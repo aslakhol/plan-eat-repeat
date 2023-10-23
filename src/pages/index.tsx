@@ -4,7 +4,8 @@ import Link from "next/link";
 import { api } from "~/utils/api";
 
 export default function Home() {
-  const hello = api.post.hello.useQuery({ text: "from tRPC" });
+  const hello = api.dinner.tag.useQuery({ text: "from tRPC" });
+  const tagQuery = api.dinner.tag.useQuery();
 
   return (
     <>
@@ -43,7 +44,7 @@ export default function Home() {
             </Link>
           </div>
           <p className="text-2xl text-white">
-            {hello.data ? hello.data.greeting : "Loading tRPC query..."}
+            {tagQuery.data ? tagQuery.data.tag : "Error loading tag"}
           </p>
         </div>
       </main>
