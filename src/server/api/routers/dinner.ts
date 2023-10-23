@@ -11,9 +11,10 @@ export const dinnerRouter = createTRPCRouter({
       };
     }),
 
-  tag: publicProcedure.query(() => {
+  tags: publicProcedure.query(({ ctx }) => {
+    const tags = ctx.db.tag.findMany();
     return {
-      tag: "Tag",
+      tags: tags,
     };
   }),
 });
