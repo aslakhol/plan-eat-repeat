@@ -43,7 +43,11 @@ export default function Home() {
             </Link>
           </div>
           <p className="text-2xl text-white">
-            {tagQuery.data ? tagQuery.data.tags.map() : "Error loading tag"}
+            {tagQuery.data
+              ? tagQuery.data.tags.map((tag) => (
+                  <p key={tag.value}>{tag.value}</p>
+                ))
+              : "Error loading tag"}
           </p>
         </div>
       </main>

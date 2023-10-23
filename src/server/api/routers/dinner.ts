@@ -11,8 +11,8 @@ export const dinnerRouter = createTRPCRouter({
       };
     }),
 
-  tags: publicProcedure.query(({ ctx }) => {
-    const tags = ctx.db.tag.findMany();
+  tags: publicProcedure.query(async ({ ctx }) => {
+    const tags = await ctx.db.tag.findMany();
     return {
       tags: tags,
     };
