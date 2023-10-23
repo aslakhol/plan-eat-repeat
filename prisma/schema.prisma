@@ -10,11 +10,19 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
+model Dinner {
     id        Int      @id @default(autoincrement())
     name      String
+    tags      Tag[]
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
     @@index([name])
+}
+
+model Tag {
+    value  String   @id
+    Dinner Dinner[]
+
+    @@index([value])
 }
