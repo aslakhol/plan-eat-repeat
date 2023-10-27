@@ -20,7 +20,7 @@ export const dinnerRouter = createTRPCRouter({
 
   //Gets stuff from DB
   dinners: publicProcedure.query(async ({ ctx }) => {
-    const dinners = await ctx.db.dinner.findMany();
+    const dinners = await ctx.db.dinner.findMany({ include: { tags: true } });
     return {
       dinners: dinners,
     };

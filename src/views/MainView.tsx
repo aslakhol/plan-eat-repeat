@@ -3,7 +3,6 @@ import { Button } from "../components/ui/button";
 import { Dinner } from "./Dinner";
 
 export const MainView = () => {
-  const tagQuery = api.dinner.tags.useQuery();
   const dinnerQuery = api.dinner.dinners.useQuery();
 
   return (
