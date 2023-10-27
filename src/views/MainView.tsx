@@ -15,7 +15,7 @@ export const MainView = () => {
           </div>
           <div className="space-y-4">
             {dinnerQuery.data?.dinners.map((dinner) => {
-              return <Dinner key={dinner.id} />;
+              return <Dinner key={dinner.id} dinner={dinner} />;
             })}
             <div className="flex flex-col rounded border px-4 py-2">
               <h3 className="font-semibold">Dinner 2</h3>

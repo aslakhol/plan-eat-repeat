@@ -1,12 +1,19 @@
 import { Button } from "~/components/ui/button";
 
-type Props = {};
+type Props = {
+  dinner: {
+    id: number;
+    name: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+};
 
-export const Dinner = ({}: Props) => {
+export const Dinner = ({ dinner }: Props) => {
   return (
     <>
       <div className="flex flex-col rounded border px-4 py-2">
-        <h3 className="font-semibold">Dinner 1</h3>
+        <h3 className="font-semibold">{dinner.name}</h3>
         <div className="mt-2 flex flex-wrap gap-2">
           <Button
             className="rounded bg-blue-100 px-2 py-1 text-blue-800 active:bg-blue-200"
