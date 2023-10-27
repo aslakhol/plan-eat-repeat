@@ -2,6 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 
 import { api } from "~/utils/api";
+import { Button } from "../components/ui/button";
 
 export default function Home() {
   const tagQuery = api.dinner.tags.useQuery();
@@ -22,6 +23,7 @@ export default function Home() {
               ))
             : "Error loading dinner"}
         </p>
+        <Button>alksjdlksj</Button>
 
         <p className="text-2xl text-white">
           {tagQuery.data
