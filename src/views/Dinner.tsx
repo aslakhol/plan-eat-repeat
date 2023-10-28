@@ -1,14 +1,7 @@
+import { type DinnerWithTags } from "../utils/types";
+
 type Props = {
-  dinner: {
-    id: number;
-    name: string;
-    createdAt: Date;
-    updatedAt: Date;
-  } & {
-    tags: {
-      value: string;
-    }[];
-  };
+  dinner: DinnerWithTags;
 };
 
 export const Dinner = ({ dinner }: Props) => {
