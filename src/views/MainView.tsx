@@ -1,5 +1,4 @@
 import { api } from "~/utils/api";
-import { Button } from "../components/ui/button";
 import { Dinners } from "./Dinners";
 
 /**
