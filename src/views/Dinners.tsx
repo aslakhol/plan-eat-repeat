@@ -14,25 +14,15 @@ type Props = {
     createdAt: Date;
     updatedAt: Date;
   })[];
+  selectedDinnerIds: number[];
+  toggleDinnerSelected: (dinner: DinnerWithTags) => void;
 };
 
-export const Dinners = ({ dinners }: Props) => {
-  const [selectedDinnerIds, setSelectedDinnerIds] = useState<number[]>([]);
-
-  const toggleDinnerSelected = (dinner: DinnerWithTags) => {
-    setSelectedDinnerIds((prevState) => {
-      if (prevState.includes(dinner.id)) {
-        return prevState.filter((id) => id !== dinner.id);
-      }
-
-      if (prevState.length >= 7) {
-        return prevState;
-      }
-
-      return [...prevState, dinner.id];
-    });
-  };
-
+export const Dinners = ({
+  dinners,
+  selectedDinnerIds,
+  toggleDinnerSelected,
+}: Props) => {
   return (
     <>
       <div className="flex flex-col justify-between space-y-8 overflow-y-auto p-6">
