@@ -38,7 +38,7 @@ export const MainView = () => {
         />
       )}
 
-      <WeekPlan />
+      <WeekPlan selectedDinnerIds={selectedDinnerIds} />
     </div>
   );
 };

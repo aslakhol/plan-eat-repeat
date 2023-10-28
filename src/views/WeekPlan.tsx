@@ -2,7 +2,8 @@ import { type Dinner } from "@prisma/client";
 
 type Props = { selectedDinnerIds: number[] };
 
-export const WeekPlan = ({}: Props) => {
+export const WeekPlan = ({ selectedDinnerIds }: Props) => {
+  console.log(selectedDinnerIds, "selectedDinnerIds in WeekPlan");
   const days = [
     "Monday",
     "Tuesday",
