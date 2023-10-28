@@ -24,6 +24,11 @@ export const Dinners = ({ dinners }: Props) => {
       if (prevState.includes(dinner.id)) {
         return prevState.filter((id) => id !== dinner.id);
       }
+
+      if (prevState.length >= 7) {
+        return prevState;
+      }
+
       return [...prevState, dinner.id];
     });
   };
