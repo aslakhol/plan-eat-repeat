@@ -1,13 +1,26 @@
+import { cn } from "../lib/utils";
 import { type DinnerWithTags } from "../utils/types";
 
 type Props = {
   dinner: DinnerWithTags;
+  onClick: (dinner: DinnerWithTags) => void;
+  selected: boolean;
 };
 
-export const Dinner = ({ dinner }: Props) => {
+export const Dinner = ({ dinner, onClick, selected }: Props) => {
+  const handleClick = () => {
+    onClick(dinner);
+  };
+
   return (
     <>
-      <div className="flex flex-col rounded border px-4 py-2">
+      <div
+        className={cn(
+          "hover:bg-accent/50 hover:text-accent-foreground flex flex-col rounded border px-4 py-2",
+          selected && "ring-2",
+        )}
+        onClick={handleClick}
+      >
         <h3 className="font-semibold">{dinner.name}</h3>
         <div className="mt-2 flex flex-wrap gap-2">
           {dinner.tags.map((tag) => {
