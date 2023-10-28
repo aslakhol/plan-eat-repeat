@@ -1,7 +1,7 @@
 import { Button } from "~/components/ui/button";
 import { Dinner } from "./Dinner";
 import { type DinnerWithTags } from "../utils/types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Props = {
   dinners: ({
@@ -19,16 +19,14 @@ type Props = {
 export const Dinners = ({ dinners }: Props) => {
   const [selectedDinnerIds, setSelectedDinnerIds] = useState<number[]>([]);
 
-  const selectDinner = (dinner: DinnerWithTags) => {
-    console.log(dinner, "dinner");
-    setSelectedDinnerIds((prevState) => [...prevState, dinner.id]);
-
-    console.log(selectedDinnerIds, "selectedDinnerIds");
+  const toggleDinnerSelected = (dinner: DinnerWithTags) => {
+    setSelectedDinnerIds((prevState) => {
+      if (prevState.includes(dinner.id)) {
+        return prevState.filter((id) => id !== dinner.id);
+      }
+      return [...prevState, dinner.id];
+    });
   };
-
-  useEffect(() => {
-    console.log(selectedDinnerIds, "selectedDinnerIds");
-  }, [selectedDinnerIds]);
 
   return (
     <>
@@ -43,7 +41,7 @@ export const Dinners = ({ dinners }: Props) => {
                 <Dinner
                   key={dinner.id}
                   dinner={dinner}
-                  onClick={selectDinner}
+                  onClick={toggleDinnerSelected}
                   selected={selectedDinnerIds.includes(dinner.id)}
                 />
               );
