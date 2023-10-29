@@ -1,29 +1,44 @@
 import { api } from "~/utils/api";
-import { Button } from "../components/ui/button";
 import { Dinners } from "./Dinners";
+import { WeekPlan } from "./WeekPlan";
+import { useState } from "react";
+import { type DinnerWithTags } from "../utils/types";
+
+/**
+ * v0 by Vercel.
+ * @see https://v0.dev/t/Gun86UHtS3V
+ */
 
 export const MainView = () => {
   const dinnerQuery = api.dinner.dinners.useQuery();
 
+  const [selectedDinnerIds, setSelectedDinnerIds] = useState<number[]>([]);
+
+  const toggleDinnerSelected = (dinner: DinnerWithTags) => {
+    setSelectedDinnerIds((prevState) => {
+      if (prevState.includes(dinner.id)) {
+        return prevState.filter((id) => id !== dinner.id);
+      }
+
+      if (prevState.length >= 7) {
+        return prevState;
+      }
+
+      return [...prevState, dinner.id];
+    });
+  };
+
   return (
     <div className="grid h-screen grid-cols-2">
       {dinnerQuery.data?.dinners && (
-        <Dinners dinners={dinnerQuery.data.dinners} />
+        <Dinners
+          dinners={dinnerQuery.data.dinners}
+          toggleDinnerSelected={toggleDinnerSelected}
+          selectedDinnerIds={selectedDinnerIds}
+        />
       )}
 
-      <div className="flex flex-col items-end justify-start bg-gray-50 p-6 dark:bg-gray-900">
-        <h2 className="mb-8 text-right text-xl font-bold">Week Plan</h2>
-        <div className="w-full space-y-4 text-right">
-          <div className="flex flex-col rounded border px-4 py-2">
-            <h3 className="font-semibold">Monday</h3>
-            <p className="mt-2">No dinner selected</p>
-          </div>
-          <div className="flex flex-col rounded border px-4 py-2">
-            <h3 className="font-semibold">Tuesday</h3>
-            <p className="mt-2">No dinner selected</p>
-          </div>
-        </div>
-      </div>
+      <WeekPlan selectedDinnerIds={selectedDinnerIds} />
     </div>
   );
 };

@@ -1,34 +1,38 @@
+import { cn } from "../lib/utils";
+import { type DinnerWithTags } from "../utils/types";
+
 type Props = {
-  dinner: {
-    id: number;
-    name: string;
-    createdAt: Date;
-    updatedAt: Date;
-  } & {
-    tags: {
-      value: string;
-    }[];
-  };
+  dinner: DinnerWithTags;
+  onClick: (dinner: DinnerWithTags) => void;
+  selected: boolean;
 };
 
-export const Dinner = ({ dinner }: Props) => {
+export const Dinner = ({ dinner, onClick, selected }: Props) => {
+  const handleClick = () => {
+    onClick(dinner);
+  };
+
   return (
-    <>
-      <div className="flex flex-col rounded border px-4 py-2">
-        <h3 className="font-semibold">{dinner.name}</h3>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {dinner.tags.map((tag) => {
-            return (
-              <div
-                key={tag.value}
-                className="rounded bg-green-100 px-2 py-1 text-green-800 active:bg-green-200"
-              >
-                {tag.value}
-              </div>
-            );
-          })}
-        </div>
+    <div
+      className={cn(
+        "hover:bg-accent/50 hover:text-accent-foreground flex flex-col rounded border px-4 py-2",
+        selected && "ring-2",
+      )}
+      onClick={handleClick}
+    >
+      <h3 className="font-semibold">{dinner.name}</h3>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {dinner.tags.map((tag) => {
+          return (
+            <div
+              key={tag.value}
+              className="rounded bg-green-100 px-2 py-1 text-green-800 active:bg-green-200"
+            >
+              {tag.value}
+            </div>
+          );
+        })}
       </div>
-    </>
+    </div>
   );
 };
