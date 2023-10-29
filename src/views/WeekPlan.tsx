@@ -3,12 +3,8 @@ import { api } from "../utils/api";
 
 type Props = { selectedDinnerIds: number[] };
 
-export const WeekPlan = ({ selectedDinnerIds }: Props) => {
-  const dinnersQuery = api.dinner.dinners.useQuery();
-
-  const selectedDinners = selectedDinnerIds.map(
-    (id) => dinnersQuery.data?.dinners?.find((dinner) => dinner.id === id),
-  );
+export const WeekPlan = ({}: Props) => {
+  const weekPlanQuery = api.dinner.weekPlan.useQuery();
 
   const days = [
     "Monday",
@@ -25,7 +21,7 @@ export const WeekPlan = ({ selectedDinnerIds }: Props) => {
       <h2 className="mb-8 text-right text-xl font-bold">Week Plan</h2>
       <div className="w-full space-y-4 text-right">
         {days.map((day, index) => (
-          <Day key={day} day={day} dinner={selectedDinners[index]} />
+          <Day key={day} day={day} dinner={weekPlanQuery.data?.week[index]} />
         ))}
       </div>
     </div>
