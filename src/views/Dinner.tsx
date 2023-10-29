@@ -11,14 +11,15 @@ type Props = {
 export const Dinner = ({ dinner, onClick, selected }: Props) => {
   const toggleMutation = api.dinner.toggle.useMutation();
   const utils = api.useUtils();
+  const dinnerIsPlanned = dinner.plannedForDay !== null;
 
   const handleClick = () => {
-    onClick(dinner);
     toggleMutation.mutate(
       { dinnerId: dinner.id },
       {
         onSettled: () => {
           void utils.dinner.weekPlan.invalidate();
+          void utils.dinner.dinners.invalidate();
         },
       },
     );
@@ -28,7 +29,7 @@ export const Dinner = ({ dinner, onClick, selected }: Props) => {
     <div
       className={cn(
         "flex flex-col rounded border px-4 py-2 hover:bg-accent/50 hover:text-accent-foreground",
-        selected && "ring-2",
+        dinnerIsPlanned && "ring-2",
       )}
       onClick={handleClick}
     >
