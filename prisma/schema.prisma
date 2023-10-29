@@ -11,13 +11,15 @@ datasource db {
 }
 
 model Dinner {
-    id        Int      @id @default(autoincrement())
-    name      String
-    tags      Tag[]
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    id            Int      @id @default(autoincrement())
+    name          String
+    tags          Tag[]
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+    plannedForDay Int?     @unique
 
     @@index([name])
+    @@index([plannedForDay])
 }
 
 model Tag {
