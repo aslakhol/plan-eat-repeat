@@ -8,8 +8,19 @@ type Props = {
 };
 
 export const Dinner = ({ dinner, onClick, selected }: Props) => {
+  const toggleMutation = api.dinner.toggle.useMutation();
+  const utils = api.useUtils();
+
   const handleClick = () => {
     onClick(dinner);
+    toggleMutation.mutate(
+      { dinnerId: dinner.id },
+      {
+        onSettled: (data) => {
+          void utils.dinner.weekPlan.invalidate();
+        },
+      },
+    );
   };
 
   return (
