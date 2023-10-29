@@ -1,19 +1,9 @@
 import { Button } from "~/components/ui/button";
 import { Dinner } from "./Dinner";
 import { type DinnerWithTags } from "../utils/types";
-import { useState } from "react";
 
 type Props = {
-  dinners: ({
-    tags: {
-      value: string;
-    }[];
-  } & {
-    id: number;
-    name: string;
-    createdAt: Date;
-    updatedAt: Date;
-  })[];
+  dinners: DinnerWithTags[];
   selectedDinnerIds: number[];
   toggleDinnerSelected: (dinner: DinnerWithTags) => void;
 };
