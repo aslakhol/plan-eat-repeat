@@ -1,4 +1,5 @@
 import { cn } from "../lib/utils";
+import { api } from "../utils/api";
 import { type DinnerWithTags } from "../utils/types";
 
 type Props = {
@@ -16,7 +17,7 @@ export const Dinner = ({ dinner, onClick, selected }: Props) => {
     toggleMutation.mutate(
       { dinnerId: dinner.id },
       {
-        onSettled: (data) => {
+        onSettled: () => {
           void utils.dinner.weekPlan.invalidate();
         },
       },
@@ -26,7 +27,7 @@ export const Dinner = ({ dinner, onClick, selected }: Props) => {
   return (
     <div
       className={cn(
-        "hover:bg-accent/50 hover:text-accent-foreground flex flex-col rounded border px-4 py-2",
+        "flex flex-col rounded border px-4 py-2 hover:bg-accent/50 hover:text-accent-foreground",
         selected && "ring-2",
       )}
       onClick={handleClick}

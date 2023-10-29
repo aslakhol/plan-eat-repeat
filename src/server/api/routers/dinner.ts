@@ -1,4 +1,4 @@
-import { date, z } from "zod";
+import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { type DinnerWithTags } from "../../../utils/types";
@@ -69,7 +69,7 @@ export const dinnerRouter = createTRPCRouter({
         return { updatedDinner: null };
       }
 
-      const updatedDinner = ctx.db.dinner.update({
+      const updatedDinner = await ctx.db.dinner.update({
         where: { id: input.dinnerId },
         data: { plannedForDay: firstAvailableDay },
       });
