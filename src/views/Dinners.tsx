@@ -4,15 +4,9 @@ import { type DinnerWithTags } from "../utils/types";
 
 type Props = {
   dinners: DinnerWithTags[];
-  selectedDinnerIds: number[];
-  toggleDinnerSelected: (dinner: DinnerWithTags) => void;
 };
 
-export const Dinners = ({
-  dinners,
-  selectedDinnerIds,
-  toggleDinnerSelected,
-}: Props) => {
+export const Dinners = ({ dinners }: Props) => {
   return (
     <>
       <div className="flex flex-col justify-between space-y-8 overflow-y-auto p-6">
@@ -22,14 +16,7 @@ export const Dinners = ({
           </div>
           <div className="space-y-4">
             {dinners.map((dinner) => {
-              return (
-                <Dinner
-                  key={dinner.id}
-                  dinner={dinner}
-                  onClick={toggleDinnerSelected}
-                  selected={selectedDinnerIds.includes(dinner.id)}
-                />
-              );
+              return <Dinner key={dinner.id} dinner={dinner} />;
             })}
             <div className="mt-12 flex justify-center">
               <Button

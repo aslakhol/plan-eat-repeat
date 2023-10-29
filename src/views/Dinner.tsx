@@ -4,11 +4,9 @@ import { type DinnerWithTags } from "../utils/types";
 
 type Props = {
   dinner: DinnerWithTags;
-  onClick: (dinner: DinnerWithTags) => void;
-  selected: boolean;
 };
 
-export const Dinner = ({ dinner, onClick, selected }: Props) => {
+export const Dinner = ({ dinner }: Props) => {
   const toggleMutation = api.dinner.toggle.useMutation();
   const utils = api.useUtils();
   const dinnerIsPlanned = dinner.plannedForDay !== null;

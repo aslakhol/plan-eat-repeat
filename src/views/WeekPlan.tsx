@@ -1,9 +1,7 @@
 import { type Dinner } from "@prisma/client";
 import { api } from "../utils/api";
 
-type Props = { selectedDinnerIds: number[] };
-
-export const WeekPlan = ({}: Props) => {
+export const WeekPlan = () => {
   const weekPlanQuery = api.dinner.weekPlan.useQuery();
 
   const days = [
