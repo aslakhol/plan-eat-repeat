@@ -1,28 +1,12 @@
 import { Button } from "~/components/ui/button";
 import { Dinner } from "./Dinner";
 import { type DinnerWithTags } from "../utils/types";
-import { useState } from "react";
 
 type Props = {
-  dinners: ({
-    tags: {
-      value: string;
-    }[];
-  } & {
-    id: number;
-    name: string;
-    createdAt: Date;
-    updatedAt: Date;
-  })[];
-  selectedDinnerIds: number[];
-  toggleDinnerSelected: (dinner: DinnerWithTags) => void;
+  dinners: DinnerWithTags[];
 };
 
-export const Dinners = ({
-  dinners,
-  selectedDinnerIds,
-  toggleDinnerSelected,
-}: Props) => {
+export const Dinners = ({ dinners }: Props) => {
   return (
     <>
       <div className="flex flex-col justify-between space-y-8 overflow-y-auto p-6">
@@ -32,14 +16,7 @@ export const Dinners = ({
           </div>
           <div className="space-y-4">
             {dinners.map((dinner) => {
-              return (
-                <Dinner
-                  key={dinner.id}
-                  dinner={dinner}
-                  onClick={toggleDinnerSelected}
-                  selected={selectedDinnerIds.includes(dinner.id)}
-                />
-              );
+              return <Dinner key={dinner.id} dinner={dinner} />;
             })}
             <div className="mt-12 flex justify-center">
               <Button

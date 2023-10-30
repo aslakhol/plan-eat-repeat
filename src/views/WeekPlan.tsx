@@ -1,9 +1,9 @@
 import { type Dinner } from "@prisma/client";
+import { api } from "../utils/api";
 
-type Props = { selectedDinnerIds: number[] };
+export const WeekPlan = () => {
+  const weekPlanQuery = api.dinner.weekPlan.useQuery();
 
-export const WeekPlan = ({ selectedDinnerIds }: Props) => {
-  console.log(selectedDinnerIds, "selectedDinnerIds in WeekPlan");
   const days = [
     "Monday",
     "Tuesday",
@@ -18,8 +18,8 @@ export const WeekPlan = ({ selectedDinnerIds }: Props) => {
     <div className="flex flex-col items-end justify-start bg-gray-50 p-6 dark:bg-gray-900">
       <h2 className="mb-8 text-right text-xl font-bold">Week Plan</h2>
       <div className="w-full space-y-4 text-right">
-        {days.map((day) => (
-          <Day key={day} day={day} dinner={undefined} />
+        {days.map((day, index) => (
+          <Day key={day} day={day} dinner={weekPlanQuery.data?.week[index]} />
         ))}
       </div>
     </div>

@@ -1,22 +1,33 @@
 import { cn } from "../lib/utils";
+import { api } from "../utils/api";
 import { type DinnerWithTags } from "../utils/types";
 
 type Props = {
   dinner: DinnerWithTags;
-  onClick: (dinner: DinnerWithTags) => void;
-  selected: boolean;
 };
 
-export const Dinner = ({ dinner, onClick, selected }: Props) => {
+export const Dinner = ({ dinner }: Props) => {
+  const toggleMutation = api.dinner.toggle.useMutation();
+  const utils = api.useUtils();
+  const dinnerIsPlanned = dinner.plannedForDay !== null;
+
   const handleClick = () => {
-    onClick(dinner);
+    toggleMutation.mutate(
+      { dinnerId: dinner.id },
+      {
+        onSettled: () => {
+          void utils.dinner.weekPlan.invalidate();
+          void utils.dinner.dinners.invalidate();
+        },
+      },
+    );
   };
 
   return (
     <div
       className={cn(
-        "hover:bg-accent/50 hover:text-accent-foreground flex flex-col rounded border px-4 py-2",
-        selected && "ring-2",
+        "flex flex-col rounded border px-4 py-2 hover:bg-accent/50 hover:text-accent-foreground",
+        dinnerIsPlanned && "ring-2",
       )}
       onClick={handleClick}
     >
