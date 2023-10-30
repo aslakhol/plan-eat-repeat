@@ -1,5 +1,3 @@
-type Props = {};
-
-export const Filter = ({}: Props) => {
+export const Filter = () => {
   return <>Filter</>;
 };

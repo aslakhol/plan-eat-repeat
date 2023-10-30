@@ -1,5 +1,3 @@
-type Props = {};
-
-export const Search = ({}: Props) => {
+export const Search = () => {
   return <>Search</>;
 };
