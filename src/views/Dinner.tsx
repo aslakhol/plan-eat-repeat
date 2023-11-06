@@ -7,20 +7,57 @@ type Props = {
 };
 
 export const Dinner = ({ dinner }: Props) => {
-  const toggleMutation = api.dinner.toggle.useMutation();
   const utils = api.useUtils();
+  const toggleMutation = api.dinner.toggle.useMutation({
+    onMutate: (input) => {
+      void utils.dinner.weekPlan.cancel();
+
+      const prevData = utils.dinner.weekPlan.getData();
+
+      utils.dinner.weekPlan.setData(undefined, (old) => {
+        const dinnerExists = old?.week.findIndex(
+          (day) => day?.id === input.dinnerId,
+        );
+
+        if (dinnerExists !== -1) {
+          return {
+            week:
+              old?.week.map((day, index) =>
+                index === dinnerExists ? undefined : day,
+              ) ?? [],
+          };
+        }
+
+        const firstAvailableDay = old?.week.findIndex(
+          (day) => day === undefined,
+        );
+
+        return {
+          week:
+            old?.week.map((day, index) =>
+              index === firstAvailableDay
+                ? { ...dinner, plannedForDay: firstAvailableDay }
+                : day,
+            ) ?? [],
+        };
+      });
+
+      return { prevData };
+    },
+    onError: (_, __, context) => {
+      if (context?.prevData) {
+        utils.dinner.weekPlan.setData(undefined, context.prevData);
+      }
+    },
+    onSettled: () => {
+      void utils.dinner.weekPlan.invalidate();
+      void utils.dinner.dinners.invalidate();
+    },
+  });
   const dinnerIsPlanned = dinner.plannedForDay !== null;
 
   const handleClick = () => {
-    toggleMutation.mutate(
-      { dinnerId: dinner.id },
-      {
-        onSettled: () => {
-          void utils.dinner.weekPlan.invalidate();
-          void utils.dinner.dinners.invalidate();
-        },
-      },
-    );
+    toggleMutation.mutate({ dinnerId: dinner.id });
   };
 
   return (
