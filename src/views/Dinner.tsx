@@ -19,7 +19,7 @@ export const Dinner = ({ dinner }: Props) => {
           (day) => day?.id === input.dinnerId,
         );
 
-        if (dinnerExists !== undefined) {
+        if (dinnerExists !== -1) {
           return {
             week:
               old?.week.map((day, index) =>
