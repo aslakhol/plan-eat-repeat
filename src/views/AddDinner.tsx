@@ -1,13 +1,25 @@
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { api } from "../utils/api";
 
 export const AddDinner = () => {
   const [dinnerName, setDinnerName] = useState("");
   const [tagValue, setTagValue] = useState("");
 
+  const addDinnerMutation = api.dinner.create.useMutation();
+  const utils = api.useUtils();
+
   function addDinner() {
     console.log("addDinner");
+    addDinnerMutation.mutate(
+      { dinnerName: dinnerName },
+      {
+        onSettled: () => {
+          void utils.dinner.dinners.invalidate();
+        },
+      },
+    );
   }
 
   function addTagToDinner() {
