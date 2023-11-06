@@ -19,7 +19,7 @@ export default function Secret() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Input
-        type="text"
+        type="password"
         placeholder="Enter superdupersecret phrase"
         value={secret}
         onChange={(event) => setSecret(event.target.value)}
