@@ -7,7 +7,7 @@ export default function Secret() {
   const [secret, setSecret] = useState("");
 
   function superSecret() {
-    console.log(secret);
+    localStorage.setItem("sulten-secret", secret);
     setSecret("");
   }
 
