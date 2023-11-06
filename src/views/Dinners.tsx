@@ -1,6 +1,7 @@
 import { Button } from "~/components/ui/button";
 import { Dinner } from "./Dinner";
 import { type DinnerWithTags } from "../utils/types";
+import { AddDinner } from "./AddDinner";
 
 type Props = {
   dinners: DinnerWithTags[];
@@ -42,6 +43,7 @@ export const Dinners = ({ dinners }: Props) => {
             </div>
           </div>
         </div>
+        <AddDinner />
         <div className="mt-6 flex flex-col space-y-4">
           <div className="mb-4">
             <input
