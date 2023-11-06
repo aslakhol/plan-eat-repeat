@@ -12,7 +12,8 @@ export const Dinner = ({ dinner }: Props) => {
     onMutate: (input) => {
       void utils.dinner.weekPlan.cancel();
 
-      const prevData = utils.dinner.weekPlan.getData();
+      const prevWeek = utils.dinner.weekPlan.getData();
+      const prevDinners = utils.dinner.dinners.getData();
 
       utils.dinner.weekPlan.setData(undefined, (old) => {
         const dinnerExists = old?.week.findIndex(
@@ -42,11 +43,29 @@ export const Dinner = ({ dinner }: Props) => {
         };
       });
 
-      return { prevData };
+      utils.dinner.dinners.setData(undefined, (old) => {
+        return {
+          dinners:
+            old?.dinners.map((dinner) =>
+              dinner.id === input.dinnerId
+                ? {
+                    ...dinner,
+                    plannedForDay: dinner.plannedForDay === null ? 8 : null,
+                  }
+                : dinner,
+            ) ?? [],
+        };
+      });
+
+      return { prevWeek, prevDinners };
     },
     onError: (_, __, context) => {
-      if (context?.prevData) {
-        utils.dinner.weekPlan.setData(undefined, context.prevData);
+      if (context?.prevWeek) {
+        utils.dinner.weekPlan.setData(undefined, context.prevWeek);
+      }
+
+      if (context?.prevDinners) {
+        utils.dinner.dinners.setData(undefined, context.prevDinners);
       }
     },
     onSettled: () => {
