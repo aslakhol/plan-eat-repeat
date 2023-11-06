@@ -5,16 +5,8 @@ import { type DinnerWithTags } from "../../../utils/types";
 import { type Dinner } from "@prisma/client";
 
 export const dinnerRouter = createTRPCRouter({
-  hello: publicProcedure
-    .input(z.object({ text: z.string() }))
-    .query(({ input }) => {
-      return {
-        greeting: `Hello ${input.text}`,
-      };
-    }),
-
   tags: publicProcedure.query(async ({ ctx }) => {
-    const tags = await ctx.db.tag.findMany();
+    const tags = await ctx.db.tag.findMany({ orderBy: { value: "asc" } });
     return {
       tags: tags,
     };
@@ -24,6 +16,7 @@ export const dinnerRouter = createTRPCRouter({
   dinners: publicProcedure.query(async ({ ctx }) => {
     const dinners: DinnerWithTags[] = await ctx.db.dinner.findMany({
       include: { tags: true },
+      orderBy: { name: "asc" },
     });
     return {
       dinners: dinners,
