@@ -2,12 +2,18 @@ import { Button } from "~/components/ui/button";
 import { Dinner } from "./Dinner";
 import { type DinnerWithTags } from "../utils/types";
 import { AddDinner } from "./AddDinner";
+import { useState } from "react";
 
 type Props = {
   dinners: DinnerWithTags[];
 };
 
 export const Dinners = ({ dinners }: Props) => {
+  const [isAddDinnerOpen, setOpenAddDinner] = useState(false);
+
+  function openAddDinner() {
+    setOpenAddDinner(true);
+  }
   return (
     <>
       <div className="flex flex-col justify-between space-y-8 overflow-y-auto p-6">
@@ -20,30 +26,35 @@ export const Dinners = ({ dinners }: Props) => {
               return <Dinner key={dinner.id} dinner={dinner} />;
             })}
             <div className="mt-12 flex justify-center">
-              <Button
-                className="bg-white p-4 text-gray-500 hover:bg-gray-200"
-                variant="outline"
-              >
-                <svg
-                  className=" h-5 w-5"
-                  fill="none"
-                  height="24"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  width="24"
-                  xmlns="http://www.w3.org/2000/svg"
+              {isAddDinnerOpen ? (
+                <AddDinner setOpenAddDinner={setOpenAddDinner} />
+              ) : (
+                <Button
+                  className="bg-white p-4 text-gray-500 hover:bg-gray-200"
+                  variant="outline"
+                  onClick={openAddDinner}
                 >
-                  <path d="M5 12h14" />
-                  <path d="M12 5v14" />
-                </svg>
-              </Button>
+                  <svg
+                    className=" h-5 w-5"
+                    fill="none"
+                    height="24"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    width="24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="M12 5v14" />
+                  </svg>
+                </Button>
+              )}
             </div>
           </div>
         </div>
-        <AddDinner />
+
         <div className="mt-6 flex flex-col space-y-4">
           <div className="mb-4">
             <input

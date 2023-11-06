@@ -3,7 +3,11 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { api } from "../utils/api";
 
-export const AddDinner = () => {
+type Props = {
+  setOpenAddDinner: (newState: boolean) => void;
+};
+
+export const AddDinner = (props: Props) => {
   const [dinnerName, setDinnerName] = useState("");
   const [tagValue, setTagValue] = useState("");
 
@@ -28,7 +32,7 @@ export const AddDinner = () => {
   }
 
   return (
-    <div className="flex flex-col rounded border px-4 py-4 hover:bg-accent/50 hover:text-accent-foreground">
+    <div className="flex flex-grow flex-col rounded border px-4 py-4 hover:bg-accent/50 hover:text-accent-foreground">
       <div className="flex flex-col gap-2">
         <Input
           type="text"
@@ -50,6 +54,7 @@ export const AddDinner = () => {
         <Button
           className="rounded border-green-400 bg-green-100 px-2 py-1 text-green-800 active:bg-green-200"
           variant="outline"
+          onClick={addTagToDinner}
         >
           +
         </Button>
@@ -65,9 +70,8 @@ export const AddDinner = () => {
         <Button
           className="rounded border-red-400 bg-red-100 px-2 py-1 text-red-800 active:bg-red-200"
           variant="outline"
-          onClick={addTagToDinner}
+          onClick={() => props.setOpenAddDinner(false)}
         >
-          {" "}
           Cancel
         </Button>
       </div>
