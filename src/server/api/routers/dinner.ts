@@ -14,7 +14,7 @@ export const dinnerRouter = createTRPCRouter({
     }),
 
   tags: publicProcedure.query(async ({ ctx }) => {
-    const tags = await ctx.db.tag.findMany();
+    const tags = await ctx.db.tag.findMany({ orderBy: { value: "asc" } });
     return {
       tags: tags,
     };
