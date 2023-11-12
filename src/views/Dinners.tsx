@@ -14,6 +14,7 @@ export const Dinners = ({ dinners }: Props) => {
   function openAddDinner() {
     setOpenAddDinner(true);
   }
+
   return (
     <>
       <div className="flex flex-col justify-between space-y-8 overflow-y-auto p-6">

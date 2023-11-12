@@ -87,6 +87,17 @@ export const dinnerRouter = createTRPCRouter({
         dinner,
       };
     }),
+
+  unselect: publicProcedure
+    .input(z.object({ dinnerId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const updatedDinner = await ctx.db.dinner.update({
+        where: { id: input.dinnerId },
+        data: { plannedForDay: null },
+      });
+
+      return { updatedDinner };
+    }),
 });
 
 const getFirstAvailableDay = (plannedDinners: Dinner[]): number | undefined => {

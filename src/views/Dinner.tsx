@@ -11,6 +11,7 @@ export const Dinner = ({ dinner }: Props) => {
   const toggleMutation = api.dinner.toggle.useMutation({
     onMutate: (input) => {
       void utils.dinner.weekPlan.cancel();
+      void utils.dinner.dinners.cancel();
 
       const prevWeek = utils.dinner.weekPlan.getData();
       const prevDinners = utils.dinner.dinners.getData();
