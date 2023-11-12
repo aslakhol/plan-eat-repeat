@@ -1,9 +1,12 @@
 import { type Dinner } from "@prisma/client";
 import { api } from "../utils/api";
 import { cn } from "../lib/utils";
+import { getWeekPlan } from "../utils/dinner";
 
 export const WeekPlan = () => {
-  const weekPlanQuery = api.dinner.weekPlan.useQuery();
+  const dinnersQuery = api.dinner.dinners.useQuery();
+
+  const weekPlan = getWeekPlan(dinnersQuery.data?.dinners);
 
   const days = [
     "Monday",
@@ -20,7 +23,7 @@ export const WeekPlan = () => {
       <h2 className="mb-8 text-right text-xl font-bold">Week Plan</h2>
       <div className="w-full space-y-4 text-right">
         {days.map((day, index) => (
-          <Day key={day} day={day} dinner={weekPlanQuery.data?.week[index]} />
+          <Day key={day} day={day} dinner={weekPlan[index]} />
         ))}
       </div>
     </div>
@@ -44,20 +47,9 @@ const Dinner = ({ dinner }: DinnerProps) => {
   const utils = api.useUtils();
   const unselectDinnerMutation = api.dinner.unselect.useMutation({
     onMutate: (input) => {
-      void utils.dinner.weekPlan.cancel();
-      void utils.dinner.weekPlan.cancel();
+      void utils.dinner.dinners.cancel();
 
-      const prevWeek = utils.dinner.weekPlan.getData();
       const prevDinners = utils.dinner.dinners.getData();
-
-      utils.dinner.weekPlan.setData(undefined, (old) => {
-        return {
-          week:
-            old?.week.map((day) =>
-              day?.id === input.dinnerId ? undefined : day,
-            ) ?? [],
-        };
-      });
 
       utils.dinner.dinners.setData(undefined, (old) => {
         return {
@@ -73,19 +65,14 @@ const Dinner = ({ dinner }: DinnerProps) => {
         };
       });
 
-      return { prevWeek, prevDinners };
+      return { prevDinners };
     },
     onError: (_, __, context) => {
-      if (context?.prevWeek) {
-        utils.dinner.weekPlan.setData(undefined, context.prevWeek);
-      }
-
       if (context?.prevDinners) {
         utils.dinner.dinners.setData(undefined, context.prevDinners);
       }
     },
     onSettled: () => {
-      void utils.dinner.weekPlan.invalidate();
       void utils.dinner.dinners.invalidate();
     },
   });

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { type DinnerWithTags } from "../../../utils/types";
 import { type Dinner } from "@prisma/client";
+import { getFirstAvailableDay } from "../../../utils/dinner";
 
 export const dinnerRouter = createTRPCRouter({
   tags: publicProcedure.query(async ({ ctx }) => {
@@ -20,20 +21,6 @@ export const dinnerRouter = createTRPCRouter({
     });
     return {
       dinners: dinners,
-    };
-  }),
-
-  weekPlan: publicProcedure.query(async ({ ctx }) => {
-    const plannedDinners = await ctx.db.dinner.findMany({
-      where: { plannedForDay: { not: null } },
-    });
-
-    const week = [0, 1, 2, 3, 4, 5, 6].map((day) => {
-      return plannedDinners.find((dinner) => dinner.plannedForDay === day);
-    });
-
-    return {
-      week,
     };
   }),
 
@@ -72,6 +59,17 @@ export const dinnerRouter = createTRPCRouter({
       };
     }),
 
+  unselect: publicProcedure
+    .input(z.object({ dinnerId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const updatedDinner = await ctx.db.dinner.update({
+        where: { id: input.dinnerId },
+        data: { plannedForDay: null },
+      });
+
+      return { updatedDinner };
+    }),
+
   create: publicProcedure
     .input(z.object({ dinnerName: z.string().min(3) }))
     .mutation(async ({ ctx, input }) => {
@@ -87,25 +85,4 @@ export const dinnerRouter = createTRPCRouter({
         dinner,
       };
     }),
-
-  unselect: publicProcedure
-    .input(z.object({ dinnerId: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      const updatedDinner = await ctx.db.dinner.update({
-        where: { id: input.dinnerId },
-        data: { plannedForDay: null },
-      });
-
-      return { updatedDinner };
-    }),
 });
-
-const getFirstAvailableDay = (plannedDinners: Dinner[]): number | undefined => {
-  const plannedForDays = plannedDinners.map((dinner) => dinner.plannedForDay!);
-
-  const firstAvailableDay = [0, 1, 2, 3, 4, 5, 6].find(
-    (day) => !plannedForDays.includes(day),
-  );
-
-  return firstAvailableDay;
-};

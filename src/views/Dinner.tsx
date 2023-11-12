@@ -1,5 +1,6 @@
 import { cn } from "../lib/utils";
 import { api } from "../utils/api";
+import { getFirstAvailableDay } from "../utils/dinner";
 import { type DinnerWithTags } from "../utils/types";
 
 type Props = {
@@ -10,67 +11,36 @@ export const Dinner = ({ dinner }: Props) => {
   const utils = api.useUtils();
   const toggleMutation = api.dinner.toggle.useMutation({
     onMutate: (input) => {
-      void utils.dinner.weekPlan.cancel();
       void utils.dinner.dinners.cancel();
 
-      const prevWeek = utils.dinner.weekPlan.getData();
       const prevDinners = utils.dinner.dinners.getData();
 
-      utils.dinner.weekPlan.setData(undefined, (old) => {
-        const dinnerExists = old?.week.findIndex(
-          (day) => day?.id === input.dinnerId,
-        );
-
-        if (dinnerExists !== -1) {
-          return {
-            week:
-              old?.week.map((day, index) =>
-                index === dinnerExists ? undefined : day,
-              ) ?? [],
-          };
-        }
-
-        const firstAvailableDay = old?.week.findIndex(
-          (day) => day === undefined,
-        );
-
-        return {
-          week:
-            old?.week.map((day, index) =>
-              index === firstAvailableDay
-                ? { ...dinner, plannedForDay: firstAvailableDay }
-                : day,
-            ) ?? [],
-        };
-      });
-
       utils.dinner.dinners.setData(undefined, (old) => {
+        const firstAvailableDays =
+          getFirstAvailableDay(old?.dinners ?? []) ?? null;
+
         return {
           dinners:
             old?.dinners.map((dinner) =>
               dinner.id === input.dinnerId
                 ? {
                     ...dinner,
-                    plannedForDay: dinner.plannedForDay === null ? 8 : null,
+                    plannedForDay:
+                      dinner.plannedForDay === null ? firstAvailableDays : null,
                   }
                 : dinner,
             ) ?? [],
         };
       });
 
-      return { prevWeek, prevDinners };
+      return { prevDinners };
     },
     onError: (_, __, context) => {
-      if (context?.prevWeek) {
-        utils.dinner.weekPlan.setData(undefined, context.prevWeek);
-      }
-
       if (context?.prevDinners) {
         utils.dinner.dinners.setData(undefined, context.prevDinners);
       }
     },
     onSettled: () => {
-      void utils.dinner.weekPlan.invalidate();
       void utils.dinner.dinners.invalidate();
     },
   });
