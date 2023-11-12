@@ -46,20 +46,9 @@ const Dinner = ({ dinner }: DinnerProps) => {
   const utils = api.useUtils();
   const unselectDinnerMutation = api.dinner.unselect.useMutation({
     onMutate: (input) => {
-      void utils.dinner.weekPlan.cancel();
-      void utils.dinner.weekPlan.cancel();
+      void utils.dinner.dinners.cancel();
 
-      const prevWeek = utils.dinner.weekPlan.getData();
       const prevDinners = utils.dinner.dinners.getData();
-
-      utils.dinner.weekPlan.setData(undefined, (old) => {
-        return {
-          week:
-            old?.week.map((day) =>
-              day?.id === input.dinnerId ? undefined : day,
-            ) ?? [],
-        };
-      });
 
       utils.dinner.dinners.setData(undefined, (old) => {
         return {
@@ -75,19 +64,14 @@ const Dinner = ({ dinner }: DinnerProps) => {
         };
       });
 
-      return { prevWeek, prevDinners };
+      return { prevDinners };
     },
     onError: (_, __, context) => {
-      if (context?.prevWeek) {
-        utils.dinner.weekPlan.setData(undefined, context.prevWeek);
-      }
-
       if (context?.prevDinners) {
         utils.dinner.dinners.setData(undefined, context.prevDinners);
       }
     },
     onSettled: () => {
-      void utils.dinner.weekPlan.invalidate();
       void utils.dinner.dinners.invalidate();
     },
   });
