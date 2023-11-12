@@ -21,7 +21,7 @@ export const WeekPlan = () => {
   ];
 
   return (
-    <div className="flex flex-col items-end justify-start bg-gray-50 p-6 dark:bg-gray-900">
+    <div className="flex flex-col items-end justify-start bg-gray-50 p-6">
       <h2 className="mb-8 text-right text-xl font-bold">Week Plan</h2>
       <div className="w-full space-y-4 text-right">
         {days.map((day, index) => (
@@ -43,7 +43,7 @@ const Day = ({ day, dinner }: DayProps) => {
     <div
       className={cn(
         "flex flex-col rounded border px-2 py-2",
-        isOver && "bg-green-400",
+        isOver && "bg-slate-100",
       )}
       ref={setNodeRef}
     >

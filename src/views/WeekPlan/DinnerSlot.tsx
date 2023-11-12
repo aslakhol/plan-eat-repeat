@@ -8,7 +8,7 @@ type DinnerSlotProps = { dinner?: Dinner };
 
 export const DinnerSlot = ({ dinner }: DinnerSlotProps) => {
   if (!dinner) {
-    return <div className="h-12 rounded-md border"></div>;
+    return <div className="h-12 rounded-md "></div>;
   }
 
   return <DinnerSelected dinner={dinner} />;
@@ -63,7 +63,7 @@ const DinnerSelected = ({ dinner }: DinnerSelectedProps) => {
     <div
       style={style}
       className={cn(
-        "flex h-12 flex-col-reverse rounded-md border p-1 hover:bg-slate-100",
+        "flex h-12 flex-col-reverse rounded-md p-1 hover:bg-slate-100",
       )}
       onClick={() => unselectDinnerMutation.mutate({ dinnerId: dinner.id })}
       ref={setNodeRef}
