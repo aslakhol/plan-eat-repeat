@@ -1,6 +1,6 @@
 import { api } from "~/utils/api";
 import { Dinners } from "./Dinners";
-import { WeekPlan } from "./WeekPlan";
+import { WeekPlan } from "./WeekPlan/WeekPlan";
 
 /**
  * v0 by Vercel.
