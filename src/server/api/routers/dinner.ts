@@ -23,20 +23,6 @@ export const dinnerRouter = createTRPCRouter({
     };
   }),
 
-  weekPlan: publicProcedure.query(async ({ ctx }) => {
-    const plannedDinners = await ctx.db.dinner.findMany({
-      where: { plannedForDay: { not: null } },
-    });
-
-    const week = [0, 1, 2, 3, 4, 5, 6].map((day) => {
-      return plannedDinners.find((dinner) => dinner.plannedForDay === day);
-    });
-
-    return {
-      week,
-    };
-  }),
-
   toggle: publicProcedure
     .input(z.object({ dinnerId: z.number() }))
     .mutation(async ({ ctx, input }) => {
