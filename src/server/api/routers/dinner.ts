@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { type DinnerWithTags } from "../../../utils/types";
 import { type Dinner } from "@prisma/client";
+import { getFirstAvailableDay } from "../../../utils/dinner";
 
 export const dinnerRouter = createTRPCRouter({
   tags: publicProcedure.query(async ({ ctx }) => {
@@ -85,13 +86,3 @@ export const dinnerRouter = createTRPCRouter({
       };
     }),
 });
-
-const getFirstAvailableDay = (plannedDinners: Dinner[]): number | undefined => {
-  const plannedForDays = plannedDinners.map((dinner) => dinner.plannedForDay!);
-
-  const firstAvailableDay = [0, 1, 2, 3, 4, 5, 6].find(
-    (day) => !plannedForDays.includes(day),
-  );
-
-  return firstAvailableDay;
-};

@@ -1,6 +1,7 @@
 import { type Dinner } from "@prisma/client";
 import { api } from "../utils/api";
 import { cn } from "../lib/utils";
+import { getWeekPlan } from "../utils/dinner";
 
 export const WeekPlan = () => {
   const dinnersQuery = api.dinner.dinners.useQuery();
@@ -88,16 +89,4 @@ const Dinner = ({ dinner }: DinnerProps) => {
       <p className={cn("font-semibold")}>{dinner.name}</p>
     </div>
   );
-};
-
-const getWeekPlan = (dinners?: Dinner[]) => {
-  const weekPlan = new Array<Dinner | undefined>(7);
-
-  dinners?.forEach((dinner) => {
-    if (dinner.plannedForDay !== null) {
-      weekPlan[dinner.plannedForDay] = dinner;
-    }
-  });
-
-  return weekPlan;
 };
