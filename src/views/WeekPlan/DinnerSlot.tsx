@@ -2,6 +2,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
+import { CSS } from "@dnd-kit/utilities";
 
 type DinnerSlotProps = { dinner?: Dinner };
 
@@ -54,7 +55,7 @@ const DinnerSelected = ({ dinner }: DinnerSelectedProps) => {
   });
   const style = transform
     ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        transform: CSS.Translate.toString(transform),
       }
     : undefined;
 
