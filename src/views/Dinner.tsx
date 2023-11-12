@@ -1,5 +1,6 @@
 import { cn } from "../lib/utils";
 import { api } from "../utils/api";
+import { getFirstAvailableDay } from "../utils/dinner";
 import { type DinnerWithTags } from "../utils/types";
 
 type Props = {
@@ -15,13 +16,17 @@ export const Dinner = ({ dinner }: Props) => {
       const prevDinners = utils.dinner.dinners.getData();
 
       utils.dinner.dinners.setData(undefined, (old) => {
+        const firstAvailableDays =
+          getFirstAvailableDay(old?.dinners ?? []) ?? null;
+
         return {
           dinners:
             old?.dinners.map((dinner) =>
               dinner.id === input.dinnerId
                 ? {
                     ...dinner,
-                    plannedForDay: dinner.plannedForDay === null ? 8 : null,
+                    plannedForDay:
+                      dinner.plannedForDay === null ? firstAvailableDays : null,
                   }
                 : dinner,
             ) ?? [],
