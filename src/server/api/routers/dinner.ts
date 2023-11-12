@@ -58,6 +58,17 @@ export const dinnerRouter = createTRPCRouter({
       };
     }),
 
+  unselect: publicProcedure
+    .input(z.object({ dinnerId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const updatedDinner = await ctx.db.dinner.update({
+        where: { id: input.dinnerId },
+        data: { plannedForDay: null },
+      });
+
+      return { updatedDinner };
+    }),
+
   create: publicProcedure
     .input(z.object({ dinnerName: z.string().min(3) }))
     .mutation(async ({ ctx, input }) => {
@@ -72,17 +83,6 @@ export const dinnerRouter = createTRPCRouter({
       return {
         dinner,
       };
-    }),
-
-  unselect: publicProcedure
-    .input(z.object({ dinnerId: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      const updatedDinner = await ctx.db.dinner.update({
-        where: { id: input.dinnerId },
-        data: { plannedForDay: null },
-      });
-
-      return { updatedDinner };
     }),
 });
 
