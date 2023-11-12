@@ -41,12 +41,23 @@ const Day = ({ day, dinner }: DayProps) => {
 type DinnerProps = { dinner?: Dinner };
 
 const Dinner = ({ dinner }: DinnerProps) => {
+  const utils = api.useUtils();
+  const unselectDinnerMutation = api.dinner.unselect.useMutation({
+    onSettled: () => {
+      void utils.dinner.weekPlan.invalidate();
+      void utils.dinner.dinners.invalidate();
+    },
+  });
+
   if (!dinner) {
     return <div className="h-12 rounded-md border"></div>;
   }
 
   return (
-    <div className="flex h-12 flex-col-reverse rounded-md border p-1 hover:bg-slate-100">
+    <div
+      className="flex h-12 flex-col-reverse rounded-md border p-1 hover:bg-slate-100"
+      onClick={() => unselectDinnerMutation.mutate({ dinnerId: dinner.id })}
+    >
       <p className={cn("font-semibold")}>{dinner.name}</p>
     </div>
   );

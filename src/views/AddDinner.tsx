@@ -15,7 +15,6 @@ export const AddDinner = (props: Props) => {
   const utils = api.useUtils();
 
   function addDinner() {
-    console.log("addDinner");
     addDinnerMutation.mutate(
       { dinnerName: dinnerName },
       {
