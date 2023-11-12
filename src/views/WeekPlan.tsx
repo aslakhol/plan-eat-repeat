@@ -3,7 +3,9 @@ import { api } from "../utils/api";
 import { cn } from "../lib/utils";
 
 export const WeekPlan = () => {
-  const weekPlanQuery = api.dinner.weekPlan.useQuery();
+  const dinnersQuery = api.dinner.dinners.useQuery();
+
+  const weekPlan = getWeekPlan(dinnersQuery.data?.dinners);
 
   const days = [
     "Monday",
@@ -20,7 +22,7 @@ export const WeekPlan = () => {
       <h2 className="mb-8 text-right text-xl font-bold">Week Plan</h2>
       <div className="w-full space-y-4 text-right">
         {days.map((day, index) => (
-          <Day key={day} day={day} dinner={weekPlanQuery.data?.week[index]} />
+          <Day key={day} day={day} dinner={weekPlan[index]} />
         ))}
       </div>
     </div>
@@ -102,4 +104,16 @@ const Dinner = ({ dinner }: DinnerProps) => {
       <p className={cn("font-semibold")}>{dinner.name}</p>
     </div>
   );
+};
+
+const getWeekPlan = (dinners?: Dinner[]) => {
+  const weekPlan = new Array<Dinner | undefined>(7);
+
+  dinners?.forEach((dinner) => {
+    if (dinner.plannedForDay !== null) {
+      weekPlan[dinner.plannedForDay] = dinner;
+    }
+  });
+
+  return weekPlan;
 };
