@@ -1,6 +1,8 @@
 import { api } from "~/utils/api";
 import { Dinners } from "./Dinners";
 import { WeekPlan } from "./WeekPlan/WeekPlan";
+import { DndContext } from "@dnd-kit/core";
+import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 
 /**
  * v0 by Vercel.
@@ -11,12 +13,14 @@ export const MainView = () => {
   const dinnerQuery = api.dinner.dinners.useQuery();
 
   return (
-    <div className="grid h-screen grid-cols-2">
-      {dinnerQuery.data?.dinners && (
-        <Dinners dinners={dinnerQuery.data.dinners} />
-      )}
+    <DndContext modifiers={[restrictToWindowEdges]}>
+      <div className="grid h-screen grid-cols-2">
+        {dinnerQuery.data?.dinners && (
+          <Dinners dinners={dinnerQuery.data.dinners} />
+        )}
 
-      <WeekPlan />
-    </div>
+        <WeekPlan />
+      </div>
+    </DndContext>
   );
 };
