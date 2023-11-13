@@ -25,18 +25,19 @@ export const WeekPlan = () => {
       <h2 className="mb-8 text-right text-xl font-bold">Week Plan</h2>
       <div className="w-full space-y-4 text-right">
         {days.map((day, index) => (
-          <Day key={day} day={day} dinner={weekPlan[index]} />
+          <Day key={day} day={day} dinner={weekPlan[index]} index={index} />
         ))}
       </div>
     </div>
   );
 };
 
-type DayProps = { day: string; dinner?: Dinner };
+type DayProps = { day: string; dinner?: Dinner; index: number };
 
-const Day = ({ day, dinner }: DayProps) => {
+const Day = ({ day, dinner, index }: DayProps) => {
   const { isOver, setNodeRef } = useDroppable({
     id: day,
+    data: { index },
   });
 
   return (

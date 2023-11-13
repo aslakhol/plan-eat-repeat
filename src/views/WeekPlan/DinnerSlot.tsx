@@ -52,6 +52,7 @@ const DinnerSelected = ({ dinner }: DinnerSelectedProps) => {
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: dinner?.id,
+    data: { dinnerId: dinner.id },
   });
   const style = transform
     ? {
