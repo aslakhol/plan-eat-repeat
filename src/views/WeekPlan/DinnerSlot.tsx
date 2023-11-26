@@ -1,8 +1,6 @@
-import { useDraggable } from "@dnd-kit/core";
 import { type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
-import { CSS } from "@dnd-kit/utilities";
 
 type DinnerSlotProps = { dinner?: Dinner };
 
@@ -50,26 +48,12 @@ const DinnerSelected = ({ dinner }: DinnerSelectedProps) => {
     },
   });
 
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: dinner?.id,
-    data: { dinnerId: dinner.id },
-  });
-  const style = transform
-    ? {
-        transform: CSS.Translate.toString(transform),
-      }
-    : undefined;
-
   return (
     <div
-      style={style}
       className={cn(
         "flex h-12 flex-col-reverse rounded-md p-1 hover:bg-slate-100",
       )}
       onClick={() => unselectDinnerMutation.mutate({ dinnerId: dinner.id })}
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
     >
       <p className={cn("font-semibold")}>{dinner.name}</p>
     </div>

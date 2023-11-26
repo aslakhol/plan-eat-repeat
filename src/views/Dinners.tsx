@@ -3,7 +3,6 @@ import { Dinner } from "./Dinner";
 import { type DinnerWithTags } from "../utils/types";
 import { AddDinner } from "./AddDinner";
 import { useState } from "react";
-import { useDroppable } from "@dnd-kit/core";
 import { cn } from "../lib/utils";
 
 type Props = {
@@ -12,9 +11,6 @@ type Props = {
 
 export const Dinners = ({ dinners }: Props) => {
   const [isAddDinnerOpen, setOpenAddDinner] = useState(false);
-  const { isOver, setNodeRef } = useDroppable({
-    id: "dinnersSection",
-  });
 
   function openAddDinner() {
     setOpenAddDinner(true);
@@ -23,10 +19,8 @@ export const Dinners = ({ dinners }: Props) => {
   return (
     <>
       <div
-        ref={setNodeRef}
         className={cn(
           "flex flex-col justify-between space-y-8 overflow-y-auto  p-6",
-          isOver && "bg-red-100",
         )}
       >
         <div>
