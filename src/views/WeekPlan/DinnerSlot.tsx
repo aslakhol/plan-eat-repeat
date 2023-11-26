@@ -53,7 +53,12 @@ const DinnerSelected = ({ dinner }: DinnerSelectedProps) => {
       className={cn(
         "flex h-12 flex-col-reverse rounded-md p-1 hover:bg-slate-100",
       )}
-      onClick={() => unselectDinnerMutation.mutate({ dinnerId: dinner.id })}
+      onClick={() =>
+        unselectDinnerMutation.mutate({
+          dinnerId: dinner.id,
+          secret: localStorage.getItem("sulten-secret"),
+        })
+      }
     >
       <p className={cn("font-semibold")}>{dinner.name}</p>
     </div>

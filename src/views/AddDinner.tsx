@@ -16,7 +16,7 @@ export const AddDinner = (props: Props) => {
 
   function addDinner() {
     addDinnerMutation.mutate(
-      { dinnerName: dinnerName },
+      { dinnerName: dinnerName, secret: localStorage.getItem("sulten-secret") },
       {
         onSettled: () => {
           void utils.dinner.dinners.invalidate();
