@@ -24,7 +24,7 @@ export default function Secret() {
         value={secret}
         onChange={(event) => setSecret(event.target.value)}
       />
-      <Button onClick={superSecret}> Save</Button>
+      <Button onClick={superSecret}>Save</Button>
     </>
   );
 }

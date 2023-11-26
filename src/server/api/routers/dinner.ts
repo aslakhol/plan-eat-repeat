@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { type DinnerWithTags } from "../../../utils/types";
 import { getFirstAvailableDay } from "../../../utils/dinner";
+import { env } from "../../../env.mjs";
 
 export const dinnerRouter = createTRPCRouter({
   tags: publicProcedure.query(async ({ ctx }) => {
@@ -24,8 +25,12 @@ export const dinnerRouter = createTRPCRouter({
   }),
 
   toggle: publicProcedure
-    .input(z.object({ dinnerId: z.number() }))
+    .input(z.object({ dinnerId: z.number(), secret: z.string().nullable() }))
     .mutation(async ({ ctx, input }) => {
+      if (env.SECRET_PHRASE !== input.secret) {
+        throw new Error("Missing secret keyword");
+      }
+
       const plannedDinners = await ctx.db.dinner.findMany({
         where: { plannedForDay: { not: null } },
       });

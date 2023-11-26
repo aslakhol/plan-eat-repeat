@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { cn } from "../lib/utils";
 import { api } from "../utils/api";
 import { getFirstAvailableDay } from "../utils/dinner";
@@ -47,7 +48,10 @@ export const Dinner = ({ dinner }: Props) => {
   const dinnerIsPlanned = dinner.plannedForDay !== null;
 
   const handleClick = () => {
-    toggleMutation.mutate({ dinnerId: dinner.id });
+    toggleMutation.mutate({
+      dinnerId: dinner.id,
+      secret: localStorage.getItem("sulten-secret"),
+    });
   };
 
   return (
