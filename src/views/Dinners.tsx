@@ -3,6 +3,7 @@ import { Dinner } from "./Dinner";
 import { type DinnerWithTags } from "../utils/types";
 import { AddDinner } from "./AddDinner";
 import { useState } from "react";
+import { cn } from "../lib/utils";
 
 type Props = {
   dinners: DinnerWithTags[];
@@ -17,7 +18,11 @@ export const Dinners = ({ dinners }: Props) => {
 
   return (
     <>
-      <div className="flex flex-col justify-between space-y-8 overflow-y-auto p-6">
+      <div
+        className={cn(
+          "flex flex-col justify-between space-y-8 overflow-y-auto  p-6",
+        )}
+      >
         <div>
           <div className="mb-6 flex justify-between">
             <h2 className="text-xl font-bold">Dinners</h2>
