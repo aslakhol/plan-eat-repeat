@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { cn } from "../lib/utils";
 import { api } from "../utils/api";
 import { getFirstAvailableDay } from "../utils/dinner";
