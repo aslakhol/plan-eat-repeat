@@ -7,9 +7,10 @@ import { cn } from "../lib/utils";
 
 type Props = {
   dinners: DinnerWithTags[];
+  setSelectedDinnerId: (dinnerId: number) => void;
 };
 
-export const Dinners = ({ dinners }: Props) => {
+export const Dinners = ({ dinners, setSelectedDinnerId }: Props) => {
   const [isAddDinnerOpen, setOpenAddDinner] = useState(false);
 
   function openAddDinner() {
@@ -29,7 +30,13 @@ export const Dinners = ({ dinners }: Props) => {
           </div>
           <div className="space-y-4">
             {dinners.map((dinner) => {
-              return <Dinner key={dinner.id} dinner={dinner} />;
+              return (
+                <Dinner
+                  key={dinner.id}
+                  dinner={dinner}
+                  setSelectedDinnerId={setSelectedDinnerId}
+                />
+              );
             })}
             <div className="mt-12 flex justify-center">
               {isAddDinnerOpen ? (

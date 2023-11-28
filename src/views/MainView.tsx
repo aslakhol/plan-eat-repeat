@@ -13,7 +13,12 @@ export const MainView = () => {
   return (
     <div className="grid h-screen grid-cols-2">
       {dinnerQuery.data?.dinners && (
-        <Dinners dinners={dinnerQuery.data.dinners} />
+        <Dinners
+          dinners={dinnerQuery.data.dinners}
+          setSelectedDinnerId={() => {
+            return;
+          }}
+        />
       )}
 
       <WeekPlan />
