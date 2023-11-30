@@ -6,12 +6,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
+import { api } from "../../utils/api";
 import { type DinnerWithTags } from "../../utils/types";
 import { DialogWeek } from "../DialogWeek";
 
 type Props = { dinner?: DinnerWithTags };
 
 export const SelectDinnerDialogContent = ({ dinner }: Props) => {
+  const toggleMutation = api.dinner.toggle.useMutation();
+
   if (!dinner) {
     return null;
   }
@@ -31,7 +34,17 @@ export const SelectDinnerDialogContent = ({ dinner }: Props) => {
       </div>
       {dinner.plannedForDay !== null && (
         <DialogFooter>
-          <Button variant={"secondary"}>Remove from plan</Button>
+          <Button
+            variant={"secondary"}
+            onClick={() =>
+              toggleMutation.mutate({
+                dinnerId: dinner.id,
+                secret: localStorage.getItem("sulten-secret"),
+              })
+            }
+          >
+            Remove from plan
+          </Button>
         </DialogFooter>
       )}
     </DialogContent>
