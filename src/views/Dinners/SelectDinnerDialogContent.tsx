@@ -27,7 +27,7 @@ export const SelectDinnerDialogContent = ({ dinner }: Props) => {
         </DialogDescription>
       </DialogHeader>
       <div>
-        <DialogWeek />
+        <DialogWeek selectedDinner={dinner} />
       </div>
       {dinner.plannedForDay !== null && (
         <DialogFooter>
