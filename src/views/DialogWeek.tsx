@@ -64,8 +64,23 @@ type SlotProps = {
 };
 
 const Slot = ({ day, plannedDinner, selectedDinner }: SlotProps) => {
+  const planForEmptyDayMutation = api.dinner.planForEmptyDay.useMutation();
+
+  const clickEmptyDay = () => {
+    planForEmptyDayMutation.mutate({
+      dinnerId: selectedDinner.id,
+      secret: localStorage.getItem("sulten-secret"),
+      day,
+    });
+  };
+
   if (!plannedDinner) {
-    return <div className="h-12 rounded-md "></div>;
+    return (
+      <div
+        className="h-12 rounded-md  hover:bg-slate-100"
+        onClick={clickEmptyDay}
+      ></div>
+    );
   }
 
   return (

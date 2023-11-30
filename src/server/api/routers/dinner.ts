@@ -78,6 +78,27 @@ export const dinnerRouter = createTRPCRouter({
       return { updatedDinner };
     }),
 
+  planForEmptyDay: publicProcedure
+    .input(
+      z.object({
+        dinnerId: z.number(),
+        day: z.number(),
+        secret: z.string().nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (env.SECRET_PHRASE !== input.secret) {
+        throw new Error("Missing secret keyword");
+      }
+
+      const updatedDinner = await ctx.db.dinner.update({
+        where: { id: input.dinnerId },
+        data: { plannedForDay: input.day },
+      });
+
+      return { updatedDinner };
+    }),
+
   replace: publicProcedure
     .input(
       z.object({
