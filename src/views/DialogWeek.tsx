@@ -142,7 +142,46 @@ const DinnerPlanned = ({
 }: DinnerPlannedProps) => {
   const utils = api.useUtils();
 
-  const replacePlannedMutation = api.dinner.replacePlanned.useMutation();
+  const replacePlannedMutation = api.dinner.replacePlanned.useMutation({
+    onMutate: (input) => {
+      void utils.dinner.dinners.cancel();
+
+      const prevDinners = utils.dinner.dinners.getData();
+
+      utils.dinner.dinners.setData(undefined, (old) => {
+        return {
+          dinners:
+            old?.dinners.map((dinner) => {
+              if (dinner.plannedForDay === input.day) {
+                return {
+                  ...dinner,
+                  plannedForDay: null,
+                };
+              }
+
+              if (dinner.id === input.dinnerId) {
+                return {
+                  ...dinner,
+                  plannedForDay: input.day,
+                };
+              }
+
+              return dinner;
+            }) ?? [],
+        };
+      });
+
+      return { prevDinners };
+    },
+    onError: (_, __, context) => {
+      if (context?.prevDinners) {
+        utils.dinner.dinners.setData(undefined, context.prevDinners);
+      }
+    },
+    onSettled: () => {
+      void utils.dinner.dinners.invalidate();
+    },
+  });
 
   const click = () => {
     replacePlannedMutation.mutate({
