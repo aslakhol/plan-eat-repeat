@@ -64,7 +64,54 @@ type SlotProps = {
 };
 
 const Slot = ({ day, plannedDinner, selectedDinner }: SlotProps) => {
-  const planForEmptyDayMutation = api.dinner.planForEmptyDay.useMutation();
+  if (!plannedDinner) {
+    return <NoDinnerPlanned day={day} selectedDinner={selectedDinner} />;
+  }
+
+  return (
+    <DinnerPlanned
+      day={day}
+      plannedDinner={plannedDinner}
+      selectedDinner={selectedDinner}
+    />
+  );
+};
+
+type NoDinnerPlannedProps = { day: number; selectedDinner: Dinner };
+
+const NoDinnerPlanned = ({ day, selectedDinner }: NoDinnerPlannedProps) => {
+  const utils = api.useUtils();
+  const planForEmptyDayMutation = api.dinner.planForEmptyDay.useMutation({
+    onMutate: (input) => {
+      void utils.dinner.dinners.cancel();
+
+      const prevDinners = utils.dinner.dinners.getData();
+
+      utils.dinner.dinners.setData(undefined, (old) => {
+        return {
+          dinners:
+            old?.dinners.map((dinner) =>
+              dinner.id === input.dinnerId
+                ? {
+                    ...dinner,
+                    plannedForDay: input.day,
+                  }
+                : dinner,
+            ) ?? [],
+        };
+      });
+
+      return { prevDinners };
+    },
+    onError: (_, __, context) => {
+      if (context?.prevDinners) {
+        utils.dinner.dinners.setData(undefined, context.prevDinners);
+      }
+    },
+    onSettled: () => {
+      void utils.dinner.dinners.invalidate();
+    },
+  });
 
   const clickEmptyDay = () => {
     planForEmptyDayMutation.mutate({
@@ -74,21 +121,11 @@ const Slot = ({ day, plannedDinner, selectedDinner }: SlotProps) => {
     });
   };
 
-  if (!plannedDinner) {
-    return (
-      <div
-        className="h-12 rounded-md  hover:bg-slate-100"
-        onClick={clickEmptyDay}
-      ></div>
-    );
-  }
-
   return (
-    <DinnerPlanned
-      day={day}
-      plannedDinner={plannedDinner}
-      selectedDinner={selectedDinner}
-    />
+    <div
+      className="h-12 rounded-md  hover:bg-slate-100"
+      onClick={clickEmptyDay}
+    ></div>
   );
 };
 
