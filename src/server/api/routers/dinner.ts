@@ -99,7 +99,7 @@ export const dinnerRouter = createTRPCRouter({
       return { updatedDinner };
     }),
 
-  replace: publicProcedure
+  replacePlanned: publicProcedure
     .input(
       z.object({
         dinnerId: z.number(),

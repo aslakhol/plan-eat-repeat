@@ -105,10 +105,10 @@ const DinnerPlanned = ({
 }: DinnerPlannedProps) => {
   const utils = api.useUtils();
 
-  const replaceMutation = api.dinner.replace.useMutation();
+  const replacePlannedMutation = api.dinner.replacePlanned.useMutation();
 
   const click = () => {
-    replaceMutation.mutate({
+    replacePlannedMutation.mutate({
       dinnerId: selectedDinner.id,
       secret: localStorage.getItem("sulten-secret"),
       day,

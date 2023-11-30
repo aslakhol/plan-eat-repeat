@@ -13,7 +13,38 @@ import { DialogWeek } from "../DialogWeek";
 type Props = { dinner?: DinnerWithTags };
 
 export const SelectDinnerDialogContent = ({ dinner }: Props) => {
-  const toggleMutation = api.dinner.toggle.useMutation();
+  const utils = api.useUtils();
+  const unselectDinnerMutation = api.dinner.unselect.useMutation({
+    onMutate: (input) => {
+      void utils.dinner.dinners.cancel();
+
+      const prevDinners = utils.dinner.dinners.getData();
+
+      utils.dinner.dinners.setData(undefined, (old) => {
+        return {
+          dinners:
+            old?.dinners.map((dinner) =>
+              dinner.id === input.dinnerId
+                ? {
+                    ...dinner,
+                    plannedForDay: null,
+                  }
+                : dinner,
+            ) ?? [],
+        };
+      });
+
+      return { prevDinners };
+    },
+    onError: (_, __, context) => {
+      if (context?.prevDinners) {
+        utils.dinner.dinners.setData(undefined, context.prevDinners);
+      }
+    },
+    onSettled: () => {
+      void utils.dinner.dinners.invalidate();
+    },
+  });
 
   if (!dinner) {
     return null;
@@ -37,7 +68,7 @@ export const SelectDinnerDialogContent = ({ dinner }: Props) => {
           <Button
             variant={"secondary"}
             onClick={() =>
-              toggleMutation.mutate({
+              unselectDinnerMutation.mutate({
                 dinnerId: dinner.id,
                 secret: localStorage.getItem("sulten-secret"),
               })
