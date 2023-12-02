@@ -23,11 +23,11 @@ export const BottomNav = () => {
           variant={"link"}
           className={cn(
             "w-full py-8 text-xl",
-            router.asPath === "/week" && "underline",
+            router.asPath === "/" && "underline",
           )}
           asChild
         >
-          <Link href="/week">Week</Link>
+          <Link href="/">Week</Link>
         </Button>
       </div>
     </div>
