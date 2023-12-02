@@ -20,12 +20,10 @@ export const WeekPlan = () => {
   ];
 
   return (
-    <div className="flex flex-col items-end justify-start bg-gray-50 p-6">
-      <div className="w-full space-y-4 text-right">
-        {days.map((day, index) => (
-          <Day key={day} day={day} dinner={weekPlan[index]} />
-        ))}
-      </div>
+    <div className="w-full space-y-4 p-4 text-right">
+      {days.map((day, index) => (
+        <Day key={day} day={day} dinner={weekPlan[index]} />
+      ))}
     </div>
   );
 };

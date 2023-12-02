@@ -21,18 +21,16 @@ export const DialogWeek = ({ selectedDinner }: Props) => {
   ];
 
   return (
-    <div className="justify-startp-6 flex flex-col items-end">
-      <div className="w-full space-y-4 text-right">
-        {days.map((day, index) => (
-          <Day
-            key={day}
-            day={day}
-            dayNumber={index}
-            plannedDinner={weekPlan[index]}
-            selectedDinner={selectedDinner}
-          />
-        ))}
-      </div>
+    <div className="w-full space-y-4 p-4 text-right">
+      {days.map((day, index) => (
+        <Day
+          key={day}
+          day={day}
+          dayNumber={index}
+          plannedDinner={weekPlan[index]}
+          selectedDinner={selectedDinner}
+        />
+      ))}
     </div>
   );
 };
