@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { api } from "../utils/api";
+import { api } from "../../utils/api";
 
 type Props = {
   setOpenAddDinner: (newState: boolean) => void;
