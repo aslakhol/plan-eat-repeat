@@ -6,9 +6,14 @@ import { type Day } from "../../utils/types";
 type DayComponentProps = {
   day: Day;
   setSelectedDay: (day: Day) => void;
+  plannedDinner?: Dinner;
 };
 
-export const DayComponent = ({ day, setSelectedDay }: DayComponentProps) => {
+export const DayComponent = ({
+  day,
+  setSelectedDay,
+  plannedDinner,
+}: DayComponentProps) => {
   return (
     <DialogTrigger asChild onClick={() => setSelectedDay(day)}>
       <div
@@ -17,7 +22,7 @@ export const DayComponent = ({ day, setSelectedDay }: DayComponentProps) => {
         )}
       >
         <h3 className="mb-2 mr-1 text-xs">{day.day}</h3>
-        <DinnerSlot dinner={day.plannedDinner} />
+        <DinnerSlot dinner={plannedDinner} />
       </div>
     </DialogTrigger>
   );

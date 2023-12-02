@@ -9,12 +9,14 @@ import {
 import { type Day } from "../../utils/types";
 import { DialogDinners } from "./DialogDinners";
 import { api } from "../../utils/api";
+import { type Dinner } from "@prisma/client";
 
 type Props = {
   day?: Day;
+  plannedDinner?: Dinner;
 };
 
-export const PlanDayDialog = ({ day }: Props) => {
+export const PlanDayDialog = ({ day, plannedDinner }: Props) => {
   const clearDayMutation = api.dinner.clearDay.useMutation();
 
   const handleClear = () => {
@@ -33,11 +35,11 @@ export const PlanDayDialog = ({ day }: Props) => {
       <DialogHeader>
         <DialogTitle>{day?.day}</DialogTitle>
         <DialogDescription>
-          {day?.plannedDinner ? day?.plannedDinner.name : "No dinner planned"}
+          {plannedDinner ? plannedDinner.name : "No dinner planned"}
         </DialogDescription>
       </DialogHeader>
       <div>{day && <DialogDinners day={day} />}</div>
-      {day?.plannedDinner && (
+      {plannedDinner && (
         <DialogFooter>
           <Button variant={"secondary"} onClick={handleClear}>
             Clear day

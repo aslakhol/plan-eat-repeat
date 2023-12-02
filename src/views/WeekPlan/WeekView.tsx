@@ -14,13 +14,13 @@ export const WeekView = () => {
   const weekPlan = getWeekPlan(dinnersQuery.data?.dinners);
 
   const days: Day[] = [
-    { day: "Monday", number: 0, plannedDinner: weekPlan[0] },
-    { day: "Tuesday", number: 1, plannedDinner: weekPlan[1] },
-    { day: "Wednesday", number: 2, plannedDinner: weekPlan[2] },
-    { day: "Thursday", number: 3, plannedDinner: weekPlan[3] },
-    { day: "Friday", number: 4, plannedDinner: weekPlan[4] },
-    { day: "Saturday", number: 5, plannedDinner: weekPlan[5] },
-    { day: "Sunday", number: 6, plannedDinner: weekPlan[6] },
+    { day: "Monday", number: 0 },
+    { day: "Tuesday", number: 1 },
+    { day: "Wednesday", number: 2 },
+    { day: "Thursday", number: 3 },
+    { day: "Friday", number: 4 },
+    { day: "Saturday", number: 5 },
+    { day: "Sunday", number: 6 },
   ];
 
   return (
@@ -32,10 +32,16 @@ export const WeekView = () => {
               key={day.day}
               day={day}
               setSelectedDay={setSelectedDay}
+              plannedDinner={weekPlan[day.number]}
             />
           ))}
         </div>
-        <PlanDayDialog day={selectedDay} />
+        <PlanDayDialog
+          day={selectedDay}
+          plannedDinner={
+            selectedDay ? weekPlan[selectedDay?.number] : undefined
+          }
+        />
       </Dialog>
 
       <BottomNav />
