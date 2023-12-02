@@ -1,5 +1,7 @@
+import { Button } from "../../components/ui/button";
 import {
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
@@ -17,7 +19,10 @@ export const PlanDayDialog = ({ day, dayNumber }: Props) => {
           {day} {dayNumber}
         </DialogTitle>
       </DialogHeader>
-      <div>{/* <DialogWeek selectedDinner={dinner} /> */}</div>
+      <div></div>
+      <DialogFooter>
+        <Button variant={"secondary"}>Clear day</Button>
+      </DialogFooter>
     </DialogContent>
   );
 };
