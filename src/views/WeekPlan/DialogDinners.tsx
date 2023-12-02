@@ -1,14 +1,15 @@
 import { type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
+import { type Day } from "../../utils/types";
 
-type Props = { dayNumber: number };
+type Props = { day: Day };
 
 export const DialogDinners = ({}: Props) => {
   const dinnersQuery = api.dinner.dinners.useQuery();
 
   return (
-    <div className={cn("flex max-h-[85vh] flex-col gap-2 overflow-y-auto")}>
+    <div className={cn("flex max-h-[80vh] flex-col gap-2 overflow-y-auto")}>
       {dinnersQuery.data?.dinners.map((dinner) => (
         <DialogDinner key={dinner.id} dinner={dinner} />
       ))}

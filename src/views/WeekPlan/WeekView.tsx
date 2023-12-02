@@ -1,53 +1,41 @@
 import { Dialog } from "../../components/ui/dialog";
 import { api } from "../../utils/api";
 import { getWeekPlan } from "../../utils/dinner";
+import { type Day } from "../../utils/types";
 import { BottomNav } from "../BottomNav";
-import { Day } from "./Day";
+import { DayComponent } from "./DayComponent";
 import { PlanDayDialog } from "./PlanDayDialog";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export const WeekView = () => {
-  const [selectedDayNumber, setSelectedDayNumber] = useState<number>();
+  const [selectedDay, setSelectedDay] = useState<Day>();
   const dinnersQuery = api.dinner.dinners.useQuery();
 
   const weekPlan = getWeekPlan(dinnersQuery.data?.dinners);
 
-  const days = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
+  const days: Day[] = [
+    { day: "Monday", number: 0, plannedDinner: weekPlan[0] },
+    { day: "Tuesday", number: 1, plannedDinner: weekPlan[1] },
+    { day: "Wednesday", number: 2, plannedDinner: weekPlan[2] },
+    { day: "Thursday", number: 3, plannedDinner: weekPlan[3] },
+    { day: "Friday", number: 4, plannedDinner: weekPlan[4] },
+    { day: "Saturday", number: 5, plannedDinner: weekPlan[5] },
+    { day: "Sunday", number: 6, plannedDinner: weekPlan[6] },
   ];
-
-  useEffect(() => {
-    console.log(selectedDayNumber, "selectedDayNumber");
-  }, [selectedDayNumber]);
 
   return (
     <div className="grid h-screen">
       <Dialog>
         <div className="w-full space-y-4 p-4 ">
-          {days.map((day, index) => (
-            <Day
-              key={day}
+          {days.map((day) => (
+            <DayComponent
+              key={day.day}
               day={day}
-              dayNumber={index}
-              dinner={weekPlan[index]}
-              setSelectedDayNumber={setSelectedDayNumber}
+              setSelectedDay={setSelectedDay}
             />
           ))}
         </div>
-        <PlanDayDialog
-          day={
-            selectedDayNumber !== undefined
-              ? days[selectedDayNumber]
-              : undefined
-          }
-          dayNumber={selectedDayNumber}
-        />
+        <PlanDayDialog day={selectedDay} />
       </Dialog>
 
       <BottomNav />
