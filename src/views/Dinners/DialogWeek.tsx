@@ -21,7 +21,7 @@ export const DialogWeek = ({ selectedDinner }: Props) => {
   ];
 
   return (
-    <div className="w-full space-y-4 p-4 text-right">
+    <div className="w-full space-y-4">
       {days.map((day, index) => (
         <Day
           key={day}

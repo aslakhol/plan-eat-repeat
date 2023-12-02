@@ -20,7 +20,7 @@ export const WeekPlan = () => {
   ];
 
   return (
-    <div className="w-full space-y-4 p-4 text-right">
+    <div className="w-full space-y-4 p-4 ">
       {days.map((day, index) => (
         <Day key={day} day={day} dinner={weekPlan[index]} />
       ))}
