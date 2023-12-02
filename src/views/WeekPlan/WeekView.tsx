@@ -1,10 +1,8 @@
-import { type Dinner } from "@prisma/client";
-import { Dialog, DialogTrigger } from "../../components/ui/dialog";
-import { cn } from "../../lib/utils";
+import { Dialog } from "../../components/ui/dialog";
 import { api } from "../../utils/api";
 import { getWeekPlan } from "../../utils/dinner";
 import { BottomNav } from "../BottomNav";
-import { DinnerSlot } from "./DinnerSlot";
+import { Day } from "./Day";
 import { PlanDayDialog } from "./PlanDayDialog";
 import { useEffect, useState } from "react";
 
@@ -43,30 +41,16 @@ export const WeekView = () => {
           ))}
         </div>
         <PlanDayDialog
-          day={selectedDayNumber ? days[selectedDayNumber] : undefined}
+          day={
+            selectedDayNumber !== undefined
+              ? days[selectedDayNumber]
+              : undefined
+          }
           dayNumber={selectedDayNumber}
         />
       </Dialog>
 
       <BottomNav />
     </div>
-  );
-};
-
-type DayProps = {
-  day: string;
-  dayNumber: number;
-  dinner?: Dinner;
-  setSelectedDayNumber: (dayNumber: number) => void;
-};
-
-const Day = ({ day, dinner, dayNumber, setSelectedDayNumber }: DayProps) => {
-  return (
-    <DialogTrigger asChild onClick={() => setSelectedDayNumber(dayNumber)}>
-      <div className={cn("flex flex-col rounded border px-2 py-2")}>
-        <h3 className="mb-2 mr-1 text-xs">{day}</h3>
-        <DinnerSlot dinner={dinner} />
-      </div>
-    </DialogTrigger>
   );
 };
