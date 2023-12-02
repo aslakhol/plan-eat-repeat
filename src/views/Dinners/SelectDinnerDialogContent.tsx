@@ -8,7 +8,7 @@ import {
 } from "../../components/ui/dialog";
 import { api } from "../../utils/api";
 import { type DinnerWithTags } from "../../utils/types";
-import { DialogWeek } from "../DialogWeek";
+import { DialogWeek } from "./DialogWeek";
 
 type Props = { dinner?: DinnerWithTags };
 

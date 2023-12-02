@@ -1,5 +1,5 @@
 import { api } from "~/utils/api";
-import { Dinners } from "../Dinners";
+import { Dinners } from "./Dinners";
 import { BottomNav } from "../BottomNav";
 import { Dialog } from "../../components/ui/dialog";
 import { SelectDinnerDialogContent } from "./SelectDinnerDialogContent";

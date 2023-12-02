@@ -1,5 +1,5 @@
-import { BottomNav } from "./BottomNav";
-import { WeekPlan } from "./WeekPlan/WeekPlan";
+import { BottomNav } from "../BottomNav";
+import { WeekPlan } from "./WeekPlan";
 
 export const WeekView = () => {
   return (

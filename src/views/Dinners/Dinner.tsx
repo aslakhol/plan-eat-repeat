@@ -1,6 +1,6 @@
 import { DialogTrigger } from "@radix-ui/react-dialog";
-import { cn } from "../lib/utils";
-import { type DinnerWithTags } from "../utils/types";
+import { cn } from "../../lib/utils";
+import { type DinnerWithTags } from "../../utils/types";
 
 type Props = {
   dinner: DinnerWithTags;

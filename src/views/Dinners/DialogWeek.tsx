@@ -1,7 +1,7 @@
 import { type Dinner } from "@prisma/client";
-import { cn } from "../lib/utils";
-import { api } from "../utils/api";
-import { getWeekPlan } from "../utils/dinner";
+import { cn } from "../../lib/utils";
+import { api } from "../../utils/api";
+import { getWeekPlan } from "../../utils/dinner";
 
 type Props = { selectedDinner: Dinner };
 
