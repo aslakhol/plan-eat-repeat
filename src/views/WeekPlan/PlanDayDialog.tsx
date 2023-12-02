@@ -37,11 +37,13 @@ export const PlanDayDialog = ({ day }: Props) => {
         </DialogDescription>
       </DialogHeader>
       <div>{day && <DialogDinners day={day} />}</div>
-      <DialogFooter>
-        <Button variant={"secondary"} onClick={handleClear}>
-          Clear day
-        </Button>
-      </DialogFooter>
+      {day?.plannedDinner && (
+        <DialogFooter>
+          <Button variant={"secondary"} onClick={handleClear}>
+            Clear day
+          </Button>
+        </DialogFooter>
+      )}
     </DialogContent>
   );
 };
