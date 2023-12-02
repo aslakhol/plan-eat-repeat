@@ -10,6 +10,7 @@ type Props = {
 export const AddDinner = (props: Props) => {
   const [dinnerName, setDinnerName] = useState("");
   const [tagValue, setTagValue] = useState("");
+  const [tagList, setTagList] = useState<string[]>([]);
 
   const addDinnerMutation = api.dinner.create.useMutation();
   const utils = api.useUtils();
@@ -25,9 +26,15 @@ export const AddDinner = (props: Props) => {
     );
   }
 
-  function addTagToDinner() {
-    //if tag already exists >> add to dinner
-    //if tag does not exist >> greate new tag and add to dinner
+  function addTagToTagList() {
+    setTagList((prevValue) => {
+      if (tagValue && !prevValue.includes(tagValue)) {
+        return [...prevValue, tagValue];
+      }
+      return prevValue;
+    });
+
+    setTagValue("");
   }
 
   return (
@@ -47,13 +54,21 @@ export const AddDinner = (props: Props) => {
         />
       </div>
       <div className="mt-2 flex flex-wrap gap-2">
-        <div className="rounded bg-green-100 px-2 py-1 text-green-800 active:bg-green-200">
-          tag
-        </div>
+        {tagList.map((tag) => {
+          return (
+            <div
+              key={tag}
+              className="rounded bg-green-100 px-2 py-1 text-green-800 active:bg-green-200"
+            >
+              {tag}
+            </div>
+          );
+        })}
+
         <Button
           className="rounded border-green-400 bg-green-100 px-2 py-1 text-green-800 active:bg-green-200"
           variant="outline"
-          onClick={addTagToDinner}
+          onClick={addTagToTagList}
         >
           +
         </Button>
