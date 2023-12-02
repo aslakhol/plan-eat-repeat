@@ -21,7 +21,7 @@ export const Dinners = ({ dinners, setSelectedDinnerId }: Props) => {
     <>
       <div
         className={cn(
-          "flex flex-col justify-between space-y-8 overflow-y-auto  p-6",
+          "flex flex-col justify-between space-y-8 overflow-y-auto p-6",
         )}
       >
         <div>
