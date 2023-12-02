@@ -17,7 +17,38 @@ type Props = {
 };
 
 export const PlanDayDialog = ({ day, plannedDinner }: Props) => {
-  const clearDayMutation = api.dinner.clearDay.useMutation();
+  const utils = api.useUtils();
+  const clearDayMutation = api.dinner.clearDay.useMutation({
+    onMutate: (input) => {
+      void utils.dinner.dinners.cancel();
+
+      const prevDinners = utils.dinner.dinners.getData();
+
+      utils.dinner.dinners.setData(undefined, (old) => {
+        return {
+          dinners:
+            old?.dinners.map((dinner) =>
+              dinner.plannedForDay === input.day
+                ? {
+                    ...dinner,
+                    plannedForDay: null,
+                  }
+                : dinner,
+            ) ?? [],
+        };
+      });
+
+      return { prevDinners };
+    },
+    onError: (_, __, context) => {
+      if (context?.prevDinners) {
+        utils.dinner.dinners.setData(undefined, context.prevDinners);
+      }
+    },
+    onSettled: () => {
+      void utils.dinner.dinners.invalidate();
+    },
+  });
 
   const handleClear = () => {
     if (!day) {
