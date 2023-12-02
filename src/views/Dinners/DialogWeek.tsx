@@ -21,18 +21,16 @@ export const DialogWeek = ({ selectedDinner }: Props) => {
   ];
 
   return (
-    <div className="justify-startp-6 flex flex-col items-end">
-      <div className="w-full space-y-4 text-right">
-        {days.map((day, index) => (
-          <Day
-            key={day}
-            day={day}
-            dayNumber={index}
-            plannedDinner={weekPlan[index]}
-            selectedDinner={selectedDinner}
-          />
-        ))}
-      </div>
+    <div className="w-full space-y-4">
+      {days.map((day, index) => (
+        <Day
+          key={day}
+          day={day}
+          dayNumber={index}
+          plannedDinner={weekPlan[index]}
+          selectedDinner={selectedDinner}
+        />
+      ))}
     </div>
   );
 };
@@ -46,7 +44,12 @@ type DayProps = {
 
 const Day = ({ day, dayNumber, plannedDinner, selectedDinner }: DayProps) => {
   return (
-    <div className={cn("flex flex-col rounded border px-2 py-2")}>
+    <div
+      className={cn(
+        "flex flex-col rounded border px-2 py-2",
+        selectedDinner.id === plannedDinner?.id && "ring-2",
+      )}
+    >
       <h3 className="mb-2 mr-1 text-xs">{day}</h3>
       <Slot
         day={dayNumber}

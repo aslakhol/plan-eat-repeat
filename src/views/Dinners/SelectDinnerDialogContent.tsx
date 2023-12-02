@@ -51,33 +51,13 @@ export const SelectDinnerDialogContent = ({ dinner }: Props) => {
   }
 
   return (
-    <DialogContent>
+    <DialogContent className="h-full">
       <DialogHeader>
         <DialogTitle>{dinner.name}</DialogTitle>
-        <DialogDescription>
-          {dinner.plannedForDay !== null
-            ? `is planned for ${dinner.plannedForDay} `
-            : "not planned"}
-        </DialogDescription>
       </DialogHeader>
       <div>
         <DialogWeek selectedDinner={dinner} />
       </div>
-      {dinner.plannedForDay !== null && (
-        <DialogFooter>
-          <Button
-            variant={"secondary"}
-            onClick={() =>
-              unselectDinnerMutation.mutate({
-                dinnerId: dinner.id,
-                secret: localStorage.getItem("sulten-secret"),
-              })
-            }
-          >
-            Remove from plan
-          </Button>
-        </DialogFooter>
-      )}
     </DialogContent>
   );
 };

@@ -13,21 +13,21 @@ export const BottomNav = () => {
           variant={"link"}
           className={cn(
             "w-full py-8 text-xl",
-            router.asPath === "/dinners" && "underline",
-          )}
-          asChild
-        >
-          <Link href="/dinners">Dinners</Link>
-        </Button>
-        <Button
-          variant={"link"}
-          className={cn(
-            "w-full py-8 text-xl",
             router.asPath === "/" && "underline",
           )}
           asChild
         >
           <Link href="/">Week</Link>
+        </Button>
+        <Button
+          variant={"link"}
+          className={cn(
+            "w-full py-8 text-xl",
+            router.asPath === "/dinners" && "underline",
+          )}
+          asChild
+        >
+          <Link href="/dinners">Dinners</Link>
         </Button>
       </div>
     </div>
