@@ -8,12 +8,26 @@ import {
 } from "../../components/ui/dialog";
 import { type Day } from "../../utils/types";
 import { DialogDinners } from "./DialogDinners";
+import { api } from "../../utils/api";
 
 type Props = {
   day?: Day;
 };
 
 export const PlanDayDialog = ({ day }: Props) => {
+  const clearDayMutation = api.dinner.clearDay.useMutation();
+
+  const handleClear = () => {
+    if (!day) {
+      return;
+    }
+
+    clearDayMutation.mutate({
+      day: day.number,
+      secret: localStorage.getItem("sulten-secret"),
+    });
+  };
+
   return (
     <DialogContent className="h-full">
       <DialogHeader>
@@ -24,7 +38,9 @@ export const PlanDayDialog = ({ day }: Props) => {
       </DialogHeader>
       <div>{day && <DialogDinners day={day} />}</div>
       <DialogFooter>
-        <Button variant={"secondary"}>Clear day</Button>
+        <Button variant={"secondary"} onClick={handleClear}>
+          Clear day
+        </Button>
       </DialogFooter>
     </DialogContent>
   );
