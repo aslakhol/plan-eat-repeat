@@ -26,6 +26,7 @@ export const DinnersView = () => {
           )}
         />
       </Dialog>
+
       <BottomNav />
     </div>
   );
