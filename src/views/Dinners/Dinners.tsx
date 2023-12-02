@@ -25,9 +25,6 @@ export const Dinners = ({ dinners, setSelectedDinnerId }: Props) => {
         )}
       >
         <div>
-          <div className="mb-6 flex justify-between">
-            <h2 className="text-xl font-bold">Dinners</h2>
-          </div>
           <div className="space-y-4">
             {dinners.map((dinner) => {
               return (
