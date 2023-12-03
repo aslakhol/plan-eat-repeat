@@ -6,9 +6,45 @@ import { getFirstAvailableDay } from "../../../utils/dinner";
 import { env } from "../../../env.mjs";
 
 export const planRouter = createTRPCRouter({
-  // planDinnerForDay
-  // unplanDay
-  // unplanDinner
+  planDinnerForDay: publicProcedure
+    .input(
+      z.object({
+        dinnerId: z.number(),
+        day: z.number(),
+        secret: z.string().nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (env.SECRET_PHRASE !== input.secret) {
+        throw new Error("Missing secret keyword");
+      }
+
+      const dinnerPlannedForDay = await ctx.db.dinner.findUnique({
+        where: { plannedForDay: input.day },
+      });
+
+      if (dinnerPlannedForDay !== null) {
+        const [unplannedDinner, plannedDinner] = await ctx.db.$transaction([
+          ctx.db.dinner.update({
+            where: { plannedForDay: input.day },
+            data: { plannedForDay: null },
+          }),
+          ctx.db.dinner.update({
+            where: { id: input.dinnerId },
+            data: { plannedForDay: input.day },
+          }),
+        ]);
+
+        return { unplannedDinner, plannedDinner };
+      }
+
+      const plannedDinner = await ctx.db.dinner.update({
+        where: { id: input.dinnerId },
+        data: { plannedForDay: input.day },
+      });
+
+      return { plannedDinner, unplannedDinner: null };
+    }),
 
   unplanDay: publicProcedure
     .input(z.object({ day: z.number(), secret: z.string().nullable() }))
@@ -38,94 +74,5 @@ export const planRouter = createTRPCRouter({
       });
 
       return { updatedDinner };
-    }),
-
-  toggle: publicProcedure
-    .input(z.object({ dinnerId: z.number(), secret: z.string().nullable() }))
-    .mutation(async ({ ctx, input }) => {
-      if (env.SECRET_PHRASE !== input.secret) {
-        throw new Error("Missing secret keyword");
-      }
-
-      const plannedDinners = await ctx.db.dinner.findMany({
-        where: { plannedForDay: { not: null } },
-      });
-
-      const toggledDinnerIsPlanned = plannedDinners.some(
-        (d) => d.id === input.dinnerId,
-      );
-      if (toggledDinnerIsPlanned) {
-        const updatedDinner = await ctx.db.dinner.update({
-          where: { id: input.dinnerId },
-          data: { plannedForDay: null },
-        });
-
-        return { updatedDinner };
-      }
-
-      const firstAvailableDay = getFirstAvailableDay(plannedDinners);
-
-      if (firstAvailableDay === undefined) {
-        return { updatedDinner: null };
-      }
-
-      const updatedDinner = await ctx.db.dinner.update({
-        where: { id: input.dinnerId },
-        data: { plannedForDay: firstAvailableDay },
-      });
-
-      return {
-        updatedDinner,
-      };
-    }),
-
-  planForEmptyDay: publicProcedure
-    .input(
-      z.object({
-        dinnerId: z.number(),
-        day: z.number(),
-        secret: z.string().nullable(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (env.SECRET_PHRASE !== input.secret) {
-        throw new Error("Missing secret keyword");
-      }
-
-      const updatedDinner = await ctx.db.dinner.update({
-        where: { id: input.dinnerId },
-        data: { plannedForDay: input.day },
-      });
-
-      return { updatedDinner };
-    }),
-
-  replacePlanned: publicProcedure
-    .input(
-      z.object({
-        dinnerId: z.number(),
-        day: z.number(),
-        secret: z.string().nullable(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (env.SECRET_PHRASE !== input.secret) {
-        throw new Error("Missing secret keyword");
-      }
-
-      const [removedDinner, updatedDinner] = await ctx.db.$transaction([
-        ctx.db.dinner.update({
-          where: { plannedForDay: input.day },
-          data: { plannedForDay: null },
-        }),
-        ctx.db.dinner.update({
-          where: { id: input.dinnerId },
-          data: { plannedForDay: input.day },
-        }),
-      ]);
-
-      console.log({ removedDinner, updatedDinner });
-
-      return { removedDinner, updatedDinner };
     }),
 });

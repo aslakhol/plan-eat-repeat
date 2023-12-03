@@ -84,8 +84,9 @@ type NoDinnerPlannedProps = { day: number; selectedDinner: Dinner };
 
 const NoDinnerPlanned = ({ day, selectedDinner }: NoDinnerPlannedProps) => {
   const utils = api.useUtils();
-  const planForEmptyDayMutation = api.plan.planForEmptyDay.useMutation({
+  const planDinnerForDayMutation = api.plan.planDinnerForDay.useMutation({
     onMutate: (input) => {
+      // TODO update optimistic
       void utils.dinner.dinners.cancel();
 
       const prevDinners = utils.dinner.dinners.getData();
@@ -117,7 +118,7 @@ const NoDinnerPlanned = ({ day, selectedDinner }: NoDinnerPlannedProps) => {
   });
 
   const clickEmptyDay = () => {
-    planForEmptyDayMutation.mutate({
+    planDinnerForDayMutation.mutate({
       dinnerId: selectedDinner.id,
       secret: localStorage.getItem("sulten-secret"),
       day,
@@ -176,8 +177,9 @@ const DinnerPlanned = ({
     },
   });
 
-  const replacePlannedMutation = api.plan.replacePlanned.useMutation({
+  const replacePlannedMutation = api.plan.planDinnerForDay.useMutation({
     onMutate: (input) => {
+      // TODO update optimistic
       void utils.dinner.dinners.cancel();
 
       const prevDinners = utils.dinner.dinners.getData();
