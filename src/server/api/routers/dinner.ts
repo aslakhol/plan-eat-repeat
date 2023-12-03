@@ -2,7 +2,6 @@ import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { type DinnerWithTags } from "../../../utils/types";
-import { getFirstAvailableDay } from "../../../utils/dinner";
 import { env } from "../../../env.mjs";
 
 export const dinnerRouter = createTRPCRouter({
@@ -13,7 +12,6 @@ export const dinnerRouter = createTRPCRouter({
     };
   }),
 
-  //Gets stuff from DB
   dinners: publicProcedure.query(async ({ ctx }) => {
     const dinners: DinnerWithTags[] = await ctx.db.dinner.findMany({
       include: { tags: true },

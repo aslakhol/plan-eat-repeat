@@ -21,7 +21,7 @@ export const DialogWeek = ({ selectedDinner }: Props) => {
   ];
 
   return (
-    <div className="w-full space-y-4">
+    <div className="flex w-full flex-col gap-2 overflow-y-auto">
       {days.map((day, index) => (
         <Day
           key={day}
@@ -47,7 +47,7 @@ const Day = ({ day, dayNumber, plannedDinner, selectedDinner }: DayProps) => {
     <div
       className={cn(
         "flex flex-col rounded border px-2 py-2",
-        selectedDinner.id === plannedDinner?.id && "ring-2",
+        selectedDinner.id === plannedDinner?.id && "underline",
       )}
     >
       <h3 className="mb-2 mr-1 text-xs">{day}</h3>
@@ -126,7 +126,7 @@ const NoDinnerPlanned = ({ day, selectedDinner }: NoDinnerPlannedProps) => {
 
   return (
     <div
-      className="h-12 rounded-md  hover:bg-slate-100"
+      className="h-12 rounded-md hover:bg-accent"
       onClick={clickEmptyDay}
     ></div>
   );

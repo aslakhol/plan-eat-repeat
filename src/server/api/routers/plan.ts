@@ -1,8 +1,6 @@
 import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { type DinnerWithTags } from "../../../utils/types";
-import { getFirstAvailableDay } from "../../../utils/dinner";
 import { env } from "../../../env.mjs";
 
 export const planRouter = createTRPCRouter({
