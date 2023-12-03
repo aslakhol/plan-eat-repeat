@@ -86,7 +86,6 @@ const NoDinnerPlanned = ({ day, selectedDinner }: NoDinnerPlannedProps) => {
   const utils = api.useUtils();
   const planDinnerForDayMutation = api.plan.planDinnerForDay.useMutation({
     onMutate: (input) => {
-      // TODO update optimistic
       void utils.dinner.dinners.cancel();
 
       const prevDinners = utils.dinner.dinners.getData();
@@ -179,7 +178,6 @@ const DinnerPlanned = ({
 
   const replacePlannedMutation = api.plan.planDinnerForDay.useMutation({
     onMutate: (input) => {
-      // TODO update optimistic
       void utils.dinner.dinners.cancel();
 
       const prevDinners = utils.dinner.dinners.getData();

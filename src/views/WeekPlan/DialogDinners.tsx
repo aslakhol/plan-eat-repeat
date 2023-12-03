@@ -23,7 +23,6 @@ const DialogDinner = ({ day, dinner }: DialogDinnerProps) => {
   const utils = api.useUtils();
   const planDinnerForDayMutation = api.plan.planDinnerForDay.useMutation({
     onMutate: (input) => {
-      // TODO update optimistic
       void utils.dinner.dinners.cancel();
 
       const prevDinners = utils.dinner.dinners.getData();
@@ -31,14 +30,23 @@ const DialogDinner = ({ day, dinner }: DialogDinnerProps) => {
       utils.dinner.dinners.setData(undefined, (old) => {
         return {
           dinners:
-            old?.dinners.map((dinner) =>
-              dinner.id === input.dinnerId
-                ? {
-                    ...dinner,
-                    plannedForDay: input.day,
-                  }
-                : dinner,
-            ) ?? [],
+            old?.dinners.map((dinner) => {
+              if (dinner.plannedForDay === input.day) {
+                return {
+                  ...dinner,
+                  plannedForDay: null,
+                };
+              }
+
+              if (dinner.id === input.dinnerId) {
+                return {
+                  ...dinner,
+                  plannedForDay: input.day,
+                };
+              }
+
+              return dinner;
+            }) ?? [],
         };
       });
 
