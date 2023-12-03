@@ -21,38 +21,7 @@ type DialogDinnerProps = { day: Day; dinner: Dinner };
 
 const DialogDinner = ({ day, dinner }: DialogDinnerProps) => {
   const utils = api.useUtils();
-  const planForEmptyDayMutation = api.dinner.planForEmptyDay.useMutation({
-    onMutate: (input) => {
-      void utils.dinner.dinners.cancel();
-
-      const prevDinners = utils.dinner.dinners.getData();
-
-      utils.dinner.dinners.setData(undefined, (old) => {
-        return {
-          dinners:
-            old?.dinners.map((dinner) =>
-              dinner.id === input.dinnerId
-                ? {
-                    ...dinner,
-                    plannedForDay: input.day,
-                  }
-                : dinner,
-            ) ?? [],
-        };
-      });
-
-      return { prevDinners };
-    },
-    onError: (_, __, context) => {
-      if (context?.prevDinners) {
-        utils.dinner.dinners.setData(undefined, context.prevDinners);
-      }
-    },
-    onSettled: () => {
-      void utils.dinner.dinners.invalidate();
-    },
-  });
-  const replacePlannedMutation = api.dinner.replacePlanned.useMutation({
+  const planDinnerForDayMutation = api.plan.planDinnerForDay.useMutation({
     onMutate: (input) => {
       void utils.dinner.dinners.cancel();
 
@@ -94,14 +63,7 @@ const DialogDinner = ({ day, dinner }: DialogDinnerProps) => {
   });
 
   const handleClick = () => {
-    if (dinner.plannedForDay === null) {
-      return planForEmptyDayMutation.mutate({
-        day: day.number,
-        dinnerId: dinner.id,
-        secret: localStorage.getItem("sulten-secret"),
-      });
-    }
-    return replacePlannedMutation.mutate({
+    return planDinnerForDayMutation.mutate({
       day: day.number,
       dinnerId: dinner.id,
       secret: localStorage.getItem("sulten-secret"),

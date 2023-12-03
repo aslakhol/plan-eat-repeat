@@ -84,7 +84,7 @@ type NoDinnerPlannedProps = { day: number; selectedDinner: Dinner };
 
 const NoDinnerPlanned = ({ day, selectedDinner }: NoDinnerPlannedProps) => {
   const utils = api.useUtils();
-  const planForEmptyDayMutation = api.dinner.planForEmptyDay.useMutation({
+  const planDinnerForDayMutation = api.plan.planDinnerForDay.useMutation({
     onMutate: (input) => {
       void utils.dinner.dinners.cancel();
 
@@ -117,7 +117,7 @@ const NoDinnerPlanned = ({ day, selectedDinner }: NoDinnerPlannedProps) => {
   });
 
   const clickEmptyDay = () => {
-    planForEmptyDayMutation.mutate({
+    planDinnerForDayMutation.mutate({
       dinnerId: selectedDinner.id,
       secret: localStorage.getItem("sulten-secret"),
       day,
@@ -144,7 +144,7 @@ const DinnerPlanned = ({
   selectedDinner,
 }: DinnerPlannedProps) => {
   const utils = api.useUtils();
-  const unselectDinnerMutation = api.dinner.unselect.useMutation({
+  const unplanDinnerMutation = api.plan.unplanDinner.useMutation({
     onMutate: (input) => {
       void utils.dinner.dinners.cancel();
 
@@ -176,7 +176,7 @@ const DinnerPlanned = ({
     },
   });
 
-  const replacePlannedMutation = api.dinner.replacePlanned.useMutation({
+  const replacePlannedMutation = api.plan.planDinnerForDay.useMutation({
     onMutate: (input) => {
       void utils.dinner.dinners.cancel();
 
@@ -219,7 +219,7 @@ const DinnerPlanned = ({
 
   const click = () => {
     if (selectedDinner.id === plannedDinner.id) {
-      return unselectDinnerMutation.mutate({
+      return unplanDinnerMutation.mutate({
         dinnerId: selectedDinner.id,
         secret: localStorage.getItem("sulten-secret"),
       });

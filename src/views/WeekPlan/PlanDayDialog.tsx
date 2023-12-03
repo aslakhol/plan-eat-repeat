@@ -18,7 +18,7 @@ type Props = {
 
 export const PlanDayDialog = ({ day, plannedDinner }: Props) => {
   const utils = api.useUtils();
-  const clearDayMutation = api.dinner.clearDay.useMutation({
+  const unplanDinnerMutation = api.plan.unplanDay.useMutation({
     onMutate: (input) => {
       void utils.dinner.dinners.cancel();
 
@@ -55,7 +55,7 @@ export const PlanDayDialog = ({ day, plannedDinner }: Props) => {
       return;
     }
 
-    clearDayMutation.mutate({
+    unplanDinnerMutation.mutate({
       day: day.number,
       secret: localStorage.getItem("sulten-secret"),
     });
