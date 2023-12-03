@@ -144,7 +144,7 @@ const DinnerPlanned = ({
   selectedDinner,
 }: DinnerPlannedProps) => {
   const utils = api.useUtils();
-  const unselectDinnerMutation = api.plan.unselect.useMutation({
+  const unplanDinnerMutation = api.plan.unplanDinner.useMutation({
     onMutate: (input) => {
       void utils.dinner.dinners.cancel();
 
@@ -219,7 +219,7 @@ const DinnerPlanned = ({
 
   const click = () => {
     if (selectedDinner.id === plannedDinner.id) {
-      return unselectDinnerMutation.mutate({
+      return unplanDinnerMutation.mutate({
         dinnerId: selectedDinner.id,
         secret: localStorage.getItem("sulten-secret"),
       });
