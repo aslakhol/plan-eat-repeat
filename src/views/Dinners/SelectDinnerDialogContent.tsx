@@ -18,9 +18,7 @@ export const SelectDinnerDialogContent = ({ dinner }: Props) => {
       <DialogHeader>
         <DialogTitle>{dinner.name}</DialogTitle>
       </DialogHeader>
-      <div>
-        <DialogWeek selectedDinner={dinner} />
-      </div>
+      <DialogWeek selectedDinner={dinner} />
     </DialogContent>
   );
 };
