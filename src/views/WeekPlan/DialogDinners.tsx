@@ -21,7 +21,7 @@ type DialogDinnerProps = { day: Day; dinner: Dinner };
 
 const DialogDinner = ({ day, dinner }: DialogDinnerProps) => {
   const utils = api.useUtils();
-  const planForEmptyDayMutation = api.dinner.planForEmptyDay.useMutation({
+  const planForEmptyDayMutation = api.plan.planForEmptyDay.useMutation({
     onMutate: (input) => {
       void utils.dinner.dinners.cancel();
 
@@ -52,7 +52,7 @@ const DialogDinner = ({ day, dinner }: DialogDinnerProps) => {
       void utils.dinner.dinners.invalidate();
     },
   });
-  const replacePlannedMutation = api.dinner.replacePlanned.useMutation({
+  const replacePlannedMutation = api.plan.replacePlanned.useMutation({
     onMutate: (input) => {
       void utils.dinner.dinners.cancel();
 

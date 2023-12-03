@@ -18,7 +18,7 @@ type Props = {
 
 export const PlanDayDialog = ({ day, plannedDinner }: Props) => {
   const utils = api.useUtils();
-  const clearDayMutation = api.dinner.clearDay.useMutation({
+  const clearDayMutation = api.plan.clearDay.useMutation({
     onMutate: (input) => {
       void utils.dinner.dinners.cancel();
 

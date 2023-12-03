@@ -84,7 +84,7 @@ type NoDinnerPlannedProps = { day: number; selectedDinner: Dinner };
 
 const NoDinnerPlanned = ({ day, selectedDinner }: NoDinnerPlannedProps) => {
   const utils = api.useUtils();
-  const planForEmptyDayMutation = api.dinner.planForEmptyDay.useMutation({
+  const planForEmptyDayMutation = api.plan.planForEmptyDay.useMutation({
     onMutate: (input) => {
       void utils.dinner.dinners.cancel();
 
@@ -144,7 +144,7 @@ const DinnerPlanned = ({
   selectedDinner,
 }: DinnerPlannedProps) => {
   const utils = api.useUtils();
-  const unselectDinnerMutation = api.dinner.unselect.useMutation({
+  const unselectDinnerMutation = api.plan.unselect.useMutation({
     onMutate: (input) => {
       void utils.dinner.dinners.cancel();
 
@@ -176,7 +176,7 @@ const DinnerPlanned = ({
     },
   });
 
-  const replacePlannedMutation = api.dinner.replacePlanned.useMutation({
+  const replacePlannedMutation = api.plan.replacePlanned.useMutation({
     onMutate: (input) => {
       void utils.dinner.dinners.cancel();
 
