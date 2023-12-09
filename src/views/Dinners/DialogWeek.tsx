@@ -2,6 +2,7 @@ import { type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
 import { getWeekPlan } from "../../utils/dinner";
+import { usePostHog } from "posthog-js/react";
 
 type Props = { selectedDinner: Dinner };
 
@@ -52,7 +53,8 @@ const Day = ({ day, dayNumber, plannedDinner, selectedDinner }: DayProps) => {
     >
       <h3 className="mb-2 mr-1 text-xs">{day}</h3>
       <Slot
-        day={dayNumber}
+        dayNumber={dayNumber}
+        day={day}
         plannedDinner={plannedDinner}
         selectedDinner={selectedDinner}
       />
@@ -61,28 +63,43 @@ const Day = ({ day, dayNumber, plannedDinner, selectedDinner }: DayProps) => {
 };
 
 type SlotProps = {
-  day: number;
+  day: string;
+  dayNumber: number;
   plannedDinner?: Dinner;
   selectedDinner: Dinner;
 };
 
-const Slot = ({ day, plannedDinner, selectedDinner }: SlotProps) => {
+const Slot = ({ day, dayNumber, plannedDinner, selectedDinner }: SlotProps) => {
   if (!plannedDinner) {
-    return <NoDinnerPlanned day={day} selectedDinner={selectedDinner} />;
+    return (
+      <NoDinnerPlanned
+        day={day}
+        dayNumber={dayNumber}
+        selectedDinner={selectedDinner}
+      />
+    );
   }
 
   return (
     <DinnerPlanned
       day={day}
+      dayNumber={dayNumber}
       plannedDinner={plannedDinner}
       selectedDinner={selectedDinner}
     />
   );
 };
 
-type NoDinnerPlannedProps = { day: number; selectedDinner: Dinner };
+type NoDinnerPlannedProps = {
+  day: string;
+  dayNumber: number;
+  selectedDinner: Dinner;
+};
 
-const NoDinnerPlanned = ({ day, selectedDinner }: NoDinnerPlannedProps) => {
+const NoDinnerPlanned = ({
+  dayNumber,
+  selectedDinner,
+}: NoDinnerPlannedProps) => {
   const utils = api.useUtils();
   const planDinnerForDayMutation = api.plan.planDinnerForDay.useMutation({
     onMutate: (input) => {
@@ -120,7 +137,7 @@ const NoDinnerPlanned = ({ day, selectedDinner }: NoDinnerPlannedProps) => {
     planDinnerForDayMutation.mutate({
       dinnerId: selectedDinner.id,
       secret: localStorage.getItem("sulten-secret"),
-      day,
+      day: dayNumber,
     });
   };
 
@@ -133,16 +150,19 @@ const NoDinnerPlanned = ({ day, selectedDinner }: NoDinnerPlannedProps) => {
 };
 
 type DinnerPlannedProps = {
-  day: number;
+  day: string;
+  dayNumber: number;
   plannedDinner: Dinner;
   selectedDinner: Dinner;
 };
 
 const DinnerPlanned = ({
   day,
+  dayNumber,
   plannedDinner,
   selectedDinner,
 }: DinnerPlannedProps) => {
+  const posthog = usePostHog();
   const utils = api.useUtils();
   const unplanDinnerMutation = api.plan.unplanDinner.useMutation({
     onMutate: (input) => {
@@ -219,16 +239,25 @@ const DinnerPlanned = ({
 
   const click = () => {
     if (selectedDinner.id === plannedDinner.id) {
+      posthog.capture("remove planned dinner", {
+        dinner: selectedDinner.name,
+        day,
+      });
+
       return unplanDinnerMutation.mutate({
         dinnerId: selectedDinner.id,
         secret: localStorage.getItem("sulten-secret"),
       });
     }
 
+    posthog.capture("plan dinner from dinners page", {
+      dinner: selectedDinner.name,
+      day,
+    });
     replacePlannedMutation.mutate({
       dinnerId: selectedDinner.id,
       secret: localStorage.getItem("sulten-secret"),
-      day,
+      day: dayNumber,
     });
   };
 
