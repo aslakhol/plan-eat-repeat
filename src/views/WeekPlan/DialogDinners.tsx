@@ -65,7 +65,7 @@ const DialogDinner = ({ day, dinner }: DialogDinnerProps) => {
   });
 
   const handleClick = () => {
-    posthog.capture("plan dinner for day", {
+    posthog.capture("plan dinner from week page", {
       dinner: dinner.name,
       day: day.day,
     });

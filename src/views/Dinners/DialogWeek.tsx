@@ -100,6 +100,7 @@ const NoDinnerPlanned = ({
   dayNumber,
   selectedDinner,
 }: NoDinnerPlannedProps) => {
+  const posthog = usePostHog();
   const utils = api.useUtils();
   const planDinnerForDayMutation = api.plan.planDinnerForDay.useMutation({
     onMutate: (input) => {
@@ -134,6 +135,11 @@ const NoDinnerPlanned = ({
   });
 
   const clickEmptyDay = () => {
+    posthog.capture("plan dinner from dinners page on empty day", {
+      dinner: selectedDinner.name,
+      day: dayNumber,
+    });
+
     planDinnerForDayMutation.mutate({
       dinnerId: selectedDinner.id,
       secret: localStorage.getItem("sulten-secret"),
@@ -250,8 +256,9 @@ const DinnerPlanned = ({
       });
     }
 
-    posthog.capture("plan dinner from dinners page", {
-      dinner: selectedDinner.name,
+    posthog.capture("replace dinner with new dinner", {
+      newDinner: selectedDinner.name,
+      oldDinner: plannedDinner.name,
       day,
     });
     replacePlannedMutation.mutate({
