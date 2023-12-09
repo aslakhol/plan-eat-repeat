@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { api } from "../../utils/api";
+import { usePostHog } from "posthog-js/react";
 
 type Props = {
   setOpenAddDinner: (newState: boolean) => void;
@@ -14,8 +15,11 @@ export const AddDinner = (props: Props) => {
 
   const addDinnerMutation = api.dinner.create.useMutation();
   const utils = api.useUtils();
+  const posthog = usePostHog();
 
   function addDinner() {
+    posthog.capture("create new dinner", { dinnerName });
+
     addDinnerMutation.mutate(
       { dinnerName: dinnerName, secret: localStorage.getItem("sulten-secret") },
       {
