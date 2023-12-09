@@ -7,6 +7,15 @@ await import("./src/env.mjs");
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: true,
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async rewrites() {
+    return [
+      {
+        source: "/ingest/:path*",
+        destination: "https://app.posthog.com/:path*",
+      },
+    ];
+  },
 
   /**
    * If you are using `appDir` then you must comment the below `i18n` config out.

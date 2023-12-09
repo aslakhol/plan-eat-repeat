@@ -2,6 +2,7 @@ import { type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
 import { type Day } from "../../utils/types";
+import { usePostHog } from "posthog-js/react";
 
 type Props = { day: Day };
 
@@ -20,6 +21,7 @@ export const DialogDinners = ({ day }: Props) => {
 type DialogDinnerProps = { day: Day; dinner: Dinner };
 
 const DialogDinner = ({ day, dinner }: DialogDinnerProps) => {
+  const posthog = usePostHog();
   const utils = api.useUtils();
   const planDinnerForDayMutation = api.plan.planDinnerForDay.useMutation({
     onMutate: (input) => {
@@ -63,6 +65,11 @@ const DialogDinner = ({ day, dinner }: DialogDinnerProps) => {
   });
 
   const handleClick = () => {
+    posthog.capture("plan dinner for day", {
+      dinner: dinner.name,
+      day: day.day,
+    });
+
     return planDinnerForDayMutation.mutate({
       day: day.number,
       dinnerId: dinner.id,
