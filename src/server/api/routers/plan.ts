@@ -4,11 +4,19 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { env } from "../../../env.mjs";
 
 export const planRouter = createTRPCRouter({
-  planDinnerForDay: publicProcedure
+  plannedDinners: publicProcedure.query(async ({ ctx }) => {
+    const plans = await ctx.db.plan.findMany({
+      include: { dinner: true },
+      orderBy: { date: "asc" },
+    });
+
+    return { plans };
+  }),
+  planDinnerForDate: publicProcedure
     .input(
       z.object({
         dinnerId: z.number(),
-        day: z.number(),
+        date: z.date(),
         secret: z.string().nullable(),
       }),
     )
@@ -17,60 +25,42 @@ export const planRouter = createTRPCRouter({
         throw new Error("Missing secret keyword");
       }
 
-      const dinnerPlannedForDay = await ctx.db.dinner.findUnique({
-        where: { plannedForDay: input.day },
+      const newPlan = await ctx.db.plan.upsert({
+        where: { date: input.date },
+        create: { date: input.date, dinnerId: input.dinnerId },
+        update: { dinnerId: input.dinnerId },
       });
 
-      if (dinnerPlannedForDay !== null) {
-        const [unplannedDinner, plannedDinner] = await ctx.db.$transaction([
-          ctx.db.dinner.update({
-            where: { plannedForDay: input.day },
-            data: { plannedForDay: null },
-          }),
-          ctx.db.dinner.update({
-            where: { id: input.dinnerId },
-            data: { plannedForDay: input.day },
-          }),
-        ]);
-
-        return { unplannedDinner, plannedDinner };
-      }
-
-      const plannedDinner = await ctx.db.dinner.update({
-        where: { id: input.dinnerId },
-        data: { plannedForDay: input.day },
-      });
-
-      return { plannedDinner, unplannedDinner: null };
+      return { newPlan };
     }),
 
   unplanDay: publicProcedure
-    .input(z.object({ day: z.number(), secret: z.string().nullable() }))
+    .input(z.object({ date: z.date(), secret: z.string().nullable() }))
     .mutation(async ({ ctx, input }) => {
-      if (env.SECRET_PHRASE !== input.secret) {
+      const { date, secret } = input;
+
+      if (env.SECRET_PHRASE !== secret) {
         throw new Error("Missing secret keyword");
       }
 
-      const updatedDinner = await ctx.db.dinner.update({
-        where: { plannedForDay: input.day },
-        data: { plannedForDay: null },
-      });
+      const deleted = await ctx.db.plan.delete({ where: { date: date } });
 
-      return { updatedDinner };
+      return { deleted };
     }),
 
-  unplanDinner: publicProcedure
-    .input(z.object({ dinnerId: z.number(), secret: z.string().nullable() }))
-    .mutation(async ({ ctx, input }) => {
-      if (env.SECRET_PHRASE !== input.secret) {
-        throw new Error("Missing secret keyword");
-      }
+  // Does not make sense anymore
+  // unplanDinner: publicProcedure
+  //   .input(z.object({ dinnerId: z.number(), secret: z.string().nullable() }))
+  //   .mutation(async ({ ctx, input }) => {
+  //     if (env.SECRET_PHRASE !== input.secret) {
+  //       throw new Error("Missing secret keyword");
+  //     }
 
-      const updatedDinner = await ctx.db.dinner.update({
-        where: { id: input.dinnerId },
-        data: { plannedForDay: null },
-      });
+  //     const updatedDinner = await ctx.db.dinner.update({
+  //       where: { id: input.dinnerId },
+  //       data: { plannedForDay: null },
+  //     });
 
-      return { updatedDinner };
-    }),
+  //     return { updatedDinner };
+  //   }),
 });
