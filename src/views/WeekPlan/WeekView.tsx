@@ -3,7 +3,7 @@ import { Dialog } from "../../components/ui/dialog";
 import { api } from "../../utils/api";
 import { getWeekPlan } from "../../utils/dinner";
 import { BottomNav } from "../BottomNav";
-import { DayComponent } from "./DayComponent";
+import { Day } from "./Day";
 import { PlanDayDialog } from "./PlanDayDialog";
 import { useState } from "react";
 import { addDays, isSameDay, startOfDay } from "date-fns";
@@ -38,7 +38,7 @@ export const WeekView = () => {
       <Dialog>
         <div className="w-full space-y-4 p-4 ">
           {week.map((day) => (
-            <DayComponent
+            <Day
               key={day.toString()}
               date={day}
               setSelectedDay={setSelectedDay}

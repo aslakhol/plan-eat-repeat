@@ -3,17 +3,13 @@ import { cn } from "../../lib/utils";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { format } from "date-fns";
 
-type DayComponentProps = {
+type DayProps = {
   date: Date;
   setSelectedDay: (date: Date) => void;
   plannedDinner?: Dinner;
 };
 
-export const DayComponent = ({
-  date,
-  setSelectedDay,
-  plannedDinner,
-}: DayComponentProps) => {
+export const Day = ({ date, setSelectedDay, plannedDinner }: DayProps) => {
   return (
     <DialogTrigger asChild onClick={() => setSelectedDay(date)}>
       <div
