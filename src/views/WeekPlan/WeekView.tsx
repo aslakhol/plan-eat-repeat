@@ -1,3 +1,4 @@
+import { UtensilsCrossed } from "lucide-react";
 import { Dialog } from "../../components/ui/dialog";
 import { api } from "../../utils/api";
 import { getWeekPlan } from "../../utils/dinner";
@@ -22,6 +23,14 @@ export const WeekView = () => {
     { day: "Saturday", number: 5 },
     { day: "Sunday", number: 6 },
   ];
+
+  if (dinnersQuery.isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <UtensilsCrossed className="animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="grid h-screen">
