@@ -1,35 +1,44 @@
 import { type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
-import { getWeekPlan } from "../../utils/dinner";
 import { usePostHog } from "posthog-js/react";
+import { startOfDay, addDays, isSameDay, format } from "date-fns";
+import { UtensilsCrossed } from "lucide-react";
 
 type Props = { selectedDinner: Dinner };
 
 export const DialogWeek = ({ selectedDinner }: Props) => {
-  const dinnersQuery = api.dinner.dinners.useQuery();
+  const plannedDinnersQuery = api.plan.plannedDinners.useQuery();
 
-  const weekPlan = getWeekPlan(dinnersQuery.data?.dinners);
-
-  const days = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
+  const week: Date[] = [
+    startOfDay(new Date()),
+    startOfDay(addDays(new Date(), 1)),
+    startOfDay(addDays(new Date(), 2)),
+    startOfDay(addDays(new Date(), 3)),
+    startOfDay(addDays(new Date(), 4)),
+    startOfDay(addDays(new Date(), 5)),
+    startOfDay(addDays(new Date(), 6)),
   ];
+
+  if (plannedDinnersQuery.isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <UtensilsCrossed className="animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full flex-col gap-2 overflow-y-auto">
-      {days.map((day, index) => (
+      {week.map((day) => (
         <Day
-          key={day}
-          day={day}
-          dayNumber={index}
-          plannedDinner={weekPlan[index]}
+          key={day.toString()}
+          date={day}
           selectedDinner={selectedDinner}
+          plannedDinner={
+            plannedDinnersQuery.data?.plans.find((p) => isSameDay(p.date, day))
+              ?.dinner
+          }
         />
       ))}
     </div>
@@ -37,13 +46,12 @@ export const DialogWeek = ({ selectedDinner }: Props) => {
 };
 
 type DayProps = {
-  day: string;
-  dayNumber: number;
+  date: Date;
   plannedDinner?: Dinner;
   selectedDinner: Dinner;
 };
 
-const Day = ({ day, dayNumber, plannedDinner, selectedDinner }: DayProps) => {
+const Day = ({ date, plannedDinner, selectedDinner }: DayProps) => {
   return (
     <div
       className={cn(
@@ -51,10 +59,9 @@ const Day = ({ day, dayNumber, plannedDinner, selectedDinner }: DayProps) => {
         selectedDinner.id === plannedDinner?.id && "underline",
       )}
     >
-      <h3 className="mb-2 mr-1 text-xs">{day}</h3>
+      <h3 className="mb-2 mr-1 text-xs">{format(date, "EEE do")}</h3>
       <Slot
-        dayNumber={dayNumber}
-        day={day}
+        date={date}
         plannedDinner={plannedDinner}
         selectedDinner={selectedDinner}
       />
@@ -63,27 +70,19 @@ const Day = ({ day, dayNumber, plannedDinner, selectedDinner }: DayProps) => {
 };
 
 type SlotProps = {
-  day: string;
-  dayNumber: number;
+  date: Date;
   plannedDinner?: Dinner;
   selectedDinner: Dinner;
 };
 
-const Slot = ({ day, dayNumber, plannedDinner, selectedDinner }: SlotProps) => {
+const Slot = ({ date, plannedDinner, selectedDinner }: SlotProps) => {
   if (!plannedDinner) {
-    return (
-      <NoDinnerPlanned
-        day={day}
-        dayNumber={dayNumber}
-        selectedDinner={selectedDinner}
-      />
-    );
+    return <NoDinnerPlanned date={date} selectedDinner={selectedDinner} />;
   }
 
   return (
     <DinnerPlanned
-      day={day}
-      dayNumber={dayNumber}
+      date={date}
       plannedDinner={plannedDinner}
       selectedDinner={selectedDinner}
     />
@@ -91,44 +90,40 @@ const Slot = ({ day, dayNumber, plannedDinner, selectedDinner }: SlotProps) => {
 };
 
 type NoDinnerPlannedProps = {
-  day: string;
-  dayNumber: number;
+  date: Date;
   selectedDinner: Dinner;
 };
 
-const NoDinnerPlanned = ({
-  dayNumber,
-  selectedDinner,
-}: NoDinnerPlannedProps) => {
+const NoDinnerPlanned = ({ date, selectedDinner }: NoDinnerPlannedProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
-  const planDinnerForDayMutation = api.plan.planDinnerForDay.useMutation({
-    onMutate: (input) => {
-      void utils.dinner.dinners.cancel();
+  const planDinnerForDayMutation = api.plan.planDinnerForDate.useMutation({
+    // onMutate: (input) => {
+    //   void utils.dinner.dinners.cancel();
 
-      const prevDinners = utils.dinner.dinners.getData();
+    //   const prevDinners = utils.dinner.dinners.getData();
 
-      utils.dinner.dinners.setData(undefined, (old) => {
-        return {
-          dinners:
-            old?.dinners.map((dinner) =>
-              dinner.id === input.dinnerId
-                ? {
-                    ...dinner,
-                    plannedForDay: input.day,
-                  }
-                : dinner,
-            ) ?? [],
-        };
-      });
+    //   utils.dinner.dinners.setData(undefined, (old) => {
+    //     return {
+    //       dinners:
+    //         old?.dinners.map((dinner) =>
+    //           dinner.id === input.dinnerId
+    //             ? {
+    //                 ...dinner,
+    //                 plannedForDay: input.day,
+    //               }
+    //             : dinner,
+    //         ) ?? [],
+    //     };
+    //   });
 
-      return { prevDinners };
-    },
-    onError: (_, __, context) => {
-      if (context?.prevDinners) {
-        utils.dinner.dinners.setData(undefined, context.prevDinners);
-      }
-    },
+    //   return { prevDinners };
+    // },
+    // onError: (_, __, context) => {
+    //   if (context?.prevDinners) {
+    //     utils.dinner.dinners.setData(undefined, context.prevDinners);
+    //   }
+    // },
     onSettled: () => {
       void utils.dinner.dinners.invalidate();
     },
@@ -137,13 +132,13 @@ const NoDinnerPlanned = ({
   const clickEmptyDay = () => {
     posthog.capture("plan dinner from dinners page on empty day", {
       dinner: selectedDinner.name,
-      day: dayNumber,
+      date: format(date, "EEE do"),
     });
 
     planDinnerForDayMutation.mutate({
       dinnerId: selectedDinner.id,
       secret: localStorage.getItem("sulten-secret"),
-      day: dayNumber,
+      date,
     });
   };
 
@@ -156,88 +151,55 @@ const NoDinnerPlanned = ({
 };
 
 type DinnerPlannedProps = {
-  day: string;
-  dayNumber: number;
+  date: Date;
   plannedDinner: Dinner;
   selectedDinner: Dinner;
 };
 
 const DinnerPlanned = ({
-  day,
-  dayNumber,
+  date,
   plannedDinner,
   selectedDinner,
 }: DinnerPlannedProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
-  const unplanDinnerMutation = api.plan.unplanDinner.useMutation({
-    onMutate: (input) => {
-      void utils.dinner.dinners.cancel();
 
-      const prevDinners = utils.dinner.dinners.getData();
+  const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
+    // onMutate: (input) => {
+    //   void utils.dinner.dinners.cancel();
 
-      utils.dinner.dinners.setData(undefined, (old) => {
-        return {
-          dinners:
-            old?.dinners.map((dinner) =>
-              dinner.id === input.dinnerId
-                ? {
-                    ...dinner,
-                    plannedForDay: null,
-                  }
-                : dinner,
-            ) ?? [],
-        };
-      });
+    //   const prevDinners = utils.dinner.dinners.getData();
 
-      return { prevDinners };
-    },
-    onError: (_, __, context) => {
-      if (context?.prevDinners) {
-        utils.dinner.dinners.setData(undefined, context.prevDinners);
-      }
-    },
-    onSettled: () => {
-      void utils.dinner.dinners.invalidate();
-    },
-  });
+    //   utils.dinner.dinners.setData(undefined, (old) => {
+    //     return {
+    //       dinners:
+    //         old?.dinners.map((dinner) => {
+    //           if (dinner.plannedForDay === input.day) {
+    //             return {
+    //               ...dinner,
+    //               plannedForDay: null,
+    //             };
+    //           }
 
-  const replacePlannedMutation = api.plan.planDinnerForDay.useMutation({
-    onMutate: (input) => {
-      void utils.dinner.dinners.cancel();
+    //           if (dinner.id === input.dinnerId) {
+    //             return {
+    //               ...dinner,
+    //               plannedForDay: input.day,
+    //             };
+    //           }
 
-      const prevDinners = utils.dinner.dinners.getData();
+    //           return dinner;
+    //         }) ?? [],
+    //     };
+    //   });
 
-      utils.dinner.dinners.setData(undefined, (old) => {
-        return {
-          dinners:
-            old?.dinners.map((dinner) => {
-              if (dinner.plannedForDay === input.day) {
-                return {
-                  ...dinner,
-                  plannedForDay: null,
-                };
-              }
-
-              if (dinner.id === input.dinnerId) {
-                return {
-                  ...dinner,
-                  plannedForDay: input.day,
-                };
-              }
-
-              return dinner;
-            }) ?? [],
-        };
-      });
-
-      return { prevDinners };
-    },
-    onError: (_, __, context) => {
-      if (context?.prevDinners) {
-        utils.dinner.dinners.setData(undefined, context.prevDinners);
-      }
-    },
+    //   return { prevDinners };
+    // },
+    // onError: (_, __, context) => {
+    //   if (context?.prevDinners) {
+    //     utils.dinner.dinners.setData(undefined, context.prevDinners);
+    //   }
+    // },
     onSettled: () => {
       void utils.dinner.dinners.invalidate();
     },
@@ -245,26 +207,18 @@ const DinnerPlanned = ({
 
   const click = () => {
     if (selectedDinner.id === plannedDinner.id) {
-      posthog.capture("remove planned dinner", {
-        dinner: selectedDinner.name,
-        day,
-      });
-
-      return unplanDinnerMutation.mutate({
-        dinnerId: selectedDinner.id,
-        secret: localStorage.getItem("sulten-secret"),
-      });
+      return;
     }
 
     posthog.capture("replace dinner with new dinner", {
       newDinner: selectedDinner.name,
       oldDinner: plannedDinner.name,
-      day,
+      day: format(date, "EEE do"),
     });
-    replacePlannedMutation.mutate({
+    planDinnerForDateMutation.mutate({
       dinnerId: selectedDinner.id,
       secret: localStorage.getItem("sulten-secret"),
-      day: dayNumber,
+      date,
     });
   };
 
