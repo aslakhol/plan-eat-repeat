@@ -10,7 +10,6 @@ import { addDays, isSameDay, startOfDay } from "date-fns";
 export const WeekView = () => {
   const [selectedDay, setSelectedDay] = useState<Date>();
   const plannedDinnersQuery = api.plan.plannedDinners.useQuery();
-  const dinnersQuery = api.dinner.dinners.useQuery();
 
   const week: Date[] = [
     startOfDay(new Date()),
@@ -22,7 +21,7 @@ export const WeekView = () => {
     startOfDay(addDays(new Date(), 6)),
   ];
 
-  if (dinnersQuery.isLoading) {
+  if (plannedDinnersQuery.isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
         <UtensilsCrossed className="animate-spin" />
