@@ -1,7 +1,6 @@
 import { UtensilsCrossed } from "lucide-react";
 import { Dialog } from "../../components/ui/dialog";
 import { api } from "../../utils/api";
-import { getWeekPlan } from "../../utils/dinner";
 import { BottomNav } from "../BottomNav";
 import { Day } from "./Day";
 import { PlanDayDialog } from "./PlanDayDialog";
@@ -12,8 +11,6 @@ export const WeekView = () => {
   const [selectedDay, setSelectedDay] = useState<Date>();
   const plannedDinnersQuery = api.plan.plannedDinners.useQuery();
   const dinnersQuery = api.dinner.dinners.useQuery();
-
-  const weekPlan = getWeekPlan(dinnersQuery.data?.dinners);
 
   const week: Date[] = [
     startOfDay(new Date()),
