@@ -3,6 +3,7 @@ import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
 import { type Day } from "../../utils/types";
 import { usePostHog } from "posthog-js/react";
+import { format } from "date-fns/esm";
 
 type Props = { day: Day };
 
@@ -68,7 +69,7 @@ const DialogDinner = ({ day, dinner }: DialogDinnerProps) => {
   const handleClick = () => {
     posthog.capture("plan dinner from week page", {
       dinner: dinner.name,
-      day: day.day,
+      day: format(day.date, "EEE do"),
     });
 
     return planDinnerForDateMutation.mutate({

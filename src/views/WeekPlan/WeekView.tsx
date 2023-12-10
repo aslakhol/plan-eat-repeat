@@ -16,20 +16,16 @@ export const WeekView = () => {
 
   const weekPlan = getWeekPlan(dinnersQuery.data?.dinners);
 
-  console.log(plannedDinnersQuery.data?.plans);
-
   const days: Day[] = [
     {
-      day: "Monday",
-      number: 0,
       date: startOfDay(new Date()),
     },
-    { day: "Tuesday", number: 1, date: startOfDay(addDays(new Date(), 1)) },
-    { day: "Wednesday", number: 2, date: startOfDay(addDays(new Date(), 2)) },
-    { day: "Thursday", number: 3, date: startOfDay(addDays(new Date(), 3)) },
-    { day: "Friday", number: 4, date: startOfDay(addDays(new Date(), 4)) },
-    { day: "Saturday", number: 5, date: startOfDay(addDays(new Date(), 5)) },
-    { day: "Sunday", number: 6, date: startOfDay(addDays(new Date(), 6)) },
+    { date: startOfDay(addDays(new Date(), 1)) },
+    { date: startOfDay(addDays(new Date(), 2)) },
+    { date: startOfDay(addDays(new Date(), 3)) },
+    { date: startOfDay(addDays(new Date(), 4)) },
+    { date: startOfDay(addDays(new Date(), 5)) },
+    { date: startOfDay(addDays(new Date(), 6)) },
   ];
 
   if (dinnersQuery.isLoading) {
@@ -46,7 +42,7 @@ export const WeekView = () => {
         <div className="w-full space-y-4 p-4 ">
           {days.map((day) => (
             <DayComponent
-              key={day.day}
+              key={day.date.toString()}
               day={day}
               setSelectedDay={setSelectedDay}
               plannedDinner={
