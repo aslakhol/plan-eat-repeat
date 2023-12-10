@@ -164,6 +164,8 @@ const DinnerPlanned = ({
   const posthog = usePostHog();
   const utils = api.useUtils();
 
+  const unplanDayMutation = api.plan.unplanDay.useMutation();
+
   const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
     // onMutate: (input) => {
     //   void utils.dinner.dinners.cancel();
@@ -207,7 +209,15 @@ const DinnerPlanned = ({
 
   const click = () => {
     if (selectedDinner.id === plannedDinner.id) {
-      return;
+      posthog.capture("remove plan", {
+        dinner: selectedDinner.name,
+        day: format(date, "EEE do"),
+      });
+
+      return unplanDayMutation.mutate({
+        date: date,
+        secret: localStorage.getItem("sulten-secret"),
+      });
     }
 
     posthog.capture("replace dinner with new dinner", {
