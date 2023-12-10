@@ -1,4 +1,5 @@
-import { type Dinner } from "@prisma/client";
+import { type Plan, type Dinner } from "@prisma/client";
+import { type Day } from "./types";
 
 export const getFirstAvailableDay = (
   plannedDinners: Dinner[],

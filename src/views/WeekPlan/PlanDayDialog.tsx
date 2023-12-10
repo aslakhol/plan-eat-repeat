@@ -21,32 +21,32 @@ export const PlanDayDialog = ({ day, plannedDinner }: Props) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
   const unplanDinnerMutation = api.plan.unplanDay.useMutation({
-    onMutate: (input) => {
-      void utils.dinner.dinners.cancel();
+    // onMutate: (input) => {
+    //   void utils.dinner.dinners.cancel();
 
-      const prevDinners = utils.dinner.dinners.getData();
+    //   const prevDinners = utils.dinner.dinners.getData();
 
-      utils.dinner.dinners.setData(undefined, (old) => {
-        return {
-          dinners:
-            old?.dinners.map((dinner) =>
-              dinner.plannedForDay === input.day
-                ? {
-                    ...dinner,
-                    plannedForDay: null,
-                  }
-                : dinner,
-            ) ?? [],
-        };
-      });
+    //   utils.dinner.dinners.setData(undefined, (old) => {
+    //     return {
+    //       dinners:
+    //         old?.dinners.map((dinner) =>
+    //           dinner.plannedForDay === input.day
+    //             ? {
+    //                 ...dinner,
+    //                 plannedForDay: null,
+    //               }
+    //             : dinner,
+    //         ) ?? [],
+    //     };
+    //   });
 
-      return { prevDinners };
-    },
-    onError: (_, __, context) => {
-      if (context?.prevDinners) {
-        utils.dinner.dinners.setData(undefined, context.prevDinners);
-      }
-    },
+    //   return { prevDinners };
+    // },
+    // onError: (_, __, context) => {
+    //   if (context?.prevDinners) {
+    //     utils.dinner.dinners.setData(undefined, context.prevDinners);
+    //   }
+    // },
     onSettled: () => {
       void utils.dinner.dinners.invalidate();
     },
@@ -60,7 +60,7 @@ export const PlanDayDialog = ({ day, plannedDinner }: Props) => {
     posthog.capture("clear day", { day: day.day });
 
     unplanDinnerMutation.mutate({
-      day: day.number,
+      date: day.date,
       secret: localStorage.getItem("sulten-secret"),
     });
   };

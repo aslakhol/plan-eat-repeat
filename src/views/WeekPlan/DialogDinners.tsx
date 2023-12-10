@@ -23,44 +23,45 @@ type DialogDinnerProps = { day: Day; dinner: Dinner };
 const DialogDinner = ({ day, dinner }: DialogDinnerProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
-  const planDinnerForDayMutation = api.plan.planDinnerForDay.useMutation({
-    onMutate: (input) => {
-      void utils.dinner.dinners.cancel();
+  const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
+    // onMutate: (input) => {
+    //   void utils.dinner.dinners.cancel();
 
-      const prevDinners = utils.dinner.dinners.getData();
+    //   const prevDinners = utils.dinner.dinners.getData();
 
-      utils.dinner.dinners.setData(undefined, (old) => {
-        return {
-          dinners:
-            old?.dinners.map((dinner) => {
-              if (dinner.plannedForDay === input.day) {
-                return {
-                  ...dinner,
-                  plannedForDay: null,
-                };
-              }
+    //   utils.dinner.dinners.setData(undefined, (old) => {
+    //     return {
+    //       dinners:
+    //         old?.dinners.map((dinner) => {
+    //           if (dinner.plannedForDay === input.day) {
+    //             return {
+    //               ...dinner,
+    //               plannedForDay: null,
+    //             };
+    //           }
 
-              if (dinner.id === input.dinnerId) {
-                return {
-                  ...dinner,
-                  plannedForDay: input.day,
-                };
-              }
+    //           if (dinner.id === input.dinnerId) {
+    //             return {
+    //               ...dinner,
+    //               plannedForDay: input.day,
+    //             };
+    //           }
 
-              return dinner;
-            }) ?? [],
-        };
-      });
+    //           return dinner;
+    //         }) ?? [],
+    //     };
+    //   });
 
-      return { prevDinners };
-    },
-    onError: (_, __, context) => {
-      if (context?.prevDinners) {
-        utils.dinner.dinners.setData(undefined, context.prevDinners);
-      }
-    },
+    //   return { prevDinners };
+    // },
+    // onError: (_, __, context) => {
+    //   if (context?.prevDinners) {
+    //     utils.dinner.dinners.setData(undefined, context.prevDinners);
+    //   }
+    // },
     onSettled: () => {
       void utils.dinner.dinners.invalidate();
+      void utils.plan.plannedDinners.invalidate();
     },
   });
 
@@ -70,8 +71,8 @@ const DialogDinner = ({ day, dinner }: DialogDinnerProps) => {
       day: day.day,
     });
 
-    return planDinnerForDayMutation.mutate({
-      day: day.number,
+    return planDinnerForDateMutation.mutate({
+      date: day.date,
       dinnerId: dinner.id,
       secret: localStorage.getItem("sulten-secret"),
     });

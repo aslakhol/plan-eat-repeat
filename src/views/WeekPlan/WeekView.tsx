@@ -7,21 +7,29 @@ import { BottomNav } from "../BottomNav";
 import { DayComponent } from "./DayComponent";
 import { PlanDayDialog } from "./PlanDayDialog";
 import { useState } from "react";
+import { addDays, isSameDay, startOfDay } from "date-fns";
 
 export const WeekView = () => {
   const [selectedDay, setSelectedDay] = useState<Day>();
+  const plannedDinnersQuery = api.plan.plannedDinners.useQuery();
   const dinnersQuery = api.dinner.dinners.useQuery();
 
   const weekPlan = getWeekPlan(dinnersQuery.data?.dinners);
 
+  console.log(plannedDinnersQuery.data?.plans);
+
   const days: Day[] = [
-    { day: "Monday", number: 0 },
-    { day: "Tuesday", number: 1 },
-    { day: "Wednesday", number: 2 },
-    { day: "Thursday", number: 3 },
-    { day: "Friday", number: 4 },
-    { day: "Saturday", number: 5 },
-    { day: "Sunday", number: 6 },
+    {
+      day: "Monday",
+      number: 0,
+      date: startOfDay(new Date()),
+    },
+    { day: "Tuesday", number: 1, date: startOfDay(addDays(new Date(), 1)) },
+    { day: "Wednesday", number: 2, date: startOfDay(addDays(new Date(), 2)) },
+    { day: "Thursday", number: 3, date: startOfDay(addDays(new Date(), 3)) },
+    { day: "Friday", number: 4, date: startOfDay(addDays(new Date(), 4)) },
+    { day: "Saturday", number: 5, date: startOfDay(addDays(new Date(), 5)) },
+    { day: "Sunday", number: 6, date: startOfDay(addDays(new Date(), 6)) },
   ];
 
   if (dinnersQuery.isLoading) {
@@ -41,7 +49,11 @@ export const WeekView = () => {
               key={day.day}
               day={day}
               setSelectedDay={setSelectedDay}
-              plannedDinner={weekPlan[day.number]}
+              plannedDinner={
+                plannedDinnersQuery.data?.plans.find((p) =>
+                  isSameDay(p.date, day.date),
+                )?.dinner
+              }
             />
           ))}
         </div>

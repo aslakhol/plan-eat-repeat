@@ -2,6 +2,7 @@ import { type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { type Day } from "../../utils/types";
+import { format } from "date-fns";
 
 type DayComponentProps = {
   day: Day;
@@ -21,7 +22,7 @@ export const DayComponent = ({
           "flex cursor-pointer flex-col rounded border px-2 py-2 hover:bg-slate-100",
         )}
       >
-        <h3 className="mb-2 mr-1 text-xs">{day.day}</h3>
+        <h3 className="mb-2 mr-1 text-xs">{format(day.date, "EEE do")}</h3>
         <DinnerSlot dinner={plannedDinner} />
       </div>
     </DialogTrigger>
