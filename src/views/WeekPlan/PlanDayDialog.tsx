@@ -6,18 +6,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
-import { type Day } from "../../utils/types";
 import { DialogDinners } from "./DialogDinners";
 import { api } from "../../utils/api";
 import { type Dinner } from "@prisma/client";
 import { usePostHog } from "posthog-js/react";
+import { format } from "date-fns";
 
 type Props = {
-  day?: Day;
+  date?: Date;
   plannedDinner?: Dinner;
 };
 
-export const PlanDayDialog = ({ day, plannedDinner }: Props) => {
+export const PlanDayDialog = ({ date, plannedDinner }: Props) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
   const unplanDinnerMutation = api.plan.unplanDay.useMutation({
@@ -51,16 +51,15 @@ export const PlanDayDialog = ({ day, plannedDinner }: Props) => {
       void utils.dinner.dinners.invalidate();
     },
   });
+  if (!date) {
+    return null;
+  }
 
   const handleClear = () => {
-    if (!day) {
-      return;
-    }
-
-    posthog.capture("clear day", { day: day.day });
+    posthog.capture("clear day", { day: format(date, "EEE do") });
 
     unplanDinnerMutation.mutate({
-      date: day.date,
+      date: date,
       secret: localStorage.getItem("sulten-secret"),
     });
   };
@@ -68,12 +67,12 @@ export const PlanDayDialog = ({ day, plannedDinner }: Props) => {
   return (
     <DialogContent className="h-full">
       <DialogHeader>
-        <DialogTitle>{day?.day}</DialogTitle>
+        <DialogTitle>{format(date, "EEE do")}</DialogTitle>
         <DialogDescription>
           {plannedDinner ? plannedDinner.name : "No dinner planned"}
         </DialogDescription>
       </DialogHeader>
-      <div>{day && <DialogDinners day={day} />}</div>
+      <div>{date && <DialogDinners date={date} />}</div>
       {plannedDinner && (
         <DialogFooter>
           <Button variant={"secondary"} onClick={handleClear}>

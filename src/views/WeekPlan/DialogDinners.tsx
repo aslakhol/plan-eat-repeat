@@ -1,27 +1,26 @@
 import { type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
-import { type Day } from "../../utils/types";
 import { usePostHog } from "posthog-js/react";
 import { format } from "date-fns/esm";
 
-type Props = { day: Day };
+type Props = { date: Date };
 
-export const DialogDinners = ({ day }: Props) => {
+export const DialogDinners = ({ date }: Props) => {
   const dinnersQuery = api.dinner.dinners.useQuery();
 
   return (
     <div className={cn("flex max-h-[80vh] flex-col gap-2 overflow-y-auto")}>
       {dinnersQuery.data?.dinners.map((dinner) => (
-        <DialogDinner key={dinner.id} day={day} dinner={dinner} />
+        <DialogDinner key={dinner.id} date={date} dinner={dinner} />
       ))}
     </div>
   );
 };
 
-type DialogDinnerProps = { day: Day; dinner: Dinner };
+type DialogDinnerProps = { date: Date; dinner: Dinner };
 
-const DialogDinner = ({ day, dinner }: DialogDinnerProps) => {
+const DialogDinner = ({ date, dinner }: DialogDinnerProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
   const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
@@ -69,11 +68,11 @@ const DialogDinner = ({ day, dinner }: DialogDinnerProps) => {
   const handleClick = () => {
     posthog.capture("plan dinner from week page", {
       dinner: dinner.name,
-      day: format(day.date, "EEE do"),
+      day: format(date, "EEE do"),
     });
 
     return planDinnerForDateMutation.mutate({
-      date: day.date,
+      date,
       dinnerId: dinner.id,
       secret: localStorage.getItem("sulten-secret"),
     });

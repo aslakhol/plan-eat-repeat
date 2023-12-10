@@ -1,28 +1,27 @@
 import { type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { DialogTrigger } from "@radix-ui/react-dialog";
-import { type Day } from "../../utils/types";
 import { format } from "date-fns";
 
 type DayComponentProps = {
-  day: Day;
-  setSelectedDay: (day: Day) => void;
+  date: Date;
+  setSelectedDay: (date: Date) => void;
   plannedDinner?: Dinner;
 };
 
 export const DayComponent = ({
-  day,
+  date,
   setSelectedDay,
   plannedDinner,
 }: DayComponentProps) => {
   return (
-    <DialogTrigger asChild onClick={() => setSelectedDay(day)}>
+    <DialogTrigger asChild onClick={() => setSelectedDay(date)}>
       <div
         className={cn(
           "flex cursor-pointer flex-col rounded border px-2 py-2 hover:bg-slate-100",
         )}
       >
-        <h3 className="mb-2 mr-1 text-xs">{format(day.date, "EEE do")}</h3>
+        <h3 className="mb-2 mr-1 text-xs">{format(date, "EEE do")}</h3>
         <DinnerSlot dinner={plannedDinner} />
       </div>
     </DialogTrigger>
