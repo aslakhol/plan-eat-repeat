@@ -10,7 +10,7 @@ import { DialogDinners } from "./DialogDinners";
 import { api } from "../../utils/api";
 import { type Dinner } from "@prisma/client";
 import { usePostHog } from "posthog-js/react";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 
 type Props = {
   date?: Date;
@@ -21,36 +21,34 @@ export const PlanDayDialog = ({ date, plannedDinner }: Props) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
   const unplanDinnerMutation = api.plan.unplanDay.useMutation({
-    // onMutate: (input) => {
-    //   void utils.dinner.dinners.cancel();
+    onMutate: (input) => {
+      void utils.plan.plannedDinners.cancel();
 
-    //   const prevDinners = utils.dinner.dinners.getData();
+      const prevPlannedDinners = utils.plan.plannedDinners.getData();
 
-    //   utils.dinner.dinners.setData(undefined, (old) => {
-    //     return {
-    //       dinners:
-    //         old?.dinners.map((dinner) =>
-    //           dinner.plannedForDay === input.day
-    //             ? {
-    //                 ...dinner,
-    //                 plannedForDay: null,
-    //               }
-    //             : dinner,
-    //         ) ?? [],
-    //     };
-    //   });
+      utils.plan.plannedDinners.setData(undefined, (old) => {
+        return {
+          plans:
+            old?.plans.filter((plan) => !isSameDay(plan.date, input.date)) ??
+            [],
+        };
+      });
 
-    //   return { prevDinners };
-    // },
-    // onError: (_, __, context) => {
-    //   if (context?.prevDinners) {
-    //     utils.dinner.dinners.setData(undefined, context.prevDinners);
-    //   }
-    // },
-    onSettled: () => {
-      void utils.dinner.dinners.invalidate();
+      return { prevPlannedDinners };
+    },
+    onError: (_, __, context) => {
+      if (context?.prevPlannedDinners) {
+        utils.plan.plannedDinners.setData(
+          undefined,
+          context.prevPlannedDinners,
+        );
+      }
+    },
+    onSettled: async () => {
+      await utils.dinner.dinners.invalidate();
     },
   });
+
   if (!date) {
     return null;
   }
