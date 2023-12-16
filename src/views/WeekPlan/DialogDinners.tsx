@@ -4,23 +4,28 @@ import { api } from "../../utils/api";
 import { usePostHog } from "posthog-js/react";
 import { format } from "date-fns";
 
-type Props = { date: Date };
+type Props = { date: Date; plannedDinner?: Dinner };
 
-export const DialogDinners = ({ date }: Props) => {
+export const DialogDinners = ({ date, plannedDinner }: Props) => {
   const dinnersQuery = api.dinner.dinners.useQuery();
 
   return (
     <div className={cn("flex max-h-[80vh] flex-col gap-2 overflow-y-auto")}>
       {dinnersQuery.data?.dinners.map((dinner) => (
-        <DialogDinner key={dinner.id} date={date} dinner={dinner} />
+        <DialogDinner
+          key={dinner.id}
+          date={date}
+          dinner={dinner}
+          isPlanned={plannedDinner?.id === dinner.id}
+        />
       ))}
     </div>
   );
 };
 
-type DialogDinnerProps = { date: Date; dinner: Dinner };
+type DialogDinnerProps = { date: Date; dinner: Dinner; isPlanned: boolean };
 
-const DialogDinner = ({ date, dinner }: DialogDinnerProps) => {
+const DialogDinner = ({ date, dinner, isPlanned }: DialogDinnerProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
   const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
@@ -82,7 +87,7 @@ const DialogDinner = ({ date, dinner }: DialogDinnerProps) => {
     <div
       className={cn(
         "flex cursor-pointer flex-col rounded border px-4 py-2 hover:bg-accent/50 hover:text-accent-foreground",
-        // dinnerIsPlanned && "ring-2",
+        isPlanned && "bg-accent/50 text-accent-foreground hover:bg-accent",
       )}
       onClick={handleClick}
     >

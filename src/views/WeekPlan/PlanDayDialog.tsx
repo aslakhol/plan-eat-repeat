@@ -72,7 +72,9 @@ export const PlanDayDialog = ({ date, plannedDinner }: Props) => {
           {plannedDinner ? plannedDinner.name : "No dinner planned"}
         </DialogDescription>
       </DialogHeader>
-      <div>{date && <DialogDinners date={date} />}</div>
+      <div>
+        {date && <DialogDinners date={date} plannedDinner={plannedDinner} />}
+      </div>
       {plannedDinner && (
         <DialogFooter>
           <Button variant={"secondary"} onClick={handleClear}>
