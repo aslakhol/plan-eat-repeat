@@ -2,7 +2,7 @@ import { type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
 import { usePostHog } from "posthog-js/react";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 
 type Props = { date: Date; plannedDinner?: Dinner };
 
@@ -29,41 +29,39 @@ const DialogDinner = ({ date, dinner, isPlanned }: DialogDinnerProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
   const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
-    // onMutate: (input) => {
-    //   void utils.dinner.dinners.cancel();
+    onMutate: (input) => {
+      void utils.plan.plannedDinners.cancel();
+      console.log("laksjdlakjsdlkjslkj");
 
-    //   const prevDinners = utils.dinner.dinners.getData();
+      const prevPlannedDinners = utils.plan.plannedDinners.getData();
 
-    //   utils.dinner.dinners.setData(undefined, (old) => {
-    //     return {
-    //       dinners:
-    //         old?.dinners.map((dinner) => {
-    //           if (dinner.plannedForDay === input.day) {
-    //             return {
-    //               ...dinner,
-    //               plannedForDay: null,
-    //             };
-    //           }
+      utils.plan.plannedDinners.setData(undefined, (old) => {
+        return {
+          plans:
+            old?.plans.map((plan) => {
+              if (isSameDay(plan.date, input.date)) {
+                return {
+                  ...plan,
+                  dinnerId: input.dinnerId,
+                  dinner: dinner,
+                };
+              }
 
-    //           if (dinner.id === input.dinnerId) {
-    //             return {
-    //               ...dinner,
-    //               plannedForDay: input.day,
-    //             };
-    //           }
+              return plan;
+            }) ?? [],
+        };
+      });
 
-    //           return dinner;
-    //         }) ?? [],
-    //     };
-    //   });
-
-    //   return { prevDinners };
-    // },
-    // onError: (_, __, context) => {
-    //   if (context?.prevDinners) {
-    //     utils.dinner.dinners.setData(undefined, context.prevDinners);
-    //   }
-    // },
+      return { prevPlannedDinners };
+    },
+    onError: (_, __, context) => {
+      if (context?.prevPlannedDinners) {
+        utils.plan.plannedDinners.setData(
+          undefined,
+          context.prevPlannedDinners,
+        );
+      }
+    },
     onSettled: () => {
       void utils.dinner.dinners.invalidate();
       void utils.plan.plannedDinners.invalidate();
