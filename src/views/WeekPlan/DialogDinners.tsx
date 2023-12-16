@@ -2,7 +2,7 @@ import { type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
 import { usePostHog } from "posthog-js/react";
-import { format } from "date-fns/esm";
+import { format } from "date-fns";
 
 type Props = { date: Date };
 
