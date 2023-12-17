@@ -6,7 +6,7 @@ At it's core it solves two problems:
 1. What dinners can we make?
 2. What did we plan to make on what day?
 
-Number 2 is pretty straight forward, we just record what dinner whas planned for what day and that's that.
+Number 2 is pretty straight forward, we just record what dinner was planned for what day and that's that.
 For number 1 we are specifically interested in having a list of dinners that we like to make as an inspiration when we make our dinner plans.
 We are not trying to solve the issues of figuring out what can be created with our current ingredients, and we are not making a recipe list (at least yet).
 
