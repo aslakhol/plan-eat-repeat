@@ -1,30 +1,38 @@
-import { UtensilsCrossed } from "lucide-react";
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  UtensilsCrossed,
+} from "lucide-react";
 import { Dialog } from "../../components/ui/dialog";
 import { api } from "../../utils/api";
 import { BottomNav } from "../BottomNav";
 import { Day } from "./Day";
 import { PlanDayDialog } from "./PlanDayDialog";
-import { useState } from "react";
-import { addDays, isSameDay, startOfDay, startOfWeek } from "date-fns";
+import { type Dispatch, type SetStateAction, useState } from "react";
+import { addDays, format, isSameDay, startOfDay, startOfWeek } from "date-fns";
+import { Button } from "../../components/ui/button";
 
 export const WeekView = () => {
   const [selectedDay, setSelectedDay] = useState<Date>();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [weekOfSet, setWeekOfSet] = useState(0);
   const plannedDinnersQuery = api.plan.plannedDinners.useQuery();
 
   const today = startOfDay(new Date());
   const monday = startOfWeek(today, {
     weekStartsOn: 1,
   });
+  const startOfRenderWeek = addDays(monday, weekOfSet * 7);
 
   const week: Date[] = [
-    startOfDay(monday),
-    startOfDay(addDays(monday, 1)),
-    startOfDay(addDays(monday, 2)),
-    startOfDay(addDays(monday, 3)),
-    startOfDay(addDays(monday, 4)),
-    startOfDay(addDays(monday, 5)),
-    startOfDay(addDays(monday, 6)),
+    startOfDay(startOfRenderWeek),
+    startOfDay(addDays(startOfRenderWeek, 1)),
+    startOfDay(addDays(startOfRenderWeek, 2)),
+    startOfDay(addDays(startOfRenderWeek, 3)),
+    startOfDay(addDays(startOfRenderWeek, 4)),
+    startOfDay(addDays(startOfRenderWeek, 5)),
+    startOfDay(addDays(startOfRenderWeek, 6)),
   ];
 
   if (plannedDinnersQuery.isLoading) {
@@ -64,8 +72,55 @@ export const WeekView = () => {
           closeDialog={() => setDialogOpen(false)}
         />
       </Dialog>
-
+      <WeekSelect
+        weekOfSet={weekOfSet}
+        setWeekOfSet={setWeekOfSet}
+        startOfRenderWeek={startOfRenderWeek}
+      />
       <BottomNav />
     </div>
+  );
+};
+
+type WeekSelectProps = {
+  setWeekOfSet: Dispatch<SetStateAction<number>>;
+  startOfRenderWeek: Date;
+};
+
+const WeekSelect = ({ setWeekOfSet, startOfRenderWeek }: WeekSelectProps) => {
+  return (
+    <>
+      <div>
+        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+          Week {format(startOfRenderWeek, "w")}
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            className="h-8 w-8 p-0"
+            onClick={() => setWeekOfSet((prev) => prev - 1)}
+          >
+            <span className="sr-only">Go back 1 week</span>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-8 w-8 p-0"
+            onClick={() => setWeekOfSet(0)}
+          >
+            <span className="sr-only">Go to today</span>
+            <Calendar className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-8 w-8 p-0"
+            onClick={() => setWeekOfSet((prev) => prev + 1)}
+          >
+            <span className="sr-only">Go forward 1 week</span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </>
   );
 };
