@@ -17,6 +17,7 @@ export const WeekView = () => {
   const [selectedDay, setSelectedDay] = useState<Date>();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [weekOfSet, setWeekOfSet] = useState(0);
+  const trpc = api.useUtils();
 
   const startOfCurrentWeek = startOfWeek(new Date(), {
     weekStartsOn: 1,
@@ -38,6 +39,20 @@ export const WeekView = () => {
       startOfWeek: startOfDisplayedWeek,
     },
     { keepPreviousData: true },
+  );
+
+  void trpc.plan.plannedDinners.prefetch(
+    {
+      startOfWeek: addDays(startOfDisplayedWeek, 7),
+    },
+    { staleTime: 60 * 1000 },
+  );
+
+  void trpc.plan.plannedDinners.prefetch(
+    {
+      startOfWeek: addDays(startOfDisplayedWeek, -7),
+    },
+    { staleTime: 60 * 1000 },
   );
 
   if (plannedDinnersQuery.isLoading) {
