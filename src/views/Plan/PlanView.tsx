@@ -47,6 +47,10 @@ export const WeekView = () => {
     <div className="grid h-screen">
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <div className="w-full space-y-4 p-4 ">
+          <WeekSelect
+            setWeekOfSet={setWeekOfSet}
+            startOfRenderWeek={startOfRenderWeek}
+          />
           {week.map((day) => (
             <Day
               key={day.toString()}
@@ -72,11 +76,7 @@ export const WeekView = () => {
           closeDialog={() => setDialogOpen(false)}
         />
       </Dialog>
-      <WeekSelect
-        weekOfSet={weekOfSet}
-        setWeekOfSet={setWeekOfSet}
-        startOfRenderWeek={startOfRenderWeek}
-      />
+
       <BottomNav />
     </div>
   );
@@ -91,10 +91,7 @@ const WeekSelect = ({ setWeekOfSet, startOfRenderWeek }: WeekSelectProps) => {
   return (
     <>
       <div>
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Week {format(startOfRenderWeek, "w")}
-        </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
@@ -119,6 +116,9 @@ const WeekSelect = ({ setWeekOfSet, startOfRenderWeek }: WeekSelectProps) => {
             <span className="sr-only">Go forward 1 week</span>
             <ChevronRight className="h-4 w-4" />
           </Button>
+          <div className="px-4 text-sm font-medium">
+            Week {format(startOfRenderWeek, "w, MMMM, yyyy")}
+          </div>
         </div>
       </div>
     </>
