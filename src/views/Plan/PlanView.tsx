@@ -78,6 +78,10 @@ export const WeekView = () => {
               }
             />
           ))}
+          <WeekSelect
+            setWeekOfSet={setWeekOfSet}
+            startOfDisplayedWeek={startOfDisplayedWeek}
+          />
         </div>
         <PlanDayDialog
           date={selectedDay}
