@@ -105,6 +105,7 @@ const Slot = ({
       date={date}
       plannedDinner={plannedDinner}
       selectedDinner={selectedDinner}
+      onClose={closeDialog}
     />
   );
 };
@@ -186,12 +187,14 @@ type DinnerPlannedProps = {
   date: Date;
   plannedDinner: Dinner;
   selectedDinner: Dinner;
+  onClose: () => void;
 };
 
 const DinnerPlanned = ({
   date,
   plannedDinner,
   selectedDinner,
+  onClose,
 }: DinnerPlannedProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
@@ -225,6 +228,14 @@ const DinnerPlanned = ({
     onSettled: () => {
       void utils.plan.plannedDinners.invalidate();
     },
+    onSuccess: () => {
+      posthog.capture("remove plan", {
+        dinner: selectedDinner.name,
+        day: format(date, "EEE do"),
+      });
+
+      onClose();
+    },
   });
 
   const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
@@ -242,7 +253,7 @@ const DinnerPlanned = ({
               return {
                 ...plan,
                 dinnerId: input.dinnerId,
-                dinner: plannedDinner,
+                dinner: selectedDinner,
               };
             }
 
@@ -267,11 +278,6 @@ const DinnerPlanned = ({
 
   const click = () => {
     if (selectedDinner.id === plannedDinner.id) {
-      posthog.capture("remove plan", {
-        dinner: selectedDinner.name,
-        day: format(date, "EEE do"),
-      });
-
       return unplanDayMutation.mutate({
         date: date,
         secret: localStorage.getItem("sulten-secret"),
