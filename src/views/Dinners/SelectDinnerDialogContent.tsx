@@ -6,9 +6,9 @@ import {
 import { type DinnerWithTags } from "../../utils/types";
 import { DialogWeek } from "./DialogWeek";
 
-type Props = { dinner?: DinnerWithTags };
+type Props = { dinner?: DinnerWithTags; closeDialog: () => void };
 
-export const SelectDinnerDialogContent = ({ dinner }: Props) => {
+export const SelectDinnerDialogContent = ({ dinner, closeDialog }: Props) => {
   if (!dinner) {
     return null;
   }
@@ -18,7 +18,7 @@ export const SelectDinnerDialogContent = ({ dinner }: Props) => {
       <DialogHeader>
         <DialogTitle>{dinner.name}</DialogTitle>
       </DialogHeader>
-      <DialogWeek selectedDinner={dinner} />
+      <DialogWeek selectedDinner={dinner} closeDialog={closeDialog} />
     </DialogContent>
   );
 };

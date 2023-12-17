@@ -7,6 +7,7 @@ import { useState } from "react";
 import { UtensilsCrossed } from "lucide-react";
 
 export const DinnersView = () => {
+  const [dialogOpen, setDialogOpen] = useState(false);
   const dinnersQuery = api.dinner.dinners.useQuery();
   const [selectedDinnerId, setSelectedDinnerId] = useState<number>();
 
@@ -20,7 +21,7 @@ export const DinnersView = () => {
 
   return (
     <div className="grid h-screen">
-      <Dialog>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <div>
           {dinnersQuery.data?.dinners && (
             <Dinners
@@ -33,6 +34,7 @@ export const DinnersView = () => {
           dinner={dinnersQuery.data?.dinners.find(
             (dinner) => dinner.id === selectedDinnerId,
           )}
+          closeDialog={() => setDialogOpen(false)}
         />
       </Dialog>
 

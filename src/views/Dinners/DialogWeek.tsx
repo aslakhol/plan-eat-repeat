@@ -1,35 +1,45 @@
 import { type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
-import { getWeekPlan } from "../../utils/dinner";
 import { usePostHog } from "posthog-js/react";
+import { startOfDay, addDays, isSameDay, format } from "date-fns";
+import { UtensilsCrossed } from "lucide-react";
 
-type Props = { selectedDinner: Dinner };
+type Props = { selectedDinner: Dinner; closeDialog: () => void };
 
-export const DialogWeek = ({ selectedDinner }: Props) => {
-  const dinnersQuery = api.dinner.dinners.useQuery();
+export const DialogWeek = ({ selectedDinner, closeDialog }: Props) => {
+  const plannedDinnersQuery = api.plan.plannedDinners.useQuery();
 
-  const weekPlan = getWeekPlan(dinnersQuery.data?.dinners);
-
-  const days = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
+  const week: Date[] = [
+    startOfDay(new Date()),
+    startOfDay(addDays(new Date(), 1)),
+    startOfDay(addDays(new Date(), 2)),
+    startOfDay(addDays(new Date(), 3)),
+    startOfDay(addDays(new Date(), 4)),
+    startOfDay(addDays(new Date(), 5)),
+    startOfDay(addDays(new Date(), 6)),
   ];
+
+  if (plannedDinnersQuery.isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <UtensilsCrossed className="animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full flex-col gap-2 overflow-y-auto">
-      {days.map((day, index) => (
+      {week.map((day) => (
         <Day
-          key={day}
-          day={day}
-          dayNumber={index}
-          plannedDinner={weekPlan[index]}
+          key={day.toString()}
+          date={day}
           selectedDinner={selectedDinner}
+          plannedDinner={
+            plannedDinnersQuery.data?.plans.find((p) => isSameDay(p.date, day))
+              ?.dinner
+          }
+          closeDialog={closeDialog}
         />
       ))}
     </div>
@@ -37,13 +47,18 @@ export const DialogWeek = ({ selectedDinner }: Props) => {
 };
 
 type DayProps = {
-  day: string;
-  dayNumber: number;
+  date: Date;
   plannedDinner?: Dinner;
   selectedDinner: Dinner;
+  closeDialog: () => void;
 };
 
-const Day = ({ day, dayNumber, plannedDinner, selectedDinner }: DayProps) => {
+const Day = ({
+  date,
+  plannedDinner,
+  selectedDinner,
+  closeDialog,
+}: DayProps) => {
   return (
     <div
       className={cn(
@@ -51,99 +66,107 @@ const Day = ({ day, dayNumber, plannedDinner, selectedDinner }: DayProps) => {
         selectedDinner.id === plannedDinner?.id && "underline",
       )}
     >
-      <h3 className="mb-2 mr-1 text-xs">{day}</h3>
+      <h3 className="mb-2 mr-1 text-xs">{format(date, "EEE do")}</h3>
       <Slot
-        dayNumber={dayNumber}
-        day={day}
+        date={date}
         plannedDinner={plannedDinner}
         selectedDinner={selectedDinner}
+        closeDialog={closeDialog}
       />
     </div>
   );
 };
 
 type SlotProps = {
-  day: string;
-  dayNumber: number;
+  date: Date;
   plannedDinner?: Dinner;
   selectedDinner: Dinner;
+  closeDialog: () => void;
 };
 
-const Slot = ({ day, dayNumber, plannedDinner, selectedDinner }: SlotProps) => {
+const Slot = ({
+  date,
+  plannedDinner,
+  selectedDinner,
+  closeDialog,
+}: SlotProps) => {
   if (!plannedDinner) {
     return (
       <NoDinnerPlanned
-        day={day}
-        dayNumber={dayNumber}
+        date={date}
         selectedDinner={selectedDinner}
+        closeDialog={closeDialog}
       />
     );
   }
 
   return (
     <DinnerPlanned
-      day={day}
-      dayNumber={dayNumber}
+      date={date}
       plannedDinner={plannedDinner}
       selectedDinner={selectedDinner}
+      onClose={closeDialog}
     />
   );
 };
 
 type NoDinnerPlannedProps = {
-  day: string;
-  dayNumber: number;
+  date: Date;
   selectedDinner: Dinner;
+  closeDialog: () => void;
 };
 
-const NoDinnerPlanned = ({
-  dayNumber,
-  selectedDinner,
-}: NoDinnerPlannedProps) => {
+const NoDinnerPlanned = ({ date, selectedDinner }: NoDinnerPlannedProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
-  const planDinnerForDayMutation = api.plan.planDinnerForDay.useMutation({
+  const planDinnerForDayMutation = api.plan.planDinnerForDate.useMutation({
     onMutate: (input) => {
-      void utils.dinner.dinners.cancel();
+      void utils.plan.plannedDinners.cancel();
 
-      const prevDinners = utils.dinner.dinners.getData();
+      const prevPlannedDinners = utils.plan.plannedDinners.getData();
 
-      utils.dinner.dinners.setData(undefined, (old) => {
+      utils.plan.plannedDinners.setData(undefined, (old) => {
+        const oldPlans = old?.plans ?? [];
+
         return {
-          dinners:
-            old?.dinners.map((dinner) =>
-              dinner.id === input.dinnerId
-                ? {
-                    ...dinner,
-                    plannedForDay: input.day,
-                  }
-                : dinner,
-            ) ?? [],
+          plans: [
+            ...oldPlans,
+            {
+              date: input.date,
+              dinner: selectedDinner,
+              dinnerId: selectedDinner.id,
+              id: Math.ceil(Math.random() * -10000),
+            },
+          ],
         };
       });
 
-      return { prevDinners };
+      return { prevPlannedDinners };
     },
     onError: (_, __, context) => {
-      if (context?.prevDinners) {
-        utils.dinner.dinners.setData(undefined, context.prevDinners);
+      if (context?.prevPlannedDinners) {
+        utils.plan.plannedDinners.setData(
+          undefined,
+          context.prevPlannedDinners,
+        );
       }
     },
     onSettled: () => {
-      void utils.dinner.dinners.invalidate();
+      void utils.plan.plannedDinners.invalidate();
+    },
+    onSuccess: () => {
+      posthog.capture("plan dinner from dinners page on empty day", {
+        dinner: selectedDinner.name,
+        date: format(date, "EEE do"),
+      });
     },
   });
 
   const clickEmptyDay = () => {
-    posthog.capture("plan dinner from dinners page on empty day", {
-      dinner: selectedDinner.name,
-      day: dayNumber,
-    });
-
     planDinnerForDayMutation.mutate({
       dinnerId: selectedDinner.id,
       secret: localStorage.getItem("sulten-secret"),
-      day: dayNumber,
+      date,
     });
   };
 
@@ -156,115 +179,114 @@ const NoDinnerPlanned = ({
 };
 
 type DinnerPlannedProps = {
-  day: string;
-  dayNumber: number;
+  date: Date;
   plannedDinner: Dinner;
   selectedDinner: Dinner;
+  onClose: () => void;
 };
 
 const DinnerPlanned = ({
-  day,
-  dayNumber,
+  date,
   plannedDinner,
   selectedDinner,
 }: DinnerPlannedProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
-  const unplanDinnerMutation = api.plan.unplanDinner.useMutation({
+
+  const unplanDayMutation = api.plan.unplanDay.useMutation({
     onMutate: (input) => {
-      void utils.dinner.dinners.cancel();
+      void utils.plan.plannedDinners.cancel();
 
-      const prevDinners = utils.dinner.dinners.getData();
+      const prevPlannedDinners = utils.plan.plannedDinners.getData();
 
-      utils.dinner.dinners.setData(undefined, (old) => {
+      utils.plan.plannedDinners.setData(undefined, (old) => {
+        const oldPlans = old?.plans ?? [];
+
         return {
-          dinners:
-            old?.dinners.map((dinner) =>
-              dinner.id === input.dinnerId
-                ? {
-                    ...dinner,
-                    plannedForDay: null,
-                  }
-                : dinner,
-            ) ?? [],
+          plans: oldPlans.filter(
+            (oldPlan) => !isSameDay(oldPlan.date, input.date),
+          ),
         };
       });
 
-      return { prevDinners };
+      return { prevPlannedDinners };
     },
     onError: (_, __, context) => {
-      if (context?.prevDinners) {
-        utils.dinner.dinners.setData(undefined, context.prevDinners);
+      if (context?.prevPlannedDinners) {
+        utils.plan.plannedDinners.setData(
+          undefined,
+          context.prevPlannedDinners,
+        );
       }
     },
     onSettled: () => {
-      void utils.dinner.dinners.invalidate();
+      void utils.plan.plannedDinners.invalidate();
+    },
+    onSuccess: () => {
+      posthog.capture("remove plan", {
+        dinner: selectedDinner.name,
+        day: format(date, "EEE do"),
+      });
     },
   });
 
-  const replacePlannedMutation = api.plan.planDinnerForDay.useMutation({
+  const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
     onMutate: (input) => {
-      void utils.dinner.dinners.cancel();
+      void utils.plan.plannedDinners.cancel();
 
-      const prevDinners = utils.dinner.dinners.getData();
+      const prevPlannedDinners = utils.plan.plannedDinners.getData();
 
-      utils.dinner.dinners.setData(undefined, (old) => {
+      utils.plan.plannedDinners.setData(undefined, (old) => {
+        const oldPlan = old?.plans ?? [];
+
         return {
-          dinners:
-            old?.dinners.map((dinner) => {
-              if (dinner.plannedForDay === input.day) {
-                return {
-                  ...dinner,
-                  plannedForDay: null,
-                };
-              }
+          plans: oldPlan.map((plan) => {
+            if (isSameDay(plan.date, input.date)) {
+              return {
+                ...plan,
+                dinnerId: input.dinnerId,
+                dinner: selectedDinner,
+              };
+            }
 
-              if (dinner.id === input.dinnerId) {
-                return {
-                  ...dinner,
-                  plannedForDay: input.day,
-                };
-              }
-
-              return dinner;
-            }) ?? [],
+            return plan;
+          }),
         };
       });
-
-      return { prevDinners };
+      return { prevPlannedDinners };
     },
     onError: (_, __, context) => {
-      if (context?.prevDinners) {
-        utils.dinner.dinners.setData(undefined, context.prevDinners);
+      if (context?.prevPlannedDinners) {
+        utils.plan.plannedDinners.setData(
+          undefined,
+          context.prevPlannedDinners,
+        );
       }
     },
     onSettled: () => {
-      void utils.dinner.dinners.invalidate();
+      void utils.plan.plannedDinners.invalidate();
+    },
+    onSuccess: () => {
+      posthog.capture("replace dinner with new dinner", {
+        newDinner: selectedDinner.name,
+        oldDinner: plannedDinner.name,
+        day: format(date, "EEE do"),
+      });
     },
   });
 
   const click = () => {
     if (selectedDinner.id === plannedDinner.id) {
-      posthog.capture("remove planned dinner", {
-        dinner: selectedDinner.name,
-        day,
-      });
-
-      return unplanDinnerMutation.mutate({
-        dinnerId: selectedDinner.id,
+      return unplanDayMutation.mutate({
+        date: date,
         secret: localStorage.getItem("sulten-secret"),
       });
     }
 
-    posthog.capture("replace dinner with new dinner", {
-      newDinner: selectedDinner.name,
-      oldDinner: plannedDinner.name,
-      day,
-    });
-    replacePlannedMutation.mutate({
+    planDinnerForDateMutation.mutate({
       dinnerId: selectedDinner.id,
       secret: localStorage.getItem("sulten-secret"),
-      day: dayNumber,
+      date,
     });
   };
 
