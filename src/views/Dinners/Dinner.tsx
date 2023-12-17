@@ -8,14 +8,11 @@ type Props = {
 };
 
 export const Dinner = ({ dinner, setSelectedDinnerId }: Props) => {
-  const dinnerIsPlanned = dinner.plannedForDay !== null;
-
   return (
     <DialogTrigger asChild onClick={() => setSelectedDinnerId(dinner.id)}>
       <div
         className={cn(
           "flex cursor-pointer flex-col rounded border px-4 py-2 hover:bg-accent/50 hover:text-accent-foreground",
-          dinnerIsPlanned && "ring-2",
         )}
       >
         <h3 className="font-semibold">{dinner.name}</h3>
