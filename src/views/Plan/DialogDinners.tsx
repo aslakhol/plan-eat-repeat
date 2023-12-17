@@ -1,4 +1,4 @@
-import { type Dinner } from "@prisma/client";
+import { type Plan, type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
 import { usePostHog } from "posthog-js/react";
@@ -48,21 +48,23 @@ const DialogDinner = ({
       utils.plan.plannedDinners.setData(
         { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
         (old) => {
-          // TODO Handle when there is a new dinner
+          const oldPlans = old?.plans ?? [];
+          const alreadyPlanned = oldPlans.find((plan) =>
+            isSameDay(plan.date, input.date),
+          );
+          const newPlan: Plan & { dinner: Dinner } = {
+            ...alreadyPlanned,
+            dinnerId: input.dinnerId,
+            dinner,
+            id: alreadyPlanned?.id ?? Math.ceil(Math.random() * -10000),
+            date: input.date,
+          };
 
           return {
-            plans:
-              old?.plans.map((plan) => {
-                if (isSameDay(plan.date, input.date)) {
-                  return {
-                    ...plan,
-                    dinnerId: input.dinnerId,
-                    dinner: dinner,
-                  };
-                }
-
-                return plan;
-              }) ?? [],
+            plans: [
+              ...oldPlans.filter((plan) => plan.id !== newPlan.id),
+              newPlan,
+            ],
           };
         },
       );
