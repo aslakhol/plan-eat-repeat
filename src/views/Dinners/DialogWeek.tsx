@@ -5,9 +5,9 @@ import { usePostHog } from "posthog-js/react";
 import { startOfDay, addDays, isSameDay, format } from "date-fns";
 import { UtensilsCrossed } from "lucide-react";
 
-type Props = { selectedDinner: Dinner };
+type Props = { selectedDinner: Dinner; closeDialog: () => void };
 
-export const DialogWeek = ({ selectedDinner }: Props) => {
+export const DialogWeek = ({ selectedDinner, closeDialog }: Props) => {
   const plannedDinnersQuery = api.plan.plannedDinners.useQuery();
 
   const week: Date[] = [
@@ -39,6 +39,7 @@ export const DialogWeek = ({ selectedDinner }: Props) => {
             plannedDinnersQuery.data?.plans.find((p) => isSameDay(p.date, day))
               ?.dinner
           }
+          closeDialog={closeDialog}
         />
       ))}
     </div>
@@ -49,9 +50,15 @@ type DayProps = {
   date: Date;
   plannedDinner?: Dinner;
   selectedDinner: Dinner;
+  closeDialog: () => void;
 };
 
-const Day = ({ date, plannedDinner, selectedDinner }: DayProps) => {
+const Day = ({
+  date,
+  plannedDinner,
+  selectedDinner,
+  closeDialog,
+}: DayProps) => {
   return (
     <div
       className={cn(
@@ -64,6 +71,7 @@ const Day = ({ date, plannedDinner, selectedDinner }: DayProps) => {
         date={date}
         plannedDinner={plannedDinner}
         selectedDinner={selectedDinner}
+        closeDialog={closeDialog}
       />
     </div>
   );
@@ -73,11 +81,23 @@ type SlotProps = {
   date: Date;
   plannedDinner?: Dinner;
   selectedDinner: Dinner;
+  closeDialog: () => void;
 };
 
-const Slot = ({ date, plannedDinner, selectedDinner }: SlotProps) => {
+const Slot = ({
+  date,
+  plannedDinner,
+  selectedDinner,
+  closeDialog,
+}: SlotProps) => {
   if (!plannedDinner) {
-    return <NoDinnerPlanned date={date} selectedDinner={selectedDinner} />;
+    return (
+      <NoDinnerPlanned
+        date={date}
+        selectedDinner={selectedDinner}
+        closeDialog={closeDialog}
+      />
+    );
   }
 
   return (
@@ -92,9 +112,14 @@ const Slot = ({ date, plannedDinner, selectedDinner }: SlotProps) => {
 type NoDinnerPlannedProps = {
   date: Date;
   selectedDinner: Dinner;
+  closeDialog: () => void;
 };
 
-const NoDinnerPlanned = ({ date, selectedDinner }: NoDinnerPlannedProps) => {
+const NoDinnerPlanned = ({
+  date,
+  selectedDinner,
+  closeDialog,
+}: NoDinnerPlannedProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
   const planDinnerForDayMutation = api.plan.planDinnerForDate.useMutation({
@@ -132,14 +157,16 @@ const NoDinnerPlanned = ({ date, selectedDinner }: NoDinnerPlannedProps) => {
     onSettled: () => {
       void utils.plan.plannedDinners.invalidate();
     },
+    onSuccess: () => {
+      posthog.capture("plan dinner from dinners page on empty day", {
+        dinner: selectedDinner.name,
+        date: format(date, "EEE do"),
+      });
+      closeDialog();
+    },
   });
 
   const clickEmptyDay = () => {
-    posthog.capture("plan dinner from dinners page on empty day", {
-      dinner: selectedDinner.name,
-      date: format(date, "EEE do"),
-    });
-
     planDinnerForDayMutation.mutate({
       dinnerId: selectedDinner.id,
       secret: localStorage.getItem("sulten-secret"),
