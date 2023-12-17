@@ -4,9 +4,9 @@ import { api } from "../../utils/api";
 import { usePostHog } from "posthog-js/react";
 import { format, isSameDay } from "date-fns";
 
-type Props = { date: Date; plannedDinner?: Dinner };
+type Props = { date: Date; plannedDinner?: Dinner; closeDialog: () => void };
 
-export const DialogDinners = ({ date, plannedDinner }: Props) => {
+export const DialogDinners = ({ date, plannedDinner, closeDialog }: Props) => {
   const dinnersQuery = api.dinner.dinners.useQuery();
 
   return (
@@ -17,21 +17,31 @@ export const DialogDinners = ({ date, plannedDinner }: Props) => {
           date={date}
           dinner={dinner}
           isPlanned={plannedDinner?.id === dinner.id}
+          closeDialog={closeDialog}
         />
       ))}
     </div>
   );
 };
 
-type DialogDinnerProps = { date: Date; dinner: Dinner; isPlanned: boolean };
+type DialogDinnerProps = {
+  date: Date;
+  dinner: Dinner;
+  isPlanned: boolean;
+  closeDialog: () => void;
+};
 
-const DialogDinner = ({ date, dinner, isPlanned }: DialogDinnerProps) => {
+const DialogDinner = ({
+  date,
+  dinner,
+  isPlanned,
+  closeDialog,
+}: DialogDinnerProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
   const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
     onMutate: (input) => {
       void utils.plan.plannedDinners.cancel();
-      console.log("laksjdlakjsdlkjslkj");
 
       const prevPlannedDinners = utils.plan.plannedDinners.getData();
 
@@ -63,17 +73,18 @@ const DialogDinner = ({ date, dinner, isPlanned }: DialogDinnerProps) => {
       }
     },
     onSettled: () => {
-      void utils.dinner.dinners.invalidate();
       void utils.plan.plannedDinners.invalidate();
+    },
+    onSuccess: () => {
+      posthog.capture("plan dinner from week page", {
+        dinner: dinner.name,
+        day: format(date, "EEE do"),
+      });
+      closeDialog();
     },
   });
 
   const handleClick = () => {
-    posthog.capture("plan dinner from week page", {
-      dinner: dinner.name,
-      day: format(date, "EEE do"),
-    });
-
     return planDinnerForDateMutation.mutate({
       date,
       dinnerId: dinner.id,

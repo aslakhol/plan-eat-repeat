@@ -74,7 +74,13 @@ export const PlanDayDialog = ({ date, plannedDinner, closeDialog }: Props) => {
         </DialogDescription>
       </DialogHeader>
       <div>
-        {date && <DialogDinners date={date} plannedDinner={plannedDinner} />}
+        {date && (
+          <DialogDinners
+            date={date}
+            plannedDinner={plannedDinner}
+            closeDialog={closeDialog}
+          />
+        )}
       </div>
       <DialogFooter>
         <Button
