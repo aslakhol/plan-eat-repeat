@@ -9,6 +9,7 @@ import { addDays, isSameDay, startOfDay } from "date-fns";
 
 export const WeekView = () => {
   const [selectedDay, setSelectedDay] = useState<Date>();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const plannedDinnersQuery = api.plan.plannedDinners.useQuery();
 
   const week: Date[] = [
@@ -31,7 +32,7 @@ export const WeekView = () => {
 
   return (
     <div className="grid h-screen">
-      <Dialog>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <div className="w-full space-y-4 p-4 ">
           {week.map((day) => (
             <Day
@@ -55,6 +56,7 @@ export const WeekView = () => {
                 )?.dinner
               : undefined
           }
+          closeDialog={() => setDialogOpen(false)}
         />
       </Dialog>
 

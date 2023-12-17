@@ -15,9 +15,10 @@ import { format, isSameDay } from "date-fns";
 type Props = {
   date?: Date;
   plannedDinner?: Dinner;
+  closeDialog: () => void;
 };
 
-export const PlanDayDialog = ({ date, plannedDinner }: Props) => {
+export const PlanDayDialog = ({ date, plannedDinner, closeDialog }: Props) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
   const unplanDinnerMutation = api.plan.unplanDay.useMutation({
@@ -47,6 +48,10 @@ export const PlanDayDialog = ({ date, plannedDinner }: Props) => {
     onSettled: async () => {
       await utils.dinner.dinners.invalidate();
     },
+    onSuccess: (res) => {
+      posthog.capture("clear day", { day: format(res.deleted.date, "EEE do") });
+      closeDialog();
+    },
   });
 
   if (!date) {
@@ -54,8 +59,6 @@ export const PlanDayDialog = ({ date, plannedDinner }: Props) => {
   }
 
   const handleClear = () => {
-    posthog.capture("clear day", { day: format(date, "EEE do") });
-
     unplanDinnerMutation.mutate({
       date: date,
       secret: localStorage.getItem("sulten-secret"),
