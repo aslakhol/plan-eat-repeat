@@ -3,7 +3,7 @@ import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
 import { usePostHog } from "posthog-js/react";
 import { startOfDay, addDays, isSameDay, format } from "date-fns";
-import { UtensilsCrossed } from "lucide-react";
+import { CircuitBoard, UtensilsCrossed } from "lucide-react";
 
 type Props = { selectedDinner: Dinner; closeDialog: () => void };
 
@@ -196,47 +196,66 @@ const DinnerPlanned = ({
   const posthog = usePostHog();
   const utils = api.useUtils();
 
-  const unplanDayMutation = api.plan.unplanDay.useMutation();
+  const unplanDayMutation = api.plan.unplanDay.useMutation({
+    onMutate: (input) => {
+      void utils.plan.plannedDinners.cancel();
+
+      const prevPlannedDinners = utils.plan.plannedDinners.getData();
+
+      utils.plan.plannedDinners.setData(undefined, (old) => {
+        const oldPlans = old?.plans ?? [];
+
+        return {
+          plans: oldPlans.filter(
+            (oldPlan) => !isSameDay(oldPlan.date, input.date),
+          ),
+        };
+      });
+
+      return { prevPlannedDinners };
+    },
+    onError: (_, __, context) => {
+      if (context?.prevPlannedDinners) {
+        utils.plan.plannedDinners.setData(
+          undefined,
+          context.prevPlannedDinners,
+        );
+      }
+    },
+    onSettled: () => {
+      void utils.plan.plannedDinners.invalidate();
+    },
+  });
 
   const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
     // onMutate: (input) => {
-    //   void utils.dinner.dinners.cancel();
-
-    //   const prevDinners = utils.dinner.dinners.getData();
-
-    //   utils.dinner.dinners.setData(undefined, (old) => {
+    //   console.log("onMutate planDinnerForDateMutation");
+    //   void utils.plan.plannedDinners.cancel();
+    //   const prevPlannedDinners = utils.plan.plannedDinners.getData();
+    //   console.log(input, "input");
+    //   utils.plan.plannedDinners.setData(undefined, (old) => {
+    //     const oldPlans = old?.plans ?? [];
+    //     console.log("oldPlans", oldPlans);
     //     return {
-    //       dinners:
-    //         old?.dinners.map((dinner) => {
-    //           if (dinner.plannedForDay === input.day) {
-    //             return {
-    //               ...dinner,
-    //               plannedForDay: null,
-    //             };
-    //           }
-
-    //           if (dinner.id === input.dinnerId) {
-    //             return {
-    //               ...dinner,
-    //               plannedForDay: input.day,
-    //             };
-    //           }
-
-    //           return dinner;
-    //         }) ?? [],
+    //       plans: oldPlans.filter(
+    //         (oldPlan) =>
+    //           oldPlan.id === input.dinnerId && oldPlan.date === input.date,
+    //       ),
     //     };
     //   });
-
-    //   return { prevDinners };
+    //   return { prevPlannedDinners };
     // },
     // onError: (_, __, context) => {
-    //   if (context?.prevDinners) {
-    //     utils.dinner.dinners.setData(undefined, context.prevDinners);
+    //   if (context?.prevPlannedDinners) {
+    //     utils.plan.plannedDinners.setData(
+    //       undefined,
+    //       context.prevPlannedDinners,
+    //     );
     //   }
     // },
-    onSettled: () => {
-      void utils.dinner.dinners.invalidate();
-    },
+    // onSettled: () => {
+    //   void utils.plan.plannedDinners.invalidate();
+    // },
   });
 
   const click = () => {
