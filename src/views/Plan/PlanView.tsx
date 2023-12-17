@@ -17,22 +17,22 @@ export const WeekView = () => {
   const [selectedDay, setSelectedDay] = useState<Date>();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [weekOfSet, setWeekOfSet] = useState(0);
+
   const plannedDinnersQuery = api.plan.plannedDinners.useQuery();
 
-  const today = startOfDay(new Date());
-  const monday = startOfWeek(today, {
+  const startOfCurrentWeek = startOfWeek(new Date(), {
     weekStartsOn: 1,
   });
-  const startOfRenderWeek = addDays(monday, weekOfSet * 7);
+  const startOfDisplayedWeek = addDays(startOfCurrentWeek, weekOfSet * 7);
 
   const week: Date[] = [
-    startOfDay(startOfRenderWeek),
-    startOfDay(addDays(startOfRenderWeek, 1)),
-    startOfDay(addDays(startOfRenderWeek, 2)),
-    startOfDay(addDays(startOfRenderWeek, 3)),
-    startOfDay(addDays(startOfRenderWeek, 4)),
-    startOfDay(addDays(startOfRenderWeek, 5)),
-    startOfDay(addDays(startOfRenderWeek, 6)),
+    startOfDay(startOfDisplayedWeek),
+    startOfDay(addDays(startOfDisplayedWeek, 1)),
+    startOfDay(addDays(startOfDisplayedWeek, 2)),
+    startOfDay(addDays(startOfDisplayedWeek, 3)),
+    startOfDay(addDays(startOfDisplayedWeek, 4)),
+    startOfDay(addDays(startOfDisplayedWeek, 5)),
+    startOfDay(addDays(startOfDisplayedWeek, 6)),
   ];
 
   if (plannedDinnersQuery.isLoading) {
@@ -49,7 +49,7 @@ export const WeekView = () => {
         <div className="w-full space-y-4 p-4 ">
           <WeekSelect
             setWeekOfSet={setWeekOfSet}
-            startOfRenderWeek={startOfRenderWeek}
+            startOfDisplayedWeek={startOfDisplayedWeek}
           />
           {week.map((day) => (
             <Day
@@ -84,10 +84,13 @@ export const WeekView = () => {
 
 type WeekSelectProps = {
   setWeekOfSet: Dispatch<SetStateAction<number>>;
-  startOfRenderWeek: Date;
+  startOfDisplayedWeek: Date;
 };
 
-const WeekSelect = ({ setWeekOfSet, startOfRenderWeek }: WeekSelectProps) => {
+const WeekSelect = ({
+  setWeekOfSet,
+  startOfDisplayedWeek,
+}: WeekSelectProps) => {
   return (
     <>
       <div>
@@ -117,7 +120,7 @@ const WeekSelect = ({ setWeekOfSet, startOfRenderWeek }: WeekSelectProps) => {
             <ChevronRight className="h-4 w-4" />
           </Button>
           <div className="px-4 text-sm font-medium">
-            Week {format(startOfRenderWeek, "w, MMMM, yyyy")}
+            Week {format(startOfDisplayedWeek, "w, MMMM, yyyy")}
           </div>
         </div>
       </div>
