@@ -1,17 +1,11 @@
-import {
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  UtensilsCrossed,
-} from "lucide-react";
+import { UtensilsCrossed } from "lucide-react";
 import { Dialog } from "../../components/ui/dialog";
 import { api } from "../../utils/api";
 import { BottomNav } from "../BottomNav";
 import { Day } from "./Day";
 import { PlanDayDialog } from "./PlanDayDialog";
-import { type Dispatch, type SetStateAction, useState } from "react";
-import { addDays, format, isSameDay, startOfDay, startOfWeek } from "date-fns";
-import { Button } from "../../components/ui/button";
+import { useState } from "react";
+import { addDays, isSameDay, startOfDay, startOfWeek } from "date-fns";
 import { WeekSelect } from "../WeekSelect";
 
 export const WeekView = () => {
