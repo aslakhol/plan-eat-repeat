@@ -5,21 +5,26 @@ import { BottomNav } from "../BottomNav";
 import { Day } from "./Day";
 import { PlanDayDialog } from "./PlanDayDialog";
 import { useState } from "react";
-import { addDays, isSameDay, startOfDay } from "date-fns";
+import { addDays, isSameDay, startOfDay, startOfWeek } from "date-fns";
 
 export const WeekView = () => {
   const [selectedDay, setSelectedDay] = useState<Date>();
   const [dialogOpen, setDialogOpen] = useState(false);
   const plannedDinnersQuery = api.plan.plannedDinners.useQuery();
 
+  const today = startOfDay(new Date());
+  const monday = startOfWeek(today, {
+    weekStartsOn: 1,
+  });
+
   const week: Date[] = [
-    startOfDay(new Date()),
-    startOfDay(addDays(new Date(), 1)),
-    startOfDay(addDays(new Date(), 2)),
-    startOfDay(addDays(new Date(), 3)),
-    startOfDay(addDays(new Date(), 4)),
-    startOfDay(addDays(new Date(), 5)),
-    startOfDay(addDays(new Date(), 6)),
+    startOfDay(monday),
+    startOfDay(addDays(monday, 1)),
+    startOfDay(addDays(monday, 2)),
+    startOfDay(addDays(monday, 3)),
+    startOfDay(addDays(monday, 4)),
+    startOfDay(addDays(monday, 5)),
+    startOfDay(addDays(monday, 6)),
   ];
 
   if (plannedDinnersQuery.isLoading) {
