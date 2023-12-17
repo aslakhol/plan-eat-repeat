@@ -18,8 +18,6 @@ export const WeekView = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [weekOfSet, setWeekOfSet] = useState(0);
 
-  const plannedDinnersQuery = api.plan.plannedDinners.useQuery();
-
   const startOfCurrentWeek = startOfWeek(new Date(), {
     weekStartsOn: 1,
   });
@@ -34,6 +32,10 @@ export const WeekView = () => {
     startOfDay(addDays(startOfDisplayedWeek, 5)),
     startOfDay(addDays(startOfDisplayedWeek, 6)),
   ];
+
+  const plannedDinnersQuery = api.plan.plannedDinners.useQuery({
+    startOfWeek: startOfDisplayedWeek,
+  });
 
   if (plannedDinnersQuery.isLoading) {
     return (
