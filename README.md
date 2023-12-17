@@ -1,28 +1,46 @@
-# Create T3 App
+# Sulten
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+This is an app for planning dinners for Madeleine and Aslak.
+At it's core it solves two problems:
 
-## What's next? How do I make an app with this?
+1. What dinners can we make?
+2. What did we plan to make on what day?
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+Number 2 is pretty straight forward, we just record what dinner whas planned for what day and that's that.
+For number 1 we are specifically interested in having a list of dinners that we like to make as an inspiration when we make our dinner plans.
+We are not trying to solve the issues of figuring out what can be created with our current ingredients, and we are not making a recipe list (at least yet).
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Technologies
 
+The project was Bootstrapped with [create-t3-app](https://create.t3.gg/)
+
+- [React](https://react.dev/)
 - [Next.js](https://nextjs.org)
 - [NextAuth.js](https://next-auth.js.org)
 - [Prisma](https://prisma.io)
 - [Tailwind CSS](https://tailwindcss.com)
 - [tRPC](https://trpc.io)
+- [shadcn/ui](https://ui.shadcn.com/)
 
-## Learn More
+## Hosting
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+The web app is hosted on [Vercel](https://vercel.com/) at [sulten.aslak.io](https://sulten.aslak.io/)
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+## Future ideas
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+For now most of the effort has been put into the planning of the dinners, and we want to put more love into the dinner list section.
+We know we want tags that help us deciding what to eat.
+F.ex. You could filter by the `Chicken` tag if you would like something with chicken.
+And of course we will implement a simple string search.
 
-## How do I deploy this?
+It might be interesting to expand the scope to make a simple recipe bank in the app, but we will focus on making it lightweight and usuable.
+Likely it won't grow beyond a single text field where you copy-paste in text, and perhaps a link to an external website.
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+We are interested in using this to prepare shopping lists by integrating with [Bring](https://www.getbring.com/), the app we use for shopping lists.
+Our thinking is that if it is possible we would like to hit some API that adds products to our list.
+Bring makes it very easy to remove products from the shopping list, so the thinking is that we could add all the products very quickly, and then remove what we already have.
+For the first version we likely will use the tags as the products, but it might also be a list of ingredients from a future recipe function.
+All this of course relies on us being able to integrate with Bring in some way.
+
+We have also discussed using LLMs to help suggest tags or ingredients based on the title and description.
+But that feels very far down the road.
