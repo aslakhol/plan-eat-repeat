@@ -228,34 +228,41 @@ const DinnerPlanned = ({
   });
 
   const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
-    // onMutate: (input) => {
-    //   console.log("onMutate planDinnerForDateMutation");
-    //   void utils.plan.plannedDinners.cancel();
-    //   const prevPlannedDinners = utils.plan.plannedDinners.getData();
-    //   console.log(input, "input");
-    //   utils.plan.plannedDinners.setData(undefined, (old) => {
-    //     const oldPlans = old?.plans ?? [];
-    //     console.log("oldPlans", oldPlans);
-    //     return {
-    //       plans: oldPlans.filter(
-    //         (oldPlan) =>
-    //           oldPlan.id === input.dinnerId && oldPlan.date === input.date,
-    //       ),
-    //     };
-    //   });
-    //   return { prevPlannedDinners };
-    // },
-    // onError: (_, __, context) => {
-    //   if (context?.prevPlannedDinners) {
-    //     utils.plan.plannedDinners.setData(
-    //       undefined,
-    //       context.prevPlannedDinners,
-    //     );
-    //   }
-    // },
-    // onSettled: () => {
-    //   void utils.plan.plannedDinners.invalidate();
-    // },
+    onMutate: (input) => {
+      void utils.plan.plannedDinners.cancel();
+
+      const prevPlannedDinners = utils.plan.plannedDinners.getData();
+
+      utils.plan.plannedDinners.setData(undefined, (old) => {
+        const oldPlan = old?.plans ?? [];
+
+        return {
+          plans: oldPlan.map((plan) => {
+            if (isSameDay(plan.date, input.date)) {
+              return {
+                ...plan,
+                dinnerId: input.dinnerId,
+                dinner: plannedDinner,
+              };
+            }
+
+            return plan;
+          }),
+        };
+      });
+      return { prevPlannedDinners };
+    },
+    onError: (_, __, context) => {
+      if (context?.prevPlannedDinners) {
+        utils.plan.plannedDinners.setData(
+          undefined,
+          context.prevPlannedDinners,
+        );
+      }
+    },
+    onSettled: () => {
+      void utils.plan.plannedDinners.invalidate();
+    },
   });
 
   const click = () => {
