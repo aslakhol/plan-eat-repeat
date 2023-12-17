@@ -3,7 +3,7 @@ import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
 import { usePostHog } from "posthog-js/react";
 import { startOfDay, addDays, isSameDay, format } from "date-fns";
-import { CircuitBoard, UtensilsCrossed } from "lucide-react";
+import { UtensilsCrossed } from "lucide-react";
 
 type Props = { selectedDinner: Dinner; closeDialog: () => void };
 
