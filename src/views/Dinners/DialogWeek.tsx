@@ -2,23 +2,37 @@ import { type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
 import { usePostHog } from "posthog-js/react";
-import { startOfDay, addDays, isSameDay, format } from "date-fns";
+import { startOfDay, addDays, isSameDay, format, startOfWeek } from "date-fns";
 import { UtensilsCrossed } from "lucide-react";
+import { useState } from "react";
+import { WeekSelect } from "../WeekSelect";
 
 type Props = { selectedDinner: Dinner; closeDialog: () => void };
 
 export const DialogWeek = ({ selectedDinner, closeDialog }: Props) => {
-  const plannedDinnersQuery = api.plan.plannedDinners.useQuery();
+  const [weekOfSet, setWeekOfSet] = useState(0);
+
+  const startOfCurrentWeek = startOfWeek(new Date(), {
+    weekStartsOn: 1,
+  });
+  const startOfDisplayedWeek = addDays(startOfCurrentWeek, weekOfSet * 7);
 
   const week: Date[] = [
-    startOfDay(new Date()),
-    startOfDay(addDays(new Date(), 1)),
-    startOfDay(addDays(new Date(), 2)),
-    startOfDay(addDays(new Date(), 3)),
-    startOfDay(addDays(new Date(), 4)),
-    startOfDay(addDays(new Date(), 5)),
-    startOfDay(addDays(new Date(), 6)),
+    startOfDay(startOfDisplayedWeek),
+    startOfDay(addDays(startOfDisplayedWeek, 1)),
+    startOfDay(addDays(startOfDisplayedWeek, 2)),
+    startOfDay(addDays(startOfDisplayedWeek, 3)),
+    startOfDay(addDays(startOfDisplayedWeek, 4)),
+    startOfDay(addDays(startOfDisplayedWeek, 5)),
+    startOfDay(addDays(startOfDisplayedWeek, 6)),
   ];
+
+  const plannedDinnersQuery = api.plan.plannedDinners.useQuery(
+    {
+      startOfWeek: startOfDisplayedWeek,
+    },
+    { keepPreviousData: true },
+  );
 
   if (plannedDinnersQuery.isLoading) {
     return (
@@ -30,6 +44,10 @@ export const DialogWeek = ({ selectedDinner, closeDialog }: Props) => {
 
   return (
     <div className="flex w-full flex-col gap-2 overflow-y-auto">
+      <WeekSelect
+        setWeekOfSet={setWeekOfSet}
+        startOfDisplayedWeek={startOfDisplayedWeek}
+      />
       {week.map((day) => (
         <Day
           key={day.toString()}
