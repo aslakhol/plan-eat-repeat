@@ -2,7 +2,7 @@ import { type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
 import { usePostHog } from "posthog-js/react";
-import { format, isSameDay } from "date-fns";
+import { format, isSameDay, startOfWeek } from "date-fns";
 
 type Props = { date: Date; plannedDinner?: Dinner; closeDialog: () => void };
 
@@ -45,29 +45,34 @@ const DialogDinner = ({
 
       const prevPlannedDinners = utils.plan.plannedDinners.getData();
 
-      utils.plan.plannedDinners.setData(undefined, (old) => {
-        return {
-          plans:
-            old?.plans.map((plan) => {
-              if (isSameDay(plan.date, input.date)) {
-                return {
-                  ...plan,
-                  dinnerId: input.dinnerId,
-                  dinner: dinner,
-                };
-              }
+      utils.plan.plannedDinners.setData(
+        { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
+        (old) => {
+          // TODO Handle when there is a new dinner
 
-              return plan;
-            }) ?? [],
-        };
-      });
+          return {
+            plans:
+              old?.plans.map((plan) => {
+                if (isSameDay(plan.date, input.date)) {
+                  return {
+                    ...plan,
+                    dinnerId: input.dinnerId,
+                    dinner: dinner,
+                  };
+                }
+
+                return plan;
+              }) ?? [],
+          };
+        },
+      );
 
       return { prevPlannedDinners };
     },
     onError: (_, __, context) => {
       if (context?.prevPlannedDinners) {
         utils.plan.plannedDinners.setData(
-          undefined,
+          { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
           context.prevPlannedDinners,
         );
       }

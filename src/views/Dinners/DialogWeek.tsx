@@ -143,28 +143,31 @@ const NoDinnerPlanned = ({ date, selectedDinner }: NoDinnerPlannedProps) => {
 
       const prevPlannedDinners = utils.plan.plannedDinners.getData();
 
-      utils.plan.plannedDinners.setData(undefined, (old) => {
-        const oldPlans = old?.plans ?? [];
+      utils.plan.plannedDinners.setData(
+        { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
+        (old) => {
+          const oldPlans = old?.plans ?? [];
 
-        return {
-          plans: [
-            ...oldPlans,
-            {
-              date: input.date,
-              dinner: selectedDinner,
-              dinnerId: selectedDinner.id,
-              id: Math.ceil(Math.random() * -10000),
-            },
-          ],
-        };
-      });
+          return {
+            plans: [
+              ...oldPlans,
+              {
+                date: input.date,
+                dinner: selectedDinner,
+                dinnerId: selectedDinner.id,
+                id: Math.ceil(Math.random() * -10000),
+              },
+            ],
+          };
+        },
+      );
 
       return { prevPlannedDinners };
     },
     onError: (_, __, context) => {
       if (context?.prevPlannedDinners) {
         utils.plan.plannedDinners.setData(
-          undefined,
+          { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
           context.prevPlannedDinners,
         );
       }
@@ -217,22 +220,25 @@ const DinnerPlanned = ({
 
       const prevPlannedDinners = utils.plan.plannedDinners.getData();
 
-      utils.plan.plannedDinners.setData(undefined, (old) => {
-        const oldPlans = old?.plans ?? [];
+      utils.plan.plannedDinners.setData(
+        { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
+        (old) => {
+          const oldPlans = old?.plans ?? [];
 
-        return {
-          plans: oldPlans.filter(
-            (oldPlan) => !isSameDay(oldPlan.date, input.date),
-          ),
-        };
-      });
+          return {
+            plans: oldPlans.filter(
+              (oldPlan) => !isSameDay(oldPlan.date, input.date),
+            ),
+          };
+        },
+      );
 
       return { prevPlannedDinners };
     },
     onError: (_, __, context) => {
       if (context?.prevPlannedDinners) {
         utils.plan.plannedDinners.setData(
-          undefined,
+          { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
           context.prevPlannedDinners,
         );
       }
@@ -254,29 +260,32 @@ const DinnerPlanned = ({
 
       const prevPlannedDinners = utils.plan.plannedDinners.getData();
 
-      utils.plan.plannedDinners.setData(undefined, (old) => {
-        const oldPlan = old?.plans ?? [];
+      utils.plan.plannedDinners.setData(
+        { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
+        (old) => {
+          const oldPlan = old?.plans ?? [];
 
-        return {
-          plans: oldPlan.map((plan) => {
-            if (isSameDay(plan.date, input.date)) {
-              return {
-                ...plan,
-                dinnerId: input.dinnerId,
-                dinner: selectedDinner,
-              };
-            }
+          return {
+            plans: oldPlan.map((plan) => {
+              if (isSameDay(plan.date, input.date)) {
+                return {
+                  ...plan,
+                  dinnerId: input.dinnerId,
+                  dinner: selectedDinner,
+                };
+              }
 
-            return plan;
-          }),
-        };
-      });
+              return plan;
+            }),
+          };
+        },
+      );
       return { prevPlannedDinners };
     },
     onError: (_, __, context) => {
       if (context?.prevPlannedDinners) {
         utils.plan.plannedDinners.setData(
-          undefined,
+          { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
           context.prevPlannedDinners,
         );
       }

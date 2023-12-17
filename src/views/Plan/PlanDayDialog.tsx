@@ -10,7 +10,7 @@ import { DialogDinners } from "./DialogDinners";
 import { api } from "../../utils/api";
 import { type Dinner } from "@prisma/client";
 import { usePostHog } from "posthog-js/react";
-import { format, isSameDay } from "date-fns";
+import { format, isSameDay, startOfWeek } from "date-fns";
 
 type Props = {
   date?: Date;
@@ -24,29 +24,29 @@ export const PlanDayDialog = ({ date, plannedDinner, closeDialog }: Props) => {
   const unplanDinnerMutation = api.plan.unplanDay.useMutation({
     onMutate: (input) => {
       void utils.plan.plannedDinners.cancel();
-
       const prevPlannedDinners = utils.plan.plannedDinners.getData();
-
-      utils.plan.plannedDinners.setData(undefined, (old) => {
-        return {
-          plans:
-            old?.plans.filter((plan) => !isSameDay(plan.date, input.date)) ??
-            [],
-        };
-      });
-
+      utils.plan.plannedDinners.setData(
+        { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
+        (old) => {
+          return {
+            plans:
+              old?.plans.filter((plan) => !isSameDay(plan.date, input.date)) ??
+              [],
+          };
+        },
+      );
       return { prevPlannedDinners };
     },
     onError: (_, __, context) => {
       if (context?.prevPlannedDinners) {
         utils.plan.plannedDinners.setData(
-          undefined,
+          { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
           context.prevPlannedDinners,
         );
       }
     },
     onSettled: async () => {
-      await utils.dinner.dinners.invalidate();
+      await utils.plan.plannedDinners.invalidate();
     },
     onSuccess: (res) => {
       posthog.capture("clear day", { day: format(res.deleted.date, "EEE do") });
