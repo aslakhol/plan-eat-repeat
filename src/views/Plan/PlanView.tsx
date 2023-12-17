@@ -33,9 +33,12 @@ export const WeekView = () => {
     startOfDay(addDays(startOfDisplayedWeek, 6)),
   ];
 
-  const plannedDinnersQuery = api.plan.plannedDinners.useQuery({
-    startOfWeek: startOfDisplayedWeek,
-  });
+  const plannedDinnersQuery = api.plan.plannedDinners.useQuery(
+    {
+      startOfWeek: startOfDisplayedWeek,
+    },
+    { keepPreviousData: true },
+  );
 
   if (plannedDinnersQuery.isLoading) {
     return (
