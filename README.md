@@ -10,9 +10,13 @@ Number 2 is pretty straight forward, we just record what dinner whas planned for
 For number 1 we are specifically interested in having a list of dinners that we like to make as an inspiration when we make our dinner plans.
 We are not trying to solve the issues of figuring out what can be created with our current ingredients, and we are not making a recipe list (at least yet).
 
-## Technologies
+## Hosting
 
-The project was Bootstrapped with [create-t3-app](https://create.t3.gg/)
+The web app is hosted on [Vercel](https://vercel.com/) at [sulten.aslak.io](https://sulten.aslak.io/)
+
+## Technology
+
+The project was Bootstrapped with [create-t3-app](https://create.t3.gg/).
 
 - [React](https://react.dev/)
 - [Next.js](https://nextjs.org)
@@ -20,10 +24,6 @@ The project was Bootstrapped with [create-t3-app](https://create.t3.gg/)
 - [Tailwind CSS](https://tailwindcss.com)
 - [tRPC](https://trpc.io)
 - [shadcn/ui](https://ui.shadcn.com/)
-
-## Hosting
-
-The web app is hosted on [Vercel](https://vercel.com/) at [sulten.aslak.io](https://sulten.aslak.io/)
 
 ## Future ideas
 
