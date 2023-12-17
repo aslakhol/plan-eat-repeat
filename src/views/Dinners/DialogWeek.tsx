@@ -98,34 +98,39 @@ const NoDinnerPlanned = ({ date, selectedDinner }: NoDinnerPlannedProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
   const planDinnerForDayMutation = api.plan.planDinnerForDate.useMutation({
-    // onMutate: (input) => {
-    //   void utils.dinner.dinners.cancel();
+    onMutate: (input) => {
+      void utils.plan.plannedDinners.cancel();
 
-    //   const prevDinners = utils.dinner.dinners.getData();
+      const prevPlannedDinners = utils.plan.plannedDinners.getData();
 
-    //   utils.dinner.dinners.setData(undefined, (old) => {
-    //     return {
-    //       dinners:
-    //         old?.dinners.map((dinner) =>
-    //           dinner.id === input.dinnerId
-    //             ? {
-    //                 ...dinner,
-    //                 plannedForDay: input.day,
-    //               }
-    //             : dinner,
-    //         ) ?? [],
-    //     };
-    //   });
+      utils.plan.plannedDinners.setData(undefined, (old) => {
+        const oldPlans = old?.plans ?? [];
 
-    //   return { prevDinners };
-    // },
-    // onError: (_, __, context) => {
-    //   if (context?.prevDinners) {
-    //     utils.dinner.dinners.setData(undefined, context.prevDinners);
-    //   }
-    // },
+        return {
+          plans: [
+            ...oldPlans,
+            {
+              date: input.date,
+              dinner: selectedDinner,
+              dinnerId: selectedDinner.id,
+              id: Math.ceil(Math.random() * -10000),
+            },
+          ],
+        };
+      });
+
+      return { prevPlannedDinners };
+    },
+    onError: (_, __, context) => {
+      if (context?.prevPlannedDinners) {
+        utils.plan.plannedDinners.setData(
+          undefined,
+          context.prevPlannedDinners,
+        );
+      }
+    },
     onSettled: () => {
-      void utils.dinner.dinners.invalidate();
+      void utils.plan.plannedDinners.invalidate();
     },
   });
 
