@@ -17,7 +17,7 @@ export const BottomNav = () => {
           )}
           asChild
         >
-          <Link href="/">Week</Link>
+          <Link href="/">Plan</Link>
         </Button>
         <Button
           variant={"link"}
