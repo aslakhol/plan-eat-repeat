@@ -274,6 +274,14 @@ const DinnerPlanned = ({
     onSettled: () => {
       void utils.plan.plannedDinners.invalidate();
     },
+    onSuccess: () => {
+      posthog.capture("replace dinner with new dinner", {
+        newDinner: selectedDinner.name,
+        oldDinner: plannedDinner.name,
+        day: format(date, "EEE do"),
+      });
+      onClose();
+    },
   });
 
   const click = () => {
@@ -284,11 +292,6 @@ const DinnerPlanned = ({
       });
     }
 
-    posthog.capture("replace dinner with new dinner", {
-      newDinner: selectedDinner.name,
-      oldDinner: plannedDinner.name,
-      day: format(date, "EEE do"),
-    });
     planDinnerForDateMutation.mutate({
       dinnerId: selectedDinner.id,
       secret: localStorage.getItem("sulten-secret"),
