@@ -116,11 +116,7 @@ type NoDinnerPlannedProps = {
   closeDialog: () => void;
 };
 
-const NoDinnerPlanned = ({
-  date,
-  selectedDinner,
-  closeDialog,
-}: NoDinnerPlannedProps) => {
+const NoDinnerPlanned = ({ date, selectedDinner }: NoDinnerPlannedProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
   const planDinnerForDayMutation = api.plan.planDinnerForDate.useMutation({
@@ -163,7 +159,6 @@ const NoDinnerPlanned = ({
         dinner: selectedDinner.name,
         date: format(date, "EEE do"),
       });
-      closeDialog();
     },
   });
 
@@ -194,7 +189,6 @@ const DinnerPlanned = ({
   date,
   plannedDinner,
   selectedDinner,
-  onClose,
 }: DinnerPlannedProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
@@ -233,8 +227,6 @@ const DinnerPlanned = ({
         dinner: selectedDinner.name,
         day: format(date, "EEE do"),
       });
-
-      onClose();
     },
   });
 
@@ -280,7 +272,6 @@ const DinnerPlanned = ({
         oldDinner: plannedDinner.name,
         day: format(date, "EEE do"),
       });
-      onClose();
     },
   });
 
