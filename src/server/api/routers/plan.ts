@@ -2,16 +2,22 @@ import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { env } from "../../../env.mjs";
+import { addDays } from "date-fns";
 
 export const planRouter = createTRPCRouter({
-  plannedDinners: publicProcedure.query(async ({ ctx }) => {
-    const plans = await ctx.db.plan.findMany({
-      include: { dinner: true },
-      orderBy: { date: "asc" },
-    });
+  plannedDinners: publicProcedure
+    .input(z.object({ startOfWeek: z.date() }))
+    .query(async ({ ctx, input }) => {
+      const plans = await ctx.db.plan.findMany({
+        where: {
+          date: { gte: input.startOfWeek, lt: addDays(input.startOfWeek, 7) },
+        },
+        include: { dinner: true },
+        orderBy: { date: "asc" },
+      });
 
-    return { plans };
-  }),
+      return { plans };
+    }),
   planDinnerForDate: publicProcedure
     .input(
       z.object({

@@ -1,8 +1,8 @@
-import { type Dinner } from "@prisma/client";
+import { type Plan, type Dinner } from "@prisma/client";
 import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
 import { usePostHog } from "posthog-js/react";
-import { format, isSameDay } from "date-fns";
+import { format, isSameDay, startOfWeek } from "date-fns";
 
 type Props = { date: Date; plannedDinner?: Dinner; closeDialog: () => void };
 
@@ -45,29 +45,36 @@ const DialogDinner = ({
 
       const prevPlannedDinners = utils.plan.plannedDinners.getData();
 
-      utils.plan.plannedDinners.setData(undefined, (old) => {
-        return {
-          plans:
-            old?.plans.map((plan) => {
-              if (isSameDay(plan.date, input.date)) {
-                return {
-                  ...plan,
-                  dinnerId: input.dinnerId,
-                  dinner: dinner,
-                };
-              }
+      utils.plan.plannedDinners.setData(
+        { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
+        (old) => {
+          const oldPlans = old?.plans ?? [];
+          const alreadyPlanned = oldPlans.find((plan) =>
+            isSameDay(plan.date, input.date),
+          );
+          const newPlan: Plan & { dinner: Dinner } = {
+            ...alreadyPlanned,
+            dinnerId: input.dinnerId,
+            dinner,
+            id: alreadyPlanned?.id ?? Math.ceil(Math.random() * -10000),
+            date: input.date,
+          };
 
-              return plan;
-            }) ?? [],
-        };
-      });
+          return {
+            plans: [
+              ...oldPlans.filter((plan) => plan.id !== newPlan.id),
+              newPlan,
+            ],
+          };
+        },
+      );
 
       return { prevPlannedDinners };
     },
     onError: (_, __, context) => {
       if (context?.prevPlannedDinners) {
         utils.plan.plannedDinners.setData(
-          undefined,
+          { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
           context.prevPlannedDinners,
         );
       }
