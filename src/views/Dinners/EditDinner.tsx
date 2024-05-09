@@ -4,7 +4,7 @@ import { Input } from "~/components/ui/input";
 import { api } from "../../utils/api";
 import { usePostHog } from "posthog-js/react";
 import { toast } from "~/components/ui/use-toast";
-import { DinnerWithTags } from "~/utils/types";
+import { type DinnerWithTags } from "~/utils/types";
 
 type Props = {
   dinner: DinnerWithTags;
@@ -104,7 +104,14 @@ export const EditDinner = (props: Props) => {
           type="text"
           placeholder="Enter tag"
           value={tagValue}
-          onChange={(event) => setTagValue(event.target.value)}
+          onChange={(event) => {
+            setTagValue(event.target.value);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              addTagToTagList();
+            }
+          }}
         />
       </div>
       <div className="mt-2 flex flex-wrap gap-2">
