@@ -8,8 +8,6 @@ type Props = {
 };
 
 export const Dinner = ({ dinner, setSelectedDinnerId }: Props) => {
-  console.log(dinner.tags);
-
   return (
     <DialogTrigger asChild onClick={() => setSelectedDinnerId(dinner.id)}>
       <div

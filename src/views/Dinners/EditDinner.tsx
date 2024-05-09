@@ -27,6 +27,23 @@ export const EditDinner = (props: Props) => {
       props.closeDialog();
     },
   });
+
+  const deleteDinnerMutation = api.dinner.delete.useMutation({
+    onSuccess: (result) => {
+      toast({
+        title: `Dinner deleted: ${result.dinner.name}`,
+      });
+      props.closeDialog();
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+        description: error.message,
+      });
+    },
+  });
+
   const utils = api.useUtils();
   const posthog = usePostHog();
 
@@ -39,6 +56,21 @@ export const EditDinner = (props: Props) => {
         dinnerId: props.dinner.id,
         secret: localStorage.getItem("sulten-secret"),
         tagList: tagList,
+      },
+      {
+        onSettled: () => {
+          void utils.dinner.dinners.invalidate();
+        },
+      },
+    );
+  }
+  function deleteDinner() {
+    posthog.capture("delete dinner", { dinnerName });
+
+    deleteDinnerMutation.mutate(
+      {
+        dinnerId: props.dinner.id,
+        secret: localStorage.getItem("sulten-secret"),
       },
       {
         onSettled: () => {
@@ -106,9 +138,9 @@ export const EditDinner = (props: Props) => {
         <Button
           className="rounded border-red-400 bg-red-100 px-2 py-1 text-red-800 active:bg-red-200"
           variant="outline"
-          onClick={props.closeDialog}
+          onClick={deleteDinner}
         >
-          Cancel
+          Delete
         </Button>
       </div>
     </div>
