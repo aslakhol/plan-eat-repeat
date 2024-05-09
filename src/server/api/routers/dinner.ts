@@ -53,4 +53,37 @@ export const dinnerRouter = createTRPCRouter({
         dinner,
       };
     }),
+  edit: publicProcedure
+    .input(
+      z.object({
+        dinnerName: z.string().min(3),
+        dinnerId: z.number(),
+        secret: z.string().nullable(),
+        tagList: z.array(z.string()),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (env.SECRET_PHRASE !== input.secret) {
+        throw new Error("Missing secret keyword");
+      }
+
+      const dinner = await ctx.db.dinner.update({
+        where: { id: input.dinnerId },
+        data: {
+          name: input.dinnerName,
+          tags: {
+            connectOrCreate: input.tagList.map((tag) => {
+              return {
+                where: { value: tag },
+                create: { value: tag },
+              };
+            }),
+          },
+        },
+      });
+
+      return {
+        dinner,
+      };
+    }),
 });

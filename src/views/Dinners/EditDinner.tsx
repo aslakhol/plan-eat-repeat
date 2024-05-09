@@ -4,35 +4,39 @@ import { Input } from "~/components/ui/input";
 import { api } from "../../utils/api";
 import { usePostHog } from "posthog-js/react";
 import { toast } from "~/components/ui/use-toast";
+import { DinnerWithTags } from "~/utils/types";
 
 type Props = {
-  setOpenAddDinner: (newState: boolean) => void;
+  dinner: DinnerWithTags;
+  closeDialog: () => void;
 };
 
-export const AddDinner = (props: Props) => {
-  const [dinnerName, setDinnerName] = useState("");
+export const EditDinner = (props: Props) => {
+  const [dinnerName, setDinnerName] = useState(props.dinner.name);
   const [tagValue, setTagValue] = useState("");
-  const [tagList, setTagList] = useState<string[]>([]);
+  const existingTags = props.dinner.tags.map((tag) => {
+    return tag.value;
+  });
+  const [tagList, setTagList] = useState<string[]>(existingTags);
 
-  const addDinnerMutation = api.dinner.create.useMutation({
+  const updateDinnerMutation = api.dinner.edit.useMutation({
     onSuccess: (result) => {
       toast({
-        title: `Dinner added: ${result.dinner.name}`,
+        title: `Dinner updated: ${result.dinner.name}`,
       });
-      setDinnerName("");
-      setTagValue("");
-      setTagList([]);
+      props.closeDialog();
     },
   });
   const utils = api.useUtils();
   const posthog = usePostHog();
 
-  function addDinner() {
-    posthog.capture("create new dinner", { dinnerName });
+  function updateDinner() {
+    posthog.capture("update dinner", { dinnerName });
 
-    addDinnerMutation.mutate(
+    updateDinnerMutation.mutate(
       {
         dinnerName: dinnerName,
+        dinnerId: props.dinner.id,
         secret: localStorage.getItem("sulten-secret"),
         tagList: tagList,
       },
@@ -95,14 +99,14 @@ export const AddDinner = (props: Props) => {
         <Button
           className="rounded border-blue-400 bg-blue-100 px-2 py-1 text-blue-800 active:bg-blue-200"
           variant="outline"
-          onClick={addDinner}
+          onClick={updateDinner}
         >
-          Create dinner
+          Save
         </Button>
         <Button
           className="rounded border-red-400 bg-red-100 px-2 py-1 text-red-800 active:bg-red-200"
           variant="outline"
-          onClick={() => props.setOpenAddDinner(false)}
+          onClick={props.closeDialog}
         >
           Cancel
         </Button>

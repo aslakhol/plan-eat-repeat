@@ -9,6 +9,7 @@ import { PostHogProvider } from "posthog-js/react";
 import { env } from "../env.mjs";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
+import { Toaster } from "~/components/ui/toaster";
 
 if (typeof window !== "undefined") {
   posthog.init(env.NEXT_PUBLIC_POSTHOG_API_KEY, {
@@ -38,6 +39,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <PostHogProvider client={posthog}>
       <Component {...pageProps} />
+      <Toaster />
     </PostHogProvider>
   );
 };
