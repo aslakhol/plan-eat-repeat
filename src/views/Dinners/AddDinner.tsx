@@ -21,7 +21,11 @@ export const AddDinner = (props: Props) => {
     posthog.capture("create new dinner", { dinnerName });
 
     addDinnerMutation.mutate(
-      { dinnerName: dinnerName, secret: localStorage.getItem("sulten-secret") },
+      {
+        dinnerName: dinnerName,
+        secret: localStorage.getItem("sulten-secret"),
+        tagList: tagList,
+      },
       {
         onSettled: () => {
           void utils.dinner.dinners.invalidate();

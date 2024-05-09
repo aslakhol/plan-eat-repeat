@@ -27,6 +27,7 @@ export const dinnerRouter = createTRPCRouter({
       z.object({
         dinnerName: z.string().min(3),
         secret: z.string().nullable(),
+        tagList: z.array(z.string()),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -37,6 +38,14 @@ export const dinnerRouter = createTRPCRouter({
       const dinner = await ctx.db.dinner.create({
         data: {
           name: input.dinnerName,
+          tags: {
+            connectOrCreate: input.tagList.map((tag) => {
+              return {
+                where: { value: tag },
+                create: { value: tag },
+              };
+            }),
+          },
         },
       });
 
