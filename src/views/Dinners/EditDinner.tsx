@@ -91,6 +91,12 @@ export const EditDinner = (props: Props) => {
     setTagValue("");
   }
 
+  function removeTagFromTagList(tag: string) {
+    setTagList((prevValue) => {
+      return prevValue.filter((value) => value !== tag);
+    });
+  }
+
   return (
     <div className="flex flex-grow flex-col rounded border px-4 py-4 hover:bg-accent/50 hover:text-accent-foreground">
       <div className="flex flex-col gap-2">
@@ -120,6 +126,7 @@ export const EditDinner = (props: Props) => {
             <div
               key={tag}
               className="rounded bg-green-100 px-2 py-1 text-green-800 active:bg-green-200"
+              onClick={() => removeTagFromTagList(tag)}
             >
               {tag}
             </div>
