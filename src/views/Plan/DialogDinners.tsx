@@ -3,15 +3,29 @@ import { cn } from "../../lib/utils";
 import { api } from "../../utils/api";
 import { usePostHog } from "posthog-js/react";
 import { format, isSameDay, startOfWeek } from "date-fns";
+import { Input } from "../../components/ui/input";
+import { useState } from "react";
 
 type Props = { date: Date; plannedDinner?: Dinner; closeDialog: () => void };
 
 export const DialogDinners = ({ date, plannedDinner, closeDialog }: Props) => {
   const dinnersQuery = api.dinner.dinners.useQuery();
+  const [search, setSearch] = useState("");
+
+  const dinners =
+    dinnersQuery.data?.dinners.filter(
+      (dinner) =>
+        !search || dinner.name.toLowerCase().includes(search.toLowerCase()),
+    ) ?? [];
 
   return (
     <div className={cn("flex max-h-[80vh] flex-col gap-2 overflow-y-auto")}>
-      {dinnersQuery.data?.dinners.map((dinner) => (
+      <Input
+        placeholder="Search dinners"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+      {dinners.map((dinner) => (
         <DialogDinner
           key={dinner.id}
           date={date}

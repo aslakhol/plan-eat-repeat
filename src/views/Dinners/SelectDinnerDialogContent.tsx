@@ -4,7 +4,6 @@ import {
   DialogTitle,
 } from "../../components/ui/dialog";
 import { type DinnerWithTags } from "../../utils/types";
-import { DialogWeek } from "./DialogWeek";
 import { EditDinner } from "./EditDinner";
 
 type Props = { dinner?: DinnerWithTags; closeDialog: () => void };
