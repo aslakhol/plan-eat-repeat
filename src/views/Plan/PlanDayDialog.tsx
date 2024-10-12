@@ -66,7 +66,7 @@ export const PlanDayDialog = ({ date, plannedDinner, closeDialog }: Props) => {
   };
 
   return (
-    <DialogContent className="h-full">
+    <DialogContent className="max-h-full">
       <DialogHeader>
         <DialogTitle>{format(date, "EEE do")}</DialogTitle>
         <DialogDescription>
