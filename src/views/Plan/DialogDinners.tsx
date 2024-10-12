@@ -19,7 +19,7 @@ export const DialogDinners = ({ date, plannedDinner, closeDialog }: Props) => {
     ) ?? [];
 
   return (
-    <div className={cn("flex max-h-[80vh] flex-col gap-2 overflow-y-auto")}>
+    <div className={cn("flex max-h-[80vh] flex-col gap-2 overflow-y-auto p-2")}>
       <Input
         placeholder="Search dinners"
         value={search}
