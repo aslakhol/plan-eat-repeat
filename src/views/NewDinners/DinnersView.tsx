@@ -28,7 +28,7 @@ export const DinnersView = () => {
   );
 
   return (
-    <div className="grid h-screen gap-4 p-6">
+    <div className="flex flex-col gap-4 p-6">
       {/* Search and Filter */}
       <Input
         placeholder="Search dinners"
