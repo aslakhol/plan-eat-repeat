@@ -2,9 +2,12 @@ import { api } from "~/utils/api";
 import { BottomNav } from "../BottomNav";
 import { UtensilsCrossed } from "lucide-react";
 import { DinnerList } from "./DinnerList";
+import { useState } from "react";
+import { Input } from "../../components/ui/input";
 
 export const DinnersView = () => {
   const dinnersQuery = api.dinner.dinners.useQuery();
+  const [search, setSearch] = useState("");
 
   if (dinnersQuery.isLoading) {
     return (
@@ -19,13 +22,23 @@ export const DinnersView = () => {
     return null;
   }
 
+  const dinners = dinnersQuery.data.dinners.filter(
+    (dinner) =>
+      !search || dinner.name.toLowerCase().includes(search.toLowerCase()),
+  );
+
   return (
-    <div className="grid h-screen p-6">
+    <div className="grid h-screen gap-4 p-6">
       {/* Search and Filter */}
+      <Input
+        placeholder="Search dinners"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
       {/* New Dinner */}
       {/* Existing Dinners */}
 
-      <DinnerList dinners={dinnersQuery.data.dinners} />
+      <DinnerList dinners={dinners} />
 
       <BottomNav />
     </div>

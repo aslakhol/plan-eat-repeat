@@ -17,7 +17,7 @@ export const DinnerList = ({ dinners }: Props) => {
           <DialogTrigger>
             <div
               className={cn(
-                "flex cursor-pointer flex-col rounded border px-4 py-2 text-left hover:bg-accent/50 hover:text-accent-foreground",
+                "flex cursor-pointer flex-col rounded-md border px-4 py-2 text-left hover:bg-accent/50 hover:text-accent-foreground",
               )}
             >
               <h3 className="font-semibold">{d.name}</h3>
