@@ -1,11 +1,13 @@
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "../../components/ui/dialog";
 import { cn } from "../../lib/utils";
 import { type DinnerWithTags } from "../../utils/types";
+import { DinnerForm } from "./DinnerForm";
 type Props = {
   dinners: DinnerWithTags[];
 };
@@ -36,7 +38,10 @@ export const DinnerList = ({ dinners }: Props) => {
             </div>
           </DialogTrigger>
           <DialogContent>
-            <DialogTitle>{d.name}</DialogTitle>
+            <DialogHeader>
+              <DialogTitle>{d.name}</DialogTitle>
+            </DialogHeader>
+            <DinnerForm existingDinner={d} />
           </DialogContent>
         </Dialog>
       ))}
