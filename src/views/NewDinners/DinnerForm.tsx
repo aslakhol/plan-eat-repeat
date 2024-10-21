@@ -91,7 +91,16 @@ export const DinnerForm = ({ existingDinner }: Props) => {
               <FormLabel>Add tag</FormLabel>
               <FormControl>
                 <div className="flex w-full max-w-sm items-center space-x-2">
-                  <Input {...field} />
+                  <Input
+                    {...field}
+                    onKeyDown={(e) => {
+                      if (e.code !== "Enter") {
+                        return;
+                      }
+                      e.preventDefault();
+                      addTag();
+                    }}
+                  />
                   <Button type="button" variant="outline" onClick={addTag}>
                     +
                   </Button>
