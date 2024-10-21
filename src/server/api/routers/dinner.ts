@@ -66,6 +66,14 @@ export const dinnerRouter = createTRPCRouter({
       if (env.SECRET_PHRASE !== input.secret) {
         throw new Error("Missing secret keyword");
       }
+      const previousDinner = await ctx.db.dinner.findUnique({
+        where: { id: input.dinnerId },
+        include: { tags: true },
+      });
+
+      const tagsToRemove = previousDinner?.tags.filter(
+        (tag) => !input.tagList.includes(tag.value),
+      );
 
       const dinner = await ctx.db.dinner.update({
         where: { id: input.dinnerId },
@@ -78,6 +86,7 @@ export const dinnerRouter = createTRPCRouter({
                 create: { value: tag },
               };
             }),
+            disconnect: tagsToRemove,
           },
         },
       });
