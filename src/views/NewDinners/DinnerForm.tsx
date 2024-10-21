@@ -34,8 +34,8 @@ export const DinnerForm = ({
       name: existingDinner?.name ?? "",
       tags: existingDinner?.tags.map((tag) => tag.value) ?? [],
       newTag: "",
-      link: "",
-      notes: "",
+      link: existingDinner?.link ?? "",
+      notes: existingDinner?.notes ?? "",
     },
   });
 

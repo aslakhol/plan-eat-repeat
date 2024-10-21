@@ -80,6 +80,8 @@ const DinnerListItem = ({ dinner }: DinnerListItemProps) => {
         dinnerId: dinner.id,
         secret: localStorage.getItem("sulten-secret"),
         tagList: values.tags,
+        link: values.link,
+        notes: values.notes,
       },
       {
         onSettled: () => {
