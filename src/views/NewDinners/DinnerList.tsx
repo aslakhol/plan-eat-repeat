@@ -7,8 +7,13 @@ import {
   DialogTrigger,
 } from "../../components/ui/dialog";
 import { cn } from "../../lib/utils";
-import { type DinnerWithTags } from "../../utils/types";
+import { type dinnerFormSchema, type DinnerWithTags } from "../../utils/types";
 import { DinnerForm } from "./DinnerForm";
+import { type z } from "zod";
+import { api } from "../../utils/api";
+import { toast } from "../../components/ui/use-toast";
+import { usePostHog } from "posthog-js/react";
+
 type Props = {
   dinners: DinnerWithTags[];
 };
@@ -28,6 +33,75 @@ type DinnerListItemProps = {
 
 const DinnerListItem = ({ dinner }: DinnerListItemProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const updateDinnerMutation = api.dinner.edit.useMutation({
+    onSuccess: (result) => {
+      toast({
+        title: `${result.dinner.name} updated`,
+      });
+      setDialogOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+        description: error.message,
+      });
+    },
+  });
+
+  const deleteDinnerMutation = api.dinner.delete.useMutation({
+    onSuccess: (result) => {
+      toast({
+        title: `${result.dinner.name} deleted`,
+      });
+      setDialogOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+        description: error.message,
+      });
+    },
+  });
+
+  const utils = api.useUtils();
+  const posthog = usePostHog();
+
+  function updateDinner(values: z.infer<typeof dinnerFormSchema>) {
+    posthog.capture("update dinner", { dinnerName: values.name });
+
+    updateDinnerMutation.mutate(
+      {
+        dinnerName: values.name,
+        dinnerId: dinner.id,
+        secret: localStorage.getItem("sulten-secret"),
+        tagList: values.tags,
+      },
+      {
+        onSettled: () => {
+          void utils.dinner.dinners.invalidate();
+        },
+      },
+    );
+  }
+
+  function deleteDinner(values: z.infer<typeof dinnerFormSchema>) {
+    posthog.capture("delete dinner", { dinnerName: values.name });
+
+    deleteDinnerMutation.mutate(
+      {
+        dinnerId: dinner.id,
+        secret: localStorage.getItem("sulten-secret"),
+      },
+      {
+        onSettled: () => {
+          void utils.dinner.dinners.invalidate();
+        },
+      },
+    );
+  }
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -59,6 +133,8 @@ const DinnerListItem = ({ dinner }: DinnerListItemProps) => {
         <DinnerForm
           existingDinner={dinner}
           closeDialog={() => setDialogOpen(false)}
+          onSubmit={updateDinner}
+          onDelete={deleteDinner}
         />
       </DialogContent>
     </Dialog>

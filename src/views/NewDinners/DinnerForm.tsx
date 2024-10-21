@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { type DinnerWithTags } from "../../utils/types";
+import { type z } from "zod";
+import { dinnerFormSchema, type DinnerWithTags } from "../../utils/types";
 import { useForm } from "react-hook-form";
 import {
   Form,
@@ -13,50 +13,21 @@ import {
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
-import { asOptionalStringWithoutEmpty } from "../../utils/zod";
 import { Label } from "../../components/ui/label";
-import { api } from "../../utils/api";
-import { toast } from "../../components/ui/use-toast";
-import { usePostHog } from "posthog-js/react";
 
 type Props = {
+  onSubmit(values: z.infer<typeof dinnerFormSchema>): void;
+  onDelete?(values: z.infer<typeof dinnerFormSchema>): void;
   existingDinner?: DinnerWithTags;
   closeDialog: () => void;
 };
 
-export const DinnerForm = ({ existingDinner, closeDialog }: Props) => {
-  const updateDinnerMutation = api.dinner.edit.useMutation({
-    onSuccess: (result) => {
-      toast({
-        title: `${result.dinner.name} updated`,
-      });
-      closeDialog();
-    },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Something went wrong",
-        description: error.message,
-      });
-    },
-  });
-
-  const deleteDinnerMutation = api.dinner.delete.useMutation({
-    onSuccess: (result) => {
-      toast({
-        title: `${result.dinner.name} deleted`,
-      });
-      closeDialog();
-    },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Something went wrong",
-        description: error.message,
-      });
-    },
-  });
-
+export const DinnerForm = ({
+  onSubmit,
+  onDelete,
+  existingDinner,
+  closeDialog,
+}: Props) => {
   const form = useForm<z.infer<typeof dinnerFormSchema>>({
     resolver: zodResolver(dinnerFormSchema),
     defaultValues: {
@@ -86,54 +57,9 @@ export const DinnerForm = ({ existingDinner, closeDialog }: Props) => {
     );
   };
 
-  const utils = api.useUtils();
-  const posthog = usePostHog();
-
-  function updateDinner(values: z.infer<typeof dinnerFormSchema>) {
-    posthog.capture("update dinner", { dinnerName: values.name });
-
-    if (!existingDinner) {
-      return;
-    }
-
-    updateDinnerMutation.mutate(
-      {
-        dinnerName: values.name,
-        dinnerId: existingDinner.id,
-        secret: localStorage.getItem("sulten-secret"),
-        tagList: values.tags,
-      },
-      {
-        onSettled: () => {
-          void utils.dinner.dinners.invalidate();
-        },
-      },
-    );
-  }
-
-  function deleteDinner(values: z.infer<typeof dinnerFormSchema>) {
-    posthog.capture("delete dinner", { dinnerName: values.name });
-
-    if (!existingDinner) {
-      return;
-    }
-
-    deleteDinnerMutation.mutate(
-      {
-        dinnerId: existingDinner.id,
-        secret: localStorage.getItem("sulten-secret"),
-      },
-      {
-        onSettled: () => {
-          void utils.dinner.dinners.invalidate();
-        },
-      },
-    );
-  }
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(updateDinner)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="name"
@@ -221,20 +147,12 @@ export const DinnerForm = ({ existingDinner, closeDialog }: Props) => {
           <Button
             type="button"
             variant={"outline"}
-            onClick={form.handleSubmit(deleteDinner)}
+            onClick={onDelete ? form.handleSubmit(onDelete) : closeDialog}
           >
-            Delete
+            {onDelete ? "Delete" : "Cancel"}
           </Button>
         </div>
       </form>
     </Form>
   );
 };
-
-const dinnerFormSchema = z.object({
-  name: z.string().min(1),
-  tags: z.array(z.string()),
-  newTag: asOptionalStringWithoutEmpty(z.string().max(20).min(1)),
-  link: asOptionalStringWithoutEmpty(z.string().url()),
-  notes: asOptionalStringWithoutEmpty(z.string()),
-});
