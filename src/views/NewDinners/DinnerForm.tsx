@@ -14,6 +14,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { asOptionalStringWithoutEmpty } from "../../utils/zod";
+import { Label } from "../../components/ui/label";
 
 type Props = {
   existingDinner?: DinnerWithTags;
@@ -50,6 +51,25 @@ export const DinnerForm = ({ existingDinner }: Props) => {
             </FormItem>
           )}
         />
+        <div>
+          <Label>Tags</Label>
+          <div className="flex flex-wrap gap-2">
+            {form.getValues("tags").map((tag) => (
+              <div
+                className="rounded bg-green-100 px-2 py-1 text-green-800 active:bg-green-200"
+                key={tag}
+                onClick={() =>
+                  form.setValue(
+                    "tags",
+                    form.watch("tags").filter((t) => t !== tag),
+                  )
+                }
+              >
+                {tag}
+              </div>
+            ))}
+          </div>
+        </div>
         <FormField
           control={form.control}
           name="link"
