@@ -15,12 +15,41 @@ import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { asOptionalStringWithoutEmpty } from "../../utils/zod";
 import { Label } from "../../components/ui/label";
+import { api } from "../../utils/api";
+import { toast } from "../../components/ui/use-toast";
+import { usePostHog } from "posthog-js/react";
 
 type Props = {
   existingDinner?: DinnerWithTags;
+  closeDialog: () => void;
 };
 
-export const DinnerForm = ({ existingDinner }: Props) => {
+export const DinnerForm = ({ existingDinner, closeDialog }: Props) => {
+  const updateDinnerMutation = api.dinner.edit.useMutation({
+    onSuccess: (result) => {
+      toast({
+        title: `${result.dinner.name} updated`,
+      });
+      closeDialog();
+    },
+  });
+
+  const deleteDinnerMutation = api.dinner.delete.useMutation({
+    onSuccess: (result) => {
+      toast({
+        title: `${result.dinner.name} deleted`,
+      });
+      closeDialog();
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+        description: error.message,
+      });
+    },
+  });
+
   const form = useForm<z.infer<typeof dinnerFormSchema>>({
     resolver: zodResolver(dinnerFormSchema),
     defaultValues: {
@@ -32,9 +61,6 @@ export const DinnerForm = ({ existingDinner }: Props) => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof dinnerFormSchema>) {
-    console.log(values);
-  }
   const tags = form.watch("tags");
   const newTag = form.watch("newTag")?.trim();
 
@@ -53,9 +79,54 @@ export const DinnerForm = ({ existingDinner }: Props) => {
     );
   };
 
+  const utils = api.useUtils();
+  const posthog = usePostHog();
+
+  function updateDinner(values: z.infer<typeof dinnerFormSchema>) {
+    posthog.capture("update dinner", { dinnerName: values.name });
+
+    if (!existingDinner) {
+      return;
+    }
+
+    updateDinnerMutation.mutate(
+      {
+        dinnerName: values.name,
+        dinnerId: existingDinner.id,
+        secret: localStorage.getItem("sulten-secret"),
+        tagList: values.tags,
+      },
+      {
+        onSettled: () => {
+          void utils.dinner.dinners.invalidate();
+        },
+      },
+    );
+  }
+
+  function deleteDinner(values: z.infer<typeof dinnerFormSchema>) {
+    posthog.capture("delete dinner", { dinnerName: values.name });
+
+    if (!existingDinner) {
+      return;
+    }
+
+    deleteDinnerMutation.mutate(
+      {
+        dinnerId: existingDinner.id,
+        secret: localStorage.getItem("sulten-secret"),
+      },
+      {
+        onSettled: () => {
+          void utils.dinner.dinners.invalidate();
+        },
+      },
+    );
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(updateDinner)} className="space-y-8">
         <FormField
           control={form.control}
           name="name"
@@ -138,7 +209,16 @@ export const DinnerForm = ({ existingDinner }: Props) => {
             </FormItem>
           )}
         />
-        <Button type="submit">Save</Button>
+        <div className="flex justify-between">
+          <Button type="submit">Save</Button>
+          <Button
+            type="button"
+            variant={"outline"}
+            onClick={form.handleSubmit(deleteDinner)}
+          >
+            Delete
+          </Button>
+        </div>
       </form>
     </Form>
   );
