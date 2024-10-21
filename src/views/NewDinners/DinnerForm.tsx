@@ -32,6 +32,13 @@ export const DinnerForm = ({ existingDinner, closeDialog }: Props) => {
       });
       closeDialog();
     },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+        description: error.message,
+      });
+    },
   });
 
   const deleteDinnerMutation = api.dinner.delete.useMutation({
