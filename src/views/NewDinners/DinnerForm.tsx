@@ -31,8 +31,8 @@ export const DinnerForm = ({
   const form = useForm<z.infer<typeof dinnerFormSchema>>({
     resolver: zodResolver(dinnerFormSchema),
     defaultValues: {
-      name: existingDinner?.name,
-      tags: existingDinner?.tags.map((tag) => tag.value),
+      name: existingDinner?.name ?? "",
+      tags: existingDinner?.tags.map((tag) => tag.value) ?? [],
       newTag: "",
       link: "",
       notes: "",

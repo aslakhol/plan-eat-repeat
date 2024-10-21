@@ -13,6 +13,7 @@ import { type z } from "zod";
 import { api } from "../../utils/api";
 import { toast } from "../../components/ui/use-toast";
 import { usePostHog } from "posthog-js/react";
+import { NewDinner } from "./NewDinner";
 
 type Props = {
   dinners: DinnerWithTags[];
@@ -20,6 +21,7 @@ type Props = {
 export const DinnerList = ({ dinners }: Props) => {
   return (
     <div className="flex flex-col gap-4">
+      <NewDinner />
       {dinners.map((d) => (
         <DinnerListItem key={d.id} dinner={d} />
       ))}
