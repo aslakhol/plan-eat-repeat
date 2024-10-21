@@ -36,7 +36,7 @@ export const DinnerForm = ({ existingDinner }: Props) => {
     console.log(values);
   }
   const tags = form.watch("tags");
-  const newTag = form.watch("newTag");
+  const newTag = form.watch("newTag")?.trim();
 
   const addTag = () => {
     if (!newTag) return;
