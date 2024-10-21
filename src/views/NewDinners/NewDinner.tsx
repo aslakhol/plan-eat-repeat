@@ -13,6 +13,7 @@ import { type z } from "zod";
 import { api } from "../../utils/api";
 import { toast } from "../../components/ui/use-toast";
 import { usePostHog } from "posthog-js/react";
+import { ChefHat, PlusIcon } from "lucide-react";
 
 export const NewDinner = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -46,10 +47,11 @@ export const NewDinner = () => {
       <DialogTrigger>
         <div
           className={cn(
-            "flex cursor-pointer flex-col rounded-md border px-4 py-2 text-left hover:bg-accent/50 hover:text-accent-foreground",
+            "flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 text-left hover:bg-accent/50 hover:text-accent-foreground",
           )}
         >
-          <h3 className="font-semibold">+ New dinner</h3>
+          <ChefHat size={16} />
+          <h3>Add new dinner</h3>
         </div>
       </DialogTrigger>
       <DialogContent>
