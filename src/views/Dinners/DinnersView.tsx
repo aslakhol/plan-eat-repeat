@@ -1,15 +1,13 @@
 import { api } from "~/utils/api";
-import { Dinners } from "./Dinners";
 import { BottomNav } from "../BottomNav";
-import { Dialog } from "../../components/ui/dialog";
-import { SelectDinnerDialogContent } from "./SelectDinnerDialogContent";
-import { useState } from "react";
 import { UtensilsCrossed } from "lucide-react";
+import { DinnerList } from "./DinnerList";
+import { useState } from "react";
+import { Input } from "../../components/ui/input";
 
 export const DinnersView = () => {
-  const [dialogOpen, setDialogOpen] = useState(false);
   const dinnersQuery = api.dinner.dinners.useQuery();
-  const [selectedDinnerId, setSelectedDinnerId] = useState<number>();
+  const [search, setSearch] = useState("");
 
   if (dinnersQuery.isLoading) {
     return (
@@ -19,24 +17,28 @@ export const DinnersView = () => {
     );
   }
 
+  if (!dinnersQuery.isSuccess) {
+    // TODO: Better error state
+    return null;
+  }
+
+  const dinners = dinnersQuery.data.dinners.filter(
+    (dinner) =>
+      !search || dinner.name.toLowerCase().includes(search.toLowerCase()),
+  );
+
   return (
-    <div className="grid h-screen">
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <div>
-          {dinnersQuery.data?.dinners && (
-            <Dinners
-              dinners={dinnersQuery.data.dinners}
-              setSelectedDinnerId={setSelectedDinnerId}
-            />
-          )}
-        </div>
-        <SelectDinnerDialogContent
-          dinner={dinnersQuery.data?.dinners.find(
-            (dinner) => dinner.id === selectedDinnerId,
-          )}
-          closeDialog={() => setDialogOpen(false)}
-        />
-      </Dialog>
+    <div className="flex flex-col gap-4 p-6">
+      {/* Search and Filter */}
+      <Input
+        placeholder="Search dinners"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+      {/* New Dinner */}
+      {/* Existing Dinners */}
+
+      <DinnerList dinners={dinners} />
 
       <BottomNav />
     </div>

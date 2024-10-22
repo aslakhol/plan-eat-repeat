@@ -7,13 +7,13 @@ import {
   DialogTrigger,
 } from "../../components/ui/dialog";
 import { cn } from "../../lib/utils";
-import { type dinnerFormSchema, type DinnerWithTags } from "../../utils/types";
+import { type dinnerFormSchema } from "../../utils/types";
 import { DinnerForm } from "./DinnerForm";
 import { type z } from "zod";
 import { api } from "../../utils/api";
 import { toast } from "../../components/ui/use-toast";
 import { usePostHog } from "posthog-js/react";
-import { ChefHat, PlusIcon } from "lucide-react";
+import { ChefHat } from "lucide-react";
 
 export const NewDinner = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
