@@ -37,6 +37,7 @@ export const DinnersView = () => {
     .filter(
       (dinner) =>
         selectedTags.length === 0 ||
+        !showTags ||
         selectedTags.every((tag) =>
           dinner.tags.map((t) => t.value).includes(tag),
         ),
