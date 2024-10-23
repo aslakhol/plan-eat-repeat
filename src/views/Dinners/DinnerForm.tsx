@@ -78,7 +78,7 @@ export const DinnerForm = ({
           <div className="flex flex-wrap gap-2">
             {form.getValues("tags").map((tag) => (
               <div
-                className="rounded bg-green-100 px-2 py-1 text-green-800 active:bg-green-200"
+                className="cursor-pointer rounded border border-green-100 bg-green-100 px-2 py-1 text-green-800 hover:bg-green-300"
                 key={tag}
                 onClick={() => removeTag(tag)}
               >
