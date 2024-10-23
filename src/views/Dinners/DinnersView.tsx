@@ -4,6 +4,7 @@ import { UtensilsCrossed } from "lucide-react";
 import { DinnerList } from "./DinnerList";
 import { useState } from "react";
 import { Input } from "../../components/ui/input";
+import { Filter } from "./Filter";
 
 export const DinnersView = () => {
   const dinnersQuery = api.dinner.dinners.useQuery();
@@ -35,6 +36,7 @@ export const DinnersView = () => {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
+      <Filter />
       {/* New Dinner */}
       {/* Existing Dinners */}
 
