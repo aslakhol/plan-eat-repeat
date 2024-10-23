@@ -17,13 +17,15 @@ import { NewDinner } from "./NewDinner";
 
 type Props = {
   dinners: DinnerWithTags[];
+  selectedTags: string[];
 };
-export const DinnerList = ({ dinners }: Props) => {
+
+export const DinnerList = ({ dinners, selectedTags }: Props) => {
   return (
     <div className="flex flex-col gap-4">
       <NewDinner />
       {dinners.map((d) => (
-        <DinnerListItem key={d.id} dinner={d} />
+        <DinnerListItem key={d.id} dinner={d} selectedTags={selectedTags} />
       ))}
     </div>
   );
@@ -31,9 +33,10 @@ export const DinnerList = ({ dinners }: Props) => {
 
 type DinnerListItemProps = {
   dinner: DinnerWithTags;
+  selectedTags: string[];
 };
 
-const DinnerListItem = ({ dinner }: DinnerListItemProps) => {
+const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const updateDinnerMutation = api.dinner.edit.useMutation({
@@ -121,7 +124,11 @@ const DinnerListItem = ({ dinner }: DinnerListItemProps) => {
               return (
                 <div
                   key={tag.value}
-                  className="rounded bg-green-100 px-2 py-1 text-green-800 active:bg-green-200"
+                  className={cn(
+                    "rounded bg-green-100 px-2 py-1 text-green-800 ",
+                    selectedTags.includes(tag.value) &&
+                      "border border-green-400 bg-green-200 ",
+                  )}
                 >
                   {tag.value}
                 </div>

@@ -49,7 +49,7 @@ export const DinnersView = () => {
       {/* New Dinner */}
       {/* Existing Dinners */}
 
-      <DinnerList dinners={dinners} />
+      <DinnerList dinners={dinners} selectedTags={selectedTags} />
 
       <BottomNav />
     </div>
