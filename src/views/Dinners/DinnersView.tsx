@@ -9,6 +9,8 @@ import { Button } from "../../components/ui/button";
 
 export const DinnersView = () => {
   const dinnersQuery = api.dinner.dinners.useQuery();
+  const utils = api.useUtils();
+  void utils.dinner.tags.prefetch();
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTags, setShowTags] = useState(false);
