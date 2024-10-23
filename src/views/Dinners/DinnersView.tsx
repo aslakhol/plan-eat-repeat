@@ -4,12 +4,13 @@ import { UtensilsCrossed } from "lucide-react";
 import { DinnerList } from "./DinnerList";
 import { useState } from "react";
 import { Input } from "../../components/ui/input";
-import { Filter } from "./Filter";
+import { Tags } from "./Tags";
 
 export const DinnersView = () => {
   const dinnersQuery = api.dinner.dinners.useQuery();
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [showFilter, setShowFilter] = useState(false);
 
   if (dinnersQuery.isLoading) {
     return (
@@ -39,13 +40,13 @@ export const DinnersView = () => {
 
   return (
     <div className="flex flex-col gap-4 p-6">
-      {/* Search and Filter */}
+      {/* Search and Filters */}
       <Input
         placeholder="Search dinners"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <Filter selectedTags={selectedTags} setSelectedTags={setSelectedTags} />
+      <Tags selectedTags={selectedTags} setSelectedTags={setSelectedTags} />
       {/* New Dinner */}
       {/* Existing Dinners */}
 

@@ -7,7 +7,7 @@ type Props = {
   setSelectedTags: Dispatch<SetStateAction<string[]>>;
 };
 
-export const Filter = ({ selectedTags, setSelectedTags }: Props) => {
+export const Tags = ({ selectedTags, setSelectedTags }: Props) => {
   const filtersQuery = api.dinner.tags.useQuery();
 
   return (
