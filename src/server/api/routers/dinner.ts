@@ -6,9 +6,12 @@ import { env } from "../../../env.mjs";
 
 export const dinnerRouter = createTRPCRouter({
   tags: publicProcedure.query(async ({ ctx }) => {
-    const tags = await ctx.db.tag.findMany({ orderBy: { value: "asc" } });
+    const tags = await ctx.db.tag.findMany({
+      orderBy: { value: "asc" },
+      include: { _count: true },
+    });
     return {
-      tags: tags,
+      tags: tags.filter((tag) => tag._count.Dinner > 0),
     };
   }),
 
