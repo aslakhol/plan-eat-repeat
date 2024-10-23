@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Input } from "../../components/ui/input";
 import { Tags } from "./Tags";
 import { Button } from "../../components/ui/button";
+import { cn } from "../../lib/utils";
 
 export const DinnersView = () => {
   const dinnersQuery = api.dinner.dinners.useQuery();
@@ -46,13 +47,17 @@ export const DinnersView = () => {
       {/* Search and Filters */}
       <div className="flex w-full max-w-sm items-center space-x-2">
         <Input
-          placeholder="Search dinners"
+          placeholder="Search..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <Button
           type="button"
           variant={"outline"}
+          className={cn(
+            "transition-all duration-300",
+            showTags && "rotate-180",
+          )}
           onClick={() => setShowTags(!showTags)}
         >
           <Filter />
