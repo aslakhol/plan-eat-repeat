@@ -56,7 +56,9 @@ export const DinnersView = () => {
           <Filter />
         </Button>
       </div>
-      <Tags selectedTags={selectedTags} setSelectedTags={setSelectedTags} />
+      {showFilter && (
+        <Tags selectedTags={selectedTags} setSelectedTags={setSelectedTags} />
+      )}
       {/* New Dinner */}
       {/* Existing Dinners */}
 
