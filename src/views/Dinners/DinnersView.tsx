@@ -44,7 +44,6 @@ export const DinnersView = () => {
 
   return (
     <div className="flex flex-col gap-4 p-6">
-      {/* Search and Filters */}
       <div className="flex w-full max-w-sm items-center space-x-2">
         <Input
           placeholder="Search..."
@@ -66,8 +65,6 @@ export const DinnersView = () => {
       {showTags && (
         <Tags selectedTags={selectedTags} setSelectedTags={setSelectedTags} />
       )}
-      {/* New Dinner */}
-      {/* Existing Dinners */}
 
       <DinnerList dinners={dinners} selectedTags={selectedTags} />
 
