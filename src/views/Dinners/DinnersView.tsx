@@ -11,7 +11,7 @@ export const DinnersView = () => {
   const dinnersQuery = api.dinner.dinners.useQuery();
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [showFilter, setShowFilter] = useState(false);
+  const [showTags, setShowTags] = useState(false);
 
   if (dinnersQuery.isLoading) {
     return (
@@ -51,12 +51,12 @@ export const DinnersView = () => {
         <Button
           type="button"
           variant={"outline"}
-          onClick={() => setShowFilter(!showFilter)}
+          onClick={() => setShowTags(!showTags)}
         >
           <Filter />
         </Button>
       </div>
-      {showFilter && (
+      {showTags && (
         <Tags selectedTags={selectedTags} setSelectedTags={setSelectedTags} />
       )}
       {/* New Dinner */}
