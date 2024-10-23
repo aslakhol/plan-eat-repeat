@@ -9,6 +9,7 @@ import { Filter } from "./Filter";
 export const DinnersView = () => {
   const dinnersQuery = api.dinner.dinners.useQuery();
   const [search, setSearch] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   if (dinnersQuery.isLoading) {
     return (
@@ -23,10 +24,18 @@ export const DinnersView = () => {
     return null;
   }
 
-  const dinners = dinnersQuery.data.dinners.filter(
-    (dinner) =>
-      !search || dinner.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const dinners = dinnersQuery.data.dinners
+    .filter(
+      (dinner) =>
+        !search || dinner.name.toLowerCase().includes(search.toLowerCase()),
+    )
+    .filter(
+      (dinner) =>
+        selectedTags.length === 0 ||
+        selectedTags.every((tag) =>
+          dinner.tags.map((t) => t.value).includes(tag),
+        ),
+    );
 
   return (
     <div className="flex flex-col gap-4 p-6">
@@ -36,7 +45,7 @@ export const DinnersView = () => {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <Filter />
+      <Filter selectedTags={selectedTags} setSelectedTags={setSelectedTags} />
       {/* New Dinner */}
       {/* Existing Dinners */}
 

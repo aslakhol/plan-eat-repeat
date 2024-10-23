@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { type Dispatch, type SetStateAction } from "react";
 import { api } from "../../utils/api";
 import { cn } from "../../lib/utils";
 
-type Props = {};
+type Props = {
+  selectedTags: string[];
+  setSelectedTags: Dispatch<SetStateAction<string[]>>;
+};
 
-export const Filter = () => {
+export const Filter = ({ selectedTags, setSelectedTags }: Props) => {
   const filtersQuery = api.dinner.tags.useQuery();
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   return (
     <div className="flex flex-wrap gap-2">
