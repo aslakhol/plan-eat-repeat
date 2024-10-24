@@ -1,5 +1,6 @@
 import Head from "next/head";
 import { WeekView } from "../views/Plan/PlanView";
+import { PlanView } from "../views/NewPlan/PlanView";
 
 export default function Home() {
   return (
@@ -9,7 +10,7 @@ export default function Home() {
         <meta name="description" content="Dinner planning tool" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <WeekView />
+      <PlanView />
     </>
   );
 }
