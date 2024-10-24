@@ -31,17 +31,17 @@ export const PlannedDinner = ({ dinner }: Props) => {
         </a>
       )}
       {dinner.notes && (
-        <div>
+        <div className="min-h-[100px]">
           {dinner.notes.split("\n").map((line) => (
             <p key={line}>{line}</p>
           ))}
         </div>
       )}
-      <Button variant={"outline"}>Edit dinner</Button>
 
-      <div>
-        <Button variant={"outline"}>Change</Button>
-        <Button variant={"outline"}>Clear</Button>
+      <div className="flex w-full gap-2">
+        <Button variant={"outline"}>Change plan</Button>
+        <Button variant={"outline"}>Clear day</Button>
+        <Button variant={"outline"}>Edit dinner</Button>
       </div>
     </div>
   );
