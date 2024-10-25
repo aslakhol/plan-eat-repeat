@@ -8,6 +8,7 @@ import {
 } from "../../components/ui/dialog";
 import { PlannedDinner } from "./PlannedDinner";
 import { type DinnerWithTags } from "../../utils/types";
+import { useState } from "react";
 
 type Props = {
   date: Date;
@@ -15,8 +16,9 @@ type Props = {
 };
 
 export const Day = ({ date, plannedDinner }: Props) => {
+  const [dialogOpen, setDialogOpen] = useState(false);
   return (
-    <Dialog>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <div
           className={cn(
@@ -28,7 +30,15 @@ export const Day = ({ date, plannedDinner }: Props) => {
         </div>
       </DialogTrigger>
       <DialogContent>
-        {plannedDinner ? <PlannedDinner dinner={plannedDinner} /> : <>foo</>}
+        {plannedDinner ? (
+          <PlannedDinner
+            dinner={plannedDinner}
+            date={date}
+            closeDialog={() => setDialogOpen(false)}
+          />
+        ) : (
+          <>foo</>
+        )}
       </DialogContent>
     </Dialog>
   );
