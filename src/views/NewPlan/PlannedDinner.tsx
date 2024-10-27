@@ -1,8 +1,6 @@
-import { usePostHog } from "posthog-js/react";
 import { Button } from "../../components/ui/button";
-import { api } from "../../utils/api";
 import { type DinnerWithTags } from "../../utils/types";
-import { format, isSameDay, startOfWeek } from "date-fns";
+import { format } from "date-fns";
 import {
   DialogHeader,
   DialogTitle,
