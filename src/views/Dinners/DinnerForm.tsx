@@ -48,6 +48,7 @@ export const DinnerForm = ({
     }
     form.setValue("tags", [...tags, newTag]);
     form.setValue("newTag", "");
+    return newTag;
   };
 
   const removeTag = (tag: string) => {
@@ -57,9 +58,17 @@ export const DinnerForm = ({
     );
   };
 
+  const submit = (values: z.infer<typeof dinnerFormSchema>) => {
+    const addedTag = addTag();
+    onSubmit({
+      ...values,
+      tags: addedTag ? [...values.tags, addedTag] : values.tags,
+    });
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(submit)} className="space-y-8">
         <FormField
           control={form.control}
           name="name"
@@ -78,7 +87,7 @@ export const DinnerForm = ({
           <div className="flex flex-wrap gap-2">
             {form.getValues("tags").map((tag) => (
               <div
-                className="rounded bg-green-100 px-2 py-1 text-green-800 active:bg-green-200"
+                className="cursor-pointer rounded border border-green-100 bg-green-100 px-2 py-1 text-green-800 hover:bg-green-300"
                 key={tag}
                 onClick={() => removeTag(tag)}
               >
