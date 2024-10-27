@@ -16,7 +16,9 @@ export const PlannedDinner = ({ dinner, date, closeDialog }: Props) => {
   return (
     <>
       <DialogHeader>
-        <DialogDescription>{format(date, "EEE do")}</DialogDescription>
+        <DialogDescription>
+          {format(date, "EEEE, LLLL  do, y")}
+        </DialogDescription>
         <DialogTitle>{dinner.name}</DialogTitle>
       </DialogHeader>
       <div className="flex flex-col gap-2">
