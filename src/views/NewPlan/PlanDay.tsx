@@ -38,10 +38,10 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
             <Dinner key={dinner.id} dinner={dinner} />
           ))}
         </div>
-        <div className="flex w-full justify-between pt-2">
-          <Button variant={"outline"}>New dinner</Button>
-          {plannedDinner && <ClearDay date={date} closeDialog={closeDialog} />}
-        </div>
+      </div>
+      <div className="flex w-full justify-between gap-2">
+        <Button variant={"outline"}>New dinner</Button>
+        {plannedDinner && <ClearDay date={date} closeDialog={closeDialog} />}
       </div>
     </DialogContent>
   );
