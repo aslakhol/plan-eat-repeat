@@ -8,6 +8,7 @@ import { type DinnerWithTags } from "../../utils/types";
 import { DialogContent } from "@radix-ui/react-dialog";
 import { api } from "../../utils/api";
 import { cn } from "../../lib/utils";
+import { ClearDay } from "./ClearDay";
 
 type Props = {
   date: Date;
@@ -35,7 +36,9 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
           <Dinner key={dinner.id} dinner={dinner} />
         ))}
         {/* New dinner link */}
-        {/* Clear plan */}
+        {/* TOOD: Clear plan only if plannedDinner is not null */}
+
+        <ClearDay date={date} closeDialog={closeDialog} />
       </div>
     </>
   );
