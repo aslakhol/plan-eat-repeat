@@ -61,7 +61,6 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
       />
 
       <div className="flex flex-col overflow-hidden">
-        {/* Filters and search */}
         <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
           {dinners?.map((dinner) => (
             <Dinner
