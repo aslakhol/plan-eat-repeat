@@ -3,8 +3,11 @@ import { Button } from "../../components/ui/button";
 import { api } from "../../utils/api";
 import { type DinnerWithTags } from "../../utils/types";
 import { format, isSameDay, startOfWeek } from "date-fns";
-import { DialogHeader, DialogTitle } from "../../components/ui/dialog";
-import { DialogDescription } from "@radix-ui/react-dialog";
+import {
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../../components/ui/dialog";
 
 type Props = {
   dinner: DinnerWithTags;
