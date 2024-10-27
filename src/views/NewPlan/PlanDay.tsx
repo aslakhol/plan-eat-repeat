@@ -10,6 +10,8 @@ import { api } from "../../utils/api";
 import { cn } from "../../lib/utils";
 import { ClearDay } from "./ClearDay";
 import { Button } from "../../components/ui/button";
+import { Filter } from "./Filter";
+import { useState } from "react";
 
 type Props = {
   date: Date;
@@ -19,6 +21,23 @@ type Props = {
 
 export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   const dinnersQuery = api.dinner.dinners.useQuery();
+  const [search, setSearch] = useState("");
+  const [showTags, setShowTags] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const dinners = dinnersQuery.data?.dinners
+    .filter(
+      (dinner) =>
+        !search || dinner.name.toLowerCase().includes(search.toLowerCase()),
+    )
+    .filter(
+      (dinner) =>
+        selectedTags.length === 0 ||
+        !showTags ||
+        selectedTags.every((tag) =>
+          dinner.tags.map((t) => t.value).includes(tag),
+        ),
+    );
 
   return (
     <DialogContent className="flex flex-col">
@@ -31,12 +50,19 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
         </DialogTitle>
       </DialogHeader>
 
+      <Filter
+        search={search}
+        setSearch={setSearch}
+        showTags={showTags}
+        setShowTags={setShowTags}
+        selectedTags={selectedTags}
+        setSelectedTags={setSelectedTags}
+      />
+
       <div className="flex flex-col overflow-hidden">
         {/* Filters and search */}
         <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
-          {dinnersQuery.data?.dinners.map((dinner) => (
-            <Dinner key={dinner.id} dinner={dinner} />
-          ))}
+          {dinners?.map((dinner) => <Dinner key={dinner.id} dinner={dinner} />)}
         </div>
       </div>
       <div className="flex w-full justify-between gap-2">
