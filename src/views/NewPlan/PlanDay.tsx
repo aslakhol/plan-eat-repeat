@@ -68,7 +68,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
               key={dinner.id}
               date={date}
               dinner={dinner}
-              plannedDinner={plannedDinner}
+              isPlanned={plannedDinner?.id === dinner.id}
               closeDialog={closeDialog}
             />
           ))}
@@ -85,12 +85,11 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
 type DinnerProps = {
   date: Date;
   dinner: DinnerWithTags;
-  plannedDinner?: DinnerWithTags;
+  isPlanned: boolean;
   closeDialog: () => void;
 };
 
-const Dinner = ({ date, dinner, plannedDinner, closeDialog }: DinnerProps) => {
-  const isPlanned = plannedDinner?.id === dinner.id;
+const Dinner = ({ date, dinner, isPlanned, closeDialog }: DinnerProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
 
