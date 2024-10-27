@@ -40,7 +40,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
         </div>
         <div className="flex w-full justify-between pt-2">
           <Button variant={"outline"}>New dinner</Button>
-          <ClearDay date={date} closeDialog={closeDialog} />
+          {plannedDinner && <ClearDay date={date} closeDialog={closeDialog} />}
         </div>
       </div>
     </DialogContent>
