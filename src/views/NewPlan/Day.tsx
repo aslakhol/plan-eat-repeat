@@ -1,11 +1,7 @@
 import { type Dinner } from "@prisma/client";
 import { format } from "date-fns";
 import { cn } from "../../lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "../../components/ui/dialog";
+import { Dialog, DialogTrigger } from "../../components/ui/dialog";
 import { PlannedDinner } from "./PlannedDinner";
 import { type DinnerWithTags } from "../../utils/types";
 import { useState } from "react";
