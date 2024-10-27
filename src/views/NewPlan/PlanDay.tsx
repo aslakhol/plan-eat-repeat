@@ -21,7 +21,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   const dinnersQuery = api.dinner.dinners.useQuery();
 
   return (
-    <DialogContent className="flex max-h-[90vh] flex-col">
+    <DialogContent className="flex flex-col">
       <DialogHeader>
         <DialogDescription>
           {format(date, "EEEE, LLLL  do, y")}

@@ -19,7 +19,7 @@ type Props = {
 
 export const PlannedDinner = ({ dinner, date, closeDialog }: Props) => {
   return (
-    <DialogContent className="flex max-h-[90vh] flex-col">
+    <DialogContent className="flex flex-col">
       <DialogHeader>
         <DialogDescription>
           {format(date, "EEEE, LLLL  do, y")}
