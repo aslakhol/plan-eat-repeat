@@ -1,8 +1,8 @@
 import { type Dispatch, type SetStateAction } from "react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { cn } from "../../lib/utils";
-import { Tags } from "../Dinners/Tags";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { cn } from "../lib/utils";
+import { Tags } from "./Dinners/Tags";
 import { FilterIcon } from "lucide-react";
 
 type Props = {

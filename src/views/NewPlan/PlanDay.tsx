@@ -10,7 +10,7 @@ import { api } from "../../utils/api";
 import { cn } from "../../lib/utils";
 import { ClearDay } from "./ClearDay";
 import { Button } from "../../components/ui/button";
-import { Filter } from "./Filter";
+import { Filter } from "../Filter";
 import { useState } from "react";
 
 type Props = {
