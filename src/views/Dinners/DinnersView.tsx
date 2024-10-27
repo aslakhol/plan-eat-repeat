@@ -3,7 +3,6 @@ import { BottomNav } from "../BottomNav";
 import { UtensilsCrossed } from "lucide-react";
 import { DinnerList } from "./DinnerList";
 import { useState } from "react";
-import { Tags } from "./Tags";
 import { Filter } from "../Filter";
 export const DinnersView = () => {
   const dinnersQuery = api.dinner.dinners.useQuery();
