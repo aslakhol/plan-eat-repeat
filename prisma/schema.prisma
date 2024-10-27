@@ -19,6 +19,8 @@ model Dinner {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
     Plan      Plan[]
+    link      String?
+    notes     String?
 
     @@index([name])
 }

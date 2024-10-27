@@ -28,6 +28,8 @@ export const dinnerRouter = createTRPCRouter({
         dinnerName: z.string().min(3),
         secret: z.string().nullable(),
         tagList: z.array(z.string()),
+        link: z.string().nullable().optional(),
+        notes: z.string().nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -38,6 +40,8 @@ export const dinnerRouter = createTRPCRouter({
       const dinner = await ctx.db.dinner.create({
         data: {
           name: input.dinnerName,
+          link: input.link,
+          notes: input.notes,
           tags: {
             connectOrCreate: input.tagList.map((tag) => {
               return {
@@ -60,17 +64,29 @@ export const dinnerRouter = createTRPCRouter({
         dinnerId: z.number(),
         secret: z.string().nullable(),
         tagList: z.array(z.string()),
+        link: z.string().nullable().optional(),
+        notes: z.string().nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       if (env.SECRET_PHRASE !== input.secret) {
         throw new Error("Missing secret keyword");
       }
+      const previousDinner = await ctx.db.dinner.findUnique({
+        where: { id: input.dinnerId },
+        include: { tags: true },
+      });
+
+      const tagsToRemove = previousDinner?.tags.filter(
+        (tag) => !input.tagList.includes(tag.value),
+      );
 
       const dinner = await ctx.db.dinner.update({
         where: { id: input.dinnerId },
         data: {
           name: input.dinnerName,
+          link: input.link,
+          notes: input.notes,
           tags: {
             connectOrCreate: input.tagList.map((tag) => {
               return {
@@ -78,6 +94,7 @@ export const dinnerRouter = createTRPCRouter({
                 create: { value: tag },
               };
             }),
+            disconnect: tagsToRemove,
           },
         },
       });
