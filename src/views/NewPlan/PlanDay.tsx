@@ -1,4 +1,4 @@
-import { format, isSameDay, startOfWeek } from "date-fns";
+import { format } from "date-fns";
 import {
   DialogDescription,
   DialogHeader,
@@ -13,7 +13,7 @@ import { Button } from "../../components/ui/button";
 import { Filter } from "../Filter";
 import { useState } from "react";
 import { usePostHog } from "posthog-js/react";
-import { type Dinner, type Plan } from "@prisma/client";
+import { type Dinner } from "@prisma/client";
 
 type Props = {
   date: Date;
@@ -22,11 +22,13 @@ type Props = {
 };
 
 export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
-  const dinnersQuery = api.dinner.dinners.useQuery();
+  const posthog = usePostHog();
+  const utils = api.useUtils();
   const [search, setSearch] = useState("");
   const [showTags, setShowTags] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
+  const dinnersQuery = api.dinner.dinners.useQuery();
   const dinners = dinnersQuery.data?.dinners
     .filter(
       (dinner) =>
@@ -39,6 +41,27 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
           dinner.tags.map((t) => t.value).includes(tag),
         ),
     );
+
+  const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
+    onSuccess: (result) => {
+      void utils.plan.plannedDinners.invalidate();
+      posthog.capture("plan dinner from week page", {
+        dinner:
+          dinnersQuery.data?.dinners.find(
+            (d) => d.id === result.newPlan.dinnerId,
+          )?.name ?? "unknown",
+        day: format(date, "EEE do"),
+      });
+      closeDialog();
+    },
+  });
+  const planDinner = (dinnerId: number) => {
+    planDinnerForDateMutation.mutate({
+      date,
+      dinnerId,
+      secret: localStorage.getItem("sulten-secret"),
+    });
+  };
 
   return (
     <DialogContent className="flex flex-col">
@@ -65,10 +88,10 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
           {dinners?.map((dinner) => (
             <Dinner
               key={dinner.id}
-              date={date}
               dinner={dinner}
               isPlanned={plannedDinner?.id === dinner.id}
-              closeDialog={closeDialog}
+              planDinner={planDinner}
+              isLoading={planDinnerForDateMutation.isLoading}
             />
           ))}
         </div>
@@ -82,76 +105,13 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
 };
 
 type DinnerProps = {
-  date: Date;
   dinner: DinnerWithTags;
   isPlanned: boolean;
-  closeDialog: () => void;
+  planDinner: (dinnerId: number) => void;
+  isLoading: boolean;
 };
 
-const Dinner = ({ date, dinner, isPlanned, closeDialog }: DinnerProps) => {
-  const posthog = usePostHog();
-  const utils = api.useUtils();
-
-  const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
-    onMutate: (input) => {
-      void utils.plan.plannedDinners.cancel();
-
-      const prevPlannedDinners = utils.plan.plannedDinners.getData();
-
-      utils.plan.plannedDinners.setData(
-        { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
-        (old) => {
-          const oldPlans = old?.plans ?? [];
-          const alreadyPlanned = oldPlans.find((plan) =>
-            isSameDay(plan.date, input.date),
-          );
-          const newPlan: Plan & { dinner: DinnerWithTags } = {
-            ...alreadyPlanned,
-            dinnerId: input.dinnerId,
-            dinner,
-            id: alreadyPlanned?.id ?? Math.ceil(Math.random() * -10000),
-            date: input.date,
-          };
-
-          return {
-            plans: [
-              ...oldPlans.filter((plan) => plan.id !== newPlan.id),
-              newPlan,
-            ],
-          };
-        },
-      );
-
-      return { prevPlannedDinners };
-    },
-    onError: (_, __, context) => {
-      if (context?.prevPlannedDinners) {
-        utils.plan.plannedDinners.setData(
-          { startOfWeek: startOfWeek(date ?? new Date(), { weekStartsOn: 1 }) },
-          context.prevPlannedDinners,
-        );
-      }
-    },
-    onSettled: () => {
-      void utils.plan.plannedDinners.invalidate();
-    },
-    onSuccess: () => {
-      posthog.capture("plan dinner from week page", {
-        dinner: dinner.name,
-        day: format(date, "EEE do"),
-      });
-      closeDialog();
-    },
-  });
-
-  const handleClick = () => {
-    return planDinnerForDateMutation.mutate({
-      date,
-      dinnerId: dinner.id,
-      secret: localStorage.getItem("sulten-secret"),
-    });
-  };
-
+const Dinner = ({ dinner, isPlanned, planDinner, isLoading }: DinnerProps) => {
   return (
     <Button
       className={cn(
@@ -159,8 +119,8 @@ const Dinner = ({ date, dinner, isPlanned, closeDialog }: DinnerProps) => {
         isPlanned && "bg-accent/50 text-accent-foreground hover:bg-accent",
       )}
       variant={"outline"}
-      disabled={planDinnerForDateMutation.isLoading}
-      onClick={handleClick}
+      disabled={isLoading}
+      onClick={() => planDinner(dinner.id)}
     >
       {dinner.name}
     </Button>
