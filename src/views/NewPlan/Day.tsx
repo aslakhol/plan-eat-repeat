@@ -30,7 +30,7 @@ export const Day = ({ date, plannedDinner }: Props) => {
           <DinnerSlot dinner={plannedDinner} />
         </div>
       </DialogTrigger>
-      <DialogContent>
+      <>
         {plannedDinner ? (
           <PlannedDinner
             dinner={plannedDinner}
@@ -40,7 +40,7 @@ export const Day = ({ date, plannedDinner }: Props) => {
         ) : (
           <PlanDay date={date} closeDialog={() => setDialogOpen(false)} />
         )}
-      </DialogContent>
+      </>
     </Dialog>
   );
 };

@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogContent,
 } from "../../components/ui/dialog";
 import { ClearDay } from "./ClearDay";
 
@@ -18,7 +19,7 @@ type Props = {
 
 export const PlannedDinner = ({ dinner, date, closeDialog }: Props) => {
   return (
-    <>
+    <DialogContent className="flex max-h-[90vh] flex-col">
       <DialogHeader>
         <DialogDescription>
           {format(date, "EEEE, LLLL  do, y")}
@@ -61,6 +62,6 @@ export const PlannedDinner = ({ dinner, date, closeDialog }: Props) => {
           <Button variant={"outline"}>Edit dinner</Button>
         </div>
       </div>
-    </>
+    </DialogContent>
   );
 };

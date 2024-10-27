@@ -3,12 +3,13 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogContent,
 } from "../../components/ui/dialog";
 import { type DinnerWithTags } from "../../utils/types";
-import { DialogContent } from "@radix-ui/react-dialog";
 import { api } from "../../utils/api";
 import { cn } from "../../lib/utils";
 import { ClearDay } from "./ClearDay";
+import { Button } from "../../components/ui/button";
 
 type Props = {
   date: Date;
@@ -20,7 +21,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   const dinnersQuery = api.dinner.dinners.useQuery();
 
   return (
-    <>
+    <DialogContent className="flex max-h-[90vh] flex-col">
       <DialogHeader>
         <DialogDescription>
           {format(date, "EEEE, LLLL  do, y")}
@@ -29,18 +30,20 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
           {plannedDinner ? plannedDinner.name : "Nothing planned yet"}
         </DialogTitle>
       </DialogHeader>
-      <div>
-        {/* Filters and search */}
-        {/* List of dinners */}
-        {dinnersQuery.data?.dinners.map((dinner) => (
-          <Dinner key={dinner.id} dinner={dinner} />
-        ))}
-        {/* New dinner link */}
-        {/* TOOD: Clear plan only if plannedDinner is not null */}
 
-        <ClearDay date={date} closeDialog={closeDialog} />
+      <div className="flex flex-col overflow-hidden">
+        {/* Filters and search */}
+        <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
+          {dinnersQuery.data?.dinners.map((dinner) => (
+            <Dinner key={dinner.id} dinner={dinner} />
+          ))}
+        </div>
+        <div className="flex w-full justify-between pt-2">
+          <Button variant={"outline"}>New dinner</Button>
+          <ClearDay date={date} closeDialog={closeDialog} />
+        </div>
       </div>
-    </>
+    </DialogContent>
   );
 };
 
