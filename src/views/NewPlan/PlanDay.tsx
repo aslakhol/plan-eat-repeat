@@ -33,7 +33,6 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
     .filter(
       (dinner) =>
         selectedTags.length === 0 ||
-        !showTags ||
         selectedTags.every((tag) =>
           dinner.tags.map((t) => t.value).includes(tag),
         ),
