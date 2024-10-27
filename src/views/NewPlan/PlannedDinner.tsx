@@ -4,6 +4,7 @@ import { api } from "../../utils/api";
 import { type DinnerWithTags } from "../../utils/types";
 import { format, isSameDay, startOfWeek } from "date-fns";
 import { DialogHeader, DialogTitle } from "../../components/ui/dialog";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
 type Props = {
   dinner: DinnerWithTags;
@@ -15,11 +16,10 @@ export const PlannedDinner = ({ dinner, date, closeDialog }: Props) => {
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{format(date, "EEE do")}</DialogTitle>
-        {/* <DialogDescription>{dinner.name}</DialogDescription> */}
+        <DialogDescription>{format(date, "EEE do")}</DialogDescription>
+        <DialogTitle>{dinner.name}</DialogTitle>
       </DialogHeader>
       <div className="flex flex-col gap-2">
-        <h1 className="text-lg font-semibold">{dinner.name}</h1>
         {dinner.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {dinner.tags.map((tag) => (

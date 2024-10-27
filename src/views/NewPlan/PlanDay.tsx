@@ -16,10 +16,10 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{format(date, "EEE do")}</DialogTitle>
-        <DialogDescription>
+        <DialogDescription>{format(date, "EEE do")}</DialogDescription>
+        <DialogTitle>
           {plannedDinner ? plannedDinner.name : "Nothing planned yet"}
-        </DialogDescription>
+        </DialogTitle>
       </DialogHeader>
     </>
   );
