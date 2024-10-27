@@ -9,6 +9,7 @@ import {
 import { PlannedDinner } from "./PlannedDinner";
 import { type DinnerWithTags } from "../../utils/types";
 import { useState } from "react";
+import { PlanDay } from "./PlanDay";
 
 type Props = {
   date: Date;
@@ -37,7 +38,7 @@ export const Day = ({ date, plannedDinner }: Props) => {
             closeDialog={() => setDialogOpen(false)}
           />
         ) : (
-          <>foo</>
+          <PlanDay date={date} closeDialog={() => setDialogOpen(false)} />
         )}
       </DialogContent>
     </Dialog>
