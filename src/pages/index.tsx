@@ -1,6 +1,5 @@
 import Head from "next/head";
-import { WeekView } from "../views/Plan/PlanView";
-import { PlanView } from "../views/NewPlan/PlanView";
+import { PlanView } from "../views/Plan/PlanView";
 
 export default function Home() {
   return (

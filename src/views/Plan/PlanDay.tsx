@@ -128,16 +128,4 @@ const Dinner = ({ dinner, isPlanned, planDinner, isLoading }: DinnerProps) => {
       {dinner.name}
     </Button>
   );
-
-  // return (
-  //   <div
-  //     className={cn(
-  //       "flex cursor-pointer flex-col rounded border px-4 py-2 hover:bg-accent/50 hover:text-accent-foreground",
-  //       isPlanned && "bg-accent/50 text-accent-foreground hover:bg-accent",
-  //     )}
-  //     onClick={handleClick}
-  //   >
-  //     <h3 className="font-semibold">{dinner.name}</h3>
-  //   </div>
-  // );
 };
