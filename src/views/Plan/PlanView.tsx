@@ -7,8 +7,6 @@ import { Day } from "./Day";
 import { WeekSelect } from "../WeekSelect";
 
 export const PlanView = () => {
-  const [selectedDay, setSelectedDay] = useState<Date>();
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [weekOffSet, setWeekOffSet] = useState(0);
   const trpc = api.useUtils();
 
