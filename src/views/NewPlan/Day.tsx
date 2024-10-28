@@ -16,8 +16,15 @@ export const Day = ({ date, plannedDinner }: Props) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [changePlan, setChangePlan] = useState(!plannedDinner);
 
+  const onOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setChangePlan(false);
+    }
+  };
+
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+    <Dialog open={dialogOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <div
           className={cn(
@@ -32,14 +39,14 @@ export const Day = ({ date, plannedDinner }: Props) => {
         {changePlan || !plannedDinner ? (
           <PlanDay
             date={date}
-            closeDialog={() => setDialogOpen(false)}
+            closeDialog={() => onOpenChange(false)}
             plannedDinner={plannedDinner}
           />
         ) : (
           <PlannedDinner
             dinner={plannedDinner}
             date={date}
-            closeDialog={() => setDialogOpen(false)}
+            closeDialog={() => onOpenChange(false)}
             setChangePlan={setChangePlan}
           />
         )}
