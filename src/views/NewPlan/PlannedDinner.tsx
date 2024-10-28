@@ -8,6 +8,7 @@ import {
   DialogContent,
 } from "../../components/ui/dialog";
 import { ClearDay } from "./ClearDay";
+import Link from "next/link";
 
 type Props = {
   dinner: DinnerWithTags;
@@ -57,7 +58,9 @@ export const PlannedDinner = ({ dinner, date, closeDialog }: Props) => {
         <div className="flex w-full gap-2">
           <Button variant={"outline"}>Change plan</Button>
           <ClearDay date={date} closeDialog={closeDialog} />
-          <Button variant={"outline"}>Edit dinner</Button>
+          <Button variant={"outline"} asChild>
+            <Link href={`/dinners/${dinner.id}`}>Edit dinner</Link>
+          </Button>
         </div>
       </div>
     </DialogContent>
