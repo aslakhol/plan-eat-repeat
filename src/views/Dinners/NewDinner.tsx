@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,11 +13,16 @@ import { api } from "../../utils/api";
 import { toast } from "../../components/ui/use-toast";
 import { usePostHog } from "posthog-js/react";
 import { ChefHat } from "lucide-react";
+import { useRouter } from "next/router";
 
 export const NewDinner = () => {
-  const [dialogOpen, setDialogOpen] = useState(false);
   const utils = api.useUtils();
   const posthog = usePostHog();
+  const router = useRouter();
+  const dialogOpen = router.pathname === "/dinners/new";
+  const setDialogOpen = (open: boolean) => {
+    void router.push(open ? "/dinners/new" : "/dinners");
+  };
 
   const createDinnerMutation = api.dinner.create.useMutation({
     onSuccess: (result) => {
