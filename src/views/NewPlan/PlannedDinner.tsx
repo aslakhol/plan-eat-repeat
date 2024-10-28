@@ -14,9 +14,15 @@ type Props = {
   dinner: DinnerWithTags;
   date: Date;
   closeDialog: () => void;
+  setChangePlan: (change: boolean) => void;
 };
 
-export const PlannedDinner = ({ dinner, date, closeDialog }: Props) => {
+export const PlannedDinner = ({
+  dinner,
+  date,
+  closeDialog,
+  setChangePlan,
+}: Props) => {
   return (
     <DialogContent className="flex flex-col">
       <DialogHeader>
@@ -56,7 +62,9 @@ export const PlannedDinner = ({ dinner, date, closeDialog }: Props) => {
         )}
 
         <div className="flex w-full gap-2">
-          <Button variant={"outline"}>Change plan</Button>
+          <Button variant={"outline"} onClick={() => setChangePlan(true)}>
+            Change plan
+          </Button>
           <ClearDay date={date} closeDialog={closeDialog} />
           <Button variant={"outline"} asChild>
             <Link href={`/dinners/${dinner.id}`}>Edit dinner</Link>
