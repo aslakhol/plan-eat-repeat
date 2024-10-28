@@ -14,6 +14,7 @@ import { Filter } from "../Filter";
 import { useState } from "react";
 import { usePostHog } from "posthog-js/react";
 import { type Dinner } from "@prisma/client";
+import Link from "next/link";
 
 type Props = {
   date: Date;
@@ -97,7 +98,9 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
         </div>
       </div>
       <div className="flex w-full justify-between gap-2">
-        <Button variant={"outline"}>New dinner</Button>
+        <Button asChild variant={"outline"}>
+          <Link href="/dinners/new">New dinner</Link>
+        </Button>
         {plannedDinner && <ClearDay date={date} closeDialog={closeDialog} />}
       </div>
     </DialogContent>
