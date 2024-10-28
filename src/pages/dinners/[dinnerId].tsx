@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { DinnersView } from "../views/Dinners/DinnersView";
+import { DinnersView } from "../../views/Dinners/DinnersView";
 
 export default function Home() {
   return (

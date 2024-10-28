@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +13,7 @@ import { api } from "../../utils/api";
 import { toast } from "../../components/ui/use-toast";
 import { usePostHog } from "posthog-js/react";
 import { NewDinner } from "./NewDinner";
+import { useRouter } from "next/router";
 
 type Props = {
   dinners: DinnerWithTags[];
@@ -37,7 +37,11 @@ type DinnerListItemProps = {
 };
 
 const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const router = useRouter();
+  const dialogOpen = Number(router.query.dinnerId) === dinner.id;
+  const setDialogOpen = (open: boolean) => {
+    void router.push(open ? `/dinners/${dinner.id}` : "/dinners");
+  };
 
   const updateDinnerMutation = api.dinner.edit.useMutation({
     onSuccess: (result) => {

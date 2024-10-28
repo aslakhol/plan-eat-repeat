@@ -12,7 +12,7 @@ export const planRouter = createTRPCRouter({
         where: {
           date: { gte: input.startOfWeek, lt: addDays(input.startOfWeek, 7) },
         },
-        include: { dinner: true },
+        include: { dinner: { include: { tags: true } } },
         orderBy: { date: "asc" },
       });
 
