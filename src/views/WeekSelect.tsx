@@ -16,7 +16,7 @@ export const WeekSelect = ({
     <div className="flex items-center gap-2">
       <Button
         variant="outline"
-        className="h-8 w-8 p-0"
+        className="h-8 w-8"
         onClick={() => setWeekOfSet((prev) => prev - 1)}
       >
         <span className="sr-only">Go back 1 week</span>
@@ -24,7 +24,7 @@ export const WeekSelect = ({
       </Button>
       <Button
         variant="outline"
-        className="h-8 w-8 p-0"
+        className="h-8 w-8"
         onClick={() => setWeekOfSet(0)}
       >
         <span className="sr-only">Go to today</span>
@@ -32,7 +32,7 @@ export const WeekSelect = ({
       </Button>
       <Button
         variant="outline"
-        className="h-8 w-8 p-0"
+        className="h-8 w-8"
         onClick={() => setWeekOfSet((prev) => prev + 1)}
       >
         <span className="sr-only">Go forward 1 week</span>
