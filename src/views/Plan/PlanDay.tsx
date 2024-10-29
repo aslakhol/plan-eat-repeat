@@ -65,7 +65,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   };
 
   return (
-    <DialogContent className="flex flex-col">
+    <DialogContent className="flex flex-col p-5">
       <DialogHeader>
         <DialogDescription>
           {format(date, "EEEE, LLLL  do, y")}
@@ -84,8 +84,8 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
         setSelectedTags={setSelectedTags}
       />
 
-      <div className="flex flex-col overflow-hidden">
-        <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
+      <div className="flex flex-col overflow-y-hidden">
+        <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-1">
           {dinners?.map((dinner) => (
             <Dinner
               key={dinner.id}
@@ -97,7 +97,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
           ))}
         </div>
       </div>
-      <div className="flex w-full justify-between gap-2">
+      <div className="flex w-full justify-between gap-2 p-1">
         <Button asChild variant={"outline"}>
           <Link href="/dinners/new">New dinner</Link>
         </Button>

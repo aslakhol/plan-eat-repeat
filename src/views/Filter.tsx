@@ -24,7 +24,7 @@ export const Filter = ({
 }: Props) => {
   return (
     <>
-      <div className="flex w-full  items-center space-x-2">
+      <div className="flex w-full items-center space-x-2 p-1">
         <Input
           placeholder="Search..."
           value={search}
