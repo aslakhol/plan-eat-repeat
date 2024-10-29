@@ -68,7 +68,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
     <DialogContent className="flex flex-col p-5">
       <DialogHeader>
         <DialogDescription>
-          {format(date, "EEEE, LLLL  do, y")}
+          {format(date, "EEEE, LLLL do, y")}
         </DialogDescription>
         <DialogTitle>
           {plannedDinner ? plannedDinner.name : "Nothing planned yet"}
