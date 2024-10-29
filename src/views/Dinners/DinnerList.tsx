@@ -14,6 +14,7 @@ import { toast } from "../../components/ui/use-toast";
 import { usePostHog } from "posthog-js/react";
 import { NewDinner } from "./NewDinner";
 import { useRouter } from "next/router";
+import { Button } from "../../components/ui/button";
 
 type Props = {
   dinners: DinnerWithTags[];
@@ -117,13 +118,14 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger>
-        <div
+        <Button
           className={cn(
-            "flex cursor-pointer flex-col rounded-md border px-4 py-2 text-left hover:bg-accent/50 hover:text-accent-foreground",
+            "flex h-auto w-full cursor-pointer flex-col items-start rounded-md border px-4 py-2 text-left hover:bg-accent/50 hover:text-accent-foreground",
           )}
+          variant={"outline"}
         >
-          <h3 className="font-semibold">{dinner.name}</h3>
-          <div className="mt-2 flex flex-wrap gap-2">
+          {dinner.name}
+          <div className="flex flex-wrap gap-2">
             {dinner.tags.map((tag) => {
               return (
                 <div
@@ -139,7 +141,7 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
               );
             })}
           </div>
-        </div>
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
