@@ -12,6 +12,7 @@ type Props = {
   setShowTags: Dispatch<SetStateAction<boolean>>;
   selectedTags: string[];
   setSelectedTags: Dispatch<SetStateAction<string[]>>;
+  className?: string;
 };
 
 export const Filter = ({
@@ -21,10 +22,11 @@ export const Filter = ({
   setShowTags,
   selectedTags,
   setSelectedTags,
+  className,
 }: Props) => {
   return (
-    <>
-      <div className="flex w-full items-center space-x-2 p-1">
+    <div className={cn(className)}>
+      <div className="flex w-full items-center space-x-2">
         <Input
           placeholder="Search..."
           value={search}
@@ -45,6 +47,6 @@ export const Filter = ({
       {showTags && (
         <Tags selectedTags={selectedTags} setSelectedTags={setSelectedTags} />
       )}
-    </>
+    </div>
   );
 };

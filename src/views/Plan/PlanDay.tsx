@@ -82,6 +82,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
         setShowTags={setShowTags}
         selectedTags={selectedTags}
         setSelectedTags={setSelectedTags}
+        className="p-1"
       />
 
       <div className="flex flex-col overflow-y-hidden">
