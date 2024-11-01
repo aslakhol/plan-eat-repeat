@@ -205,6 +205,12 @@ const TagsCombobox = ({ form }: TagsComboboxProps) => {
     form.setValue("tags", currentTags.slice(0, -1));
   };
 
+  const createNew = (value: string) => {
+    const trimmedValue = value.trim();
+    if (!trimmedValue) return;
+    form.setValue("tags", [...form.getValues("tags"), trimmedValue]);
+  };
+
   return (
     <FancyCombobox
       options={existingTags ?? []}
@@ -213,6 +219,7 @@ const TagsCombobox = ({ form }: TagsComboboxProps) => {
       select={select}
       unselect={unselect}
       removeLast={removeLast}
+      createNew={createNew}
     />
   );
 };

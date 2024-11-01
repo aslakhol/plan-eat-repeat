@@ -38,6 +38,7 @@ export const FancyCombobox = ({
   select,
   unselect,
   removeLast,
+  createNew,
 }: {
   placeholder?: string;
   options: FancyComboboxOptions[];
@@ -45,10 +46,14 @@ export const FancyCombobox = ({
   select: (option: FancyComboboxOptions) => void;
   unselect: (option: FancyComboboxOptions) => void;
   removeLast: () => void;
+  createNew: (value: string) => void;
 }) => {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState("");
+  const selectables = options.filter(
+    (option) => !selected.map((s) => s.value).includes(option.value),
+  );
 
   const handleUnselect = React.useCallback(
     (option: FancyComboboxOptions) => {
@@ -56,6 +61,14 @@ export const FancyCombobox = ({
     },
     [unselect],
   );
+
+  const handleCreateNew = React.useCallback(() => {
+    if (inputValue.trim()) {
+      createNew(inputValue);
+      setInputValue("");
+      setOpen(false);
+    }
+  }, [inputValue, createNew]);
 
   const handleKeyDown = React.useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -66,17 +79,21 @@ export const FancyCombobox = ({
             removeLast();
           }
         }
+        if (
+          e.key === "Enter" &&
+          inputValue.trim() &&
+          selectables.length === 0
+        ) {
+          e.preventDefault();
+          handleCreateNew();
+        }
         // This is not a default behaviour of the <input /> field
         if (e.key === "Escape") {
           input.blur();
         }
       }
     },
-    [removeLast],
-  );
-
-  const selectables = options.filter(
-    (option) => !selected.map((s) => s.value).includes(option.value),
+    [inputValue, selectables.length, removeLast, handleCreateNew],
   );
 
   return (
@@ -122,7 +139,7 @@ export const FancyCombobox = ({
       </div>
       <div className="relative mt-2">
         <CommandList>
-          {open && selectables.length > 0 ? (
+          {open && (selectables.length || inputValue.trim()) ? (
             <div className="absolute top-0 z-10 max-h-[35vh] w-full overflow-scroll rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
               <CommandGroup>
                 {selectables.map((option) => {
@@ -143,6 +160,18 @@ export const FancyCombobox = ({
                     </CommandItem>
                   );
                 })}
+                {inputValue.trim() && (
+                  <CommandItem
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onSelect={handleCreateNew}
+                    className="cursor-pointer"
+                  >
+                    Add &ldquo;{inputValue}&rdquo;
+                  </CommandItem>
+                )}
               </CommandGroup>
             </div>
           ) : null}
