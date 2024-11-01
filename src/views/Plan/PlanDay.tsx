@@ -65,7 +65,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   };
 
   return (
-    <DialogContent className="flex flex-col p-5">
+    <DialogContent className="flex h-[90vh] flex-col">
       <DialogHeader>
         <DialogDescription>
           {format(date, "EEEE, LLLL do, y")}
@@ -85,7 +85,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
         className="p-1"
       />
 
-      <div className="flex flex-col overflow-y-hidden">
+      <div className="flex flex-1 flex-col overflow-y-hidden">
         <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-1">
           {dinners?.map((dinner) => (
             <Dinner
