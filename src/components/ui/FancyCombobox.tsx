@@ -34,18 +34,28 @@ type FancyComboboxOptions = Record<"value" | "label", string>;
 export const FancyCombobox = ({
   placeholder,
   options,
+  selected,
+  select,
+  unselect,
+  removeLast,
 }: {
   placeholder?: string;
   options: FancyComboboxOptions[];
+  selected: FancyComboboxOptions[];
+  select: (option: FancyComboboxOptions) => void;
+  unselect: (option: FancyComboboxOptions) => void;
+  removeLast: () => void;
 }) => {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [open, setOpen] = React.useState(false);
-  const [selected, setSelected] = React.useState<FancyComboboxOptions[]>([]);
   const [inputValue, setInputValue] = React.useState("");
 
-  const handleUnselect = React.useCallback((option: FancyComboboxOptions) => {
-    setSelected((prev) => prev.filter((s) => s.value !== option.value));
-  }, []);
+  const handleUnselect = React.useCallback(
+    (option: FancyComboboxOptions) => {
+      unselect(option);
+    },
+    [unselect],
+  );
 
   const handleKeyDown = React.useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -53,11 +63,7 @@ export const FancyCombobox = ({
       if (input) {
         if (e.key === "Delete" || e.key === "Backspace") {
           if (input.value === "") {
-            setSelected((prev) => {
-              const newSelected = [...prev];
-              newSelected.pop();
-              return newSelected;
-            });
+            removeLast();
           }
         }
         // This is not a default behaviour of the <input /> field
@@ -66,7 +72,7 @@ export const FancyCombobox = ({
         }
       }
     },
-    [],
+    [removeLast],
   );
 
   const selectables = options.filter((option) => !selected.includes(option));
@@ -117,8 +123,8 @@ export const FancyCombobox = ({
       <div className="relative mt-2">
         <CommandList>
           {open && selectables.length > 0 ? (
-            <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
-              <CommandGroup className="h-full overflow-auto">
+            <div className="absolute top-0 z-10 max-h-[35vh] w-full overflow-scroll rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
+              <CommandGroup>
                 {selectables.map((option) => {
                   return (
                     <CommandItem
@@ -129,7 +135,7 @@ export const FancyCombobox = ({
                       }}
                       onSelect={() => {
                         setInputValue("");
-                        setSelected((prev) => [...prev, option]);
+                        select(option);
                       }}
                       className={"cursor-pointer"}
                     >

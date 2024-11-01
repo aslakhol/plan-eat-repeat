@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type z } from "zod";
 import { dinnerFormSchema, type DinnerWithTags } from "../../utils/types";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormReturn } from "react-hook-form";
 import {
   Form,
   FormControl,
@@ -14,10 +14,8 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
-import {
-  FancyCombobox,
-  FancyMultiSelect,
-} from "../../components/ui/FancyCombobox";
+import { FancyCombobox } from "../../components/ui/FancyCombobox";
+import { api } from "../../utils/api";
 
 type Props = {
   onSubmit(values: z.infer<typeof dinnerFormSchema>): void;
@@ -32,6 +30,10 @@ export const DinnerForm = ({
   existingDinner,
   closeDialog,
 }: Props) => {
+  const { data: existingTags } = api.dinner.tags.useQuery(undefined, {
+    select: (data) =>
+      data.tags.map((tag) => ({ value: tag.value, label: tag.value })),
+  });
   const form = useForm<z.infer<typeof dinnerFormSchema>>({
     resolver: zodResolver(dinnerFormSchema),
     defaultValues: {
@@ -101,7 +103,7 @@ export const DinnerForm = ({
           </div>
         </div>
 
-        <FancyCombobox options={[]} placeholder="Add tag" />
+        <TagsCombobox form={form} />
 
         <FormField
           control={form.control}
@@ -169,5 +171,48 @@ export const DinnerForm = ({
         </div>
       </form>
     </Form>
+  );
+};
+
+type TagsComboboxProps = {
+  form: UseFormReturn<z.infer<typeof dinnerFormSchema>>;
+};
+
+const TagsCombobox = ({ form }: TagsComboboxProps) => {
+  const { data: existingTags } = api.dinner.tags.useQuery(undefined, {
+    select: (data) =>
+      data.tags.map((tag) => ({ value: tag.value, label: tag.value })),
+  });
+  const selectedTags = form.watch("tags").map((tag) => ({
+    value: tag,
+    label: tag,
+  }));
+
+  const select = (option: { value: string; label: string }) => {
+    form.setValue("tags", [...form.getValues("tags"), option.value]);
+  };
+
+  const unselect = (option: { value: string; label: string }) => {
+    const currentTags = form.getValues("tags");
+    form.setValue(
+      "tags",
+      currentTags.filter((tag) => tag !== option.value),
+    );
+  };
+
+  const removeLast = () => {
+    const currentTags = form.getValues("tags");
+    form.setValue("tags", currentTags.slice(0, -1));
+  };
+
+  return (
+    <FancyCombobox
+      options={existingTags ?? []}
+      placeholder="Add tag"
+      selected={selectedTags}
+      select={select}
+      unselect={unselect}
+      removeLast={removeLast}
+    />
   );
 };
