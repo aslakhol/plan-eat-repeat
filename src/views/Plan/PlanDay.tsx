@@ -65,7 +65,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   };
 
   return (
-    <DialogContent className="flex h-[90vh] flex-col p-5">
+    <DialogContent className="flex h-[90vh] flex-col">
       <DialogHeader>
         <DialogDescription>
           {format(date, "EEEE, LLLL do, y")}
