@@ -88,6 +88,7 @@ export const FancyCombobox = ({
           selectables.length === 0
         ) {
           e.preventDefault();
+          e.stopPropagation();
           handleCreateNew();
         }
         // This is not a default behaviour of the <input /> field
