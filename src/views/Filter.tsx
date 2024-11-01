@@ -60,7 +60,7 @@ const Tags = ({ selectedTags, setSelectedTags }: TagsProps) => {
   const filtersQuery = api.dinner.tags.useQuery();
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2 pt-2">
       {filtersQuery.data?.tags.map((tag) => (
         <div
           key={tag.value}
