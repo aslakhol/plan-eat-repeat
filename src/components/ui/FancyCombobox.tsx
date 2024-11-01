@@ -63,12 +63,15 @@ export const FancyCombobox = ({
   );
 
   const handleCreateNew = React.useCallback(() => {
-    if (inputValue.trim()) {
-      createNew(inputValue);
+    const trimmedValue = inputValue.trim();
+    if (!trimmedValue || selected.map((s) => s.value).includes(trimmedValue)) {
       setInputValue("");
-      setOpen(false);
+      return;
     }
-  }, [inputValue, createNew]);
+    createNew(trimmedValue);
+    setInputValue("");
+    setOpen(false);
+  }, [inputValue, selected, createNew]);
 
   const handleKeyDown = React.useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
