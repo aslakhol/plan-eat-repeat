@@ -15,6 +15,7 @@ import { usePostHog } from "posthog-js/react";
 import { NewDinner } from "./NewDinner";
 import { useRouter } from "next/router";
 import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
 
 type Props = {
   dinners: DinnerWithTags[];
@@ -128,16 +129,16 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
           <div className="flex flex-wrap gap-2">
             {dinner.tags.map((tag) => {
               return (
-                <div
+                <Badge
                   key={tag.value}
+                  variant="secondary"
                   className={cn(
-                    "rounded bg-green-100 px-2 py-1 text-green-800 ",
                     selectedTags.includes(tag.value) &&
-                      "border border-green-400 bg-green-200 ",
+                      "border border-secondary-foreground/50",
                   )}
                 >
                   {tag.value}
-                </div>
+                </Badge>
               );
             })}
           </div>

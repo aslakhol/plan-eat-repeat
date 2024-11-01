@@ -9,6 +9,7 @@ import {
 } from "../../components/ui/dialog";
 import { ClearDay } from "./ClearDay";
 import Link from "next/link";
+import { Badge } from "../../components/ui/badge";
 
 type Props = {
   dinner: DinnerWithTags;
@@ -35,12 +36,9 @@ export const PlannedDinner = ({
         {dinner.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {dinner.tags.map((tag) => (
-              <div
-                className="rounded border border-green-100 bg-green-100 px-2 py-1 text-green-800"
-                key={tag.value}
-              >
+              <Badge key={tag.value} variant="secondary">
                 {tag.value}
-              </div>
+              </Badge>
             ))}
           </div>
         )}
