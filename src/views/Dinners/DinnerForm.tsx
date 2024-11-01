@@ -14,6 +14,10 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
+import {
+  FancyCombobox,
+  FancyMultiSelect,
+} from "../../components/ui/FancyCombobox";
 
 type Props = {
   onSubmit(values: z.infer<typeof dinnerFormSchema>): void;
@@ -96,6 +100,8 @@ export const DinnerForm = ({
             ))}
           </div>
         </div>
+
+        <FancyCombobox options={[]} placeholder="Add tag" />
 
         <FormField
           control={form.control}

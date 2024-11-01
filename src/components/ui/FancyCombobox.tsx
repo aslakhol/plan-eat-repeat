@@ -29,51 +29,22 @@ import { Command as CommandPrimitive } from "cmdk";
 import { Command, CommandList, CommandGroup, CommandItem } from "./command";
 import { Badge } from "./badge";
 
-type Framework = Record<"value" | "label", string>;
+type FancyComboboxOptions = Record<"value" | "label", string>;
 
-const FRAMEWORKS = [
-  {
-    value: "next.js",
-    label: "Next.js",
-  },
-  {
-    value: "sveltekit",
-    label: "SvelteKit",
-  },
-  {
-    value: "nuxt.js",
-    label: "Nuxt.js",
-  },
-  {
-    value: "remix",
-    label: "Remix",
-  },
-  {
-    value: "astro",
-    label: "Astro",
-  },
-  {
-    value: "wordpress",
-    label: "WordPress",
-  },
-  {
-    value: "express.js",
-    label: "Express.js",
-  },
-  {
-    value: "nest.js",
-    label: "Nest.js",
-  },
-] satisfies Framework[];
-
-export function FancyMultiSelect() {
+export const FancyCombobox = ({
+  placeholder,
+  options,
+}: {
+  placeholder?: string;
+  options: FancyComboboxOptions[];
+}) => {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [open, setOpen] = React.useState(false);
-  const [selected, setSelected] = React.useState<Framework[]>([FRAMEWORKS[1]!]);
+  const [selected, setSelected] = React.useState<FancyComboboxOptions[]>([]);
   const [inputValue, setInputValue] = React.useState("");
 
-  const handleUnselect = React.useCallback((framework: Framework) => {
-    setSelected((prev) => prev.filter((s) => s.value !== framework.value));
+  const handleUnselect = React.useCallback((option: FancyComboboxOptions) => {
+    setSelected((prev) => prev.filter((s) => s.value !== option.value));
   }, []);
 
   const handleKeyDown = React.useCallback(
@@ -98,9 +69,7 @@ export function FancyMultiSelect() {
     [],
   );
 
-  const selectables = FRAMEWORKS.filter(
-    (framework) => !selected.includes(framework),
-  );
+  const selectables = options.filter((option) => !selected.includes(option));
 
   console.log(selectables, selected, inputValue);
 
@@ -111,22 +80,22 @@ export function FancyMultiSelect() {
     >
       <div className="group rounded-md border border-input px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
         <div className="flex flex-wrap gap-1">
-          {selected.map((framework) => {
+          {selected.map((option) => {
             return (
-              <Badge key={framework.value} variant="secondary">
-                {framework.label}
+              <Badge key={option.value} variant="secondary">
+                {option.label}
                 <button
                   className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      handleUnselect(framework);
+                      handleUnselect(option);
                     }
                   }}
                   onMouseDown={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                   }}
-                  onClick={() => handleUnselect(framework)}
+                  onClick={() => handleUnselect(option)}
                 >
                   <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
                 </button>
@@ -140,7 +109,7 @@ export function FancyMultiSelect() {
             onValueChange={setInputValue}
             onBlur={() => setOpen(false)}
             onFocus={() => setOpen(true)}
-            placeholder="Select frameworks..."
+            placeholder={placeholder}
             className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
           />
         </div>
@@ -150,21 +119,21 @@ export function FancyMultiSelect() {
           {open && selectables.length > 0 ? (
             <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
               <CommandGroup className="h-full overflow-auto">
-                {selectables.map((framework) => {
+                {selectables.map((option) => {
                   return (
                     <CommandItem
-                      key={framework.value}
+                      key={option.value}
                       onMouseDown={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                       }}
-                      onSelect={(value) => {
+                      onSelect={() => {
                         setInputValue("");
-                        setSelected((prev) => [...prev, framework]);
+                        setSelected((prev) => [...prev, option]);
                       }}
                       className={"cursor-pointer"}
                     >
-                      {framework.label}
+                      {option.label}
                     </CommandItem>
                   );
                 })}
@@ -175,4 +144,4 @@ export function FancyMultiSelect() {
       </div>
     </Command>
   );
-}
+};
