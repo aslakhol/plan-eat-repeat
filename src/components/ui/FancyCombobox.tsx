@@ -141,7 +141,7 @@ export const FancyCombobox = ({
         <CommandList>
           {open && (selectables.length || inputValue.trim()) ? (
             <div className="absolute top-0 z-10 max-h-[35vh] w-full overflow-scroll rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
-              <CommandGroup>
+              <CommandGroup className="pb-0">
                 {selectables.map((option) => {
                   return (
                     <CommandItem
@@ -160,6 +160,8 @@ export const FancyCombobox = ({
                     </CommandItem>
                   );
                 })}
+              </CommandGroup>
+              <CommandGroup className="pt-0">
                 {inputValue.trim() && (
                   <CommandItem
                     onMouseDown={(e) => {
