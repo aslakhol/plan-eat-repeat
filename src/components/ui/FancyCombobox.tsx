@@ -75,9 +75,9 @@ export const FancyCombobox = ({
     [removeLast],
   );
 
-  const selectables = options.filter((option) => !selected.includes(option));
-
-  console.log(selectables, selected, inputValue);
+  const selectables = options.filter(
+    (option) => !selected.map((s) => s.value).includes(option.value),
+  );
 
   return (
     <Command
