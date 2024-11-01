@@ -70,7 +70,6 @@ export const FancyCombobox = ({
     }
     createNew(trimmedValue);
     setInputValue("");
-    setOpen(false);
   }, [inputValue, selected, createNew]);
 
   const handleKeyDown = React.useCallback(
