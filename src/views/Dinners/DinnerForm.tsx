@@ -30,10 +30,6 @@ export const DinnerForm = ({
   existingDinner,
   closeDialog,
 }: Props) => {
-  const { data: existingTags } = api.dinner.tags.useQuery(undefined, {
-    select: (data) =>
-      data.tags.map((tag) => ({ value: tag.value, label: tag.value })),
-  });
   const form = useForm<z.infer<typeof dinnerFormSchema>>({
     resolver: zodResolver(dinnerFormSchema),
     defaultValues: {
@@ -45,31 +41,8 @@ export const DinnerForm = ({
     },
   });
 
-  const tags = form.watch("tags");
-  const newTag = form.watch("newTag")?.trim();
-
-  const addTag = () => {
-    if (!newTag || tags.includes(newTag)) {
-      return;
-    }
-    form.setValue("tags", [...tags, newTag]);
-    form.setValue("newTag", "");
-    return newTag;
-  };
-
-  const removeTag = (tag: string) => {
-    form.setValue(
-      "tags",
-      tags.filter((t) => t !== tag),
-    );
-  };
-
   const submit = (values: z.infer<typeof dinnerFormSchema>) => {
-    const addedTag = addTag();
-    onSubmit({
-      ...values,
-      tags: addedTag ? [...values.tags, addedTag] : values.tags,
-    });
+    onSubmit(values);
   };
 
   return (
@@ -88,50 +61,10 @@ export const DinnerForm = ({
             </FormItem>
           )}
         />
-        <div>
+        <div className="space-y-2">
           <Label>Tags</Label>
-          <div className="flex flex-wrap gap-2">
-            {form.getValues("tags").map((tag) => (
-              <div
-                className="cursor-pointer rounded border border-green-100 bg-green-100 px-2 py-1 text-green-800 hover:bg-green-300"
-                key={tag}
-                onClick={() => removeTag(tag)}
-              >
-                {tag}
-              </div>
-            ))}
-          </div>
+          <TagsCombobox form={form} />
         </div>
-
-        <TagsCombobox form={form} />
-
-        <FormField
-          control={form.control}
-          name="newTag"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Add tag</FormLabel>
-              <FormControl>
-                <div className="flex w-full max-w-sm items-center space-x-2">
-                  <Input
-                    {...field}
-                    onKeyDown={(e) => {
-                      if (e.code !== "Enter") {
-                        return;
-                      }
-                      e.preventDefault();
-                      addTag();
-                    }}
-                  />
-                  <Button type="button" variant="outline" onClick={addTag}>
-                    +
-                  </Button>
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
         <FormField
           control={form.control}
