@@ -17,6 +17,16 @@ import { Label } from "../../components/ui/label";
 import { FancyCombobox } from "../../components/ui/FancyCombobox";
 import { api } from "../../utils/api";
 import { Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogFooter,
+  DialogDescription,
+  DialogTitle,
+  DialogHeader,
+  DialogTrigger,
+  DialogContent,
+} from "../../components/ui/dialog";
+import { useState } from "react";
 
 type Props = {
   onSubmit(values: z.infer<typeof dinnerFormSchema>): void;
@@ -156,20 +166,44 @@ const TagsCombobox = ({ form }: TagsComboboxProps) => {
     />
   );
 };
-
 type DeleteProps = {
   onDelete(values: z.infer<typeof dinnerFormSchema>): void;
   form: UseFormReturn<z.infer<typeof dinnerFormSchema>>;
 };
 
 const Delete = ({ onDelete, form }: DeleteProps) => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   return (
-    <Button
-      type="button"
-      variant={"destructive"}
-      onClick={form.handleSubmit(onDelete)}
-    >
-      <Trash2 className="h-4 w-4" />
-    </Button>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogTrigger asChild>
+        <Button type="button" variant={"destructive"}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete dinner</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete this dinner? This action cannot be
+            undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={async () => {
+              await form.handleSubmit(onDelete)();
+              setDialogOpen(false);
+            }}
+          >
+            Delete
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
