@@ -8,6 +8,7 @@ import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCNext } from "@trpc/next";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import superjson from "superjson";
+import { toast } from "~/components/ui/use-toast";
 
 import { type AppRouter } from "~/server/api/root";
 
@@ -43,6 +44,34 @@ export const api = createTRPCNext<AppRouter>({
           url: `${getBaseUrl()}/api/trpc`,
         }),
       ],
+      queryClientConfig: {
+        defaultOptions: {
+          mutations: {
+            onError: (error) => {
+              toast({
+                variant: "destructive",
+                title: "Something went wrong",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Please try again later",
+              });
+            },
+          },
+          queries: {
+            onError: (error) => {
+              toast({
+                variant: "destructive",
+                title: "Something went wrong",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Please try again later",
+              });
+            },
+          },
+        },
+      },
     };
   },
   /**
