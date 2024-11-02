@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  protectedProcedure,
+} from "~/server/api/trpc";
 import { type DinnerWithTags } from "../../../utils/types";
 import { env } from "../../../env.mjs";
 
@@ -25,7 +29,7 @@ export const dinnerRouter = createTRPCRouter({
     };
   }),
 
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
         dinnerName: z.string().min(3),
