@@ -5,6 +5,13 @@ import { api } from "~/utils/api";
 import "~/styles/globals.css";
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
+import {
+  ClerkProvider,
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs";
 
 import { env } from "../env.mjs";
 import { useRouter } from "next/router";
@@ -38,8 +45,16 @@ const MyApp: AppType = ({ Component, pageProps }) => {
 
   return (
     <PostHogProvider client={posthog}>
-      <Component {...pageProps} />
-      <Toaster />
+      <ClerkProvider>
+        <SignedOut>
+          <SignInButton />
+        </SignedOut>
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
+        <Component {...pageProps} />
+        <Toaster />
+      </ClerkProvider>
     </PostHogProvider>
   );
 };
