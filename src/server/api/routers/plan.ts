@@ -1,7 +1,10 @@
 import { z } from "zod";
 
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { env } from "../../../env.mjs";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { addDays } from "date-fns";
 
 export const planRouter = createTRPCRouter({
@@ -18,19 +21,14 @@ export const planRouter = createTRPCRouter({
 
       return { plans };
     }),
-  planDinnerForDate: publicProcedure
+  planDinnerForDate: protectedProcedure
     .input(
       z.object({
         dinnerId: z.number(),
         date: z.date(),
-        secret: z.string().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (env.SECRET_PHRASE !== input.secret) {
-        throw new Error("Missing secret keyword");
-      }
-
       const newPlan = await ctx.db.plan.upsert({
         where: { date: input.date },
         create: { date: input.date, dinnerId: input.dinnerId },
@@ -40,16 +38,11 @@ export const planRouter = createTRPCRouter({
       return { newPlan };
     }),
 
-  unplanDay: publicProcedure
-    .input(z.object({ date: z.date(), secret: z.string().nullable() }))
+  unplanDay: protectedProcedure
+    .input(z.object({ date: z.date() }))
     .mutation(async ({ ctx, input }) => {
-      const { date, secret } = input;
-
-      if (env.SECRET_PHRASE !== secret) {
-        throw new Error("Missing secret keyword");
-      }
-
-      const deleted = await ctx.db.plan.delete({ where: { date: date } });
+      const { date } = input;
+      const deleted = await ctx.db.plan.delete({ where: { date } });
 
       return { deleted };
     }),
