@@ -16,6 +16,7 @@ import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
 import { FancyCombobox } from "../../components/ui/FancyCombobox";
 import { api } from "../../utils/api";
+import { Trash2 } from "lucide-react";
 
 type Props = {
   onSubmit(values: z.infer<typeof dinnerFormSchema>): void;
@@ -94,13 +95,12 @@ export const DinnerForm = ({
         />
         <div className="flex justify-between">
           <Button type="submit">Save</Button>
-          <Button
-            type="button"
-            variant={"outline"}
-            onClick={onDelete ? form.handleSubmit(onDelete) : closeDialog}
-          >
-            {onDelete ? "Delete" : "Cancel"}
-          </Button>
+          <div className="flex gap-2">
+            {onDelete && <Delete onDelete={onDelete} form={form} />}
+            <Button type="button" variant={"outline"} onClick={closeDialog}>
+              {"Cancel"}
+            </Button>
+          </div>
         </div>
       </form>
     </Form>
@@ -154,5 +154,22 @@ const TagsCombobox = ({ form }: TagsComboboxProps) => {
       removeLast={removeLast}
       createNew={createNew}
     />
+  );
+};
+
+type DeleteProps = {
+  onDelete(values: z.infer<typeof dinnerFormSchema>): void;
+  form: UseFormReturn<z.infer<typeof dinnerFormSchema>>;
+};
+
+const Delete = ({ onDelete, form }: DeleteProps) => {
+  return (
+    <Button
+      type="button"
+      variant={"destructive"}
+      onClick={form.handleSubmit(onDelete)}
+    >
+      <Trash2 className="h-4 w-4" />
+    </Button>
   );
 };
