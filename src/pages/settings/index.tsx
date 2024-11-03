@@ -1,5 +1,4 @@
 import Head from "next/head";
-import { DinnersView } from "../../views/Dinners/DinnersView";
 import { SettingsView } from "../../views/Settings/SettingsView";
 
 export default function Settings() {
