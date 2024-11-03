@@ -12,39 +12,43 @@ export const SettingsView = () => {
     organization,
   } = useClerk();
 
-  return (
-    <div className="flex flex-col gap-4 p-4">
-      <Button
-        className={cn("justify-start")}
-        variant={"outline"}
-        onClick={() => openUserProfile()}
-      >
-        Account
-      </Button>
-      {organization ? (
-        <Button
-          className={cn("justify-start")}
-          variant={"outline"}
-          onClick={() => openOrganizationProfile()}
-        >
-          Organization
-        </Button>
-      ) : (
-        <Button
-          className={cn("justify-start")}
-          variant={"outline"}
-          onClick={() => openCreateOrganization()}
-        >
-          Create Organization
-        </Button>
-      )}
+  console.log(organization);
 
-      <SignOutButton>
-        <Button variant={"outline"} className={cn("justify-start")}>
-          Sign out
+  return (
+    <>
+      <div className="flex flex-col gap-4 p-4">
+        <Button
+          className={cn("justify-start")}
+          variant={"outline"}
+          onClick={() => openUserProfile()}
+        >
+          Account
         </Button>
-      </SignOutButton>
+        {organization ? (
+          <Button
+            className={cn("justify-start")}
+            variant={"outline"}
+            onClick={() => openOrganizationProfile()}
+          >
+            Organization
+          </Button>
+        ) : (
+          <Button
+            className={cn("justify-start")}
+            variant={"outline"}
+            onClick={() => openCreateOrganization()}
+          >
+            Create Organization
+          </Button>
+        )}
+
+        <SignOutButton>
+          <Button variant={"outline"} className={cn("justify-start")}>
+            Sign out
+          </Button>
+        </SignOutButton>
+      </div>
       <BottomNav />
-    </div>
+    </>
   );
 };
