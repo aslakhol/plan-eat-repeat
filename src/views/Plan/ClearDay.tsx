@@ -23,7 +23,6 @@ export const ClearDay = ({ date, closeDialog }: ClearDayProps) => {
       onClick={() =>
         unplanDayMutation.mutate({
           date,
-          secret: localStorage.getItem("sulten-secret"),
         })
       }
       disabled={unplanDayMutation.isLoading}

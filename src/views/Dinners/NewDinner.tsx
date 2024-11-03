@@ -41,7 +41,6 @@ export const NewDinner = () => {
 
     createDinnerMutation.mutate({
       dinnerName: values.name,
-      secret: localStorage.getItem("sulten-secret"),
       tagList: values.tags,
       link: values.link,
       notes: values.notes,

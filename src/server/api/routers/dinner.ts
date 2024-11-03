@@ -1,8 +1,11 @@
 import { z } from "zod";
 
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { type DinnerWithTags } from "../../../utils/types";
-import { env } from "../../../env.mjs";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  protectedProcedure,
+} from "~/server/api/trpc";
+import { type DinnerWithTags } from "~/utils/types";
 
 export const dinnerRouter = createTRPCRouter({
   tags: publicProcedure.query(async ({ ctx }) => {
@@ -25,21 +28,16 @@ export const dinnerRouter = createTRPCRouter({
     };
   }),
 
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
         dinnerName: z.string().min(3),
-        secret: z.string().nullable(),
         tagList: z.array(z.string()),
         link: z.string().nullable().optional(),
         notes: z.string().nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (env.SECRET_PHRASE !== input.secret) {
-        throw new Error("Missing secret keyword");
-      }
-
       const dinner = await ctx.db.dinner.create({
         data: {
           name: input.dinnerName,
@@ -60,21 +58,17 @@ export const dinnerRouter = createTRPCRouter({
         dinner,
       };
     }),
-  edit: publicProcedure
+  edit: protectedProcedure
     .input(
       z.object({
         dinnerName: z.string().min(3),
         dinnerId: z.number(),
-        secret: z.string().nullable(),
         tagList: z.array(z.string()),
         link: z.string().nullable().optional(),
         notes: z.string().nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (env.SECRET_PHRASE !== input.secret) {
-        throw new Error("Missing secret keyword");
-      }
       const previousDinner = await ctx.db.dinner.findUnique({
         where: { id: input.dinnerId },
         include: { tags: true },
@@ -106,13 +100,9 @@ export const dinnerRouter = createTRPCRouter({
         dinner,
       };
     }),
-  delete: publicProcedure
-    .input(z.object({ dinnerId: z.number(), secret: z.string().nullable() }))
+  delete: protectedProcedure
+    .input(z.object({ dinnerId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      if (env.SECRET_PHRASE !== input.secret) {
-        throw new Error("Missing secret keyword");
-      }
-
       const dinner = await ctx.db.dinner.delete({
         where: { id: input.dinnerId },
       });

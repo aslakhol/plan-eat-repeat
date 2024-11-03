@@ -39,16 +39,18 @@ export const DinnersView = () => {
     );
 
   return (
-    <div className="flex flex-col gap-4 p-6">
-      <Filter
-        search={search}
-        setSearch={setSearch}
-        showTags={showTags}
-        setShowTags={setShowTags}
-        selectedTags={selectedTags}
-        setSelectedTags={setSelectedTags}
-      />
-      <DinnerList dinners={dinners} selectedTags={selectedTags} />
+    <div>
+      <div className="flex flex-col gap-4 p-4">
+        <Filter
+          search={search}
+          setSearch={setSearch}
+          showTags={showTags}
+          setShowTags={setShowTags}
+          selectedTags={selectedTags}
+          setSelectedTags={setSelectedTags}
+        />
+        <DinnerList dinners={dinners} selectedTags={selectedTags} />
+      </div>
       <BottomNav />
     </div>
   );

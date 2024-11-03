@@ -87,7 +87,6 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
       {
         dinnerName: values.name,
         dinnerId: dinner.id,
-        secret: localStorage.getItem("sulten-secret"),
         tagList: values.tags,
         link: values.link,
         notes: values.notes,
@@ -106,7 +105,6 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
     deleteDinnerMutation.mutate(
       {
         dinnerId: dinner.id,
-        secret: localStorage.getItem("sulten-secret"),
       },
       {
         onSettled: () => {

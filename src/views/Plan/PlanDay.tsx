@@ -60,7 +60,6 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
     planDinnerForDateMutation.mutate({
       date,
       dinnerId,
-      secret: localStorage.getItem("sulten-secret"),
     });
   };
 
