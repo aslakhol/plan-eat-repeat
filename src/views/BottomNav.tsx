@@ -2,14 +2,7 @@ import { useRouter } from "next/router";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 import Link from "next/link";
-import {
-  SignedIn,
-  Si,
-  UserButtongnedOut,
-  SignInButton,
-  UserButton,
-  SignedOut,
-} from "@clerk/nextjs";
+import { SignedIn, SignInButton, SignedOut } from "@clerk/nextjs";
 
 export const BottomNav = () => {
   const router = useRouter();
