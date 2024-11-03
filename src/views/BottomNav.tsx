@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 import Link from "next/link";
+import { SignInButton } from "@clerk/nextjs";
 
 export const BottomNav = () => {
   const router = useRouter();
@@ -29,6 +30,11 @@ export const BottomNav = () => {
         >
           <Link href="/dinners">Dinners</Link>
         </Button>
+        <SignInButton mode="modal">
+          <Button variant={"link"} className="w-full py-8 text-xl">
+            Sign in
+          </Button>
+        </SignInButton>
       </div>
     </div>
   );
