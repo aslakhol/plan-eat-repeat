@@ -2,7 +2,14 @@ import { useRouter } from "next/router";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 import Link from "next/link";
-import { SignInButton } from "@clerk/nextjs";
+import {
+  SignedIn,
+  Si,
+  UserButtongnedOut,
+  SignInButton,
+  UserButton,
+  SignedOut,
+} from "@clerk/nextjs";
 
 export const BottomNav = () => {
   const router = useRouter();
@@ -30,11 +37,25 @@ export const BottomNav = () => {
         >
           <Link href="/dinners">Dinners</Link>
         </Button>
-        <SignInButton mode="modal">
-          <Button variant={"link"} className="w-full py-8 text-xl">
-            Sign in
+        <SignedOut>
+          <SignInButton mode="modal">
+            <Button variant={"link"} className="w-full py-8 text-xl">
+              Sign in
+            </Button>
+          </SignInButton>
+        </SignedOut>
+        <SignedIn>
+          <Button
+            variant={"link"}
+            className={cn(
+              "w-full py-8 text-xl",
+              router.asPath === "/settings" && "underline",
+            )}
+            asChild
+          >
+            <Link href="/settings">Settings</Link>
           </Button>
-        </SignInButton>
+        </SignedIn>
       </div>
     </div>
   );
