@@ -35,7 +35,7 @@ export const SettingsView = () => {
               variant={"outline"}
               onClick={() => openOrganizationProfile()}
             >
-              Organization
+              Household
             </Button>
           ) : (
             <Button
@@ -43,7 +43,7 @@ export const SettingsView = () => {
               variant={"outline"}
               onClick={() => openCreateOrganization()}
             >
-              Create Organization
+              Create household
             </Button>
           )}
 
