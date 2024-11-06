@@ -11,4 +11,4 @@ services:
       - POSTGRES_USER=sulten
       - POSTGRES_PASSWORD=sulten
     ports:
-      - "5433:5432"
+      - "5434:5432"
