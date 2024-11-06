@@ -66,5 +66,9 @@ export default async function handler(
   console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
   console.log("Webhook body:", body);
 
+  if (evt.type === "user.created") {
+    console.log("userId:", evt.data.id);
+  }
+
   return res.status(200).json({ response: "Success" });
 }
