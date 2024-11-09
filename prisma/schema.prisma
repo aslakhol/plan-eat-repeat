@@ -7,20 +7,17 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-// datasource db {
-//     provider = "sqlite"
-//     url      = env("DATABASE_URL")
-// }
-
 model Dinner {
-    id        Int      @id @default(autoincrement())
-    name      String
-    tags      Tag[]
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    Plan      Plan[]
-    link      String?
-    notes     String?
+    id          Int       @id @default(autoincrement())
+    name        String
+    tags        Tag[]
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    Plan        Plan[]
+    link        String?
+    notes       String?
+    Household   Household @relation(fields: [householdId], references: [id])
+    householdId String    @default("org_2od444SKLdkm5D1kfSTGqNfEfIq")
 
     @@index([name])
 }
@@ -50,4 +47,5 @@ model Household {
     // These are not managed by Clerk
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+    Dinner    Dinner[]
 }
