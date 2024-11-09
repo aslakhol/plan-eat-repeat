@@ -24,22 +24,13 @@ The project was Bootstrapped with [create-t3-app](https://create.t3.gg/).
 - [Tailwind CSS](https://tailwindcss.com)
 - [tRPC](https://trpc.io)
 - [shadcn/ui](https://ui.shadcn.com/)
+- [Vercel](https://vercel.com/)
+- [Supabase](https://supabase.com/)
+- [Clerk](https://clerk.com/)
 
-## Future ideas
+## Database
 
-For now most of the effort has been put into the planning of the dinners, and we want to put more love into the dinner list section.
-We know we want tags that help us deciding what to eat.
-F.ex. You could filter by the `Chicken` tag if you would like something with chicken.
-And of course we will implement a simple string search.
-
-It might be interesting to expand the scope to make a simple recipe bank in the app, but we will focus on making it lightweight and usuable.
-Likely it won't grow beyond a single text field where you copy-paste in text, and perhaps a link to an external website.
-
-We are interested in using this to prepare shopping lists by integrating with [Bring](https://www.getbring.com/), the app we use for shopping lists.
-Our thinking is that if it is possible we would like to hit some API that adds products to our list.
-Bring makes it very easy to remove products from the shopping list, so the thinking is that we could add all the products very quickly, and then remove what we already have.
-For the first version we likely will use the tags as the products, but it might also be a list of ingredients from a future recipe function.
-All this of course relies on us being able to integrate with Bring in some way.
-
-We have also discussed using LLMs to help suggest tags or ingredients based on the title and description.
-But that feels very far down the road.
+Locally we're using docker to run a postgres database.
+Use `make db:fix` to wipe the database and start it fresh.
+To make a migration you use `npm run db:migrate`.
+The migration is deployed to vercel automatically when pushing to main by `vercel-build`.
