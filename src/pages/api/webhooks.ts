@@ -3,6 +3,11 @@ import { type WebhookEvent } from "@clerk/nextjs/server";
 import { type NextApiRequest, type NextApiResponse } from "next";
 import { buffer } from "micro";
 import { env } from "../../env.mjs";
+import {
+  organizationCreated,
+  organizationDeleted,
+  organizationUpdated,
+} from "../../server/webhooks/organization";
 
 export const config = {
   api: {
@@ -59,15 +64,16 @@ export default async function handler(
     return res.status(400).json({ Error: err });
   }
 
-  // Do something with the payload
-  // For this guide, you simply log the payload to the console
-  const { id } = evt.data;
-  const eventType = evt.type;
-  console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
-  console.log("Webhook body:", body);
+  if (evt.type === "organization.created") {
+    await organizationCreated(evt.data);
+  }
 
-  if (evt.type === "user.created") {
-    console.log("userId:", evt.data.id);
+  if (evt.type === "organization.updated") {
+    await organizationUpdated(evt.data);
+  }
+
+  if (evt.type === "organization.deleted") {
+    await organizationDeleted(evt.data.id, evt.data.slug);
   }
 
   return res.status(200).json({ response: "Success" });
