@@ -77,7 +77,6 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 });
 
 const isAuthed = t.middleware(({ next, ctx }) => {
-  console.log(ctx.auth.userId, "user id in isAuthed middleware");
   if (!ctx.auth.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
@@ -86,6 +85,13 @@ const isAuthed = t.middleware(({ next, ctx }) => {
       auth: ctx.auth,
     },
   });
+});
+
+const isAuthedAndHasHousehold = t.middleware(({ next, ctx }) => {
+  if (!ctx.auth.orgId || !ctx.auth.userId) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next({ ctx });
 });
 
 /**
@@ -111,3 +117,6 @@ export const createTRPCRouter = t.router;
  */
 export const publicProcedure = t.procedure;
 export const protectedProcedure = t.procedure.use(isAuthed);
+export const protectedProcedureWithHousehold = t.procedure.use(
+  isAuthedAndHasHousehold,
+);
