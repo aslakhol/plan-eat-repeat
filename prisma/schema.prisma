@@ -17,7 +17,7 @@ model Dinner {
     link        String?
     notes       String?
     Household   Household @relation(fields: [householdId], references: [id])
-    householdId String    @default("org_2od444SKLdkm5D1kfSTGqNfEfIq")
+    householdId String
 
     @@index([name])
 }
