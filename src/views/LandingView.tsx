@@ -1,6 +1,5 @@
-import { SignInButton } from "@clerk/nextjs";
+import { SignUpButton, SignedOut } from "@clerk/nextjs";
 
-import { SignedOut } from "@clerk/nextjs";
 import { Button } from "../components/ui/button";
 
 export const LandingView = () => {
@@ -36,9 +35,9 @@ export const LandingView = () => {
 const CTA = () => {
   return (
     <SignedOut>
-      <SignInButton>
-        <Button>Sign in</Button>
-      </SignInButton>
+      <SignUpButton>
+        <Button>Sign up</Button>
+      </SignUpButton>
     </SignedOut>
   );
 };
