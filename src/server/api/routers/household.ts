@@ -61,4 +61,13 @@ export const householdRouter = createTRPCRouter({
       });
       return { invite };
     }),
+  members: protectedProcedure
+    .input(z.object({ householdId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const members = await ctx.db.membership.findMany({
+        where: { householdId: input.householdId },
+        include: { user: true },
+      });
+      return { members };
+    }),
 });
