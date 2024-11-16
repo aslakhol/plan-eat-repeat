@@ -13,14 +13,19 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { toast } from "../../components/ui/use-toast";
+import { useClerk } from "@clerk/nextjs";
 
 type Props = { household: Household };
 
 export const Memberships = ({ household }: Props) => {
+  const { user } = useClerk();
   const utils = api.useUtils();
   const membersQuery = api.household.members.useQuery({
     householdId: household.id,
   });
+  const userIsAdmin = membersQuery.data?.members.some(
+    (member) => member.userId === user?.id && member.role === "ADMIN",
+  );
 
   const updateRoleMutation = api.household.updateMemberRole.useMutation({
     onSuccess: () => {
@@ -62,6 +67,7 @@ export const Memberships = ({ household }: Props) => {
               onValueChange={(value: MembershipRole) =>
                 handleRoleChange(member.id, value)
               }
+              disabled={!userIsAdmin}
             >
               <SelectTrigger className="ml-auto w-[120px]">
                 <SelectValue />
