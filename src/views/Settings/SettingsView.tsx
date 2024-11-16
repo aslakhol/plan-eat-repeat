@@ -11,12 +11,7 @@ import { cn } from "../../lib/utils";
 import Link from "next/link";
 
 export const SettingsView = () => {
-  const {
-    openUserProfile,
-    openOrganizationProfile,
-    openCreateOrganization,
-    organization,
-  } = useClerk();
+  const { openUserProfile } = useClerk();
 
   return (
     <>
