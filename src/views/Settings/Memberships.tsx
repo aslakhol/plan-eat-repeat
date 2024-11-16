@@ -111,3 +111,8 @@ export const Memberships = ({ household }: Props) => {
     </Card>
   );
 };
+
+// Update role mutation so that there is always one admin
+// disable remove button if user is not admin
+// change text to leave household if member is self
+// make remove member mutation
