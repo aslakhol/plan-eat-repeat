@@ -4,13 +4,10 @@ import { type NextApiRequest, type NextApiResponse } from "next";
 import { buffer } from "micro";
 import { env } from "../../env.mjs";
 import {
-  organizationCreated,
-  organizationDeleted,
-  organizationUpdated,
   userCreated,
   userDeleted,
   userUpdated,
-} from "../../server/webhooks/organization";
+} from "../../server/webhooks/user";
 
 export const config = {
   api: {
