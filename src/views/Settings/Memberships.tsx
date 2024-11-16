@@ -14,6 +14,14 @@ import {
 } from "../../components/ui/select";
 import { toast } from "../../components/ui/use-toast";
 import { useClerk } from "@clerk/nextjs";
+import {
+  Card,
+  CardTitle,
+  CardContent,
+  CardHeader,
+} from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { X } from "lucide-react";
 
 type Props = { household: Household };
 
@@ -44,42 +52,62 @@ export const Memberships = ({ household }: Props) => {
     });
   };
 
+  const handleRemoveMember = (memberId: number) => {
+    // removeMemberMutation.mutate({ memberId });
+    console.log("remove member", memberId);
+  };
+
   return (
-    <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-semibold">Members</h2>
-      <div className="flex flex-col gap-2">
-        {membersQuery.data?.members.map((member) => (
-          <div key={member.id} className="flex items-center gap-2">
-            <Avatar>
-              <AvatarImage
-                src={`https://api.dicebear.com/9.x/thumbs/svg?flip=true&backgroundColor=c0aede&seed=${member.user.id}`}
-              />
-              <AvatarFallback>
-                {member.user.firstName?.slice(0, 1)}
-                {member.user.lastName?.slice(0, 1)}
-              </AvatarFallback>
-            </Avatar>
-            <span>
-              {member.user.firstName} {member.user.lastName}
-            </span>
-            <Select
-              defaultValue={member.role}
-              onValueChange={(value: MembershipRole) =>
-                handleRoleChange(member.id, value)
-              }
-              disabled={!userIsAdmin}
-            >
-              <SelectTrigger className="ml-auto w-[120px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ADMIN">Admin</SelectItem>
-                <SelectItem value="MEMBER">Member</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        ))}
-      </div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Members</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="space-y-4">
+          {membersQuery.data?.members.map((member) => (
+            <li key={member.id} className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <Avatar>
+                  <AvatarImage
+                    src={`https://api.dicebear.com/9.x/thumbs/svg?flip=true&backgroundColor=c0aede&seed=${member.user.id}`}
+                  />
+                  <AvatarFallback>
+                    {member.user.firstName?.slice(0, 1)}
+                    {member.user.lastName?.slice(0, 1)}
+                  </AvatarFallback>
+                </Avatar>
+                <span>
+                  {member.user.firstName} {member.user.lastName}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Select
+                  defaultValue={member.role}
+                  onValueChange={(value: MembershipRole) =>
+                    handleRoleChange(member.id, value)
+                  }
+                  disabled={!userIsAdmin}
+                >
+                  <SelectTrigger className="ml-auto w-[120px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                    <SelectItem value="MEMBER">Member</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleRemoveMember(member.id)}
+                >
+                  <X className="h-4 w-4" />
+                  <span className="">Remove member</span>
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 };

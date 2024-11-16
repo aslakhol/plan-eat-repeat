@@ -15,6 +15,12 @@ import {
   Form,
 } from "../../components/ui/form";
 import { Button } from "../../components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "../../components/ui/card";
 
 const householdFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
@@ -92,14 +98,18 @@ export const EditHousehold = ({ household }: EditHouseholdProps) => {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Edit {household.name}</h1>
-      <HouseholdForm
-        form={form}
-        onSubmit={onSubmit}
-        submitLabel="Update Household"
-      />
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Edit Household</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <HouseholdForm
+          form={form}
+          onSubmit={onSubmit}
+          submitLabel="Save changes"
+        />
+      </CardContent>
+    </Card>
   );
 };
 

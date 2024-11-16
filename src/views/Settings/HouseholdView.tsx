@@ -12,7 +12,7 @@ export const HouseholdView = ({ currentHousehold }: Props) => {
       {!currentHousehold ? (
         <NewHousehold />
       ) : (
-        <div className="flex flex-col p-4">
+        <div className=" space-y-8 p-4">
           <EditHousehold household={currentHousehold} />
           <Memberships household={currentHousehold} />
         </div>
