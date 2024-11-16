@@ -39,13 +39,26 @@ model Plan {
     @@index([date])
 }
 
-model Household {
-    id   String @id @default(cuid())
-    name String
-    slug String @unique
+model Membership {
+    id          Int       @id @default(autoincrement())
+    household   Household @relation(fields: [householdId], references: [id])
+    householdId String
+    userId      String
 
-    // These are not managed by Clerk
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    Dinner    Dinner[]
+    role MembershipRole
+}
+
+enum MembershipRole {
+    ADMIN
+    MEMBER
+}
+
+model Household {
+    id        String       @id @default(cuid())
+    name      String
+    slug      String       @unique
+    createdAt DateTime     @default(now())
+    updatedAt DateTime     @updatedAt
+    Dinners   Dinner[]
+    Members   Membership[]
 }
