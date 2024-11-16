@@ -18,6 +18,12 @@ export const householdRouter = createTRPCRouter({
 
       return { household };
     }),
+  householdsForUser: protectedProcedure.query(async ({ ctx }) => {
+    const households = await ctx.db.household.findMany({
+      where: { Members: { some: { userId: ctx.auth.userId } } },
+    });
+    return { households };
+  }),
   createHousehold: protectedProcedure
     .input(z.object({ name: z.string(), slug: z.string() }))
     .mutation(async ({ ctx, input }) => {
