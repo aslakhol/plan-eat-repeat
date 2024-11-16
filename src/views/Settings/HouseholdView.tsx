@@ -15,14 +15,22 @@ import {
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { toast } from "../../components/ui/use-toast";
+import { BottomNav } from "../BottomNav";
 
 type Props = { currentHousehold?: Household };
 
 export const HouseholdView = ({ currentHousehold }: Props) => {
-  return currentHousehold ? (
-    <EditHousehold household={currentHousehold} />
-  ) : (
-    <NewHousehold />
+  return (
+    <div>
+      <div className="flex flex-col p-4">
+        {currentHousehold ? (
+          <EditHousehold household={currentHousehold} />
+        ) : (
+          <NewHousehold />
+        )}
+      </div>
+      <BottomNav />
+    </div>
   );
 };
 
