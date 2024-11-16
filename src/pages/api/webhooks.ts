@@ -65,15 +65,15 @@ export default async function handler(
   }
 
   if (evt.type === "organization.created") {
-    await organizationCreated(evt.data);
+    // await organizationCreated(evt.data);
   }
 
   if (evt.type === "organization.updated") {
-    await organizationUpdated(evt.data);
+    // await organizationUpdated(evt.data);
   }
 
   if (evt.type === "organization.deleted") {
-    await organizationDeleted(evt.data.id, evt.data.slug);
+    // await organizationDeleted(evt.data.id, evt.data.slug);
   }
 
   return res.status(200).json({ response: "Success" });
