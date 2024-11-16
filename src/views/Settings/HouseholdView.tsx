@@ -138,7 +138,13 @@ const HouseholdForm = ({ form, onSubmit, submitLabel }: HouseholdFormProps) => {
             <FormItem>
               <FormLabel>Household Name</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    form.setValue("slug", slugify(e.target.value));
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -165,4 +171,14 @@ const HouseholdForm = ({ form, onSubmit, submitLabel }: HouseholdFormProps) => {
       </form>
     </Form>
   );
+};
+
+const slugify = (text: string): string => {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, "-") // Replace spaces with -
+    .replace(/[^\w\-]+/g, "") // Remove all non-word chars
+    .replace(/\-\-+/g, "-") // Replace multiple - with single -
+    .replace(/^-+/, "") // Trim - from start of text
+    .replace(/-+$/, ""); // Trim - from end of text
 };
