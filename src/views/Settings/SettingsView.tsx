@@ -29,23 +29,9 @@ export const SettingsView = () => {
           >
             Account
           </Button>
-          {organization ? (
-            <Button
-              className={cn("justify-start")}
-              variant={"outline"}
-              onClick={() => openOrganizationProfile()}
-            >
-              Household
-            </Button>
-          ) : (
-            <Button
-              className={cn("justify-start")}
-              variant={"outline"}
-              onClick={() => openCreateOrganization()}
-            >
-              Create household
-            </Button>
-          )}
+          <Button className={cn("justify-start")} variant={"outline"} asChild>
+            <Link href="/settings/household">Household</Link>
+          </Button>
 
           <SignOutButton>
             <Button variant={"outline"} className={cn("justify-start")}>
