@@ -58,6 +58,7 @@ model Household {
     updatedAt DateTime     @updatedAt
     Dinners   Dinner[]
     Members   Membership[]
+    Invite    Invite[]
 }
 
 model Membership {
@@ -77,4 +78,15 @@ model Membership {
 enum MembershipRole {
     ADMIN
     MEMBER
+}
+
+model Invite {
+    id String @id @default(cuid())
+
+    household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    householdId String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    expiresAt DateTime
 }
