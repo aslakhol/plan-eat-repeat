@@ -6,6 +6,7 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 import { addDays } from "date-fns";
+import { MembershipRole } from "@prisma/client";
 
 export const householdRouter = createTRPCRouter({
   household: publicProcedure
@@ -69,5 +70,17 @@ export const householdRouter = createTRPCRouter({
         include: { user: true },
       });
       return { members };
+    }),
+  updateMemberRole: protectedProcedure
+    .input(
+      z.object({ memberId: z.number(), role: z.nativeEnum(MembershipRole) }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { memberId, role } = input;
+      const member = await ctx.db.membership.update({
+        where: { id: memberId },
+        data: { role },
+      });
+      return { member };
     }),
 });
