@@ -1,5 +1,3 @@
-import { Form } from "react-hook-form";
-
 import { toast } from "../../components/ui/use-toast";
 
 import { type Household } from "@prisma/client";
@@ -14,6 +12,7 @@ import {
   FormLabel,
   FormItem,
   FormMessage,
+  Form,
 } from "../../components/ui/form";
 import { Button } from "../../components/ui/button";
 
