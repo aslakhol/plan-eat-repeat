@@ -102,7 +102,11 @@ const EditHousehold = ({ household }: EditHouseholdProps) => {
   });
 
   const onSubmit = (data: HouseholdFormData) => {
-    updateHouseholdMutation.mutate({ id: household.id, name: data.name });
+    updateHouseholdMutation.mutate({
+      id: household.id,
+      name: data.name,
+      slug: data.slug,
+    });
   };
 
   return (
@@ -112,7 +116,6 @@ const EditHousehold = ({ household }: EditHouseholdProps) => {
         form={form}
         onSubmit={onSubmit}
         submitLabel="Update Household"
-        disableSlug
       />
     </div>
   );
@@ -122,15 +125,9 @@ type HouseholdFormProps = {
   form: UseFormReturn<HouseholdFormData>;
   onSubmit: (data: HouseholdFormData) => void;
   submitLabel: string;
-  disableSlug?: boolean;
 };
 
-const HouseholdForm = ({
-  form,
-  onSubmit,
-  submitLabel,
-  disableSlug,
-}: HouseholdFormProps) => {
+const HouseholdForm = ({ form, onSubmit, submitLabel }: HouseholdFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -155,7 +152,7 @@ const HouseholdForm = ({
             <FormItem>
               <FormLabel>Household Slug</FormLabel>
               <FormControl>
-                <Input {...field} disabled={disableSlug} />
+                <Input {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

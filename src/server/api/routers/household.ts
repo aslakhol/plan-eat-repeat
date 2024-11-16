@@ -38,12 +38,12 @@ export const householdRouter = createTRPCRouter({
       return { household };
     }),
   updateHousehold: protectedProcedure
-    .input(z.object({ id: z.string(), name: z.string() }))
+    .input(z.object({ id: z.string(), name: z.string(), slug: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const { id, name } = input;
+      const { id, name, slug } = input;
       const household = await ctx.db.household.update({
         where: { id },
-        data: { name },
+        data: { name, slug },
       });
 
       return { household };
