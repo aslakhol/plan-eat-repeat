@@ -39,18 +39,15 @@ model Plan {
     @@index([date])
 }
 
-model Membership {
-    id          Int       @id @default(autoincrement())
-    household   Household @relation(fields: [householdId], references: [id])
-    householdId String
-    userId      String
+model User {
+    id        String  @id
+    firstName String?
+    lastName  String?
 
-    role MembershipRole
-}
-
-enum MembershipRole {
-    ADMIN
-    MEMBER
+    // Not managed by clerk
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+    Memberships Membership[]
 }
 
 model Household {
@@ -61,4 +58,23 @@ model Household {
     updatedAt DateTime     @updatedAt
     Dinners   Dinner[]
     Members   Membership[]
+}
+
+model Membership {
+    id          Int       @id @default(autoincrement())
+    household   Household @relation(fields: [householdId], references: [id])
+    householdId String
+    user        User      @relation(fields: [userId], references: [id])
+    userId      String
+
+    role      MembershipRole
+    createdAt DateTime       @default(now())
+    updatedAt DateTime       @updatedAt
+
+    @@unique([householdId, userId])
+}
+
+enum MembershipRole {
+    ADMIN
+    MEMBER
 }
