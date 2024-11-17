@@ -88,8 +88,8 @@ export const Invitation = ({ invite }: Props) => {
                       {member.user.firstName} {member.user.lastName}
                     </span>
                   </div>
-                  <span className="text-sm text-muted-foreground">
-                    {member.role}
+                  <span className="text-sm capitalize text-muted-foreground">
+                    {member.role.toLowerCase()}
                   </span>
                 </li>
               ))}
