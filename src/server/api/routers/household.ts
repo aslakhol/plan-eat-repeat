@@ -118,6 +118,15 @@ export const householdRouter = createTRPCRouter({
       });
       return { invite };
     }),
+  manuallyExpireInvite: protectedProcedure
+    .input(z.object({ inviteId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const invite = await ctx.db.invite.update({
+        where: { id: input.inviteId },
+        data: { expiresAt: new Date() },
+      });
+      return { invite };
+    }),
 });
 
 const generateInviteLink = (inviteId: string) => {
