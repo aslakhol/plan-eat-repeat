@@ -49,6 +49,7 @@ export const Memberships = ({ household }: Props) => {
     updateRoleMutation.mutate({
       memberId,
       role: newRole,
+      householdId: household.id,
     });
   };
 

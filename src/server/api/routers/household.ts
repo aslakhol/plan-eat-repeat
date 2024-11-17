@@ -73,10 +73,25 @@ export const householdRouter = createTRPCRouter({
     }),
   updateMemberRole: protectedProcedure
     .input(
-      z.object({ memberId: z.number(), role: z.nativeEnum(MembershipRole) }),
+      z.object({
+        memberId: z.number(),
+        role: z.nativeEnum(MembershipRole),
+        householdId: z.string(),
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { memberId, role } = input;
+      const { memberId, role, householdId } = input;
+
+      const memberships = await ctx.db.membership.findMany({
+        where: { householdId },
+      });
+
+      const admins = memberships.filter((m) => m.role === "ADMIN");
+      const isAdmin = !!admins.find((m) => m.id === memberId);
+      if (isAdmin && role !== "ADMIN" && admins.length <= 1) {
+        throw new Error("There must be at least one admin");
+      }
+
       const member = await ctx.db.membership.update({
         where: { id: memberId },
         data: { role },
