@@ -20,6 +20,9 @@ export const Invites = ({ household }: Props) => {
   const createInviteMutation = api.household.createInvite.useMutation({
     onSuccess: () => {
       void utils.household.invites.invalidate();
+      toast({
+        title: "Invite link created",
+      });
     },
   });
 
