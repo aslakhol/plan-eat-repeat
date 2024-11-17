@@ -1,4 +1,8 @@
-import { type MembershipRole, type Household } from "@prisma/client";
+import {
+  type MembershipRole,
+  type Household,
+  type Membership,
+} from "@prisma/client";
 import {
   Avatar,
   AvatarImage,
@@ -22,36 +26,18 @@ import {
 } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { X } from "lucide-react";
+import { useState } from "react";
 
 type Props = { household: Household };
 
 export const Memberships = ({ household }: Props) => {
   const { user } = useClerk();
-  const utils = api.useUtils();
   const membersQuery = api.household.members.useQuery({
     householdId: household.id,
   });
-  const userIsAdmin = membersQuery.data?.members.some(
+  const userIsAdmin = !!membersQuery.data?.members.some(
     (member) => member.userId === user?.id && member.role === "ADMIN",
   );
-
-  const updateRoleMutation = api.household.updateMemberRole.useMutation({
-    onSuccess: () => {
-      void utils.household.members.invalidate();
-      toast({
-        title: "Role updated",
-        description: "Member role has been updated successfully",
-      });
-    },
-  });
-
-  const handleRoleChange = (memberId: number, newRole: MembershipRole) => {
-    updateRoleMutation.mutate({
-      memberId,
-      role: newRole,
-      householdId: household.id,
-    });
-  };
 
   const handleRemoveMember = (memberId: number) => {
     // removeMemberMutation.mutate({ memberId });
@@ -82,21 +68,11 @@ export const Memberships = ({ household }: Props) => {
                 </span>
               </div>
               <div className="flex items-center space-x-2">
-                <Select
-                  defaultValue={member.role}
-                  onValueChange={(value: MembershipRole) =>
-                    handleRoleChange(member.id, value)
-                  }
-                  disabled={!userIsAdmin}
-                >
-                  <SelectTrigger className="ml-auto w-[120px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
-                    <SelectItem value="MEMBER">Member</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Role
+                  member={member}
+                  household={household}
+                  userIsAdmin={userIsAdmin}
+                />
                 <Button
                   variant="destructive"
                   onClick={() => handleRemoveMember(member.id)}
@@ -110,6 +86,61 @@ export const Memberships = ({ household }: Props) => {
         </ul>
       </CardContent>
     </Card>
+  );
+};
+
+type RoleProps = {
+  member: Membership;
+  household: Household;
+  userIsAdmin: boolean;
+};
+
+const Role = ({ member, household, userIsAdmin }: RoleProps) => {
+  const [role, setRole] = useState<MembershipRole>(member.role);
+  const utils = api.useUtils();
+  const updateRoleMutation = api.household.updateMemberRole.useMutation({
+    onSuccess: () => {
+      void utils.household.members.invalidate();
+      toast({
+        title: "Role updated",
+        description: "Member role has been updated successfully",
+      });
+    },
+    onError: (error) => {
+      void utils.household.members.invalidate();
+      setRole(member.role);
+      toast({
+        title: "Something went wrong",
+        description: error.message,
+      });
+    },
+  });
+
+  const handleRoleChange = (memberId: number, newRole: MembershipRole) => {
+    updateRoleMutation.mutate({
+      memberId,
+      role: newRole,
+      householdId: household.id,
+    });
+  };
+
+  return (
+    <Select
+      value={role}
+      onValueChange={(value: MembershipRole) => {
+        setRole(value);
+        handleRoleChange(member.id, value);
+      }}
+      disabled={!userIsAdmin}
+    >
+      <SelectTrigger className="ml-auto w-[120px]">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="ADMIN">Admin</SelectItem>
+        <SelectItem value="MEMBER">Member</SelectItem>
+      </SelectContent>
+    </Select>
   );
 };
 
