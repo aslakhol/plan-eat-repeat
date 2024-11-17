@@ -113,3 +113,6 @@ export const Invite = ({ invite }: Props) => {
     </div>
   );
 };
+
+// Make the mutation
+// Ask v0 about no invite page
