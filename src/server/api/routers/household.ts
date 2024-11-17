@@ -7,6 +7,7 @@ import {
 } from "~/server/api/trpc";
 import { addDays } from "date-fns";
 import { MembershipRole } from "@prisma/client";
+import { env } from "../../../env.mjs";
 
 export const householdRouter = createTRPCRouter({
   household: publicProcedure
@@ -95,8 +96,15 @@ export const householdRouter = createTRPCRouter({
             gt: new Date(),
           },
         },
+        include: { household: true },
       });
-      return { invites };
+
+      return {
+        invites: invites.map((invite) => ({
+          ...invite,
+          link: generateInviteLink(invite.household.slug, invite.id),
+        })),
+      };
     }),
   createInvite: protectedProcedure
     .input(
@@ -112,3 +120,7 @@ export const householdRouter = createTRPCRouter({
       return { invite };
     }),
 });
+
+const generateInviteLink = (householdSlug: string, inviteId: string) => {
+  return `${env.NEXT_PUBLIC_APP_URL}h/${householdSlug}/invite/${inviteId}`;
+};
