@@ -12,12 +12,18 @@ import { type Household } from "@prisma/client";
 type Props = { household: Household };
 
 export const Invites = ({ household }: Props) => {
+  const utils = api.useUtils();
   const invitesQuery = api.household.invites.useQuery({
     householdId: household.id,
   });
+  const createInviteMutation = api.household.createInvite.useMutation({
+    onSuccess: () => {
+      void utils.household.invites.invalidate();
+    },
+  });
 
   const handleCreateInvite = () => {
-    console.log("create invite");
+    createInviteMutation.mutate({ householdId: household.id });
   };
 
   const handleRemoveInvite = (inviteId: string) => {
