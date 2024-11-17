@@ -2,7 +2,7 @@ import { UtensilsCrossed } from "lucide-react";
 
 import { api } from "../../utils/api";
 import { NoInvite } from "./NoInvite";
-import { Invite } from "./Invite";
+import { Invitation } from "./Invitation";
 
 type Props = { inviteId: string };
 
@@ -21,5 +21,5 @@ export const InviteView = ({ inviteId }: Props) => {
     return <NoInvite />;
   }
 
-  return <Invite invite={inviteQuery.data.invite} />;
+  return <Invitation invite={inviteQuery.data.invite} />;
 };
