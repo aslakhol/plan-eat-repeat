@@ -8,6 +8,7 @@ import {
 } from "../../components/ui/card";
 import { api } from "../../utils/api";
 import { type Household } from "@prisma/client";
+import { toast } from "../../components/ui/use-toast";
 
 type Props = { household: Household };
 
@@ -30,6 +31,13 @@ export const Invites = ({ household }: Props) => {
     console.log("remove invite", inviteId);
   };
 
+  const handleCopyInviteLink = (link: string) => {
+    void navigator.clipboard.writeText(link);
+    toast({
+      title: "Invite link copied to clipboard",
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -50,7 +58,7 @@ export const Invites = ({ household }: Props) => {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => navigator.clipboard.writeText(invite.link)}
+                    onClick={() => handleCopyInviteLink(invite.link)}
                   >
                     <Copy className="h-4 w-4" />
                     <span className="sr-only">Copy invite link</span>
