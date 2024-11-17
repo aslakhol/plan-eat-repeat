@@ -25,13 +25,22 @@ export const Invites = ({ household }: Props) => {
       });
     },
   });
+  const manuallyExpireInviteMutation =
+    api.household.manuallyExpireInvite.useMutation({
+      onSuccess: () => {
+        void utils.household.invites.invalidate();
+        toast({
+          title: "Invite link removed",
+        });
+      },
+    });
 
   const handleCreateInvite = () => {
     createInviteMutation.mutate({ householdId: household.id });
   };
 
   const handleRemoveInvite = (inviteId: string) => {
-    console.log("remove invite", inviteId);
+    manuallyExpireInviteMutation.mutate({ inviteId });
   };
 
   const handleCopyInviteLink = (link: string) => {
