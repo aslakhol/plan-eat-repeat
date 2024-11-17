@@ -49,19 +49,6 @@ export const householdRouter = createTRPCRouter({
 
       return { household };
     }),
-  createInvite: protectedProcedure
-    .input(
-      z.object({ householdId: z.string(), duration: z.number().optional() }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const invite = await ctx.db.invite.create({
-        data: {
-          householdId: input.householdId,
-          expiresAt: addDays(new Date(), input.duration ?? 30),
-        },
-      });
-      return { invite };
-    }),
   members: protectedProcedure
     .input(z.object({ householdId: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -110,5 +97,18 @@ export const householdRouter = createTRPCRouter({
         },
       });
       return { invites };
+    }),
+  createInvite: protectedProcedure
+    .input(
+      z.object({ householdId: z.string(), duration: z.number().optional() }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const invite = await ctx.db.invite.create({
+        data: {
+          householdId: input.householdId,
+          expiresAt: addDays(new Date(), input.duration ?? 30),
+        },
+      });
+      return { invite };
     }),
 });
