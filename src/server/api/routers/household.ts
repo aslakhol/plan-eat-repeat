@@ -138,6 +138,25 @@ export const householdRouter = createTRPCRouter({
       });
       return { invite };
     }),
+  join: protectedProcedure
+    .input(z.object({ inviteId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const invite = await ctx.db.invite.findUnique({
+        where: { id: input.inviteId, expiresAt: { gt: new Date() } },
+      });
+      if (!invite) {
+        throw new Error("Invite not found");
+      }
+
+      const membership = await ctx.db.membership.create({
+        data: {
+          userId: ctx.auth.userId,
+          householdId: invite.householdId,
+          role: "MEMBER",
+        },
+      });
+      return { membership };
+    }),
 });
 
 const generateInviteLink = (inviteId: string) => {
