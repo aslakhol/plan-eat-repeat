@@ -1,6 +1,6 @@
 import {
   type Household,
-  Invite,
+  type Invite,
   type Membership,
   type User,
 } from "@prisma/client";
@@ -19,8 +19,10 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import { api, type RouterOutputs } from "../../utils/api";
+import { api } from "../../utils/api";
 import { UserPlus } from "lucide-react";
+import { toast } from "../../components/ui/use-toast";
+import { useRouter } from "next/navigation";
 
 type Props = {
   invite: Invite & {
@@ -28,8 +30,9 @@ type Props = {
   };
 };
 
-export const Invite = ({ invite }: Props) => {
+export const Invitation = ({ invite }: Props) => {
   const utils = api.useUtils();
+  const router = useRouter();
 
   const joinHouseholdMutation = api.household.join.useMutation({
     onSuccess: () => {
@@ -97,9 +100,9 @@ export const Invite = ({ invite }: Props) => {
           <Button
             className="w-full"
             onClick={handleJoinHousehold}
-            disabled={isJoining}
+            disabled={joinHouseholdMutation.isLoading}
           >
-            {isJoining ? (
+            {joinHouseholdMutation.isLoading ? (
               "Joining..."
             ) : (
               <>
@@ -114,5 +117,4 @@ export const Invite = ({ invite }: Props) => {
   );
 };
 
-// Make the mutation
 // Ask v0 about no invite page
