@@ -86,6 +86,17 @@ export const householdRouter = createTRPCRouter({
       });
       return { member };
     }),
+  getInvite: publicProcedure
+    .input(z.object({ inviteId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const invite = await ctx.db.invite.findUnique({
+        where: { id: input.inviteId, expiresAt: { gt: new Date() } },
+        include: {
+          household: { include: { Members: { include: { user: true } } } },
+        },
+      });
+      return { invite };
+    }),
   invites: protectedProcedure
     .input(z.object({ householdId: z.string() }))
     .query(async ({ ctx, input }) => {
