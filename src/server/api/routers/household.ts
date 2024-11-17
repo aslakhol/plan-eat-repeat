@@ -96,13 +96,12 @@ export const householdRouter = createTRPCRouter({
             gt: new Date(),
           },
         },
-        include: { household: true },
       });
 
       return {
         invites: invites.map((invite) => ({
           ...invite,
-          link: generateInviteLink(invite.household.slug, invite.id),
+          link: generateInviteLink(invite.id),
         })),
       };
     }),
@@ -121,6 +120,6 @@ export const householdRouter = createTRPCRouter({
     }),
 });
 
-const generateInviteLink = (householdSlug: string, inviteId: string) => {
-  return `${env.NEXT_PUBLIC_APP_URL}h/${householdSlug}/invite/${inviteId}`;
+const generateInviteLink = (inviteId: string) => {
+  return `${env.NEXT_PUBLIC_APP_URL}invite/${inviteId}`;
 };
