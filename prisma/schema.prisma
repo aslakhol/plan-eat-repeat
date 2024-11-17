@@ -81,8 +81,7 @@ enum MembershipRole {
 }
 
 model Invite {
-    id   String @id @default(cuid())
-    link String @unique
+    id String @id @default(cuid())
 
     household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
     householdId String
