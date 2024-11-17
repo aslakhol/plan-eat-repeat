@@ -116,5 +116,3 @@ export const Invitation = ({ invite }: Props) => {
     </div>
   );
 };
-
-// Ask v0 about no invite page
