@@ -1,4 +1,4 @@
-import { Plus, Copy, X } from "lucide-react";
+import { Plus, Copy, Trash2 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import {
   Card,
@@ -80,7 +80,7 @@ export const Invites = ({ household }: Props) => {
                     size="icon"
                     onClick={() => handleRemoveInvite(invite.id)}
                   >
-                    <X className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" />
                     <span className="sr-only">Remove invite</span>
                   </Button>
                 </div>
