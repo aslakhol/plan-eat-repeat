@@ -5,8 +5,11 @@ import { HouseholdView } from "../../views/Settings/HouseholdView";
 import { api } from "../../utils/api";
 
 export default function Home() {
+  const utils = api.useUtils();
   const householdsForUserQuery = api.household.householdsForUser.useQuery();
-
+  void utils.household.members.prefetch({
+    householdId: householdsForUserQuery.data?.households[0]?.id ?? "",
+  });
   return (
     <>
       <Head>

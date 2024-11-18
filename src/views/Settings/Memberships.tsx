@@ -149,11 +149,6 @@ const Role = ({ member, household, userIsAdmin }: RoleProps) => {
   );
 };
 
-// Update role mutation so that there is always one admin
-// disable remove button if user is not admin
-// change text to leave household if member is self
-// make remove member mutation
-
 type RemoveMemberProps = {
   member: Membership & { user: User };
   household: Household;
