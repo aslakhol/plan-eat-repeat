@@ -157,6 +157,28 @@ export const householdRouter = createTRPCRouter({
       });
       return { membership };
     }),
+  removeMember: protectedProcedure
+    .input(z.object({ memberId: z.number(), householdId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { memberId, householdId } = input;
+      const admins = await ctx.db.membership.findMany({
+        where: { householdId, role: "ADMIN" },
+      });
+      const callerIsAdmin = admins.find((m) => m.userId === ctx.auth.userId);
+      if (!callerIsAdmin) {
+        throw new Error("Only an admin can remove members");
+      }
+
+      const removedIsAdmin = admins.find((m) => m.id === memberId);
+      if (removedIsAdmin && admins.length <= 1) {
+        throw new Error("There must be at least one admin");
+      }
+
+      const member = await ctx.db.membership.delete({
+        where: { id: memberId },
+      });
+      return { member };
+    }),
 });
 
 const generateInviteLink = (inviteId: string) => {
