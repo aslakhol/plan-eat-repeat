@@ -20,7 +20,11 @@ export const householdRouter = createTRPCRouter({
 
       return { household };
     }),
-  householdsForUser: protectedProcedure.query(async ({ ctx }) => {
+  householdsForUser: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.auth.userId) {
+      return { households: [] };
+    }
+
     const households = await ctx.db.household.findMany({
       where: { Members: { some: { userId: ctx.auth.userId } } },
     });
