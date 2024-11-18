@@ -19,20 +19,20 @@ export const householdRouter = createTRPCRouter({
       }
 
       if (!input.id && ctx.auth.userId) {
-        const household = await ctx.db.household.findFirstOrThrow({
+        const household = await ctx.db.household.findFirst({
           where: { Members: { some: { userId: ctx.auth.userId } } },
         });
 
         void (await clerkClient()).users.updateUserMetadata(ctx.auth.userId, {
           publicMetadata: {
-            householdId: household.id,
+            householdId: household?.id ?? null,
           },
         });
 
         return { household };
       }
 
-      const household = await ctx.db.household.findUniqueOrThrow({
+      const household = await ctx.db.household.findUnique({
         where: { id: input.id },
         include: { Members: true },
       });
