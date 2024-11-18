@@ -50,7 +50,7 @@ export const householdRouter = createTRPCRouter({
 
       return { household };
     }),
-  members: protectedProcedure
+  members: publicProcedure
     .input(z.object({ householdId: z.string() }))
     .query(async ({ ctx, input }) => {
       const members = await ctx.db.membership.findMany({
