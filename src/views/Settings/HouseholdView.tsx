@@ -7,7 +7,7 @@ import { Invites } from "./Invites";
 import { api } from "../../utils/api";
 import { useClerk } from "@clerk/nextjs";
 
-type Props = { currentHousehold?: Household };
+type Props = { currentHousehold: Household | null };
 
 export const HouseholdView = ({ currentHousehold }: Props) => {
   const { user } = useClerk();

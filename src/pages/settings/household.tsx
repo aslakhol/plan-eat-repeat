@@ -1,15 +1,38 @@
 import Head from "next/head";
-import { SignedIn, SignedOut } from "@clerk/nextjs";
+import { SignedIn, SignedOut, useClerk } from "@clerk/nextjs";
 import { LandingView } from "../../views/LandingView";
 import { HouseholdView } from "../../views/Settings/HouseholdView";
 import { api } from "../../utils/api";
+import { UtensilsCrossed } from "lucide-react";
 
-export default function Home() {
+export default function HouseholdSettings() {
+  const { user } = useClerk();
   const utils = api.useUtils();
-  const householdsForUserQuery = api.household.householdsForUser.useQuery();
+  const householdQuery = api.household.household.useQuery(
+    {
+      id: user?.publicMetadata.householdId ?? "",
+    },
+    { enabled: !!user?.publicMetadata.householdId },
+  );
   void utils.household.members.prefetch({
-    householdId: householdsForUserQuery.data?.households[0]?.id ?? "",
+    householdId: householdQuery.data?.household?.id ?? "",
   });
+
+  if (householdQuery.isLoading) {
+    return (
+      <>
+        <Head>
+          <title>Sulten</title>
+          <meta name="description" content="Dinner planning tool" />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+        <div className="flex h-screen w-screen items-center justify-center">
+          <UtensilsCrossed className="animate-spin" />
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Head>
@@ -18,9 +41,9 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <SignedIn>
-        <HouseholdView
-          currentHousehold={householdsForUserQuery.data?.households[0]}
-        />
+        {householdQuery.isSuccess && (
+          <HouseholdView currentHousehold={householdQuery.data?.household} />
+        )}
       </SignedIn>
       <SignedOut>
         <LandingView />
