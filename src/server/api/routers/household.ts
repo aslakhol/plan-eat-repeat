@@ -208,6 +208,13 @@ export const householdRouter = createTRPCRouter({
       const member = await ctx.db.membership.delete({
         where: { id: memberId },
       });
+
+      void (await clerkClient()).users.updateUserMetadata(member.userId, {
+        publicMetadata: {
+          householdId: null,
+        },
+      });
+
       return { member };
     }),
 });
