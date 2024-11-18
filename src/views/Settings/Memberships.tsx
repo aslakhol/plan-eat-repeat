@@ -2,6 +2,7 @@ import {
   type MembershipRole,
   type Household,
   type Membership,
+  type User,
 } from "@prisma/client";
 import {
   Avatar,
@@ -27,6 +28,15 @@ import {
 import { Button } from "../../components/ui/button";
 import { DoorOpen } from "lucide-react";
 import { useState } from "react";
+import {
+  Dialog,
+  DialogFooter,
+  DialogDescription,
+  DialogTitle,
+  DialogHeader,
+  DialogContent,
+  DialogTrigger,
+} from "../../components/ui/dialog";
 
 type Props = { household: Household };
 
@@ -145,27 +155,62 @@ const Role = ({ member, household, userIsAdmin }: RoleProps) => {
 // make remove member mutation
 
 type RemoveMemberProps = {
-  member: Membership;
+  member: Membership & { user: User };
   household: Household;
   userIsAdmin: boolean;
 };
 
 const RemoveMember = ({ member, household }: RemoveMemberProps) => {
+  const [dialogOpen, setDialogOpen] = useState(false);
   const utils = api.useUtils();
-  const removeMemberMutation = api.household.removeMember.useMutation({
-    onSuccess: () => {
-      void utils.household.members.invalidate();
-    },
-  });
+  const { user, signOut } = useClerk();
+  const isSelf = member.userId === user?.id;
+  // const removeMemberMutation = api.household.removeMember.useMutation({
+  //   onSuccess: () => {
+  //     void utils.household.members.invalidate();
+  //     if (isSelf) {
+  //       void signOut();
+  //     }
+  //     setDialogOpen(false);
+  //   },
+  // });
 
   const handleRemoveMember = (memberId: number) => {
-    removeMemberMutation.mutate({ memberId, householdId: household.id });
+    // removeMemberMutation.mutate({ memberId, householdId: household.id });
+    console.log("remove member", memberId);
   };
 
   return (
-    <Button variant="destructive" onClick={() => handleRemoveMember(member.id)}>
-      <DoorOpen className="h-4 w-4" />
-      <span className="sr-only">Remove member</span>
-    </Button>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogTrigger asChild>
+        <Button variant="destructive" size="icon">
+          <DoorOpen className="h-4 w-4" />
+          <span className="sr-only">Remove member</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            {isSelf ? "Leave Household" : "Remove Member"}
+          </DialogTitle>
+          <DialogDescription>
+            {isSelf
+              ? "Are you sure you want to remove yourself from this household? You will lose access and be logged out."
+              : `Are you sure you want to remove ${member.user.firstName} ${member.user.lastName} from this household?`}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => handleRemoveMember(member.id)}
+          >
+            {isSelf ? "Leave" : "Remove"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
