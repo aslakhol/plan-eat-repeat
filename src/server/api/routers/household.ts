@@ -12,9 +12,27 @@ import { clerkClient } from "@clerk/nextjs/server";
 
 export const householdRouter = createTRPCRouter({
   household: publicProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().optional() }))
     .query(async ({ ctx, input }) => {
-      const household = await ctx.db.household.findUnique({
+      if (!ctx.auth.userId && !input.id) {
+        throw new Error("No user or household id provided");
+      }
+
+      if (!input.id && ctx.auth.userId) {
+        const household = await ctx.db.household.findFirstOrThrow({
+          where: { Members: { some: { userId: ctx.auth.userId } } },
+        });
+
+        void (await clerkClient()).users.updateUserMetadata(ctx.auth.userId, {
+          publicMetadata: {
+            householdId: household.id,
+          },
+        });
+
+        return { household };
+      }
+
+      const household = await ctx.db.household.findUniqueOrThrow({
         where: { id: input.id },
         include: { Members: true },
       });
