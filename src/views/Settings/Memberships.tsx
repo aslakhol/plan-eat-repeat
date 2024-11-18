@@ -167,10 +167,10 @@ const RemoveMember = ({ member, household }: RemoveMemberProps) => {
   const isSelf = member.userId === user?.id;
   const removeMemberMutation = api.household.removeMember.useMutation({
     onSuccess: () => {
-      void utils.household.members.invalidate();
       if (isSelf) {
         void signOut();
       }
+      void utils.household.members.invalidate();
       setDialogOpen(false);
     },
   });
