@@ -125,6 +125,14 @@ export const householdRouter = createTRPCRouter({
       z.object({ householdId: z.string(), duration: z.number().optional() }),
     )
     .mutation(async ({ ctx, input }) => {
+      const admins = await ctx.db.membership.findMany({
+        where: { householdId: input.householdId, role: "ADMIN" },
+      });
+      const callerIsAdmin = admins.find((m) => m.userId === ctx.auth.userId);
+      if (!callerIsAdmin) {
+        throw new Error("Only admins can create invites");
+      }
+
       const invite = await ctx.db.invite.create({
         data: {
           householdId: input.householdId,
