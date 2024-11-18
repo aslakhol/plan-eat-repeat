@@ -33,7 +33,3 @@ export const InviteView = ({ inviteId }: Props) => {
 
   return <Invitation invite={inviteQuery.data.invite} />;
 };
-
-// Avatar from clerk, and reusable avatar component
-// Disable, or think harder about multiple households per account
-// Figure out the onboarding flow
