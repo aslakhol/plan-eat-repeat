@@ -52,6 +52,13 @@ export const householdRouter = createTRPCRouter({
   createHousehold: protectedProcedure
     .input(z.object({ name: z.string(), slug: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      const existingMembership = await ctx.db.membership.findFirst({
+        where: { userId: ctx.auth.userId },
+      });
+      if (existingMembership) {
+        throw new Error("You can only be part of one household");
+      }
+
       const household = await ctx.db.household.create({
         data: {
           name: input.name,
@@ -188,6 +195,16 @@ export const householdRouter = createTRPCRouter({
       });
       if (!invite) {
         throw new Error("Invite not found");
+      }
+
+      const existingMembership = await ctx.db.membership.findFirst({
+        where: { userId: ctx.auth.userId },
+      });
+      if (existingMembership) {
+        if (existingMembership.householdId === invite.householdId) {
+          throw new Error("You are already a member of this household");
+        }
+        throw new Error("You can only be part of one household");
       }
 
       const membership = await ctx.db.membership.create({
