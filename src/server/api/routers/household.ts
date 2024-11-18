@@ -8,6 +8,7 @@ import {
 import { addDays } from "date-fns";
 import { MembershipRole } from "@prisma/client";
 import { env } from "../../../env.mjs";
+import { clerkClient } from "@clerk/nextjs/server";
 
 export const householdRouter = createTRPCRouter({
   household: publicProcedure
@@ -41,6 +42,13 @@ export const householdRouter = createTRPCRouter({
         },
         include: { Members: true },
       });
+
+      void (await clerkClient()).users.updateUserMetadata(ctx.auth.userId, {
+        publicMetadata: {
+          householdId: household.id,
+        },
+      });
+
       return { household };
     }),
   updateHousehold: protectedProcedure
@@ -171,6 +179,13 @@ export const householdRouter = createTRPCRouter({
           role: "MEMBER",
         },
       });
+
+      void (await clerkClient()).users.updateUserMetadata(ctx.auth.userId, {
+        publicMetadata: {
+          householdId: membership.householdId,
+        },
+      });
+
       return { membership };
     }),
   removeMember: protectedProcedure
