@@ -7,26 +7,27 @@ import { Invites } from "./Invites";
 import { api } from "../../utils/api";
 import { useClerk } from "@clerk/nextjs";
 
-type Props = { currentHousehold: Household | null };
+type Props = { household: Household | null };
 
-export const HouseholdView = ({ currentHousehold }: Props) => {
+export const HouseholdView = ({ household }: Props) => {
   const { user } = useClerk();
   const membersQuery = api.household.members.useQuery(
-    { householdId: currentHousehold?.id ?? "" },
-    { enabled: !!currentHousehold },
+    { householdId: household?.id ?? "" },
+    { enabled: !!household },
   );
   const userIsAdmin = !!membersQuery.data?.members.some(
     (member) => member.userId === user?.id && member.role === "ADMIN",
   );
+
   return (
     <div>
-      {!currentHousehold ? (
+      {!household ? (
         <NewHousehold />
       ) : (
-        <div className=" space-y-8 p-4">
-          <EditHousehold household={currentHousehold} />
-          <Memberships household={currentHousehold} />
-          {userIsAdmin && <Invites household={currentHousehold} />}
+        <div className="space-y-8 p-4">
+          <EditHousehold household={household} />
+          <Memberships household={household} />
+          {userIsAdmin && <Invites household={household} />}
         </div>
       )}
       <BottomNav />

@@ -42,7 +42,7 @@ export default function HouseholdSettings() {
       </Head>
       <SignedIn>
         {householdQuery.isSuccess && (
-          <HouseholdView currentHousehold={householdQuery.data?.household} />
+          <HouseholdView household={householdQuery.data?.household} />
         )}
       </SignedIn>
       <SignedOut>
