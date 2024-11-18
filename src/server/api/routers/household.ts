@@ -92,7 +92,7 @@ export const householdRouter = createTRPCRouter({
       const invite = await ctx.db.invite.findUnique({
         where: { id: input.inviteId, expiresAt: { gt: new Date() } },
         include: {
-          household: { include: { Members: { include: { user: true } } } },
+          household: true,
         },
       });
       return { invite };

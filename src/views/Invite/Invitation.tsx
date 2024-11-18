@@ -1,9 +1,4 @@
-import {
-  type Household,
-  type Invite,
-  type Membership,
-  type User,
-} from "@prisma/client";
+import { type Household, type Invite } from "@prisma/client";
 import {
   Avatar,
   AvatarFallback,
@@ -26,20 +21,21 @@ import { useRouter } from "next/navigation";
 
 type Props = {
   invite: Invite & {
-    household: Household & { Members: Array<Membership & { user: User }> };
+    household: Household;
   };
 };
 
 export const Invitation = ({ invite }: Props) => {
   const utils = api.useUtils();
   const router = useRouter();
-
+  const membersQuery = api.household.members.useQuery({
+    householdId: invite.householdId,
+  });
   const joinHouseholdMutation = api.household.join.useMutation({
     onSuccess: () => {
       void utils.household.members.invalidate({
         householdId: invite.householdId,
       });
-      void utils.household.getInvite.invalidate({ inviteId: invite.id });
 
       toast({
         title: "You have joined the household",
@@ -69,7 +65,7 @@ export const Invitation = ({ invite }: Props) => {
           <div>
             <h3 className="mb-2 text-lg font-semibold">Existing Members</h3>
             <ul className="space-y-2">
-              {invite.household.Members.map((member) => (
+              {membersQuery.data?.members.map((member) => (
                 <li
                   key={member.id}
                   className="flex items-center justify-between"
