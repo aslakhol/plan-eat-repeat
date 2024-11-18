@@ -25,7 +25,7 @@ import {
   CardHeader,
 } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { X } from "lucide-react";
+import { DoorOpen } from "lucide-react";
 import { useState } from "react";
 
 type Props = { household: Household };
@@ -38,11 +38,6 @@ export const Memberships = ({ household }: Props) => {
   const userIsAdmin = !!membersQuery.data?.members.some(
     (member) => member.userId === user?.id && member.role === "ADMIN",
   );
-
-  const handleRemoveMember = (memberId: number) => {
-    // removeMemberMutation.mutate({ memberId });
-    console.log("remove member", memberId);
-  };
 
   return (
     <Card>
@@ -73,13 +68,13 @@ export const Memberships = ({ household }: Props) => {
                   household={household}
                   userIsAdmin={userIsAdmin}
                 />
-                <Button
-                  variant="destructive"
-                  onClick={() => handleRemoveMember(member.id)}
-                >
-                  <X className="h-4 w-4" />
-                  <span className="">Remove member</span>
-                </Button>
+                {userIsAdmin && (
+                  <RemoveMember
+                    member={member}
+                    household={household}
+                    userIsAdmin={userIsAdmin}
+                  />
+                )}
               </div>
             </li>
           ))}
@@ -148,3 +143,29 @@ const Role = ({ member, household, userIsAdmin }: RoleProps) => {
 // disable remove button if user is not admin
 // change text to leave household if member is self
 // make remove member mutation
+
+type RemoveMemberProps = {
+  member: Membership;
+  household: Household;
+  userIsAdmin: boolean;
+};
+
+const RemoveMember = ({ member, household }: RemoveMemberProps) => {
+  const utils = api.useUtils();
+  const removeMemberMutation = api.household.removeMember.useMutation({
+    onSuccess: () => {
+      void utils.household.members.invalidate();
+    },
+  });
+
+  const handleRemoveMember = (memberId: number) => {
+    removeMemberMutation.mutate({ memberId, householdId: household.id });
+  };
+
+  return (
+    <Button variant="destructive" onClick={() => handleRemoveMember(member.id)}>
+      <DoorOpen className="h-4 w-4" />
+      <span className="sr-only">Remove member</span>
+    </Button>
+  );
+};
