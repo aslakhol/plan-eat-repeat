@@ -165,19 +165,18 @@ const RemoveMember = ({ member, household }: RemoveMemberProps) => {
   const utils = api.useUtils();
   const { user, signOut } = useClerk();
   const isSelf = member.userId === user?.id;
-  // const removeMemberMutation = api.household.removeMember.useMutation({
-  //   onSuccess: () => {
-  //     void utils.household.members.invalidate();
-  //     if (isSelf) {
-  //       void signOut();
-  //     }
-  //     setDialogOpen(false);
-  //   },
-  // });
+  const removeMemberMutation = api.household.removeMember.useMutation({
+    onSuccess: () => {
+      void utils.household.members.invalidate();
+      if (isSelf) {
+        void signOut();
+      }
+      setDialogOpen(false);
+    },
+  });
 
   const handleRemoveMember = (memberId: number) => {
-    // removeMemberMutation.mutate({ memberId, householdId: household.id });
-    console.log("remove member", memberId);
+    removeMemberMutation.mutate({ memberId, householdId: household.id });
   };
 
   return (
