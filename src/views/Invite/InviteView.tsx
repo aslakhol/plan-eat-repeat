@@ -4,7 +4,6 @@ import { api } from "../../utils/api";
 import { NoInvite } from "./NoInvite";
 import { Invitation } from "./Invitation";
 import { AlreadyInHousehold } from "./AlreadyInHousehold";
-import household from "../../pages/settings/household";
 
 type Props = { inviteId: string };
 
@@ -34,3 +33,8 @@ export const InviteView = ({ inviteId }: Props) => {
 
   return <Invitation invite={inviteQuery.data.invite} />;
 };
+
+// Handle logged out users
+// Avatar from clerk, and reusable avatar component
+// Disable, or think harder about multiple households per account
+// Figure out the onboarding flow
