@@ -18,6 +18,7 @@ import { api } from "../../utils/api";
 import { UserPlus } from "lucide-react";
 import { toast } from "../../components/ui/use-toast";
 import { useRouter } from "next/navigation";
+import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
 
 type Props = {
   invite: Invite & {
@@ -93,20 +94,27 @@ export const Invitation = ({ invite }: Props) => {
           </div>
         </CardContent>
         <CardFooter>
-          <Button
-            className="w-full"
-            onClick={handleJoinHousehold}
-            disabled={joinHouseholdMutation.isLoading}
-          >
-            {joinHouseholdMutation.isLoading ? (
-              "Joining..."
-            ) : (
-              <>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Join Household
-              </>
-            )}
-          </Button>
+          <SignedIn>
+            <Button
+              className="w-full"
+              onClick={handleJoinHousehold}
+              disabled={joinHouseholdMutation.isLoading}
+            >
+              {joinHouseholdMutation.isLoading ? (
+                "Joining..."
+              ) : (
+                <>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Join Household
+                </>
+              )}
+            </Button>
+          </SignedIn>
+          <SignedOut>
+            <SignUpButton>
+              <Button className="w-full">Sign up to join</Button>
+            </SignUpButton>
+          </SignedOut>
         </CardFooter>
       </Card>
     </div>
