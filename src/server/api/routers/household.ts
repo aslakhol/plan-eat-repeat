@@ -70,13 +70,17 @@ export const householdRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { memberId, role, householdId } = input;
 
-      const memberships = await ctx.db.membership.findMany({
-        where: { householdId },
+      const admins = await ctx.db.membership.findMany({
+        where: { householdId, role: "ADMIN" },
       });
 
-      const admins = memberships.filter((m) => m.role === "ADMIN");
-      const isAdmin = !!admins.find((m) => m.id === memberId);
-      if (isAdmin && role !== "ADMIN" && admins.length <= 1) {
+      const callerIsAdmin = admins.find((m) => m.userId === ctx.auth.userId);
+      if (!callerIsAdmin) {
+        throw new Error("Only admins can update member roles");
+      }
+
+      const targetIsAdmin = !!admins.find((m) => m.id === memberId);
+      if (targetIsAdmin && role !== "ADMIN" && admins.length <= 1) {
         throw new Error("There must be at least one admin");
       }
 
