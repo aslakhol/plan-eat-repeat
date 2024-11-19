@@ -21,6 +21,8 @@ import {
   CardTitle,
   CardContent,
 } from "../../components/ui/card";
+import { useClerk } from "@clerk/nextjs";
+import { useRouter } from "next/router";
 
 const householdFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
@@ -30,6 +32,9 @@ const householdFormSchema = z.object({
 type HouseholdFormData = z.infer<typeof householdFormSchema>;
 
 export const NewHousehold = () => {
+  const router = useRouter();
+  const { user } = useClerk();
+
   const utils = api.useUtils();
   const form = useForm<HouseholdFormData>({
     resolver: zodResolver(householdFormSchema),
@@ -40,12 +45,14 @@ export const NewHousehold = () => {
   });
 
   const createHouseholdMutation = api.household.createHousehold.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       void utils.household.invalidate();
       toast({
         title: "Household created",
         description: "Your household has been created successfully",
       });
+      await user?.reload();
+      await router.push("/dinners");
     },
   });
 
