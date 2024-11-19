@@ -17,8 +17,8 @@ import {
 import { api } from "../../utils/api";
 import { UserPlus } from "lucide-react";
 import { toast } from "../../components/ui/use-toast";
-import { useRouter } from "next/navigation";
-import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
+import { useRouter } from "next/router";
+import { SignedIn, SignedOut, SignUpButton, useClerk } from "@clerk/nextjs";
 
 type Props = {
   invite: Invite & {
@@ -28,13 +28,14 @@ type Props = {
 
 export const Invitation = ({ invite }: Props) => {
   const utils = api.useUtils();
+  const { user } = useClerk();
   const router = useRouter();
   const membersQuery = api.household.members.useQuery({
     householdId: invite.householdId,
   });
   const joinHouseholdMutation = api.household.join.useMutation({
-    onSuccess: () => {
-      void utils.household.members.invalidate({
+    onSuccess: async () => {
+      await utils.household.members.invalidate({
         householdId: invite.householdId,
       });
 
@@ -42,7 +43,8 @@ export const Invitation = ({ invite }: Props) => {
         title: "You have joined the household",
         description: `Welcome to the ${invite.household.name} household!`,
       });
-      router.push("/");
+      await user?.reload();
+      await router.push("/dinners");
     },
   });
 
