@@ -61,14 +61,18 @@ export const NewHousehold = () => {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Create Household</h1>
-      <HouseholdForm
-        form={form}
-        onSubmit={onSubmit}
-        submitLabel="Create Household"
-      />
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Create Household</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <HouseholdForm
+          form={form}
+          onSubmit={onSubmit}
+          submitLabel="Create Household"
+        />
+      </CardContent>
+    </Card>
   );
 };
 
