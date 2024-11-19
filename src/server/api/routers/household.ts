@@ -23,7 +23,9 @@ export const householdRouter = createTRPCRouter({
           where: { Members: { some: { userId: ctx.auth.userId } } },
         });
 
-        void (await clerkClient()).users.updateUserMetadata(ctx.auth.userId, {
+        await (
+          await clerkClient()
+        ).users.updateUserMetadata(ctx.auth.userId, {
           publicMetadata: {
             householdId: household?.id ?? null,
           },
@@ -68,7 +70,9 @@ export const householdRouter = createTRPCRouter({
         include: { Members: true },
       });
 
-      void (await clerkClient()).users.updateUserMetadata(ctx.auth.userId, {
+      await (
+        await clerkClient()
+      ).users.updateUserMetadata(ctx.auth.userId, {
         publicMetadata: {
           householdId: household.id,
         },
@@ -215,7 +219,9 @@ export const householdRouter = createTRPCRouter({
         },
       });
 
-      void (await clerkClient()).users.updateUserMetadata(ctx.auth.userId, {
+      await (
+        await clerkClient()
+      ).users.updateUserMetadata(ctx.auth.userId, {
         publicMetadata: {
           householdId: membership.householdId,
         },
@@ -244,7 +250,9 @@ export const householdRouter = createTRPCRouter({
         where: { id: memberId },
       });
 
-      void (await clerkClient()).users.updateUserMetadata(member.userId, {
+      await (
+        await clerkClient()
+      ).users.updateUserMetadata(member.userId, {
         publicMetadata: {
           householdId: null,
         },
