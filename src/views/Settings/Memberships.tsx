@@ -46,6 +46,7 @@ export const Memberships = ({ household }: Props) => {
   const membersQuery = api.household.members.useQuery({
     householdId: household.id,
   });
+
   const userIsAdmin = !!membersQuery.data?.members.some(
     (member) => member.userId === user?.id && member.role === "ADMIN",
   );
