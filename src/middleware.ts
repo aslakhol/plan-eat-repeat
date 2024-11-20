@@ -23,7 +23,7 @@ export default clerkMiddleware(async (auth, req) => {
   if (
     userId &&
     !sessionClaims?.metadata?.householdId &&
-    req.nextUrl.pathname !== "/settings/household"
+    !req.nextUrl.pathname.includes("/settings")
   ) {
     console.log(sessionClaims.metadata.householdId, "householdId");
     const onboardingUrl = new URL("/settings/household", req.url);
