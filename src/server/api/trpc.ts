@@ -88,10 +88,13 @@ const isAuthed = t.middleware(({ next, ctx }) => {
 });
 
 const isAuthedAndHasHousehold = t.middleware(({ next, ctx }) => {
-  if (!ctx.auth.orgId || !ctx.auth.userId) {
+  if (!ctx.auth.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-  return next({ ctx });
+  if (!ctx.auth.sessionClaims?.metadata.householdId) {
+    throw new TRPCError({ code: "FORBIDDEN" });
+  }
+  return next({ ctx: { auth: ctx.auth } });
 });
 
 /**
