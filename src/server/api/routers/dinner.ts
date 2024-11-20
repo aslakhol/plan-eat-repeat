@@ -19,10 +19,7 @@ export const dinnerRouter = createTRPCRouter({
   }),
 
   dinners: protectedProcedureWithHousehold.query(async ({ ctx }) => {
-    const householdId = ctx.auth.orgId;
-    if (!householdId) {
-      throw new Error("Not connected to a household");
-    }
+    const householdId = ctx.householdId;
 
     const dinners: DinnerWithTags[] = await ctx.db.dinner.findMany({
       where: { householdId },
@@ -44,10 +41,7 @@ export const dinnerRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const householdId = ctx.auth.orgId;
-      if (!householdId) {
-        throw new Error("Not connected to a household");
-      }
+      const householdId = ctx.householdId;
 
       const dinner = await ctx.db.dinner.create({
         data: {
@@ -81,11 +75,6 @@ export const dinnerRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const householdId = ctx.auth.orgId;
-      if (!householdId) {
-        throw new Error("Not connected to a household");
-      }
-
       const previousDinner = await ctx.db.dinner.findUnique({
         where: { id: input.dinnerId },
         include: { tags: true },
@@ -96,7 +85,7 @@ export const dinnerRouter = createTRPCRouter({
       );
 
       const dinner = await ctx.db.dinner.update({
-        where: { id: input.dinnerId, householdId: ctx.auth.orgId },
+        where: { id: input.dinnerId, householdId: ctx.householdId },
         data: {
           name: input.dinnerName,
           link: input.link,
@@ -120,13 +109,8 @@ export const dinnerRouter = createTRPCRouter({
   delete: protectedProcedureWithHousehold
     .input(z.object({ dinnerId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      const householdId = ctx.auth.orgId;
-      if (!householdId) {
-        throw new Error("Not connected to a household");
-      }
-
       const dinner = await ctx.db.dinner.delete({
-        where: { id: input.dinnerId, householdId },
+        where: { id: input.dinnerId, householdId: ctx.householdId },
       });
 
       return {
