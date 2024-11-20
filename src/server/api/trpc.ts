@@ -94,7 +94,12 @@ const isAuthedAndHasHousehold = t.middleware(({ next, ctx }) => {
   if (!ctx.auth.sessionClaims?.metadata.householdId) {
     throw new TRPCError({ code: "FORBIDDEN" });
   }
-  return next({ ctx: { auth: ctx.auth } });
+  return next({
+    ctx: {
+      auth: ctx.auth,
+      householdId: ctx.auth.sessionClaims.metadata.householdId,
+    },
+  });
 });
 
 /**
