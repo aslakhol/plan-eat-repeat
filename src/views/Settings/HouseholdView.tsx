@@ -22,7 +22,9 @@ export const HouseholdView = ({ household }: Props) => {
   return (
     <div>
       {!household ? (
-        <NewHousehold />
+        <div className="p-4">
+          <NewHousehold />
+        </div>
       ) : (
         <div className="space-y-8 p-4">
           <EditHousehold household={household} />
