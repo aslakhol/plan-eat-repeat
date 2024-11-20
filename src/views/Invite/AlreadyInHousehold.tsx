@@ -17,6 +17,7 @@ import {
   AvatarImage,
 } from "../../components/ui/avatar";
 import { api } from "../../utils/api";
+import { UserAvatar } from "../UserAvatar";
 
 type Props = {
   household: Household;
@@ -43,20 +44,7 @@ export const AlreadyInHousehold = ({ household }: Props) => {
                   key={member.id}
                   className="flex items-center justify-between"
                 >
-                  <div className="flex items-center space-x-2">
-                    <Avatar>
-                      <AvatarImage
-                        src={`https://api.dicebear.com/9.x/thumbs/svg?flip=true&backgroundColor=c0aede&seed=${member.user.id}`}
-                      />
-                      <AvatarFallback>
-                        {member.user.firstName?.slice(0, 1)}
-                        {member.user.lastName?.slice(0, 1)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span>
-                      {member.user.firstName} {member.user.lastName}
-                    </span>
-                  </div>
+                  <UserAvatar user={member.user} />
                   <span className="text-sm capitalize text-muted-foreground">
                     {member.role.toLowerCase()}
                   </span>

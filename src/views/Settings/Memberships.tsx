@@ -37,6 +37,7 @@ import {
   DialogContent,
   DialogTrigger,
 } from "../../components/ui/dialog";
+import { UserAvatar } from "../UserAvatar";
 
 type Props = { household: Household };
 
@@ -58,20 +59,7 @@ export const Memberships = ({ household }: Props) => {
         <ul className="space-y-4">
           {membersQuery.data?.members.map((member) => (
             <li key={member.id} className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Avatar>
-                  <AvatarImage
-                    src={`https://api.dicebear.com/9.x/thumbs/svg?flip=true&backgroundColor=c0aede&seed=${member.user.id}`}
-                  />
-                  <AvatarFallback>
-                    {member.user.firstName?.slice(0, 1)}
-                    {member.user.lastName?.slice(0, 1)}
-                  </AvatarFallback>
-                </Avatar>
-                <span>
-                  {member.user.firstName} {member.user.lastName}
-                </span>
-              </div>
+              <UserAvatar user={member.user} />
               <div className="flex items-center space-x-2">
                 <Role
                   member={member}
