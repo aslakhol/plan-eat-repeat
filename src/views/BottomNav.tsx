@@ -8,7 +8,12 @@ export const BottomNav = () => {
   const router = useRouter();
   const { user } = useClerk();
 
-  const onClick = !user?.publicMetadata.householdId ? router.reload : undefined;
+  const onClick = !user?.publicMetadata.householdId
+    ? async () => {
+        await user?.reload();
+        router.reload();
+      }
+    : undefined;
 
   return (
     <div className="pb-20">
