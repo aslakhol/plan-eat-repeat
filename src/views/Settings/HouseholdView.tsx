@@ -6,6 +6,9 @@ import { Memberships } from "./Memberships";
 import { Invites } from "./Invites";
 import { api } from "../../utils/api";
 import { useClerk } from "@clerk/nextjs";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "../../components/ui/button";
+import Link from "next/link";
 
 type Props = { household: Household | null };
 
@@ -26,10 +29,16 @@ export const HouseholdView = ({ household }: Props) => {
           <NewHousehold />
         </div>
       ) : (
-        <div className="space-y-8 p-4">
+        <div className="space-y-4 p-4">
           <EditHousehold household={household} />
           <Memberships household={household} />
           {userIsAdmin && <Invites household={household} />}
+          <Button asChild variant="outline">
+            <Link href="/settings">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Go Back
+            </Link>
+          </Button>
         </div>
       )}
       <BottomNav />
