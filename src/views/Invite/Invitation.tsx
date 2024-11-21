@@ -1,9 +1,4 @@
 import { type Household, type Invite } from "@prisma/client";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "../../components/ui/avatar";
 import { Button } from "../../components/ui/button";
 
 import {

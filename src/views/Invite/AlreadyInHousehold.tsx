@@ -11,11 +11,6 @@ import {
 import { Button } from "../../components/ui/button";
 import Link from "next/link";
 import { type Household } from "@prisma/client";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "../../components/ui/avatar";
 import { api } from "../../utils/api";
 import { UserAvatar } from "../UserAvatar";
 

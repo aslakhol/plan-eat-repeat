@@ -4,11 +4,6 @@ import {
   type Membership,
   type User,
 } from "@prisma/client";
-import {
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
-} from "../../components/ui/avatar";
 import { api } from "../../utils/api";
 import {
   Select,
