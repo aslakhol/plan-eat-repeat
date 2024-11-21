@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   createTRPCRouter,
   publicProcedure,
-  protectedProcedure,
+  protectedProcedureWithHousehold,
 } from "~/server/api/trpc";
 import { type DinnerWithTags } from "~/utils/types";
 
@@ -19,7 +19,14 @@ export const dinnerRouter = createTRPCRouter({
   }),
 
   dinners: publicProcedure.query(async ({ ctx }) => {
+    const householdId = ctx.householdId;
+
+    if (!householdId) {
+      return { dinners: [] };
+    }
+
     const dinners: DinnerWithTags[] = await ctx.db.dinner.findMany({
+      where: { householdId },
       include: { tags: true },
       orderBy: { name: "asc" },
     });
@@ -28,7 +35,7 @@ export const dinnerRouter = createTRPCRouter({
     };
   }),
 
-  create: protectedProcedure
+  create: protectedProcedureWithHousehold
     .input(
       z.object({
         dinnerName: z.string().min(3),
@@ -38,11 +45,14 @@ export const dinnerRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const householdId = ctx.householdId;
+
       const dinner = await ctx.db.dinner.create({
         data: {
           name: input.dinnerName,
           link: input.link,
           notes: input.notes,
+          householdId,
           tags: {
             connectOrCreate: input.tagList.map((tag) => {
               return {
@@ -58,7 +68,7 @@ export const dinnerRouter = createTRPCRouter({
         dinner,
       };
     }),
-  edit: protectedProcedure
+  edit: protectedProcedureWithHousehold
     .input(
       z.object({
         dinnerName: z.string().min(3),
@@ -79,7 +89,7 @@ export const dinnerRouter = createTRPCRouter({
       );
 
       const dinner = await ctx.db.dinner.update({
-        where: { id: input.dinnerId },
+        where: { id: input.dinnerId, householdId: ctx.householdId },
         data: {
           name: input.dinnerName,
           link: input.link,
@@ -100,11 +110,11 @@ export const dinnerRouter = createTRPCRouter({
         dinner,
       };
     }),
-  delete: protectedProcedure
+  delete: protectedProcedureWithHousehold
     .input(z.object({ dinnerId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const dinner = await ctx.db.dinner.delete({
-        where: { id: input.dinnerId },
+        where: { id: input.dinnerId, householdId: ctx.householdId },
       });
 
       return {

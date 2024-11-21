@@ -39,7 +39,7 @@ export const DinnersView = () => {
     );
 
   return (
-    <div>
+    <div className="min-h-screen max-w-xl border-r">
       <div className="flex flex-col gap-4 p-4">
         <Filter
           search={search}

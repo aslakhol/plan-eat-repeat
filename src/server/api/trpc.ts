@@ -75,15 +75,40 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
     };
   },
 });
+const hasHouseholdOrUndefined = t.middleware(({ next, ctx }) => {
+  const householdId = ctx.auth.sessionClaims?.metadata.householdId;
 
+  return next({
+    ctx: {
+      householdId,
+    },
+  });
+});
 const isAuthed = t.middleware(({ next, ctx }) => {
-  console.log(ctx.auth.userId, "user id in isAuthed middleware");
+  const householdId = ctx.auth.sessionClaims?.metadata.householdId;
+
   if (!ctx.auth.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({
     ctx: {
       auth: ctx.auth,
+      householdId,
+    },
+  });
+});
+
+const isAuthedAndHasHousehold = t.middleware(({ next, ctx }) => {
+  if (!ctx.auth.userId) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  if (!ctx.auth.sessionClaims?.metadata.householdId) {
+    throw new TRPCError({ code: "FORBIDDEN" });
+  }
+  return next({
+    ctx: {
+      auth: ctx.auth,
+      householdId: ctx.auth.sessionClaims.metadata.householdId,
     },
   });
 });
@@ -109,5 +134,8 @@ export const createTRPCRouter = t.router;
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
-export const publicProcedure = t.procedure;
+export const publicProcedure = t.procedure.use(hasHouseholdOrUndefined);
 export const protectedProcedure = t.procedure.use(isAuthed);
+export const protectedProcedureWithHousehold = t.procedure.use(
+  isAuthedAndHasHousehold,
+);

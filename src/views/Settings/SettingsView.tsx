@@ -11,15 +11,10 @@ import { cn } from "../../lib/utils";
 import Link from "next/link";
 
 export const SettingsView = () => {
-  const {
-    openUserProfile,
-    openOrganizationProfile,
-    openCreateOrganization,
-    organization,
-  } = useClerk();
+  const { openUserProfile } = useClerk();
 
   return (
-    <>
+    <div className="min-h-screen max-w-xl border-r">
       <SignedIn>
         <div className="flex flex-col gap-4 p-4">
           <Button
@@ -29,23 +24,9 @@ export const SettingsView = () => {
           >
             Account
           </Button>
-          {organization ? (
-            <Button
-              className={cn("justify-start")}
-              variant={"outline"}
-              onClick={() => openOrganizationProfile()}
-            >
-              Household
-            </Button>
-          ) : (
-            <Button
-              className={cn("justify-start")}
-              variant={"outline"}
-              onClick={() => openCreateOrganization()}
-            >
-              Create household
-            </Button>
-          )}
+          <Button className={cn("justify-start")} variant={"outline"} asChild>
+            <Link href="/settings/household">Household</Link>
+          </Button>
 
           <SignOutButton>
             <Button variant={"outline"} className={cn("justify-start")}>
@@ -64,6 +45,6 @@ export const SettingsView = () => {
         </div>
       </SignedOut>
       <BottomNav />
-    </>
+    </div>
   );
 };

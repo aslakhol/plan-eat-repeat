@@ -11,9 +11,17 @@ export const planRouter = createTRPCRouter({
   plannedDinners: publicProcedure
     .input(z.object({ startOfWeek: z.date() }))
     .query(async ({ ctx, input }) => {
+      if (!ctx.householdId) {
+        return { plans: [] };
+      }
+
       const plans = await ctx.db.plan.findMany({
         where: {
-          date: { gte: input.startOfWeek, lt: addDays(input.startOfWeek, 7) },
+          date: {
+            gte: input.startOfWeek,
+            lt: addDays(input.startOfWeek, 7),
+          },
+          dinner: { householdId: ctx.householdId },
         },
         include: { dinner: { include: { tags: true } } },
         orderBy: { date: "asc" },

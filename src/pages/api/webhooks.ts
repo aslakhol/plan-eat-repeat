@@ -4,10 +4,10 @@ import { type NextApiRequest, type NextApiResponse } from "next";
 import { buffer } from "micro";
 import { env } from "../../env.mjs";
 import {
-  organizationCreated,
-  organizationDeleted,
-  organizationUpdated,
-} from "../../server/webhooks/organization";
+  userCreated,
+  userDeleted,
+  userUpdated,
+} from "../../server/webhooks/user";
 
 export const config = {
   api: {
@@ -64,16 +64,16 @@ export default async function handler(
     return res.status(400).json({ Error: err });
   }
 
-  if (evt.type === "organization.created") {
-    await organizationCreated(evt.data);
+  if (evt.type === "user.created") {
+    await userCreated(evt.data);
   }
 
-  if (evt.type === "organization.updated") {
-    await organizationUpdated(evt.data);
+  if (evt.type === "user.updated") {
+    await userUpdated(evt.data);
   }
 
-  if (evt.type === "organization.deleted") {
-    await organizationDeleted(evt.data.id, evt.data.slug);
+  if (evt.type === "user.deleted") {
+    await userDeleted(evt.data.id);
   }
 
   return res.status(200).json({ response: "Success" });

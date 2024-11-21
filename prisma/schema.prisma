@@ -17,7 +17,7 @@ model Dinner {
     link        String?
     notes       String?
     Household   Household @relation(fields: [householdId], references: [id])
-    householdId String    @default("org_2od444SKLdkm5D1kfSTGqNfEfIq")
+    householdId String
 
     @@index([name])
 }
@@ -39,13 +39,55 @@ model Plan {
     @@index([date])
 }
 
-model Household {
-    id   String @id @default(cuid())
-    name String
-    slug String @unique
+model User {
+    id        String  @id
+    firstName String?
+    lastName  String?
+    imageUrl  String?
 
-    // These are not managed by Clerk
+    // Not managed by clerk
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+    Memberships Membership[]
+}
+
+model Household {
+    id        String       @id @default(cuid())
+    name      String
+    slug      String       @unique
+    createdAt DateTime     @default(now())
+    updatedAt DateTime     @updatedAt
+    Dinners   Dinner[]
+    Members   Membership[]
+    Invite    Invite[]
+}
+
+model Membership {
+    id          Int       @id @default(autoincrement())
+    household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    householdId String
+    user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId      String
+
+    role      MembershipRole
+    createdAt DateTime       @default(now())
+    updatedAt DateTime       @updatedAt
+
+    @@unique([householdId, userId])
+}
+
+enum MembershipRole {
+    ADMIN
+    MEMBER
+}
+
+model Invite {
+    id String @id @default(cuid())
+
+    household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    householdId String
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-    Dinner    Dinner[]
+    expiresAt DateTime
 }
