@@ -18,8 +18,12 @@ export const dinnerRouter = createTRPCRouter({
     };
   }),
 
-  dinners: protectedProcedureWithHousehold.query(async ({ ctx }) => {
+  dinners: publicProcedure.query(async ({ ctx }) => {
     const householdId = ctx.householdId;
+
+    if (!householdId) {
+      return { dinners: [] };
+    }
 
     const dinners: DinnerWithTags[] = await ctx.db.dinner.findMany({
       where: { householdId },
