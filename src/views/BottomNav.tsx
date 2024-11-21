@@ -2,10 +2,13 @@ import { useRouter } from "next/router";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 import Link from "next/link";
-import { SignedIn, SignInButton, SignedOut } from "@clerk/nextjs";
+import { SignedIn, SignInButton, SignedOut, useClerk } from "@clerk/nextjs";
 
 export const BottomNav = () => {
   const router = useRouter();
+  const { user } = useClerk();
+
+  const onClick = !user?.publicMetadata.householdId ? router.reload : undefined;
 
   return (
     <div className="pb-20">
@@ -16,6 +19,7 @@ export const BottomNav = () => {
             "w-full py-8 text-xl",
             router.asPath === "/" && "underline",
           )}
+          onClick={onClick}
           asChild
         >
           <Link href="/">Plan</Link>
@@ -26,6 +30,7 @@ export const BottomNav = () => {
             "w-full py-8 text-xl",
             router.asPath.startsWith("/dinners") && "underline",
           )}
+          onClick={onClick}
           asChild
         >
           <Link href="/dinners">Dinners</Link>
