@@ -50,8 +50,9 @@ export const NewHousehold = () => {
     onSuccess: async () => {
       void utils.household.invalidate();
       toast({
-        title: "Household created",
-        description: "Your household has been created successfully",
+        title: "Created household",
+        description:
+          "Your household has been created successfully, to invite people you can head to settings -> household. Next step now is to make a couple of dinners!",
       });
       await user?.reload();
       await router.push("/dinners");
