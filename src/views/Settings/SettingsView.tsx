@@ -14,7 +14,7 @@ export const SettingsView = () => {
   const { openUserProfile } = useClerk();
 
   return (
-    <>
+    <div className="min-h-screen max-w-xl border-r">
       <SignedIn>
         <div className="flex flex-col gap-4 p-4">
           <Button
@@ -45,6 +45,6 @@ export const SettingsView = () => {
         </div>
       </SignedOut>
       <BottomNav />
-    </>
+    </div>
   );
 };

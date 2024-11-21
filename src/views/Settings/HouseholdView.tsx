@@ -20,7 +20,7 @@ export const HouseholdView = ({ household }: Props) => {
   );
 
   return (
-    <div>
+    <div className="min-h-screen max-w-xl border-r">
       {!household ? (
         <div className="p-4">
           <NewHousehold />

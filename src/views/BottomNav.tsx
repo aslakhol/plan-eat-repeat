@@ -9,7 +9,7 @@ export const BottomNav = () => {
 
   return (
     <div className="pb-20">
-      <div className="fixed bottom-0 flex w-full justify-around border-t bg-white">
+      <div className="fixed bottom-0 flex w-full max-w-xl justify-around border-r border-t bg-white">
         <Button
           variant={"link"}
           className={cn(

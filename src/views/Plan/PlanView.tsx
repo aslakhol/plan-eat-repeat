@@ -55,7 +55,7 @@ export const PlanView = () => {
   }
 
   return (
-    <div>
+    <div className="min-h-screen max-w-xl border-r">
       <div className="space-y-4 p-4">
         <WeekSelect
           setWeekOfSet={setWeekOffSet}
