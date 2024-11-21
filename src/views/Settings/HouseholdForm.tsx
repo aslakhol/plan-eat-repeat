@@ -13,6 +13,7 @@ import {
   FormItem,
   FormMessage,
   Form,
+  FormDescription,
 } from "../../components/ui/form";
 import { Button } from "../../components/ui/button";
 import {
@@ -20,6 +21,7 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
+  CardDescription,
 } from "../../components/ui/card";
 import { useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/router";
@@ -64,6 +66,10 @@ export const NewHousehold = () => {
     <Card>
       <CardHeader>
         <CardTitle>Create Household</CardTitle>
+        <CardDescription>
+          To use PlanEatRepeat you need to create a household. If you&apos;d
+          like, you can invite other people to join later.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <HouseholdForm
@@ -164,6 +170,10 @@ const HouseholdForm = ({ form, onSubmit, submitLabel }: HouseholdFormProps) => {
                 <Input {...field} />
               </FormControl>
               <FormMessage />
+              <FormDescription>
+                The slug is used to identify your household. It will be part of
+                the URL for your household invitations.
+              </FormDescription>
             </FormItem>
           )}
         />
