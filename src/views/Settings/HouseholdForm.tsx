@@ -59,8 +59,8 @@ export const NewHousehold = () => {
     },
   });
 
-  const onSubmit = (data: HouseholdFormData) => {
-    createHouseholdMutation.mutate(data);
+  const onSubmit = async (data: HouseholdFormData) => {
+    await createHouseholdMutation.mutateAsync(data);
   };
 
   return (
@@ -77,6 +77,7 @@ export const NewHousehold = () => {
           form={form}
           onSubmit={onSubmit}
           submitLabel="Create Household"
+          isSubmitting={createHouseholdMutation.isLoading}
         />
       </CardContent>
     </Card>
@@ -125,6 +126,7 @@ export const EditHousehold = ({ household }: EditHouseholdProps) => {
           form={form}
           onSubmit={onSubmit}
           submitLabel="Save changes"
+          isSubmitting={updateHouseholdMutation.isLoading}
         />
       </CardContent>
     </Card>
@@ -135,9 +137,15 @@ type HouseholdFormProps = {
   form: UseFormReturn<HouseholdFormData>;
   onSubmit: (data: HouseholdFormData) => void;
   submitLabel: string;
+  isSubmitting: boolean;
 };
 
-const HouseholdForm = ({ form, onSubmit, submitLabel }: HouseholdFormProps) => {
+const HouseholdForm = ({
+  form,
+  onSubmit,
+  submitLabel,
+  isSubmitting,
+}: HouseholdFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -180,7 +188,9 @@ const HouseholdForm = ({ form, onSubmit, submitLabel }: HouseholdFormProps) => {
         />
 
         <div className="flex justify-between">
-          <Button type="submit">{submitLabel}</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {submitLabel}
+          </Button>
         </div>
       </form>
     </Form>
