@@ -8,9 +8,7 @@ import { UtensilsCrossed } from "lucide-react";
 export default function HouseholdSettings() {
   const { user } = useClerk();
   const utils = api.useUtils();
-  const householdQuery = api.household.household.useQuery({
-    id: user?.publicMetadata.householdId ?? undefined,
-  });
+  const householdQuery = api.household.household.useQuery();
   void utils.household.members.prefetch({
     householdId: user?.publicMetadata.householdId ?? "",
   });

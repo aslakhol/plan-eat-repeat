@@ -11,36 +11,34 @@ import { env } from "../../../env.mjs";
 import { clerkClient } from "@clerk/nextjs/server";
 
 export const householdRouter = createTRPCRouter({
-  household: publicProcedure
-    .input(z.object({ id: z.string().optional() }))
-    .query(async ({ ctx, input }) => {
-      if (!ctx.auth.userId && !input.id) {
-        throw new Error("No user or household id provided");
-      }
+  household: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.auth.userId && !ctx.householdId) {
+      throw new Error("No user or household id provided");
+    }
 
-      if (!input.id && ctx.auth.userId) {
-        const household = await ctx.db.household.findFirst({
-          where: { Members: { some: { userId: ctx.auth.userId } } },
-        });
+    if (!ctx.householdId && ctx.auth.userId) {
+      const household = await ctx.db.household.findFirst({
+        where: { Members: { some: { userId: ctx.auth.userId } } },
+      });
 
-        await (
-          await clerkClient()
-        ).users.updateUserMetadata(ctx.auth.userId, {
-          publicMetadata: {
-            householdId: household?.id ?? null,
-          },
-        });
-
-        return { household };
-      }
-
-      const household = await ctx.db.household.findUnique({
-        where: { id: input.id },
-        include: { Members: true },
+      await (
+        await clerkClient()
+      ).users.updateUserMetadata(ctx.auth.userId, {
+        publicMetadata: {
+          householdId: household?.id ?? null,
+        },
       });
 
       return { household };
-    }),
+    }
+
+    const household = await ctx.db.household.findUnique({
+      where: { id: ctx.householdId },
+      include: { Members: true },
+    });
+
+    return { household };
+  }),
   householdsForUser: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.auth.userId) {
       return { households: [] };
