@@ -110,7 +110,6 @@ export const EditHousehold = ({ household }: EditHouseholdProps) => {
 
   const onSubmit = (data: HouseholdFormData) => {
     updateHouseholdMutation.mutate({
-      id: household.id,
       name: data.name,
       slug: data.slug,
     });

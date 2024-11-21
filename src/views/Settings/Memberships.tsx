@@ -62,11 +62,7 @@ export const Memberships = ({ household }: Props) => {
             <li key={member.id} className="flex items-center justify-between">
               <UserAvatar user={member.user} />
               <div className="flex items-center space-x-2">
-                <Role
-                  member={member}
-                  household={household}
-                  userIsAdmin={userIsAdmin}
-                />
+                <Role member={member} userIsAdmin={userIsAdmin} />
                 {userIsAdmin && (
                   <RemoveMember
                     member={member}
@@ -85,11 +81,10 @@ export const Memberships = ({ household }: Props) => {
 
 type RoleProps = {
   member: Membership;
-  household: Household;
   userIsAdmin: boolean;
 };
 
-const Role = ({ member, household, userIsAdmin }: RoleProps) => {
+const Role = ({ member, userIsAdmin }: RoleProps) => {
   const [role, setRole] = useState<MembershipRole>(member.role);
   const utils = api.useUtils();
   const updateRoleMutation = api.household.updateMemberRole.useMutation({
@@ -114,7 +109,6 @@ const Role = ({ member, household, userIsAdmin }: RoleProps) => {
     updateRoleMutation.mutate({
       memberId,
       role: newRole,
-      householdId: household.id,
     });
   };
 

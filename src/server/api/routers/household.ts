@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   createTRPCRouter,
   protectedProcedure,
+  protectedProcedureWithHousehold,
   publicProcedure,
 } from "~/server/api/trpc";
 import { addDays } from "date-fns";
@@ -68,12 +69,12 @@ export const householdRouter = createTRPCRouter({
 
       return { household };
     }),
-  updateHousehold: protectedProcedure
-    .input(z.object({ id: z.string(), name: z.string(), slug: z.string() }))
+  updateHousehold: protectedProcedureWithHousehold
+    .input(z.object({ name: z.string(), slug: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const { id, name, slug } = input;
+      const { name, slug } = input;
       const household = await ctx.db.household.update({
-        where: { id },
+        where: { id: ctx.householdId },
         data: { name, slug },
       });
 
@@ -88,19 +89,18 @@ export const householdRouter = createTRPCRouter({
       });
       return { members };
     }),
-  updateMemberRole: protectedProcedure
+  updateMemberRole: protectedProcedureWithHousehold
     .input(
       z.object({
         memberId: z.number(),
         role: z.nativeEnum(MembershipRole),
-        householdId: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { memberId, role, householdId } = input;
+      const { memberId, role } = input;
 
       const admins = await ctx.db.membership.findMany({
-        where: { householdId, role: "ADMIN" },
+        where: { householdId: ctx.householdId, role: "ADMIN" },
       });
 
       const callerIsAdmin = admins.find((m) => m.userId === ctx.auth.userId);
