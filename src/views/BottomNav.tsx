@@ -14,7 +14,7 @@ export const BottomNav = () => {
           variant={"link"}
           className={cn(
             "w-full py-8 text-xl",
-            router.asPath.startsWith("/") && "underline",
+            router.asPath === "/" && "underline",
           )}
           asChild
         >
