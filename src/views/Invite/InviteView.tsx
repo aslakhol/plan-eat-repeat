@@ -9,9 +9,9 @@ type Props = { inviteId: string };
 
 export const InviteView = ({ inviteId }: Props) => {
   const inviteQuery = api.household.getInvite.useQuery({ inviteId });
-  const householdsForUserQuery = api.household.householdsForUser.useQuery();
+  const householdQuery = api.household.household.useQuery();
 
-  if (inviteQuery.isLoading || householdsForUserQuery.isLoading) {
+  if (inviteQuery.isLoading || householdQuery.isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
         <UtensilsCrossed className="animate-spin" />
@@ -23,9 +23,9 @@ export const InviteView = ({ inviteId }: Props) => {
     return <NoInvite />;
   }
 
-  const alreadyInHousehold = !!householdsForUserQuery.data?.households.find(
-    (household) => household.id === inviteQuery.data?.invite?.householdId,
-  );
+  const alreadyInHousehold =
+    !!householdQuery.data?.household &&
+    householdQuery.data.household.id === inviteQuery.data?.invite?.householdId;
 
   if (alreadyInHousehold) {
     return <AlreadyInHousehold household={inviteQuery.data.invite.household} />;
