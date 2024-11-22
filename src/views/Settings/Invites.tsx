@@ -63,7 +63,7 @@ export const Invites = ({ household }: Props) => {
           <ul className="space-y-2">
             {invitesQuery.data?.invites.map((invite) => (
               <li key={invite.id} className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
+                <span className="max-w-xs overflow-x-auto whitespace-nowrap text-sm text-muted-foreground">
                   {invite.link}
                 </span>
                 <div className="flex space-x-2">
