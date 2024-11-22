@@ -59,6 +59,7 @@ export const planRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const plans = await ctx.db.plan.findMany({
         where: { dinnerId: input.dinnerId },
+        orderBy: { date: "desc" },
       });
       return { plans };
     }),
