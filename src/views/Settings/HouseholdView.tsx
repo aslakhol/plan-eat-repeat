@@ -9,6 +9,7 @@ import { useClerk } from "@clerk/nextjs";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import Link from "next/link";
+import { Account } from "./Account";
 
 type Props = { household: Household | null };
 
@@ -25,11 +26,13 @@ export const HouseholdView = ({ household }: Props) => {
   return (
     <div className="min-h-screen max-w-xl border-r">
       {!household ? (
-        <div className="p-4">
+        <div className="space-y-4 p-4">
           <NewHousehold />
+          <Account />
         </div>
       ) : (
         <div className="space-y-4 p-4">
+          <Account />
           <EditHousehold household={household} />
           <Memberships household={household} />
           {userIsAdmin && <Invites household={household} />}
