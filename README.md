@@ -1,4 +1,4 @@
-# Sulten
+# PlanEatRepeat
 
 This is an app for planning dinners for Madeleine and Aslak.
 At it's core it solves two problems:
@@ -12,7 +12,7 @@ We are not trying to solve the issues of figuring out what can be created with o
 
 ## Hosting
 
-The web app is hosted on [Vercel](https://vercel.com/) at [sulten.aslak.io](https://sulten.aslak.io/)
+The web app is hosted on [Vercel](https://vercel.com/) at [PlanEatRepeat.com](https://planeatrepeat.com/)
 
 ## Technology
 

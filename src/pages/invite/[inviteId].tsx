@@ -8,8 +8,8 @@ export default function Invite() {
   return (
     <>
       <Head>
-        <title>Sulten</title>
-        <meta name="description" content="Dinner planning tool" />
+        <title>PlanEatRepeat</title>
+        <meta name="description" content="The easiest way to plan dinners" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       {router.query.inviteId && (

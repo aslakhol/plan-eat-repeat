@@ -7,8 +7,8 @@ services:
     volumes:
       - "./resources/postgres:/docker-entrypoint-initdb.d"
     environment:
-      - POSTGRES_DB=sulten
-      - POSTGRES_USER=sulten
-      - POSTGRES_PASSWORD=sulten
+      - POSTGRES_DB=planeatrepeat
+      - POSTGRES_USER=planeatrepeat
+      - POSTGRES_PASSWORD=planeatrepeat
     ports:
       - "5434:5432"

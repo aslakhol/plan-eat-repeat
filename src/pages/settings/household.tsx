@@ -17,8 +17,8 @@ export default function HouseholdSettings() {
     return (
       <>
         <Head>
-          <title>Sulten</title>
-          <meta name="description" content="Dinner planning tool" />
+          <title>PlanEatRepeat</title>
+          <meta name="description" content="The easiest way to plan dinners" />
           <link rel="icon" href="/favicon.ico" />
         </Head>
         <div className="flex h-screen w-screen items-center justify-center">
@@ -31,8 +31,8 @@ export default function HouseholdSettings() {
   return (
     <>
       <Head>
-        <title>Sulten</title>
-        <meta name="description" content="Dinner planning tool" />
+        <title>PlanEatRepeat</title>
+        <meta name="description" content="The easiest way to plan dinners" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <SignedIn>
