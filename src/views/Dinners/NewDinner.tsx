@@ -66,6 +66,7 @@ export const NewDinner = () => {
         <DinnerForm
           closeDialog={() => setDialogOpen(false)}
           onSubmit={createDinner}
+          isLoading={createDinnerMutation.isLoading}
         />
       </DialogContent>
     </Dialog>

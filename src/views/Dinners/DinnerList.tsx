@@ -151,6 +151,9 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
           closeDialog={() => setDialogOpen(false)}
           onSubmit={updateDinner}
           onDelete={deleteDinner}
+          isLoading={
+            updateDinnerMutation.isLoading || deleteDinnerMutation.isLoading
+          }
         />
       </DialogContent>
     </Dialog>

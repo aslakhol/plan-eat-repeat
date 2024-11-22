@@ -27,12 +27,14 @@ import {
   DialogContent,
 } from "../../components/ui/dialog";
 import { useState } from "react";
+import { format } from "date-fns";
 
 type Props = {
   onSubmit(values: z.infer<typeof dinnerFormSchema>): void;
   onDelete?(values: z.infer<typeof dinnerFormSchema>): void;
   existingDinner?: DinnerWithTags;
   closeDialog: () => void;
+  isLoading: boolean;
 };
 
 export const DinnerForm = ({
@@ -40,6 +42,7 @@ export const DinnerForm = ({
   onDelete,
   existingDinner,
   closeDialog,
+  isLoading,
 }: Props) => {
   const form = useForm<z.infer<typeof dinnerFormSchema>>({
     resolver: zodResolver(dinnerFormSchema),
@@ -104,9 +107,18 @@ export const DinnerForm = ({
           )}
         />
         <div className="flex justify-between">
-          <Button type="submit">Save</Button>
+          <Button type="submit" disabled={isLoading}>
+            Save
+          </Button>
           <div className="flex gap-2">
-            {onDelete && <Delete onDelete={onDelete} form={form} />}
+            {onDelete && existingDinner && (
+              <Delete
+                onDelete={onDelete}
+                isLoading={isLoading}
+                form={form}
+                dinner={existingDinner}
+              />
+            )}
             <Button type="button" variant={"outline"} onClick={closeDialog}>
               {"Cancel"}
             </Button>
@@ -168,11 +180,16 @@ const TagsCombobox = ({ form }: TagsComboboxProps) => {
 };
 type DeleteProps = {
   onDelete(values: z.infer<typeof dinnerFormSchema>): void;
+  isLoading: boolean;
   form: UseFormReturn<z.infer<typeof dinnerFormSchema>>;
+  dinner: DinnerWithTags;
 };
 
-const Delete = ({ onDelete, form }: DeleteProps) => {
+const Delete = ({ onDelete, isLoading, form, dinner }: DeleteProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const plansQuery = api.plan.plansForDinner.useQuery({
+    dinnerId: dinner.id,
+  });
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -189,12 +206,29 @@ const Delete = ({ onDelete, form }: DeleteProps) => {
             undone.
           </DialogDescription>
         </DialogHeader>
+        {plansQuery.isSuccess && (
+          <div className="space-y-2">
+            <p>
+              If you delete this dinner, the plan for the following dates will
+              also be deleted:
+            </p>
+            <div className="max-h-[200px] overflow-y-auto rounded border p-2">
+              <ul className="space-y-1">
+                {plansQuery.data.plans.map((plan) => (
+                  <li key={plan.id}>{format(plan.date, "LLLL do, y")}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
         <DialogFooter>
           <Button variant="outline" onClick={() => setDialogOpen(false)}>
             Cancel
           </Button>
           <Button
             variant="destructive"
+            disabled={isLoading || plansQuery.isLoading}
             onClick={async () => {
               await form.handleSubmit(onDelete)();
               setDialogOpen(false);

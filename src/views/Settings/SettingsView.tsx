@@ -6,9 +6,6 @@ import { Memberships } from "./Memberships";
 import { Invites } from "./Invites";
 import { api } from "../../utils/api";
 import { useClerk } from "@clerk/nextjs";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import Link from "next/link";
 import { Account } from "./Account";
 
 type Props = { household: Household | null };
