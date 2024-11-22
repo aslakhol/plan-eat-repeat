@@ -54,4 +54,12 @@ export const planRouter = createTRPCRouter({
 
       return { deleted };
     }),
+  plansForDinner: publicProcedure
+    .input(z.object({ dinnerId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const plans = await ctx.db.plan.findMany({
+        where: { dinnerId: input.dinnerId },
+      });
+      return { plans };
+    }),
 });
