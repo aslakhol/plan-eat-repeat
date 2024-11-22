@@ -17,7 +17,7 @@ if (typeof window !== "undefined") {
     api_host:
       process.env.NODE_ENV === "development"
         ? "http://localhost:3000/ingest"
-        : "https://planeatrepeat.com/ingest",
+        : "https://www.planeatrepeat.com/ingest",
     loaded: (posthog) => {
       if (process.env.NODE_ENV === "development") posthog.debug();
     },
