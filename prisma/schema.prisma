@@ -31,7 +31,7 @@ model Tag {
 
 model Plan {
     id     Int      @id @default(autoincrement())
-    dinner Dinner   @relation(fields: [dinnerId], references: [id])
+    dinner Dinner   @relation(fields: [dinnerId], references: [id], onDelete: Cascade)
     date   DateTime @unique
 
     dinnerId Int
