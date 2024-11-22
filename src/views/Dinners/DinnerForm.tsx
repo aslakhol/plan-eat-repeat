@@ -33,6 +33,7 @@ type Props = {
   onDelete?(values: z.infer<typeof dinnerFormSchema>): void;
   existingDinner?: DinnerWithTags;
   closeDialog: () => void;
+  isLoading: boolean;
 };
 
 export const DinnerForm = ({
@@ -40,6 +41,7 @@ export const DinnerForm = ({
   onDelete,
   existingDinner,
   closeDialog,
+  isLoading,
 }: Props) => {
   const form = useForm<z.infer<typeof dinnerFormSchema>>({
     resolver: zodResolver(dinnerFormSchema),
@@ -104,7 +106,9 @@ export const DinnerForm = ({
           )}
         />
         <div className="flex justify-between">
-          <Button type="submit">Save</Button>
+          <Button type="submit" disabled={isLoading}>
+            Save
+          </Button>
           <div className="flex gap-2">
             {onDelete && <Delete onDelete={onDelete} form={form} />}
             <Button type="button" variant={"outline"} onClick={closeDialog}>
