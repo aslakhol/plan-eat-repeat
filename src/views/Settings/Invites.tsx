@@ -57,7 +57,7 @@ export const Invites = ({ household }: Props) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <Button onClick={handleCreateInvite}>
+          <Button onClick={handleCreateInvite} variant="outline">
             <Plus className="mr-2 h-4 w-4" /> Create New Invite
           </Button>
           <ul className="space-y-2">

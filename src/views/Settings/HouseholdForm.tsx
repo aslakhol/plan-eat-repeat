@@ -187,7 +187,7 @@ const HouseholdForm = ({
         />
 
         <div className="flex justify-between">
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} variant="outline">
             {submitLabel}
           </Button>
         </div>
