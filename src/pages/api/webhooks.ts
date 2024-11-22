@@ -64,16 +64,23 @@ export default async function handler(
     return res.status(400).json({ Error: err });
   }
 
-  if (evt.type === "user.created") {
-    await userCreated(evt.data);
-  }
+  try {
+    if (evt.type === "user.created") {
+      await userCreated(evt.data);
+    }
 
-  if (evt.type === "user.updated") {
-    await userUpdated(evt.data);
-  }
+    if (evt.type === "user.updated") {
+      await userUpdated(evt.data);
+    }
 
-  if (evt.type === "user.deleted") {
-    await userDeleted(evt.data.id);
+    if (evt.type === "user.deleted") {
+      await userDeleted(evt.data.id);
+    }
+  } catch (error) {
+    console.error("Error handling webhook:", error);
+
+    // Still return 200 to avoid giving Clerk trouble
+    return res.status(200).json({ response: "Success" });
   }
 
   return res.status(200).json({ response: "Success" });
