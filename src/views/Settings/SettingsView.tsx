@@ -1,49 +1,43 @@
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignOutButton,
-  useClerk,
-} from "@clerk/nextjs";
+import { type Household } from "@prisma/client";
 import { BottomNav } from "../BottomNav";
+import { NewHousehold } from "./HouseholdForm";
+import { EditHousehold } from "./HouseholdForm";
+import { Memberships } from "./Memberships";
+import { Invites } from "./Invites";
+import { api } from "../../utils/api";
+import { useClerk } from "@clerk/nextjs";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "../../components/ui/button";
-import { cn } from "../../lib/utils";
 import Link from "next/link";
+import { Account } from "./Account";
 
-export const SettingsView = () => {
-  const { openUserProfile } = useClerk();
+type Props = { household: Household | null };
+
+export const SettingsView = ({ household }: Props) => {
+  const { user } = useClerk();
+  const membersQuery = api.household.members.useQuery(
+    { householdId: household?.id ?? "" },
+    { enabled: !!household },
+  );
+  const userIsAdmin = !!membersQuery.data?.members.some(
+    (member) => member.userId === user?.id && member.role === "ADMIN",
+  );
 
   return (
     <div className="min-h-screen max-w-xl border-r">
-      <SignedIn>
-        <div className="flex flex-col gap-4 p-4">
-          <Button
-            className={cn("justify-start")}
-            variant={"outline"}
-            onClick={() => openUserProfile()}
-          >
-            Account
-          </Button>
-          <Button className={cn("justify-start")} variant={"outline"} asChild>
-            <Link href="/settings/household">Household</Link>
-          </Button>
-
-          <SignOutButton>
-            <Button variant={"outline"} className={cn("justify-start")}>
-              Sign out
-            </Button>
-          </SignOutButton>
+      {!household ? (
+        <div className="space-y-4 p-4">
+          <NewHousehold />
+          <Account />
         </div>
-      </SignedIn>
-      <SignedOut>
-        <div className="flex flex-col gap-4 p-4">
-          <SignInButton>
-            <Button variant={"outline"} className={cn("justify-start")}>
-              Sign in
-            </Button>
-          </SignInButton>
+      ) : (
+        <div className="space-y-4 p-4">
+          <Account />
+          <EditHousehold household={household} />
+          <Memberships household={household} />
+          {userIsAdmin && <Invites household={household} />}
         </div>
-      </SignedOut>
+      )}
       <BottomNav />
     </div>
   );

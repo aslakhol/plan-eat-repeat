@@ -2,6 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher(["/", "/invite/:inviteId"]);
+const shouldNotRedirect = createRouteMatcher(["/settings", "/invite"]);
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims, redirectToSignIn } = await auth();
@@ -23,10 +24,9 @@ export default clerkMiddleware(async (auth, req) => {
   if (
     userId &&
     !sessionClaims?.metadata?.householdId &&
-    !req.nextUrl.pathname.includes("/settings") &&
-    !req.nextUrl.pathname.includes("/invite")
+    !shouldNotRedirect(req)
   ) {
-    const onboardingUrl = new URL("/settings/household", req.url);
+    const onboardingUrl = new URL("/settings", req.url);
     return NextResponse.redirect(onboardingUrl);
   }
 
