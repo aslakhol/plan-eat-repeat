@@ -20,8 +20,8 @@ export const LandingView = () => {
             what meals you cook, or perhaps even what food is?
           </p>
           <p className="leading-7">
-            PlanEatRepeat makes it super simple and fast to manage your
-            recipies, and plan the meals for your week with the whole household
+            PlanEatRepeat makes it super simple and fast to manage your recipes,
+            and plan the meals for your week with the whole household
             contributing.
           </p>
 
