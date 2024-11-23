@@ -49,13 +49,13 @@ export const NewHousehold = () => {
   const createHouseholdMutation = api.household.createHousehold.useMutation({
     onSuccess: async () => {
       void utils.household.invalidate();
+      await user?.reload();
+      router.reload();
       toast({
         title: "Created household",
         description:
           "Your household has been created successfully, to invite people you can head to settings -> household. Next step now is to make a couple of dinners!",
       });
-      await user?.reload();
-      await router.push("/dinners");
     },
   });
 
