@@ -56,7 +56,7 @@ async function main() {
   );
 
   // Create tags
-  const createdTags = await Promise.all(
+  await Promise.all(
     tags.map((tagValue) =>
       prisma.tag.create({
         data: {
