@@ -1,10 +1,26 @@
-import { PrismaClient, type Dinner, type Tag } from "@prisma/client";
+import { PrismaClient, type Dinner } from "@prisma/client";
 import { addDays, startOfWeek, subWeeks } from "date-fns";
 import { users, households, tags, dinners } from "./seed.data";
+import { env } from "../src/env.mjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // Check for production environment
+  if (env.NODE_ENV === "production") {
+    throw new Error("🚫 Seed script should not be run in production");
+  }
+
+  // Check for development database
+  const databaseUrl = process.env.DATABASE_URL;
+  if (databaseUrl?.includes("supabase")) {
+    throw new Error(
+      "🚫 Seed script should not be run against production database",
+    );
+  }
+
+  console.log("🌱 Starting seed script...");
+
   // Create users
   const createdUsers = await Promise.all(
     users.map((user) =>
@@ -109,7 +125,7 @@ async function createWeekPlans(weekStart: Date, dinners: Dinner[]) {
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("❌ Seed error:", e);
     process.exit(1);
   })
   .finally(() => {
