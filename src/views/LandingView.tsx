@@ -24,8 +24,6 @@ export const LandingView = () => {
             and plan the meals for your week with the whole household
             contributing.
           </p>
-
-          <p className="leading-7">Get started by planning your first week!</p>
         </div>
         <CTA />
       </div>
@@ -38,7 +36,7 @@ const CTA = () => {
     <div className="flex flex-col gap-2">
       <SignedOut>
         <Button asChild>
-          <Link href="/onboarding">Get started</Link>
+          <Link href="/onboarding">Get started!</Link>
         </Button>
         <SignInButton>
           <Button variant={"outline"}>Already have an account?</Button>
