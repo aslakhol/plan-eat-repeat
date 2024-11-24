@@ -1,10 +1,15 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const isPublicRoute = createRouteMatcher(["/", "/invite/:inviteId"]);
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/invite/:inviteId",
+  "/onboarding",
+]);
 const shouldNotRedirect = createRouteMatcher([
   "/settings",
   "/invite/:inviteId",
+  "/onboarding",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

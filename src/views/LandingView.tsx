@@ -1,6 +1,6 @@
-import { SignInButton, SignUpButton, SignedOut } from "@clerk/nextjs";
-
+import { SignInButton, SignedOut } from "@clerk/nextjs";
 import { Button } from "../components/ui/button";
+import Link from "next/link";
 
 export const LandingView = () => {
   return (
@@ -25,7 +25,7 @@ export const LandingView = () => {
             contributing.
           </p>
 
-          <p className="leading-7">Sign in to plan your first week!</p>
+          <p className="leading-7">Get started by planning your first week!</p>
         </div>
         <CTA />
       </div>
@@ -37,9 +37,9 @@ const CTA = () => {
   return (
     <div className="flex flex-col gap-2">
       <SignedOut>
-        <SignUpButton>
-          <Button>Get started</Button>
-        </SignUpButton>
+        <Button asChild>
+          <Link href="/onboarding">Get started</Link>
+        </Button>
         <SignInButton>
           <Button variant={"outline"}>Already have an account?</Button>
         </SignInButton>
