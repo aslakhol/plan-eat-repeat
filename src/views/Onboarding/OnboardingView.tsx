@@ -13,6 +13,7 @@ import { SignUpButton, SignedIn, SignedOut, useClerk } from "@clerk/nextjs";
 import { api } from "../../utils/api";
 import { useRouter } from "next/router";
 import { toast } from "../../components/ui/use-toast";
+import { Undo2 } from "lucide-react";
 
 type OnboardingDinner = {
   name: string;
@@ -110,11 +111,30 @@ export const OnboardingView = () => {
     });
   };
 
+  const handleReset = () => {
+    setDinners([]);
+    setCurrentDinner("");
+    setStep(1);
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <CardTitle>Let&apos;s get started!</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Let&apos;s get started!</CardTitle>
+            {dinners.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleReset}
+                className="h-8 w-8"
+              >
+                <Undo2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           {step === 1 && (
             <CardDescription>
               Tell us about your dinner plans for the next few days
