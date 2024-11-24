@@ -11,6 +11,11 @@ import { MembershipRole } from "@prisma/client";
 import { env } from "../../../env.mjs";
 import { clerkClient } from "@clerk/nextjs/server";
 
+const onboardingDinnerSchema = z.object({
+  name: z.string(),
+  date: z.date(),
+});
+
 export const householdRouter = createTRPCRouter({
   household: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.auth.userId && !ctx.householdId) {
@@ -41,7 +46,13 @@ export const householdRouter = createTRPCRouter({
     return { household };
   }),
   createHousehold: protectedProcedure
-    .input(z.object({ name: z.string(), slug: z.string() }))
+    .input(
+      z.object({
+        name: z.string(),
+        slug: z.string(),
+        onboardingDinners: z.array(onboardingDinnerSchema).optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const existingMembership = await ctx.db.membership.findFirst({
         where: { userId: ctx.auth.userId },
@@ -58,6 +69,25 @@ export const householdRouter = createTRPCRouter({
         },
         include: { Members: true },
       });
+
+      if (input.onboardingDinners) {
+        // Create dinners and plans from onboarding data
+        for (const dinnerData of input.onboardingDinners) {
+          const dinner = await ctx.db.dinner.create({
+            data: {
+              name: dinnerData.name,
+              householdId: household.id,
+            },
+          });
+
+          await ctx.db.plan.create({
+            data: {
+              date: dinnerData.date,
+              dinnerId: dinner.id,
+            },
+          });
+        }
+      }
 
       await (
         await clerkClient()
