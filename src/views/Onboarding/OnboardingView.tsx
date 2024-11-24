@@ -68,7 +68,7 @@ export const OnboardingView = () => {
       void router.push("/");
       toast({
         title: "Welcome to PlanEatRepeat!",
-        description: "Your household has been created with your dinner plans.",
+        description: "You can invite people to your household in the settings.",
       });
     },
   });
@@ -137,13 +137,12 @@ export const OnboardingView = () => {
           </div>
           {step === 1 && (
             <CardDescription>
-              Tell us about your dinner plans for the next few days
+              To get going we&apos;ll set up some dinner plans for you.
             </CardDescription>
           )}
           {step === 2 && (
             <CardDescription>
-              Great! Now let&apos;s create your account to save these dinner
-              plans
+              Great! Now let&apos;s create your account.
             </CardDescription>
           )}
         </CardHeader>
