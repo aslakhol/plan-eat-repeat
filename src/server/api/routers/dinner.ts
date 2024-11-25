@@ -11,7 +11,11 @@ export const dinnerRouter = createTRPCRouter({
   tags: publicProcedure.query(async ({ ctx }) => {
     const tags = await ctx.db.tag.findMany({
       orderBy: { value: "asc" },
-      include: { _count: true },
+      include: {
+        _count: {
+          select: { Dinner: { where: { householdId: ctx.householdId } } },
+        },
+      },
     });
     return {
       tags: tags.filter((tag) => tag._count.Dinner > 0),
