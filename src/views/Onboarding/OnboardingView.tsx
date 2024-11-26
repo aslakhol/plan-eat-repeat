@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format, addDays, subDays } from "date-fns";
+import { format, addDays, subDays, startOfDay } from "date-fns";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import {
@@ -33,7 +33,7 @@ export const OnboardingView = () => {
   const [currentDinner, setCurrentDinner] = useState("");
   const [dinners, setDinners] = useState<OnboardingDinner[]>([]);
   const [householdName, setHouseholdName] = useState("");
-  const today = new Date();
+  const today = startOfDay(new Date());
   const router = useRouter();
   const { user } = useClerk();
 
@@ -48,7 +48,7 @@ export const OnboardingView = () => {
         }[];
         const parsedDinners: OnboardingDinner[] = parsed.map((dinner) => ({
           name: dinner.name,
-          date: new Date(dinner.date),
+          date: startOfDay(new Date(dinner.date)),
         }));
         setDinners(parsedDinners);
         if (parsedDinners.length >= 3) {
