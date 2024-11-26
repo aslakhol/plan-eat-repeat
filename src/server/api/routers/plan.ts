@@ -37,10 +37,22 @@ export const planRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const newPlan = await ctx.db.plan.upsert({
-        where: { date: input.date },
-        create: { date: input.date, dinnerId: input.dinnerId },
-        update: { dinnerId: input.dinnerId },
+      const existingPlan = await ctx.db.plan.findFirst({
+        where: { date: input.date, dinner: { householdId: ctx.householdId } },
+      });
+      let newPlan;
+
+      if (existingPlan) {
+        newPlan = await ctx.db.plan.update({
+          where: { id: existingPlan.id },
+          data: { dinnerId: input.dinnerId },
+        });
+
+        return { newPlan };
+      }
+
+      newPlan = await ctx.db.plan.create({
+        data: { date: input.date, dinnerId: input.dinnerId },
       });
 
       return { newPlan };
@@ -50,7 +62,7 @@ export const planRouter = createTRPCRouter({
     .input(z.object({ date: z.date() }))
     .mutation(async ({ ctx, input }) => {
       const { date } = input;
-      const deleted = await ctx.db.plan.delete({
+      const deleted = await ctx.db.plan.deleteMany({
         where: { date, dinner: { householdId: ctx.householdId } },
       });
 
