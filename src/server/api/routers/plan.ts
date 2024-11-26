@@ -50,7 +50,9 @@ export const planRouter = createTRPCRouter({
     .input(z.object({ date: z.date() }))
     .mutation(async ({ ctx, input }) => {
       const { date } = input;
-      const deleted = await ctx.db.plan.delete({ where: { date } });
+      const deleted = await ctx.db.plan.delete({
+        where: { date, dinner: { householdId: ctx.householdId } },
+      });
 
       return { deleted };
     }),
