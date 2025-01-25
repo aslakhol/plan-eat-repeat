@@ -12,7 +12,7 @@ const config = {
     return [
       {
         source: "/ingest/:path*",
-        destination: "https://app.posthog.com/:path*",
+        destination: "https://eu.i.posthog.com/:path*",
       },
     ];
   },
