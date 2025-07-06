@@ -45,6 +45,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.53.1",
+    "react-use-wake-lock": "^1.0.1",
     "superjson": "^1.13.1",
     "svix": "^1.37.0",
     "tailwind-merge": "^1.14.0",

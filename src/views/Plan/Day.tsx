@@ -48,6 +48,7 @@ export const Day = ({ date, plannedDinner }: Props) => {
             date={date}
             closeDialog={() => onOpenChange(false)}
             setChangePlan={setChangePlan}
+            isOpen={dialogOpen}
           />
         )}
       </>

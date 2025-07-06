@@ -10,12 +10,15 @@ import {
 import { ClearDay } from "./ClearDay";
 import Link from "next/link";
 import { Badge } from "../../components/ui/badge";
+import useWakeLock from "react-use-wake-lock";
+import { useEffect } from "react";
 
 type Props = {
   dinner: DinnerWithTags;
   date: Date;
   closeDialog: () => void;
   setChangePlan: (change: boolean) => void;
+  isOpen: boolean;
 };
 
 export const PlannedDinner = ({
@@ -23,7 +26,26 @@ export const PlannedDinner = ({
   date,
   closeDialog,
   setChangePlan,
+  isOpen,
 }: Props) => {
+  const { isSupported, isLocked, request, release } = useWakeLock();
+
+  useEffect(() => {
+    if (!isSupported) {
+      return;
+    }
+    if (!isOpen) {
+      release();
+      return;
+    }
+
+    request();
+
+    return () => {
+      release();
+    };
+  }, [isSupported, isOpen, request, release]);
+
   return (
     <DialogContent className="flex flex-col">
       <DialogHeader>
