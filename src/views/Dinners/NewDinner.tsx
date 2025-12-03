@@ -1,10 +1,3 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../../components/ui/dialog";
 import { cn } from "../../lib/utils";
 import { type dinnerFormSchema } from "../../utils/types";
 import { DinnerForm } from "./DinnerForm";
@@ -12,8 +5,16 @@ import { type z } from "zod";
 import { api } from "../../utils/api";
 import { toast } from "../../components/ui/use-toast";
 import { usePostHog } from "posthog-js/react";
-import { ChefHat } from "lucide-react";
+import { ChefHat, Plus } from "lucide-react";
 import { useRouter } from "next/router";
+import {
+  ResponsiveModal,
+  ResponsiveModalContent,
+  ResponsiveModalHeader,
+  ResponsiveModalTitle,
+  ResponsiveModalTrigger,
+} from "../../components/ResponsiveModal";
+import { Card, CardContent } from "../../components/ui/card";
 
 export const NewDinner = () => {
   const utils = api.useUtils();
@@ -48,27 +49,25 @@ export const NewDinner = () => {
   }
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger>
-        <div
-          className={cn(
-            "flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 text-left hover:bg-accent/50 hover:text-accent-foreground",
-          )}
-        >
-          <ChefHat size={16} />
-          <h3>Add new dinner</h3>
-        </div>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>New dinner</DialogTitle>
-        </DialogHeader>
+    <ResponsiveModal open={dialogOpen} onOpenChange={setDialogOpen}>
+      <ResponsiveModalTrigger asChild>
+        <Card className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center border-dashed bg-transparent transition-colors hover:border-primary/50 hover:bg-accent/50">
+          <CardContent className="flex h-full flex-col items-center justify-center gap-2 p-6 text-muted-foreground hover:text-primary">
+            <ChefHat className="h-8 w-8" />
+            <span className="font-medium">Add new dinner</span>
+          </CardContent>
+        </Card>
+      </ResponsiveModalTrigger>
+      <ResponsiveModalContent>
+        <ResponsiveModalHeader>
+          <ResponsiveModalTitle>New dinner</ResponsiveModalTitle>
+        </ResponsiveModalHeader>
         <DinnerForm
           closeDialog={() => setDialogOpen(false)}
           onSubmit={createDinner}
           isLoading={createDinnerMutation.isLoading}
         />
-      </DialogContent>
-    </Dialog>
+      </ResponsiveModalContent>
+    </ResponsiveModal>
   );
 };

@@ -3,6 +3,7 @@ import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 import Link from "next/link";
 import { SignedIn, SignInButton, SignedOut, useClerk } from "@clerk/nextjs";
+import { Calendar, Settings, UtensilsCrossed, LogIn } from "lucide-react";
 
 export const BottomNav = () => {
   const router = useRouter();
@@ -15,49 +16,54 @@ export const BottomNav = () => {
       }
     : undefined;
 
+  const navClass =
+    "flex flex-col items-center justify-center h-full w-full gap-1 text-xs font-medium text-muted-foreground hover:text-primary transition-colors";
+  const activeClass = "text-primary";
+
   return (
-    <div className="pb-20">
-      <div className="fixed bottom-0 flex w-full max-w-xl justify-around border-r border-t bg-white">
-        <Button
-          variant={"link"}
+    <div className="fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex h-full w-full items-center justify-around">
+        <Link
+          href="/"
+          className={cn(navClass, router.asPath === "/" && activeClass)}
+          onClick={onClick}
+        >
+          <Calendar className="h-5 w-5" />
+          <span>Plan</span>
+        </Link>
+        
+        <Link
+          href="/dinners"
           className={cn(
-            "w-full py-8 text-xl",
-            router.asPath === "/" && "underline",
+            navClass,
+            router.asPath.startsWith("/dinners") && activeClass
           )}
           onClick={onClick}
-          asChild
         >
-          <Link href="/">Plan</Link>
-        </Button>
-        <Button
-          variant={"link"}
-          className={cn(
-            "w-full py-8 text-xl",
-            router.asPath.startsWith("/dinners") && "underline",
-          )}
-          onClick={onClick}
-          asChild
-        >
-          <Link href="/dinners">Dinners</Link>
-        </Button>
+          <UtensilsCrossed className="h-5 w-5" />
+          <span>Dinners</span>
+        </Link>
+
         <SignedOut>
           <SignInButton mode="modal">
-            <Button variant={"link"} className="w-full py-8 text-xl">
-              Sign in
-            </Button>
+            <button className={navClass}>
+              <LogIn className="h-5 w-5" />
+              <span>Sign in</span>
+            </button>
           </SignInButton>
         </SignedOut>
+        
         <SignedIn>
-          <Button
-            variant={"link"}
+          <Link
+            href="/settings"
             className={cn(
-              "w-full py-8 text-xl",
-              router.asPath.startsWith("/settings") && "underline",
+              navClass,
+              router.asPath.startsWith("/settings") && activeClass
             )}
-            asChild
           >
-            <Link href="/settings">Settings</Link>
-          </Button>
+            <Settings className="h-5 w-5" />
+            <span>Settings</span>
+          </Link>
         </SignedIn>
       </div>
     </div>
