@@ -83,7 +83,7 @@
   },
   "devDependencies": {
     "@types/eslint": "^8.44.2",
-    "@types/node": "^18.16.0",
+    "@types/node": "^24.10.1",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "@typescript-eslint/eslint-plugin": "^6.3.0",
@@ -103,5 +103,9 @@
   "ct3aMetadata": {
     "initVersion": "7.22.0"
   },
-  "packageManager": "npm@10.2.0"
+  "packageManager": "npm@10.2.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
 }
