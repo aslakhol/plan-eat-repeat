@@ -8,6 +8,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
+  SidebarTrigger,
 } from "src/components/ui/sidebar";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -62,6 +64,11 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <div className="flex w-full p-2">
+          <SidebarTrigger />
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }
