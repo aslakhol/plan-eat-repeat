@@ -54,7 +54,7 @@ const FeatureCard = ({
   description: string;
 }) => {
   return (
-    <Card className="flex flex-col items-center text-center transition-colors hover:bg-accent/50">
+    <Card className="flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-md">
       <CardHeader className="flex flex-col items-center gap-4 pb-2">
         <div className="rounded-full bg-primary/10 p-4">{icon}</div>
         <CardTitle className="font-serif text-xl">{title}</CardTitle>
