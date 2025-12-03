@@ -69,7 +69,7 @@ const Tags = ({ selectedTags, setSelectedTags }: TagsProps) => {
           className={cn(
             "cursor-pointer hover:bg-secondary-foreground/10",
             selectedTags.includes(tag.value) &&
-              "border border-secondary-foreground/50",
+              "border border-primary bg-primary/10",
           )}
           onClick={() => {
             if (selectedTags.includes(tag.value)) {

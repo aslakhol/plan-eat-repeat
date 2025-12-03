@@ -138,7 +138,7 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
                     variant="secondary"
                     className={cn(
                       selectedTags.includes(tag.value) &&
-                        "border border-primary bg-primary/10 text-primary-foreground",
+                        "border border-primary bg-primary/10",
                     )}
                   >
                     {tag.value}
