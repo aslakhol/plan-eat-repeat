@@ -1,26 +1,37 @@
-import { SidebarProvider, SidebarTrigger } from "src/components/ui/sidebar";
+import { SidebarProvider } from "src/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { BottomNav } from "../views/BottomNav";
+import { useUser } from "@clerk/nextjs";
+import { cn } from "src/lib/utils";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
+  const { isSignedIn, isLoaded } = useUser();
+  const showNav = isLoaded && isSignedIn;
+
   return (
     <SidebarProvider>
-      {/* Sidebar only visible on desktop */}
-      <div className="hidden md:block">
-        <AppSidebar />
-      </div>
+      {showNav && (
+        <div className="hidden md:block">
+          <AppSidebar />
+        </div>
+      )}
 
-      <main className="flex-1 w-full min-h-screen bg-background">
-        <div className="p-4 pb-24 md:p-8 md:pb-8 w-full max-w-7xl mx-auto">
+      <main className="min-h-screen w-full flex-1 bg-background">
+        <div
+          className={cn(
+            "mx-auto w-full max-w-7xl p-4",
+            showNav ? "pb-24 md:p-8 md:pb-8" : "md:p-8",
+          )}
+        >
           {children}
         </div>
 
-        {/* BottomNav only visible on mobile */}
-        <div className="md:hidden">
-          <BottomNav />
-        </div>
+        {showNav && (
+          <div className="md:hidden">
+            <BottomNav />
+          </div>
+        )}
       </main>
     </SidebarProvider>
   );
 }
-
