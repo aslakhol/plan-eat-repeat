@@ -28,7 +28,7 @@ export const PlannedDinner = ({
   setChangePlan,
   isOpen,
 }: Props) => {
-  const { isSupported, isLocked, request, release } = useWakeLock();
+  const { isSupported, request, release } = useWakeLock();
 
   useEffect(() => {
     if (!isSupported) {

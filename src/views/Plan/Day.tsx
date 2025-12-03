@@ -1,4 +1,3 @@
-import { type Dinner } from "@prisma/client";
 import { format, isToday } from "date-fns";
 import { cn } from "../../lib/utils";
 import { PlannedDinner } from "./PlannedDinner";

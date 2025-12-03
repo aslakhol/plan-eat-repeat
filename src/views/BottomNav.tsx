@@ -1,5 +1,4 @@
 import { useRouter } from "next/router";
-import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 import Link from "next/link";
 import { SignedIn, SignInButton, SignedOut, useClerk } from "@clerk/nextjs";
@@ -31,12 +30,12 @@ export const BottomNav = () => {
           <Calendar className="h-5 w-5" />
           <span>Plan</span>
         </Link>
-        
+
         <Link
           href="/dinners"
           className={cn(
             navClass,
-            router.asPath.startsWith("/dinners") && activeClass
+            router.asPath.startsWith("/dinners") && activeClass,
           )}
           onClick={onClick}
         >
@@ -52,13 +51,13 @@ export const BottomNav = () => {
             </button>
           </SignInButton>
         </SignedOut>
-        
+
         <SignedIn>
           <Link
             href="/settings"
             className={cn(
               navClass,
-              router.asPath.startsWith("/settings") && activeClass
+              router.asPath.startsWith("/settings") && activeClass,
             )}
           >
             <Settings className="h-5 w-5" />
