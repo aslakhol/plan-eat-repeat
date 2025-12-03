@@ -54,18 +54,20 @@ export const PlanView = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-3xl font-serif font-bold text-foreground">
+        <h1 className="font-serif text-3xl font-bold text-foreground">
           Weekly Plan
         </h1>
-        <WeekSelect
-          setWeekOfSet={setWeekOffSet}
-          startOfDisplayedWeek={startOfDisplayedWeek}
-        />
+        <div className="hidden sm:block">
+          <WeekSelect
+            setWeekOfSet={setWeekOffSet}
+            startOfDisplayedWeek={startOfDisplayedWeek}
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
         {week.map((day) => (
           <Day
             key={day.toString()}
@@ -77,6 +79,14 @@ export const PlanView = () => {
             }
           />
         ))}
+      </div>
+      <div className="fixed bottom-20 left-0 right-0 z-40 flex justify-center p-4 md:hidden">
+        <div className="rounded-lg border bg-background/95 p-2 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <WeekSelect
+            setWeekOfSet={setWeekOffSet}
+            startOfDisplayedWeek={startOfDisplayedWeek}
+          />
+        </div>
       </div>
     </div>
   );
