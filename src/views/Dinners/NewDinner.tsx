@@ -51,10 +51,10 @@ export const NewDinner = () => {
   return (
     <ResponsiveModal open={dialogOpen} onOpenChange={setDialogOpen}>
       <ResponsiveModalTrigger asChild>
-        <Card className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center border-dashed bg-transparent transition-colors hover:border-primary/50 hover:bg-accent/50">
-          <CardContent className="flex h-full flex-col items-center justify-center gap-2 p-6 text-muted-foreground hover:text-primary">
-            <ChefHat className="h-8 w-8" />
-            <span className="font-medium">Add new dinner</span>
+        <Card className="flex min-h-[100px] cursor-pointer flex-col items-center justify-center border-dashed bg-transparent transition-colors hover:border-primary/50 hover:bg-accent/50">
+          <CardContent className="flex h-full flex-col items-center justify-center gap-2 p-4 text-muted-foreground hover:text-primary">
+            <ChefHat className="h-6 w-6 sm:h-8 sm:w-8" />
+            <span className="font-medium text-sm sm:text-base">Add new dinner</span>
           </CardContent>
         </Card>
       </ResponsiveModalTrigger>

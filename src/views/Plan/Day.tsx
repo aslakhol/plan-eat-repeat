@@ -40,7 +40,7 @@ export const Day = ({ date, plannedDinner }: Props) => {
       <ResponsiveModalTrigger asChild>
         <Card
           className={cn(
-            "group relative flex h-full min-h-[140px] cursor-pointer flex-col overflow-hidden transition-colors hover:bg-accent/50",
+            "group relative flex h-full min-h-[80px] cursor-pointer flex-col overflow-hidden transition-colors hover:bg-accent/50 sm:min-h-[140px]",
             !plannedDinner &&
               "border-dashed bg-transparent hover:border-primary/50",
             plannedDinner &&
@@ -48,7 +48,7 @@ export const Day = ({ date, plannedDinner }: Props) => {
             isDateToday && "ring-2 ring-primary ring-offset-2",
           )}
         >
-          <CardHeader className="p-4 pb-2">
+          <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
             <CardTitle
               className={cn(
                 "flex items-center justify-between font-sans text-sm font-medium text-muted-foreground",
@@ -58,14 +58,14 @@ export const Day = ({ date, plannedDinner }: Props) => {
               {format(date, "EEE do")}
             </CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-1 flex-col justify-center p-4 pt-0">
+          <CardContent className="flex flex-1 flex-col justify-center p-3 pt-0 sm:p-4 sm:pt-0">
             {plannedDinner ? (
-              <p className="line-clamp-2 font-serif text-lg font-medium leading-tight">
+              <p className="line-clamp-3 font-serif text-base font-medium leading-tight sm:line-clamp-2 sm:text-lg">
                 {plannedDinner.name}
               </p>
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground/50 transition-colors group-hover:text-primary/50">
-                <Plus className="h-8 w-8" />
+                <Plus className="h-6 w-6 sm:h-8 sm:w-8" />
               </div>
             )}
           </CardContent>

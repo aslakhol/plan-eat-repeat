@@ -123,13 +123,13 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
   return (
     <ResponsiveModal open={dialogOpen} onOpenChange={setDialogOpen}>
       <ResponsiveModalTrigger asChild>
-        <Card className="flex h-full min-h-[120px] cursor-pointer flex-col justify-between transition-colors hover:bg-accent/50">
-          <CardHeader>
-            <CardTitle className="line-clamp-2 font-serif text-lg font-medium leading-tight">
+        <Card className="flex h-full min-h-[100px] cursor-pointer flex-col justify-between transition-colors hover:bg-accent/50">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="line-clamp-2 font-serif text-base font-medium leading-tight sm:text-lg">
               {dinner.name}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-2">
             <div className="flex flex-wrap gap-2">
               {dinner.tags.map((tag) => {
                 return (
