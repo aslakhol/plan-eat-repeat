@@ -2,11 +2,11 @@ import { Button } from "../../components/ui/button";
 import { type DinnerWithTags } from "../../utils/types";
 import { format } from "date-fns";
 import {
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogContent,
-} from "../../components/ui/dialog";
+  ResponsiveModalContent,
+  ResponsiveModalHeader,
+  ResponsiveModalTitle,
+  ResponsiveModalDescription,
+} from "../../components/ResponsiveModal";
 import { ClearDay } from "./ClearDay";
 import Link from "next/link";
 import { Badge } from "../../components/ui/badge";
@@ -28,7 +28,7 @@ export const PlannedDinner = ({
   setChangePlan,
   isOpen,
 }: Props) => {
-  const { isSupported, isLocked, request, release } = useWakeLock();
+  const { isSupported, request, release } = useWakeLock();
 
   useEffect(() => {
     if (!isSupported) {
@@ -47,13 +47,13 @@ export const PlannedDinner = ({
   }, [isSupported, isOpen, request, release]);
 
   return (
-    <DialogContent className="flex flex-col">
-      <DialogHeader>
-        <DialogDescription>
+    <ResponsiveModalContent className="flex flex-col">
+      <ResponsiveModalHeader>
+        <ResponsiveModalDescription>
           {format(date, "EEEE, LLLL  do, y")}
-        </DialogDescription>
-        <DialogTitle>{dinner.name}</DialogTitle>
-      </DialogHeader>
+        </ResponsiveModalDescription>
+        <ResponsiveModalTitle>{dinner.name}</ResponsiveModalTitle>
+      </ResponsiveModalHeader>
       <div className="flex flex-col gap-2">
         {dinner.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
@@ -91,6 +91,6 @@ export const PlannedDinner = ({
           </Button>
         </div>
       </div>
-    </DialogContent>
+    </ResponsiveModalContent>
   );
 };

@@ -30,8 +30,8 @@ import { useState } from "react";
 import { format } from "date-fns";
 
 type Props = {
-  onSubmit(values: z.infer<typeof dinnerFormSchema>): void;
-  onDelete?(values: z.infer<typeof dinnerFormSchema>): void;
+  onSubmit: (values: z.infer<typeof dinnerFormSchema>) => void;
+  onDelete?: (values: z.infer<typeof dinnerFormSchema>) => void;
   existingDinner?: DinnerWithTags;
   closeDialog: () => void;
   isLoading: boolean;
@@ -179,7 +179,7 @@ const TagsCombobox = ({ form }: TagsComboboxProps) => {
   );
 };
 type DeleteProps = {
-  onDelete(values: z.infer<typeof dinnerFormSchema>): void;
+  onDelete: (values: z.infer<typeof dinnerFormSchema>) => void;
   isLoading: boolean;
   form: UseFormReturn<z.infer<typeof dinnerFormSchema>>;
   dinner: DinnerWithTags;

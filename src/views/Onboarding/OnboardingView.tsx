@@ -9,7 +9,13 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import { SignUpButton, SignedIn, SignedOut, useClerk } from "@clerk/nextjs";
+import {
+  SignUpButton,
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  useClerk,
+} from "@clerk/nextjs";
 import { api } from "../../utils/api";
 import { useRouter } from "next/router";
 import { toast } from "../../components/ui/use-toast";
@@ -37,7 +43,6 @@ export const OnboardingView = () => {
   const router = useRouter();
   const { user } = useClerk();
 
-  // Load dinners from localStorage on mount
   useEffect(() => {
     const savedDinners = localStorage.getItem(STORAGE_KEY);
     if (savedDinners) {
@@ -83,7 +88,6 @@ export const OnboardingView = () => {
     };
 
     const updatedDinners = [...dinners, newDinner];
-    // Sort dinners chronologically
     const sortedDinners = updatedDinners.sort(
       (a, b) => a.date.getTime() - b.date.getTime(),
     );
@@ -234,6 +238,15 @@ export const OnboardingView = () => {
           </div>
         </CardContent>
       </Card>
+      <SignedOut>
+        <div className="mt-4">
+          <SignInButton mode="modal" forceRedirectUrl="/">
+            <Button variant="link" className="text-muted-foreground">
+              Already have an account? Sign in
+            </Button>
+          </SignInButton>
+        </div>
+      </SignedOut>
     </main>
   );
 };

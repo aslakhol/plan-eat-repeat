@@ -1,5 +1,4 @@
 import { api } from "~/utils/api";
-import { BottomNav } from "../BottomNav";
 import { UtensilsCrossed } from "lucide-react";
 import { DinnerList } from "./DinnerList";
 import { useState } from "react";
@@ -14,8 +13,8 @@ export const DinnersView = () => {
 
   if (dinnersQuery.isLoading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center">
-        <UtensilsCrossed className="animate-spin" />
+      <div className="flex h-[50vh] w-full items-center justify-center">
+        <UtensilsCrossed className="animate-spin text-primary" />
       </div>
     );
   }
@@ -39,8 +38,11 @@ export const DinnersView = () => {
     );
 
   return (
-    <div className="min-h-screen max-w-xl border-r">
-      <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
+        <h1 className="font-serif text-3xl font-bold text-foreground">
+          Dinners
+        </h1>
         <Filter
           search={search}
           setSearch={setSearch}
@@ -49,9 +51,8 @@ export const DinnersView = () => {
           selectedTags={selectedTags}
           setSelectedTags={setSelectedTags}
         />
-        <DinnerList dinners={dinners} selectedTags={selectedTags} />
       </div>
-      <BottomNav />
+      <DinnerList dinners={dinners} selectedTags={selectedTags} />
     </div>
   );
 };

@@ -11,6 +11,20 @@ import { env } from "../env.mjs";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { Toaster } from "~/components/ui/toaster";
+import { Young_Serif, Quicksand } from "next/font/google";
+
+const youngSerif = Young_Serif({
+  subsets: ["latin"],
+  variable: "--font-young-serif",
+  weight: "400",
+});
+
+const quicksand = Quicksand({
+  subsets: ["latin"],
+  variable: "--font-quicksand",
+});
+
+import { AppLayout } from "~/components/AppLayout";
 
 if (typeof window !== "undefined") {
   posthog.init(env.NEXT_PUBLIC_POSTHOG_API_KEY, {
@@ -40,8 +54,12 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <PostHogProvider client={posthog}>
       <ClerkProvider localization={localization}>
-        <Component {...pageProps} />
-        <Toaster />
+        <main className={`${youngSerif.variable} ${quicksand.variable} font-sans`}>
+          <AppLayout>
+            <Component {...pageProps} />
+          </AppLayout>
+          <Toaster />
+        </main>
       </ClerkProvider>
     </PostHogProvider>
   );

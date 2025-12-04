@@ -1,12 +1,20 @@
-import { type Dinner } from "@prisma/client";
-import { format } from "date-fns";
+import { format, isToday } from "date-fns";
 import { cn } from "../../lib/utils";
-import { Dialog, DialogTrigger } from "../../components/ui/dialog";
 import { PlannedDinner } from "./PlannedDinner";
 import { type DinnerWithTags } from "../../utils/types";
 import { useState } from "react";
 import { PlanDay } from "./PlanDay";
-import { Button } from "../../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import {
+  ResponsiveModal,
+  ResponsiveModalTrigger,
+} from "../../components/ResponsiveModal";
+import { Plus } from "lucide-react";
 
 type Props = {
   date: Date;
@@ -24,17 +32,44 @@ export const Day = ({ date, plannedDinner }: Props) => {
     }
   };
 
+  const isDateToday = isToday(date);
+
   return (
-    <Dialog open={dialogOpen} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="flex h-auto w-full flex-col items-start"
+    <ResponsiveModal open={dialogOpen} onOpenChange={onOpenChange}>
+      <ResponsiveModalTrigger asChild>
+        <Card
+          className={cn(
+            "group relative flex h-full min-h-[80px] cursor-pointer flex-col overflow-hidden transition-colors hover:bg-accent/50 sm:min-h-[140px]",
+            !plannedDinner &&
+              "border-dashed bg-transparent hover:border-primary/50",
+            plannedDinner &&
+              "border-secondary bg-secondary/30 hover:bg-secondary/50",
+            isDateToday && "ring-2 ring-primary ring-offset-2",
+          )}
         >
-          <p className="text-xs font-normal">{format(date, "EEE do")}</p>
-          <DinnerSlot dinner={plannedDinner} />
-        </Button>
-      </DialogTrigger>
+          <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
+            <CardTitle
+              className={cn(
+                "flex items-center justify-between font-sans text-sm font-medium text-muted-foreground",
+                isDateToday && "font-bold text-primary",
+              )}
+            >
+              {format(date, "EEE do")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-1 flex-col justify-center p-3 pt-0 sm:p-4 sm:pt-0">
+            {plannedDinner ? (
+              <p className="line-clamp-3 font-serif text-base font-medium leading-tight sm:line-clamp-2 sm:text-lg">
+                {plannedDinner.name}
+              </p>
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground/50 transition-colors group-hover:text-primary/50">
+                <Plus className="h-6 w-6 sm:h-8 sm:w-8" />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </ResponsiveModalTrigger>
       <>
         {changePlan || !plannedDinner ? (
           <PlanDay
@@ -52,20 +87,6 @@ export const Day = ({ date, plannedDinner }: Props) => {
           />
         )}
       </>
-    </Dialog>
-  );
-};
-
-type DinnerSlotProps = { dinner?: Dinner };
-
-export const DinnerSlot = ({ dinner }: DinnerSlotProps) => {
-  if (!dinner) {
-    return <div className="h-8"></div>;
-  }
-
-  return (
-    <div className={cn("flex h-8 flex-col justify-end")}>
-      <p className={cn("pb-2 font-semibold")}>{dinner.name}</p>
-    </div>
+    </ResponsiveModal>
   );
 };

@@ -1,10 +1,3 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../../components/ui/dialog";
 import { cn } from "../../lib/utils";
 import { type dinnerFormSchema, type DinnerWithTags } from "../../utils/types";
 import { DinnerForm } from "./DinnerForm";
@@ -14,8 +7,20 @@ import { toast } from "../../components/ui/use-toast";
 import { usePostHog } from "posthog-js/react";
 import { NewDinner } from "./NewDinner";
 import { useRouter } from "next/router";
-import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import {
+  ResponsiveModal,
+  ResponsiveModalContent,
+  ResponsiveModalHeader,
+  ResponsiveModalTitle,
+  ResponsiveModalTrigger,
+} from "../../components/ResponsiveModal";
 
 type Props = {
   dinners: DinnerWithTags[];
@@ -24,7 +29,7 @@ type Props = {
 
 export const DinnerList = ({ dinners, selectedTags }: Props) => {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <NewDinner />
       {dinners.map((d) => (
         <DinnerListItem key={d.id} dinner={d} selectedTags={selectedTags} />
@@ -115,37 +120,38 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
   }
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger>
-        <Button
-          className={cn(
-            "flex h-auto w-full cursor-pointer flex-col items-start rounded-md border px-4 py-2 text-left hover:bg-accent/50 hover:text-accent-foreground",
-          )}
-          variant={"outline"}
-        >
-          {dinner.name}
-          <div className="flex flex-wrap gap-2">
-            {dinner.tags.map((tag) => {
-              return (
-                <Badge
-                  key={tag.value}
-                  variant="secondary"
-                  className={cn(
-                    selectedTags.includes(tag.value) &&
-                      "border border-secondary-foreground/50",
-                  )}
-                >
-                  {tag.value}
-                </Badge>
-              );
-            })}
-          </div>
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{dinner.name}</DialogTitle>
-        </DialogHeader>
+    <ResponsiveModal open={dialogOpen} onOpenChange={setDialogOpen}>
+      <ResponsiveModalTrigger asChild>
+        <Card className="flex h-full min-h-[100px] cursor-pointer flex-col justify-between transition-colors hover:bg-accent/50">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="line-clamp-2 font-serif text-base font-medium leading-tight sm:text-lg">
+              {dinner.name}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-2">
+            <div className="flex flex-wrap gap-2">
+              {dinner.tags.map((tag) => {
+                return (
+                  <Badge
+                    key={tag.value}
+                    variant="secondary"
+                    className={cn(
+                      selectedTags.includes(tag.value) &&
+                        "border border-primary bg-primary/10",
+                    )}
+                  >
+                    {tag.value}
+                  </Badge>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </ResponsiveModalTrigger>
+      <ResponsiveModalContent>
+        <ResponsiveModalHeader>
+          <ResponsiveModalTitle>{dinner.name}</ResponsiveModalTitle>
+        </ResponsiveModalHeader>
         <DinnerForm
           existingDinner={dinner}
           closeDialog={() => setDialogOpen(false)}
@@ -155,7 +161,7 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
             updateDinnerMutation.isLoading || deleteDinnerMutation.isLoading
           }
         />
-      </DialogContent>
-    </Dialog>
+      </ResponsiveModalContent>
+    </ResponsiveModal>
   );
 };
