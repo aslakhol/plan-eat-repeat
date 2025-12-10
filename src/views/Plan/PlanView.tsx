@@ -4,6 +4,7 @@ import { useState } from "react";
 import { addDays, isSameDay, startOfDay, startOfWeek } from "date-fns";
 import { Day } from "./Day";
 import { WeekSelect } from "../WeekSelect";
+import { keepPreviousData } from "@tanstack/react-query";
 
 export const PlanView = () => {
   const [weekOffSet, setWeekOffSet] = useState(0);
@@ -28,7 +29,7 @@ export const PlanView = () => {
     {
       startOfWeek: startOfDisplayedWeek,
     },
-    { keepPreviousData: true },
+    { placeholderData: keepPreviousData },
   );
 
   void trpc.plan.plannedDinners.prefetch(
