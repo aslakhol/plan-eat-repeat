@@ -64,7 +64,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   };
 
   return (
-    <ResponsiveModalContent className="flex max-h-[90vh] h-full flex-col">
+    <ResponsiveModalContent className="flex h-full max-h-[90vh] flex-col">
       <ResponsiveModalHeader>
         <ResponsiveModalDescription>
           {format(date, "EEEE, LLLL do, y")}
@@ -92,7 +92,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
               dinner={dinner}
               isPlanned={plannedDinner?.id === dinner.id}
               planDinner={planDinner}
-              isLoading={planDinnerForDateMutation.isLoading}
+              isPending={planDinnerForDateMutation.isPending}
             />
           ))}
         </div>
@@ -111,10 +111,10 @@ type DinnerProps = {
   dinner: DinnerWithTags;
   isPlanned: boolean;
   planDinner: (dinnerId: number) => void;
-  isLoading: boolean;
+  isPending: boolean;
 };
 
-const Dinner = ({ dinner, isPlanned, planDinner, isLoading }: DinnerProps) => {
+const Dinner = ({ dinner, isPlanned, planDinner, isPending }: DinnerProps) => {
   return (
     <Button
       className={cn(
@@ -122,7 +122,7 @@ const Dinner = ({ dinner, isPlanned, planDinner, isLoading }: DinnerProps) => {
         isPlanned && "bg-accent/50 text-accent-foreground hover:bg-accent",
       )}
       variant={"outline"}
-      disabled={isLoading}
+      disabled={isPending}
       onClick={() => planDinner(dinner.id)}
     >
       {dinner.name}

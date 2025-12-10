@@ -45,7 +45,7 @@ export const PlanView = () => {
     { staleTime: 60 * 1000 },
   );
 
-  if (plannedDinnersQuery.isLoading) {
+  if (plannedDinnersQuery.isPending) {
     return (
       <div className="flex h-[50vh] w-full items-center justify-center">
         <UtensilsCrossed className="animate-spin text-primary" />

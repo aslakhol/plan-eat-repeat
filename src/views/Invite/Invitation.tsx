@@ -83,9 +83,9 @@ export const Invitation = ({ invite }: Props) => {
             <Button
               className="w-full"
               onClick={handleJoinHousehold}
-              disabled={joinHouseholdMutation.isLoading}
+              disabled={joinHouseholdMutation.isPending}
             >
-              {joinHouseholdMutation.isLoading ? (
+              {joinHouseholdMutation.isPending ? (
                 "Joining..."
               ) : (
                 <>

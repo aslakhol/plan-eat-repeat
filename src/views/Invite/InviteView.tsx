@@ -11,7 +11,7 @@ type Props = { inviteId: string };
 export const InviteView = ({ inviteId }: Props) => {
   const inviteQuery = api.household.getInvite.useQuery({ inviteId });
 
-  if (inviteQuery.isLoading) {
+  if (inviteQuery.isPending) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
         <UtensilsCrossed className="animate-spin" />
@@ -41,7 +41,7 @@ export const LoggedInInvite = ({ inviteId }: LoggedInInviteProps) => {
   const inviteQuery = api.household.getInvite.useQuery({ inviteId });
   const householdQuery = api.household.household.useQuery();
 
-  if (inviteQuery.isLoading || householdQuery.isLoading) {
+  if (inviteQuery.isPending || householdQuery.isPending) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
         <UtensilsCrossed className="animate-spin" />

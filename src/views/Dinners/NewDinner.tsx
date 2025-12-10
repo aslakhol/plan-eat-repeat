@@ -1,6 +1,6 @@
 import { type dinnerFormSchema } from "../../utils/types";
 import { DinnerForm } from "./DinnerForm";
-import { type z } from "zod";
+import { z } from "zod";
 import { api } from "../../utils/api";
 import { toast } from "../../components/ui/use-toast";
 import { usePostHog } from "posthog-js/react";
@@ -66,7 +66,7 @@ export const NewDinner = () => {
         <DinnerForm
           closeDialog={() => setDialogOpen(false)}
           onSubmit={createDinner}
-          isLoading={createDinnerMutation.isLoading}
+          isPending={createDinnerMutation.isPending}
         />
       </ResponsiveModalContent>
     </ResponsiveModal>

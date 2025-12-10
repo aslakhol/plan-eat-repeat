@@ -77,7 +77,7 @@ export const NewHousehold = () => {
           form={form}
           onSubmit={onSubmit}
           submitLabel="Create Household"
-          isSubmitting={createHouseholdMutation.isLoading}
+          isSubmitting={createHouseholdMutation.isPending}
         />
       </CardContent>
     </Card>
@@ -125,7 +125,7 @@ export const EditHousehold = ({ household }: EditHouseholdProps) => {
           form={form}
           onSubmit={onSubmit}
           submitLabel="Save changes"
-          isSubmitting={updateHouseholdMutation.isLoading}
+          isSubmitting={updateHouseholdMutation.isPending}
         />
       </CardContent>
     </Card>

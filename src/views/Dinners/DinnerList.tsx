@@ -1,7 +1,7 @@
 import { cn } from "../../lib/utils";
 import { type dinnerFormSchema, type DinnerWithTags } from "../../utils/types";
 import { DinnerForm } from "./DinnerForm";
-import { type z } from "zod";
+import { z } from "zod";
 import { api } from "../../utils/api";
 import { toast } from "../../components/ui/use-toast";
 import { usePostHog } from "posthog-js/react";
@@ -157,8 +157,8 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
           closeDialog={() => setDialogOpen(false)}
           onSubmit={updateDinner}
           onDelete={deleteDinner}
-          isLoading={
-            updateDinnerMutation.isLoading || deleteDinnerMutation.isLoading
+          isPending={
+            updateDinnerMutation.isPending || deleteDinnerMutation.isPending
           }
         />
       </ResponsiveModalContent>
