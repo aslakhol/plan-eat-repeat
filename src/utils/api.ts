@@ -21,6 +21,12 @@ const getBaseUrl = () => {
 
 /** A set of type-safe react-query hooks for your tRPC API. */
 export const api = createTRPCNext<AppRouter>({
+  /**
+   * Transformer used for data de-serialization from the server.
+   *
+   * @see https://trpc.io/docs/data-transformers
+   */
+  transformer: superjson,
   config() {
     return {
       /**
@@ -36,11 +42,6 @@ export const api = createTRPCNext<AppRouter>({
         }),
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
-          /**
-           * Transformer used for data de-serialization from the server.
-           *
-           * @see https://trpc.io/docs/data-transformers
-           */
           transformer: superjson,
         }),
       ],
