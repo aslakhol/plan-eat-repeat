@@ -1,4 +1,4 @@
-import { type Household } from "@prisma/client";
+import { type Household } from "../../../generated/prisma/client";
 import { NewHousehold } from "./HouseholdForm";
 import { EditHousehold } from "./HouseholdForm";
 import { Memberships } from "./Memberships";

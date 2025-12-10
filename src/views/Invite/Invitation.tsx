@@ -1,4 +1,4 @@
-import { type Household, type Invite } from "@prisma/client";
+import { type Household, type Invite } from "../../../generated/prisma/client";
 import { Button } from "../../components/ui/button";
 
 import {

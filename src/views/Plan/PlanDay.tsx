@@ -13,7 +13,7 @@ import { Button } from "../../components/ui/button";
 import { Filter } from "../Filter";
 import { useState } from "react";
 import { usePostHog } from "posthog-js/react";
-import { type Dinner } from "@prisma/client";
+import { type Dinner } from "../../../generated/prisma/client";
 import Link from "next/link";
 
 type Props = {

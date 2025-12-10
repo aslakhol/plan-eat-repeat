@@ -1,6 +1,6 @@
 import { toast } from "../../components/ui/use-toast";
 
-import { type Household } from "@prisma/client";
+import { type Household } from "../../../generated/prisma/client";
 import { api } from "../../utils/api";
 import { z } from "zod";
 import { useForm, type UseFormReturn } from "react-hook-form";

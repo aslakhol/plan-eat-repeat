@@ -3,7 +3,7 @@ import {
   type Household,
   type Membership,
   type User,
-} from "@prisma/client";
+} from "../../../generated/prisma/client";
 import { api } from "../../utils/api";
 import {
   Select,

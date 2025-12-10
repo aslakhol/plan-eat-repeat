@@ -7,7 +7,7 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 import { addDays } from "date-fns";
-import { MembershipRole } from "@prisma/client";
+import { MembershipRole } from "../../../../generated/prisma/client";
 import { env } from "../../../env.mjs";
 import { clerkClient } from "@clerk/nextjs/server";
 
