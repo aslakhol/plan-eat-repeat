@@ -8,7 +8,7 @@ import {
 } from "~/server/api/trpc";
 import { addDays } from "date-fns";
 import { MembershipRole } from "../../../../generated/prisma/client";
-import { env } from "../../../env.mjs";
+import { env } from "~/env";
 import { clerkClient } from "@clerk/nextjs/server";
 
 const onboardingDinnerSchema = z.object({

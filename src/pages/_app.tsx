@@ -7,7 +7,7 @@ import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 import { ClerkProvider } from "@clerk/nextjs";
 
-import { env } from "../env.mjs";
+import { env } from "~/env";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { Toaster } from "~/components/ui/toaster";
@@ -54,7 +54,9 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <PostHogProvider client={posthog}>
       <ClerkProvider localization={localization}>
-        <main className={`${youngSerif.variable} ${quicksand.variable} font-sans`}>
+        <main
+          className={`${youngSerif.variable} ${quicksand.variable} font-sans`}
+        >
           <AppLayout>
             <Component {...pageProps} />
           </AppLayout>

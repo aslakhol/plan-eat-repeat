@@ -32,17 +32,13 @@ export const env = createEnv({
   },
 
   /**
-   * You can't destruct `process.env` as a regular object in the Next.js edge runtimes (e.g.
-   * middlewares) or client-side so we need to destruct manually.
+   * For Next.js >= 13.4.4, you only need to destructure client variables:
    */
-  runtimeEnv: {
-    DATABASE_URL: process.env.DATABASE_URL,
-    NODE_ENV: process.env.NODE_ENV,
+  experimental__runtimeEnv: {
     NEXT_PUBLIC_POSTHOG_API_KEY: process.env.NEXT_PUBLIC_POSTHOG_API_KEY,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-    WEBHOOK_SECRET: process.env.WEBHOOK_SECRET,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

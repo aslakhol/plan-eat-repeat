@@ -1,7 +1,7 @@
 import { PrismaClient, type Dinner } from "@prisma/client";
 import { addDays, startOfWeek, subWeeks } from "date-fns";
 import { users, households, tags, dinners } from "./seed.data";
-import { env } from "../src/env.mjs";
+import { env } from "../src/env";
 
 const prisma = new PrismaClient();
 
