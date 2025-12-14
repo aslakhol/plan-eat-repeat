@@ -31,9 +31,7 @@ export const Account = () => {
               <Button
                 className="w-full sm:w-auto"
                 variant="outline"
-                onClick={() =>
-                  openUserProfile({ routing: "path", path: "/security" })
-                }
+                onClick={() => openUserProfile()}
               >
                 <Settings className="mr-2 h-4 w-4" />
                 Account Settings

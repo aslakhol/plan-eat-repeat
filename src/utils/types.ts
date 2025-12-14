@@ -1,6 +1,6 @@
-import { type Tag, type Dinner } from "@prisma/client";
 import { z } from "zod";
 import { asOptionalStringWithoutEmpty } from "./zod";
+import { type Tag, type Dinner } from "../../generated/prisma/client";
 
 export type DinnerWithTags = Dinner & { tags: Tag[] };
 

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type z } from "zod";
+import { z } from "zod";
 import { dinnerFormSchema, type DinnerWithTags } from "../../utils/types";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import {
@@ -34,7 +34,7 @@ type Props = {
   onDelete?: (values: z.infer<typeof dinnerFormSchema>) => void;
   existingDinner?: DinnerWithTags;
   closeDialog: () => void;
-  isLoading: boolean;
+  isPending: boolean;
 };
 
 export const DinnerForm = ({
@@ -42,7 +42,7 @@ export const DinnerForm = ({
   onDelete,
   existingDinner,
   closeDialog,
-  isLoading,
+  isPending,
 }: Props) => {
   const form = useForm<z.infer<typeof dinnerFormSchema>>({
     resolver: zodResolver(dinnerFormSchema),
@@ -107,14 +107,14 @@ export const DinnerForm = ({
           )}
         />
         <div className="flex justify-between">
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isPending}>
             Save
           </Button>
           <div className="flex gap-2">
             {onDelete && existingDinner && (
               <Delete
                 onDelete={onDelete}
-                isLoading={isLoading}
+                isPending={isPending}
                 form={form}
                 dinner={existingDinner}
               />
@@ -180,12 +180,12 @@ const TagsCombobox = ({ form }: TagsComboboxProps) => {
 };
 type DeleteProps = {
   onDelete: (values: z.infer<typeof dinnerFormSchema>) => void;
-  isLoading: boolean;
+  isPending: boolean;
   form: UseFormReturn<z.infer<typeof dinnerFormSchema>>;
   dinner: DinnerWithTags;
 };
 
-const Delete = ({ onDelete, isLoading, form, dinner }: DeleteProps) => {
+const Delete = ({ onDelete, isPending, form, dinner }: DeleteProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const plansQuery = api.plan.plansForDinner.useQuery({
     dinnerId: dinner.id,
@@ -228,7 +228,7 @@ const Delete = ({ onDelete, isLoading, form, dinner }: DeleteProps) => {
           </Button>
           <Button
             variant="destructive"
-            disabled={isLoading || plansQuery.isLoading}
+            disabled={isPending || plansQuery.isPending}
             onClick={async () => {
               await form.handleSubmit(onDelete)();
               setDialogOpen(false);

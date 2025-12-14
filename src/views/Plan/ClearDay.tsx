@@ -27,9 +27,9 @@ export const ClearDay = ({ date, closeDialog }: ClearDayProps) => {
           date,
         })
       }
-      disabled={unplanDayMutation.isLoading}
+      disabled={unplanDayMutation.isPending}
     >
-      {!unplanDayMutation.isLoading ? (
+      {!unplanDayMutation.isPending ? (
         "Clear day"
       ) : (
         <UtensilsCrossed className="animate-spin" size={14} />

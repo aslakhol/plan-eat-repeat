@@ -1,6 +1,6 @@
 import { toast } from "../../components/ui/use-toast";
 
-import { type Household } from "@prisma/client";
+import { type Household } from "../../../generated/prisma/client";
 import { api } from "../../utils/api";
 import { z } from "zod";
 import { useForm, type UseFormReturn } from "react-hook-form";
@@ -77,7 +77,7 @@ export const NewHousehold = () => {
           form={form}
           onSubmit={onSubmit}
           submitLabel="Create Household"
-          isSubmitting={createHouseholdMutation.isLoading}
+          isSubmitting={createHouseholdMutation.isPending}
         />
       </CardContent>
     </Card>
@@ -125,7 +125,7 @@ export const EditHousehold = ({ household }: EditHouseholdProps) => {
           form={form}
           onSubmit={onSubmit}
           submitLabel="Save changes"
-          isSubmitting={updateHouseholdMutation.isLoading}
+          isSubmitting={updateHouseholdMutation.isPending}
         />
       </CardContent>
     </Card>

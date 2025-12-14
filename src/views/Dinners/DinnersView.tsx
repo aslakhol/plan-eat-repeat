@@ -11,7 +11,7 @@ export const DinnersView = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTags, setShowTags] = useState(false);
 
-  if (dinnersQuery.isLoading) {
+  if (dinnersQuery.isPending) {
     return (
       <div className="flex h-[50vh] w-full items-center justify-center">
         <UtensilsCrossed className="animate-spin text-primary" />

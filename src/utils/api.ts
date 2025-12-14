@@ -7,6 +7,7 @@
 import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCNext } from "@trpc/next";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
+import { QueryCache, MutationCache } from "@tanstack/react-query";
 import superjson from "superjson";
 import { toast } from "~/components/ui/use-toast";
 
@@ -20,15 +21,14 @@ const getBaseUrl = () => {
 
 /** A set of type-safe react-query hooks for your tRPC API. */
 export const api = createTRPCNext<AppRouter>({
+  /**
+   * Transformer used for data de-serialization from the server.
+   *
+   * @see https://trpc.io/docs/data-transformers
+   */
+  transformer: superjson,
   config() {
     return {
-      /**
-       * Transformer used for data de-serialization from the server.
-       *
-       * @see https://trpc.io/docs/data-transformers
-       */
-      transformer: superjson,
-
       /**
        * Links used to determine request flow from client to server.
        *
@@ -42,35 +42,34 @@ export const api = createTRPCNext<AppRouter>({
         }),
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
+          transformer: superjson,
         }),
       ],
       queryClientConfig: {
-        defaultOptions: {
-          mutations: {
-            onError: (error) => {
-              toast({
-                variant: "destructive",
-                title: "Something went wrong",
-                description:
-                  error instanceof Error
-                    ? error.message
-                    : "Please try again later",
-              });
-            },
+        queryCache: new QueryCache({
+          onError: (error) => {
+            toast({
+              variant: "destructive",
+              title: "Something went wrong",
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "Please try again later",
+            });
           },
-          queries: {
-            onError: (error) => {
-              toast({
-                variant: "destructive",
-                title: "Something went wrong",
-                description:
-                  error instanceof Error
-                    ? error.message
-                    : "Please try again later",
-              });
-            },
+        }),
+        mutationCache: new MutationCache({
+          onError: (error) => {
+            toast({
+              variant: "destructive",
+              title: "Something went wrong",
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "Please try again later",
+            });
           },
-        },
+        }),
       },
     };
   },

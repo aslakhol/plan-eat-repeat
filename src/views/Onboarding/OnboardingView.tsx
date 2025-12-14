@@ -217,10 +217,10 @@ export const OnboardingView = () => {
                       onClick={handleCreateHousehold}
                       disabled={
                         !householdName.trim() ||
-                        createHouseholdMutation.isLoading
+                        createHouseholdMutation.isPending
                       }
                     >
-                      {createHouseholdMutation.isLoading
+                      {createHouseholdMutation.isPending
                         ? "Creating your household..."
                         : "Create household"}
                     </Button>

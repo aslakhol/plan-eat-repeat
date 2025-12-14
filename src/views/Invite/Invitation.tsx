@@ -1,4 +1,4 @@
-import { type Household, type Invite } from "@prisma/client";
+import { type Household, type Invite } from "../../../generated/prisma/client";
 import { Button } from "../../components/ui/button";
 
 import {
@@ -83,9 +83,9 @@ export const Invitation = ({ invite }: Props) => {
             <Button
               className="w-full"
               onClick={handleJoinHousehold}
-              disabled={joinHouseholdMutation.isLoading}
+              disabled={joinHouseholdMutation.isPending}
             >
-              {joinHouseholdMutation.isLoading ? (
+              {joinHouseholdMutation.isPending ? (
                 "Joining..."
               ) : (
                 <>

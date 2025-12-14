@@ -10,7 +10,7 @@ import {
 } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import Link from "next/link";
-import { type Household } from "@prisma/client";
+import { type Household } from "../../../generated/prisma/client";
 import { api } from "../../utils/api";
 import { UserAvatar } from "../UserAvatar";
 

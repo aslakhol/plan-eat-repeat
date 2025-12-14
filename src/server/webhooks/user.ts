@@ -1,4 +1,4 @@
-import { type UserJSON } from "@clerk/nextjs/dist/types/server";
+import { type UserJSON } from "@clerk/nextjs/server";
 import { db } from "../db";
 
 export const userDeleted = async (id?: string) => {

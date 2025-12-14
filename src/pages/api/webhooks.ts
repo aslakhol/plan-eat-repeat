@@ -2,7 +2,7 @@ import { Webhook } from "svix";
 import { type WebhookEvent } from "@clerk/nextjs/server";
 import { type NextApiRequest, type NextApiResponse } from "next";
 import { buffer } from "micro";
-import { env } from "../../env.mjs";
+import { env } from "~/env";
 import {
   userCreated,
   userDeleted,

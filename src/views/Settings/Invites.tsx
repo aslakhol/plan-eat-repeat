@@ -7,7 +7,7 @@ import {
   CardContent,
 } from "../../components/ui/card";
 import { api } from "../../utils/api";
-import { type Household } from "@prisma/client";
+import { type Household } from "../../../generated/prisma/client";
 import { toast } from "../../components/ui/use-toast";
 
 type Props = { household: Household };

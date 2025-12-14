@@ -1,10 +1,13 @@
 generator client {
-    provider = "prisma-client-js"
+    provider               = "prisma-client"
+    output                 = "../generated/prisma"
+    moduleFormat           = "esm"
+    generatedFileExtension = "ts"
+    importFileExtension    = "ts"
 }
 
 datasource db {
     provider = "postgres"
-    url      = env("DATABASE_URL")
 }
 
 model Dinner {

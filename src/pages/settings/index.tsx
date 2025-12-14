@@ -13,7 +13,7 @@ export default function Settings() {
     householdId: user?.publicMetadata.householdId ?? "",
   });
 
-  if (householdQuery.isLoading) {
+  if (householdQuery.isPending) {
     return (
       <>
         <Head>

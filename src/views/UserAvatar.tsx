@@ -1,4 +1,4 @@
-import { type User } from "@prisma/client";
+import { type User } from "../../generated/prisma/client";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { api } from "../utils/api";
 
@@ -37,8 +37,9 @@ export const BigUserAvatar = ({ user, householdId }: BigUserAvatarProps) => {
     },
   );
 
-  const role = membersQuery.data?.members.find((m) => m.userId === user.id)
-    ?.role;
+  const role = membersQuery.data?.members.find(
+    (m) => m.userId === user.id,
+  )?.role;
 
   return (
     <div className="flex items-center space-x-4">
