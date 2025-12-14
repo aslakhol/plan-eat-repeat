@@ -55,7 +55,7 @@ export const PlanView = () => {
   }
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6">
+    <div className="flex flex-col gap-4 pb-20 sm:gap-6 md:pb-0">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="font-serif text-3xl font-bold text-foreground">
           Weekly Plan
