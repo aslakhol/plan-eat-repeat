@@ -9,7 +9,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio:prod": "npx --yes -p dotenv-cli dotenv -c prod -- prisma studio -p 5555",
     "db:reset": "npx --yes -p dotenv-cli dotenv -c development -- prisma migrate reset",
-    "db:fix": "docker compose -f database-docker.yml down --volumes && docker compose -f database-docker.yml up --build -d && echo Waiting for databases to boot... && sleep 4 && echo Populating seed data... && npm run db:reset --force && echo Local databases wiped and ready. Restart npm run dev if running...",
+    "db:fix": "docker compose -f database-docker.yml down --volumes && docker compose -f database-docker.yml up --build -d && echo Waiting for databases to boot... && sleep 4 && echo Populating seed data... && pnpm run db:reset --force && echo Local databases wiped and ready. Restart pnpm run dev if running...",
     "dev": "next dev",
     "postinstall": "prisma generate",
     "lint": "next lint",
@@ -84,9 +84,8 @@
   "ct3aMetadata": {
     "initVersion": "7.22.0"
   },
-  "packageManager": "npm@10.2.0",
+  "packageManager": "pnpm@9.15.2",
   "engines": {
-    "node": ">=24.12.0",
-    "npm": ">=10.0.0"
+    "node": ">=24.12.0"
   }
 }
