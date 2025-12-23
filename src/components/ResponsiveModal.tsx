@@ -30,7 +30,7 @@ export const ResponsiveModal = ({
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
+      <Drawer open={open} onOpenChange={onOpenChange} repositionInputs>
         {children}
       </Drawer>
     );
@@ -126,4 +126,3 @@ export const ResponsiveModalDescription = ({
     <DialogDescription className={className}>{children}</DialogDescription>
   );
 };
-
