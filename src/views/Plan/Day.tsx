@@ -10,10 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import {
-  ResponsiveModal,
-  ResponsiveModalTrigger,
-} from "../../components/ResponsiveModal";
+import { Modal, ModalTrigger } from "../../components/Modal";
 import { Plus } from "lucide-react";
 
 type Props = {
@@ -35,8 +32,8 @@ export const Day = ({ date, plannedDinner }: Props) => {
   const isDateToday = isToday(date);
 
   return (
-    <ResponsiveModal open={dialogOpen} onOpenChange={onOpenChange}>
-      <ResponsiveModalTrigger asChild>
+    <Modal open={dialogOpen} onOpenChange={onOpenChange}>
+      <ModalTrigger asChild>
         <Card
           className={cn(
             "group relative flex h-full min-h-[80px] cursor-pointer flex-col overflow-hidden transition-colors hover:bg-accent/50 sm:min-h-[140px]",
@@ -69,7 +66,7 @@ export const Day = ({ date, plannedDinner }: Props) => {
             )}
           </CardContent>
         </Card>
-      </ResponsiveModalTrigger>
+      </ModalTrigger>
       <>
         {changePlan || !plannedDinner ? (
           <PlanDay
@@ -87,6 +84,6 @@ export const Day = ({ date, plannedDinner }: Props) => {
           />
         )}
       </>
-    </ResponsiveModal>
+    </Modal>
   );
 };

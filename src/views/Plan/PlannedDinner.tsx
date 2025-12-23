@@ -2,11 +2,11 @@ import { Button } from "../../components/ui/button";
 import { type DinnerWithTags } from "../../utils/types";
 import { format } from "date-fns";
 import {
-  ResponsiveModalContent,
-  ResponsiveModalHeader,
-  ResponsiveModalTitle,
-  ResponsiveModalDescription,
-} from "../../components/ResponsiveModal";
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+} from "../../components/Modal";
 import { ClearDay } from "./ClearDay";
 import Link from "next/link";
 import { Badge } from "../../components/ui/badge";
@@ -47,13 +47,11 @@ export const PlannedDinner = ({
   }, [isSupported, isOpen, request, release]);
 
   return (
-    <ResponsiveModalContent className="flex flex-col">
-      <ResponsiveModalHeader>
-        <ResponsiveModalDescription>
-          {format(date, "EEEE, LLLL  do, y")}
-        </ResponsiveModalDescription>
-        <ResponsiveModalTitle>{dinner.name}</ResponsiveModalTitle>
-      </ResponsiveModalHeader>
+    <ModalContent className="flex flex-col">
+      <ModalHeader>
+        <ModalDescription>{format(date, "EEEE, LLLL  do, y")}</ModalDescription>
+        <ModalTitle>{dinner.name}</ModalTitle>
+      </ModalHeader>
       <div className="flex flex-col gap-2">
         {dinner.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
@@ -91,6 +89,6 @@ export const PlannedDinner = ({
           </Button>
         </div>
       </div>
-    </ResponsiveModalContent>
+    </ModalContent>
   );
 };
