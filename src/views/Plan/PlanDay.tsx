@@ -1,10 +1,10 @@
 import { format } from "date-fns";
 import {
-  ResponsiveModalContent,
-  ResponsiveModalHeader,
-  ResponsiveModalTitle,
-  ResponsiveModalDescription,
-} from "../../components/ResponsiveModal";
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+} from "../../components/Modal";
 import { type DinnerWithTags } from "../../utils/types";
 import { api } from "../../utils/api";
 import { cn } from "../../lib/utils";
@@ -64,15 +64,13 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   };
 
   return (
-    <ResponsiveModalContent className="flex h-full max-h-[90dvh] flex-col">
-      <ResponsiveModalHeader>
-        <ResponsiveModalDescription>
-          {format(date, "EEEE, LLLL do, y")}
-        </ResponsiveModalDescription>
-        <ResponsiveModalTitle>
+    <ModalContent className="flex h-full max-h-[90dvh] flex-col">
+      <ModalHeader>
+        <ModalDescription>{format(date, "EEEE, LLLL do, y")}</ModalDescription>
+        <ModalTitle>
           {plannedDinner ? plannedDinner.name : "Nothing planned yet"}
-        </ResponsiveModalTitle>
-      </ResponsiveModalHeader>
+        </ModalTitle>
+      </ModalHeader>
 
       <Filter
         search={search}
@@ -103,7 +101,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
         </Button>
         {plannedDinner && <ClearDay date={date} closeDialog={closeDialog} />}
       </div>
-    </ResponsiveModalContent>
+    </ModalContent>
   );
 };
 
