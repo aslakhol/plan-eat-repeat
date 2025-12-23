@@ -143,7 +143,7 @@ export const FancyCombobox = ({
       <div className="relative mt-2">
         <CommandList>
           {open && (selectables.length || inputValue.trim()) ? (
-            <div className="absolute top-0 z-10 max-h-[35dvh] w-full overflow-scroll rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
+            <div className="absolute top-0 z-10 max-h-[35vh] w-full overflow-scroll rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
               <CommandGroup className="pb-0">
                 {selectables.map((option) => {
                   return (

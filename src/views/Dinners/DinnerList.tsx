@@ -15,12 +15,12 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  ModalTrigger,
-} from "../../components/Modal";
+  ResponsiveModal,
+  ResponsiveModalContent,
+  ResponsiveModalHeader,
+  ResponsiveModalTitle,
+  ResponsiveModalTrigger,
+} from "../../components/ResponsiveModal";
 
 type Props = {
   dinners: DinnerWithTags[];
@@ -120,8 +120,8 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
   }
 
   return (
-    <Modal open={dialogOpen} onOpenChange={setDialogOpen}>
-      <ModalTrigger asChild>
+    <ResponsiveModal open={dialogOpen} onOpenChange={setDialogOpen}>
+      <ResponsiveModalTrigger asChild>
         <Card className="flex h-full min-h-[100px] cursor-pointer flex-col justify-between transition-colors hover:bg-accent/50">
           <CardHeader className="p-4 pb-2">
             <CardTitle className="line-clamp-2 font-serif text-base font-medium leading-tight sm:text-lg">
@@ -147,11 +147,11 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
             </div>
           </CardContent>
         </Card>
-      </ModalTrigger>
-      <ModalContent>
-        <ModalHeader>
-          <ModalTitle>{dinner.name}</ModalTitle>
-        </ModalHeader>
+      </ResponsiveModalTrigger>
+      <ResponsiveModalContent>
+        <ResponsiveModalHeader>
+          <ResponsiveModalTitle>{dinner.name}</ResponsiveModalTitle>
+        </ResponsiveModalHeader>
         <DinnerForm
           existingDinner={dinner}
           closeDialog={() => setDialogOpen(false)}
@@ -161,7 +161,7 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
             updateDinnerMutation.isPending || deleteDinnerMutation.isPending
           }
         />
-      </ModalContent>
-    </Modal>
+      </ResponsiveModalContent>
+    </ResponsiveModal>
   );
 };
