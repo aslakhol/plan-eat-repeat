@@ -7,7 +7,7 @@ settings:
 dependencies:
   '@clerk/nextjs':
     specifier: ^6.1.0
-    version: 6.36.0(next@15.5.7)(react-dom@18.3.1)(react@18.3.1)
+    version: 6.36.0(next@15.5.9)(react-dom@18.3.1)(react@18.3.1)
   '@hookform/resolvers':
     specifier: ^3.10.0
     version: 3.10.0(react-hook-form@7.68.0)
@@ -55,7 +55,7 @@ dependencies:
     version: 11.7.2(@trpc/server@11.7.2)(typescript@5.9.3)
   '@trpc/next':
     specifier: ^11.7.2
-    version: 11.7.2(@tanstack/react-query@5.90.12)(@trpc/client@11.7.2)(@trpc/react-query@11.7.2)(@trpc/server@11.7.2)(next@15.5.7)(react-dom@18.3.1)(react@18.3.1)(typescript@5.9.3)
+    version: 11.7.2(@tanstack/react-query@5.90.12)(@trpc/client@11.7.2)(@trpc/react-query@11.7.2)(@trpc/server@11.7.2)(next@15.5.9)(react-dom@18.3.1)(react@18.3.1)(typescript@5.9.3)
   '@trpc/react-query':
     specifier: ^11.7.2
     version: 11.7.2(@tanstack/react-query@5.90.12)(@trpc/client@11.7.2)(@trpc/server@11.7.2)(react-dom@18.3.1)(react@18.3.1)(typescript@5.9.3)
@@ -81,8 +81,8 @@ dependencies:
     specifier: ^10.0.1
     version: 10.0.1
   next:
-    specifier: ^15.5.7
-    version: 15.5.7(react-dom@18.3.1)(react@18.3.1)
+    specifier: 15.5.9
+    version: 15.5.9(react-dom@18.3.1)(react@18.3.1)
   next-themes:
     specifier: ^0.4.6
     version: 0.4.6(react-dom@18.3.1)(react@18.3.1)
@@ -242,7 +242,7 @@ packages:
       tslib: 2.8.1
     dev: false
 
-  /@clerk/nextjs@6.36.0(next@15.5.7)(react-dom@18.3.1)(react@18.3.1):
+  /@clerk/nextjs@6.36.0(next@15.5.9)(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-OXxFdOH7jdzGAiBtedwA2hP5IFvxgojH9wnSeCrYA77RXV3YF10ujia/tPU3C6iE0xT8U/WMCd7uSp6XmeWLHQ==}
     engines: {node: '>=18.17.0'}
     peerDependencies:
@@ -254,7 +254,7 @@ packages:
       '@clerk/clerk-react': 5.58.0(react-dom@18.3.1)(react@18.3.1)
       '@clerk/shared': 3.38.0(react-dom@18.3.1)(react@18.3.1)
       '@clerk/types': 4.101.5(react-dom@18.3.1)(react@18.3.1)
-      next: 15.5.7(react-dom@18.3.1)(react@18.3.1)
+      next: 15.5.9(react-dom@18.3.1)(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       server-only: 0.0.1
@@ -969,8 +969,8 @@ packages:
     dev: true
     optional: true
 
-  /@next/env@15.5.7:
-    resolution: {integrity: sha512-4h6Y2NyEkIEN7Z8YxkA27pq6zTkS09bUSYC0xjd0NpwFxjnIKeZEeH591o5WECSmjpUhLn3H2QLJcDye3Uzcvg==}
+  /@next/env@15.5.9:
+    resolution: {integrity: sha512-4GlTZ+EJM7WaW2HEZcyU317tIQDjkQIyENDLxYJfSWlfqguN+dHkZgyQTV/7ykvobU7yEH5gKvreNrH4B6QgIg==}
     dev: false
 
   /@next/eslint-plugin-next@15.5.7:
@@ -1963,7 +1963,7 @@ packages:
       typescript: 5.9.3
     dev: false
 
-  /@trpc/next@11.7.2(@tanstack/react-query@5.90.12)(@trpc/client@11.7.2)(@trpc/react-query@11.7.2)(@trpc/server@11.7.2)(next@15.5.7)(react-dom@18.3.1)(react@18.3.1)(typescript@5.9.3):
+  /@trpc/next@11.7.2(@tanstack/react-query@5.90.12)(@trpc/client@11.7.2)(@trpc/react-query@11.7.2)(@trpc/server@11.7.2)(next@15.5.9)(react-dom@18.3.1)(react@18.3.1)(typescript@5.9.3):
     resolution: {integrity: sha512-eZQeZag+/aJMxV6ucfyVdcgE7I6o88tldyBi+AFVCD8fPUjssRT7qOqR/THSaTLHjDl20Ok9gN0Sn1bmMEa+1w==}
     peerDependencies:
       '@tanstack/react-query': ^5.59.15
@@ -1984,7 +1984,7 @@ packages:
       '@trpc/client': 11.7.2(@trpc/server@11.7.2)(typescript@5.9.3)
       '@trpc/react-query': 11.7.2(@tanstack/react-query@5.90.12)(@trpc/client@11.7.2)(@trpc/server@11.7.2)(react-dom@18.3.1)(react@18.3.1)(typescript@5.9.3)
       '@trpc/server': 11.7.2(typescript@5.9.3)
-      next: 15.5.7(react-dom@18.3.1)(react@18.3.1)
+      next: 15.5.9(react-dom@18.3.1)(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       typescript: 5.9.3
@@ -4234,8 +4234,8 @@ packages:
       react-dom: 18.3.1(react@18.3.1)
     dev: false
 
-  /next@15.5.7(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-+t2/0jIJ48kUpGKkdlhgkv+zPTEOoXyr60qXe68eB/pl3CMJaLeIGjzp5D6Oqt25hCBiBTt8wEeeAzfJvUKnPQ==}
+  /next@15.5.9(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-agNLK89seZEtC5zUHwtut0+tNrc0Xw4FT/Dg+B/VLEo9pAcS9rtTKpek3V6kVcVwsB2YlqMaHdfZL4eLEVYuCg==}
     engines: {node: ^18.18.0 || ^19.8.0 || >= 20.0.0}
     hasBin: true
     peerDependencies:
@@ -4255,7 +4255,7 @@ packages:
       sass:
         optional: true
     dependencies:
-      '@next/env': 15.5.7
+      '@next/env': 15.5.9
       '@swc/helpers': 0.5.15
       caniuse-lite: 1.0.30001759
       postcss: 8.4.31
