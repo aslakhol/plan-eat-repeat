@@ -64,7 +64,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   };
 
   return (
-    <ResponsiveModalContent className="flex h-full max-h-[90vh] flex-col">
+    <ResponsiveModalContent className="flex flex-col">
       <ResponsiveModalHeader>
         <ResponsiveModalDescription>
           {format(date, "EEEE, LLLL do, y")}
