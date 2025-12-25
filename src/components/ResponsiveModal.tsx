@@ -45,11 +45,7 @@ export const ResponsiveModal = ({
 
   if (isMobile) {
     return (
-      <Drawer
-        open={open}
-        onOpenChange={onOpenChange}
-        repositionInputs={shouldRepositionInputs}
-      >
+      <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
         {children}
       </Drawer>
     );
