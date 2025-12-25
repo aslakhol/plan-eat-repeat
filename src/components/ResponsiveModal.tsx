@@ -28,21 +28,6 @@ export const ResponsiveModal = ({
 }) => {
   const isMobile = useIsMobile();
 
-  // On iOS Safari/Chrome the keyboard often overlays the page instead of resizing the viewport,
-  // so Vaul's input repositioning helps keep focused inputs visible.
-  // On Android Chrome the viewport typically *does* resize; enabling repositioning can
-  // overcompensate and cause the "drawer jumps / input pushed out of view" behavior.
-  const shouldRepositionInputs = React.useMemo(() => {
-    if (typeof window === "undefined") return false;
-    const ua = window.navigator.userAgent ?? "";
-    const isiOSDevice = /iPad|iPhone|iPod/.test(ua);
-    // iPadOS 13+ reports as Mac; detect via touch points.
-    const isiPadOS =
-      window.navigator.platform === "MacIntel" &&
-      (window.navigator.maxTouchPoints ?? 0) > 1;
-    return isiOSDevice || isiPadOS;
-  }, []);
-
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
