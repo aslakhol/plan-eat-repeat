@@ -17,8 +17,8 @@ import type * as Prisma from "./prismaNamespace.ts"
 
 const config: runtime.GetPrismaClientConfig = {
   "previewFeatures": [],
-  "clientVersion": "7.1.0",
-  "engineVersion": "ab635e6b9d606fa5c8fb8b1a7f909c3c3c1c98ba",
+  "clientVersion": "7.3.0",
+  "engineVersion": "9d6ad21cbbceab97458517b147a6a09ff43aa735",
   "activeProvider": "postgresql",
   "inlineSchema": "generator client {\n  provider               = \"prisma-client\"\n  output                 = \"../generated/prisma\"\n  moduleFormat           = \"esm\"\n  generatedFileExtension = \"ts\"\n  importFileExtension    = \"ts\"\n}\n\ndatasource db {\n  provider = \"postgres\"\n}\n\nmodel Dinner {\n  id          Int       @id @default(autoincrement())\n  name        String\n  tags        Tag[]\n  createdAt   DateTime  @default(now())\n  updatedAt   DateTime  @updatedAt\n  Plan        Plan[]\n  link        String?\n  notes       String?\n  Household   Household @relation(fields: [householdId], references: [id])\n  householdId String\n\n  @@index([name])\n}\n\nmodel Tag {\n  value  String   @id\n  Dinner Dinner[]\n\n  @@index([value])\n}\n\nmodel Plan {\n  id     Int      @id @default(autoincrement())\n  dinner Dinner   @relation(fields: [dinnerId], references: [id], onDelete: Cascade)\n  date   DateTime\n\n  dinnerId Int\n\n  @@index([date])\n}\n\nmodel User {\n  id        String  @id\n  firstName String?\n  lastName  String?\n  imageUrl  String?\n\n  // Not managed by clerk\n  createdAt   DateTime     @default(now())\n  updatedAt   DateTime     @updatedAt\n  Memberships Membership[]\n}\n\nmodel Household {\n  id        String       @id @default(cuid())\n  name      String\n  slug      String       @unique\n  createdAt DateTime     @default(now())\n  updatedAt DateTime     @updatedAt\n  Dinners   Dinner[]\n  Members   Membership[]\n  Invite    Invite[]\n}\n\nmodel Membership {\n  id          Int       @id @default(autoincrement())\n  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)\n  householdId String\n  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)\n  userId      String\n\n  role      MembershipRole\n  createdAt DateTime       @default(now())\n  updatedAt DateTime       @updatedAt\n\n  @@unique([householdId, userId])\n}\n\nenum MembershipRole {\n  ADMIN\n  MEMBER\n}\n\nmodel Invite {\n  id String @id @default(cuid())\n\n  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)\n  householdId String\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n  expiresAt DateTime\n}\n",
   "runtimeDataModel": {
@@ -37,12 +37,14 @@ async function decodeBase64AsWasm(wasmBase64: string): Promise<WebAssembly.Modul
 }
 
 config.compilerWasm = {
-  getRuntime: async () => await import("@prisma/client/runtime/query_compiler_bg.postgresql.mjs"),
+  getRuntime: async () => await import("@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs"),
 
   getQueryCompilerWasmModule: async () => {
-    const { wasm } = await import("@prisma/client/runtime/query_compiler_bg.postgresql.wasm-base64.mjs")
+    const { wasm } = await import("@prisma/client/runtime/query_compiler_fast_bg.postgresql.wasm-base64.mjs")
     return await decodeBase64AsWasm(wasm)
-  }
+  },
+
+  importName: "./query_compiler_fast_bg.js"
 }
 
 
