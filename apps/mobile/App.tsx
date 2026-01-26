@@ -4,6 +4,7 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import { ClerkProvider } from "./src/providers/ClerkProvider";
 import { TRPCProvider } from "./src/providers/TRPCProvider";
 import { api } from "./src/utils/api";
+import { SignInWithOAuth } from "./src/components/SignInWithOAuth";
 
 function HomeScreen() {
   const { signOut, isSignedIn, isLoaded } = useAuth();
@@ -29,7 +30,7 @@ function HomeScreen() {
       {isLoaded && !isSignedIn && (
         <View style={styles.authSection}>
           <Text style={styles.authText}>Sign in to access your dinners</Text>
-          <Text style={styles.authNote}>(OAuth sign-in coming soon)</Text>
+          <SignInWithOAuth />
         </View>
       )}
 
@@ -103,11 +104,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     marginBottom: 8,
-  },
-  authNote: {
-    fontSize: 12,
-    color: "#999",
-    fontStyle: "italic",
   },
   status: {
     padding: 16,
