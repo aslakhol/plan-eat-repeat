@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "next build",
-    "vercel-build": "pnpm --filter @planeatrepeat/db db:generate && prisma migrate deploy && next build",
+    "vercel-build": "pnpm --filter @planeatrepeat/db db:generate && pnpm --filter @planeatrepeat/db exec prisma migrate deploy && next build",
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start"
