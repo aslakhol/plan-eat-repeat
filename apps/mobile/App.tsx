@@ -7,11 +7,34 @@ import { api } from "./src/utils/api";
 import { SignInWithOAuth } from "./src/components/SignInWithOAuth";
 
 function HomeScreen() {
-  const { signOut, isSignedIn, isLoaded } = useAuth();
+  const { signOut, isSignedIn, isLoaded, getToken } = useAuth();
   const { user } = useUser();
-  const { data, isLoading, error } = api.dinner.dinners.useQuery(undefined, {
+
+  // Fetch household first - this syncs householdId to Clerk metadata if missing
+  const {
+    data: householdData,
+    isLoading: householdLoading,
+    refetch: refetchHousehold,
+  } = api.household.household.useQuery(undefined, {
+    enabled: isSignedIn,
     retry: false,
   });
+
+  // Fetch dinners after household is loaded
+  const { data, isLoading, error, refetch: refetchDinners } = api.dinner.dinners.useQuery(undefined, {
+    enabled: isSignedIn && !!householdData?.household,
+    retry: false,
+  });
+
+  // If user has a household but 0 dinners returned, session may need refresh
+  const needsSessionRefresh = householdData?.household && data?.dinners.length === 0;
+
+  const handleRefreshSession = async () => {
+    // Force token refresh and refetch data
+    await getToken({ skipCache: true });
+    await refetchHousehold();
+    await refetchDinners();
+  };
 
   return (
     <View style={styles.container}>
@@ -41,16 +64,36 @@ function HomeScreen() {
       )}
 
       <View style={styles.status}>
-        {isLoading && <Text>Loading dinners...</Text>}
+        {(householdLoading || isLoading) && <Text>Loading...</Text>}
         {error && (
           <Text style={styles.error}>
             API Error: {error.message}
           </Text>
         )}
-        {data && (
-          <Text style={styles.success}>
-            Connected! {data.dinners.length} dinners found
+        {householdData && !householdData.household && (
+          <Text style={styles.warning}>
+            No household found. Join or create one on the web app.
           </Text>
+        )}
+        {householdData?.household && (
+          <View style={styles.householdInfo}>
+            <Text style={styles.householdName}>
+              Household: {householdData.household.name}
+            </Text>
+            {data && (
+              <Text style={styles.success}>
+                {data.dinners.length} dinners found
+              </Text>
+            )}
+            {needsSessionRefresh && (
+              <View style={styles.refreshSection}>
+                <Text style={styles.warning}>
+                  Session needs refresh to see dinners
+                </Text>
+                <Button title="Refresh Session" onPress={handleRefreshSession} />
+              </View>
+            )}
+          </View>
         )}
       </View>
       <StatusBar style="auto" />
@@ -118,5 +161,23 @@ const styles = StyleSheet.create({
   success: {
     color: "#0a0",
     textAlign: "center",
+  },
+  warning: {
+    color: "#a50",
+    textAlign: "center",
+  },
+  householdInfo: {
+    alignItems: "center",
+    gap: 8,
+  },
+  householdName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+  },
+  refreshSection: {
+    marginTop: 8,
+    alignItems: "center",
+    gap: 8,
   },
 });

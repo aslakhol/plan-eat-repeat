@@ -3,9 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": {
-    "./trpc": "./src/server/api/root.ts"
-  },
   "scripts": {
     "build": "next build",
     "vercel-build": "pnpm --filter @planeatrepeat/db db:generate && prisma migrate deploy && next build",

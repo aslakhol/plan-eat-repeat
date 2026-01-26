@@ -23,9 +23,6 @@ importers:
       '@planeatrepeat/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@planeatrepeat/web':
-        specifier: workspace:^
-        version: link:../web
       '@tanstack/react-query':
         specifier: ^5.90.12
         version: 5.90.12(react@19.1.0)

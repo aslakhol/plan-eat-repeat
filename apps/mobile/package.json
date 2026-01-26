@@ -12,7 +12,6 @@
   "dependencies": {
     "@clerk/clerk-expo": "^2.19.20",
     "@planeatrepeat/shared": "workspace:*",
-    "@planeatrepeat/web": "workspace:^",
     "@tanstack/react-query": "^5.90.12",
     "@trpc/client": "^11.7.2",
     "@trpc/react-query": "^11.7.2",
