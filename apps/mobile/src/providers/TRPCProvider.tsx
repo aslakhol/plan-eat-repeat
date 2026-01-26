@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Platform } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
+import { useAuth } from "@clerk/clerk-expo";
 import superjson from "superjson";
 import { api } from "../utils/api";
 
@@ -18,6 +19,7 @@ const getBaseUrl = () => {
 };
 
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
+  const { getToken } = useAuth();
   const [queryClient] = useState(() => new QueryClient());
   const [trpcClient] = useState(() =>
     api.createClient({
@@ -25,12 +27,16 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
           transformer: superjson,
-          // You can add auth headers here later
-          // headers() {
-          //   return {
-          //     authorization: getToken(),
-          //   };
-          // },
+          async headers() {
+            try {
+              const token = await getToken();
+              return {
+                Authorization: token ? `Bearer ${token}` : "",
+              };
+            } catch {
+              return {};
+            }
+          },
         }),
       ],
     })
