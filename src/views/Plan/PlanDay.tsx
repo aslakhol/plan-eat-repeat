@@ -63,6 +63,17 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
     });
   };
 
+  const surpriseMe = () => {
+    if (!dinners?.length) {
+      return;
+    }
+
+    const randomDinner = dinners[Math.floor(Math.random() * dinners.length)];
+    if (randomDinner) {
+      planDinner(randomDinner.id);
+    }
+  };
+
   return (
     <ResponsiveModalContent className="flex flex-col">
       <ResponsiveModalHeader>
@@ -100,6 +111,13 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
       <div className="flex w-full justify-between gap-2 p-1">
         <Button asChild variant={"outline"}>
           <Link href="/dinners/new">New dinner</Link>
+        </Button>
+        <Button
+          variant={"outline"}
+          onClick={surpriseMe}
+          disabled={!dinners?.length || planDinnerForDateMutation.isPending}
+        >
+          Surprise me!
         </Button>
         {plannedDinner && <ClearDay date={date} closeDialog={closeDialog} />}
       </div>
