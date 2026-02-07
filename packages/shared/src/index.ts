@@ -2,5 +2,5 @@
 export * from "./zod";
 export * from "./types";
 
-// Import clerk types for side effects
-import "./clerk-types";
+// Type-only import ensures global Clerk augmentations are included at compile time
+import type {} from "./clerk-types";
