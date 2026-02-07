@@ -1,9 +1,9 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../generated/prisma/client.ts";
+import { PrismaClient } from "../generated/prisma/client";
 import { Pool } from "pg";
 
 // Re-export Prisma types
-export * from "../generated/prisma/client.ts";
+export * from "../generated/prisma/client";
 export type { PrismaClient };
 
 const globalForPrisma = globalThis as unknown as {
