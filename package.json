@@ -22,5 +22,16 @@
   "packageManager": "pnpm@9.15.2",
   "engines": {
     "node": ">=24.12.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "tailwindcss": "3.4.17",
+      "nativewind": "4.2.1",
+      "react-native-reanimated": "4.1.1",
+      "react-native-worklets": "0.5.1",
+      "react-native-screens": "4.16.0",
+      "react-native-gesture-handler": "2.28.0",
+      "react-native-safe-area-context": "5.6.0"
+    }
   }
 }
