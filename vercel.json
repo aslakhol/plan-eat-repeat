@@ -2,6 +2,5 @@
   "framework": "nextjs",
   "buildCommand": "pnpm --filter @planeatrepeat/web vercel-build",
   "installCommand": "pnpm install",
-  "outputDirectory": "apps/web/.next",
-  "ignoreCommand": "echo \"Root-level config only; build handled via buildCommand.\""
+  "outputDirectory": "apps/web/.next"
 }
