@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import { ChefHat } from "lucide-react-native";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -13,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card"
 import { Badge } from "../components/ui/Badge";
 import { DinnerForm } from "../components/dinners/DinnerForm";
 import { colors } from "../theme/colors";
+import { cn } from "../utils/cn";
 
 type DinnersScreenProps = {
   navigation: any;
@@ -116,13 +118,14 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
 
         {dinnersQuery.isPending ? (
           <View className="h-[50vh] items-center justify-center">
-            <Text className="text-muted-foreground">Loading dinners...</Text>
+            <ActivityIndicator size="small" color={colors.primary} />
           </View>
         ) : (
           <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 12 }}>
             <Pressable onPress={openNewDinner}>
               <Card className="border-dashed bg-transparent">
-                <CardContent className="items-center gap-2 py-6">
+                <CardContent className="items-center gap-1 py-3">
+                  <ChefHat size={20} color={colors.mutedForeground} />
                   <Text className="text-sm font-medium text-muted-foreground">
                     Add new dinner
                   </Text>
@@ -133,14 +136,25 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
             {dinners?.map((dinner) => (
               <Pressable key={dinner.id} onPress={() => openDinner(dinner)}>
                 <Card className="bg-card">
-                  <CardHeader>
-                    <CardTitle className="text-base">
+                  <CardHeader className="p-3 pb-1">
+                    <CardTitle
+                      className="text-base font-medium leading-tight"
+                      numberOfLines={2}
+                      ellipsizeMode="tail"
+                    >
                       {dinner.name}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="flex-row flex-wrap gap-2">
+                  <CardContent className="flex-row flex-wrap gap-2 p-3 pt-1">
                     {dinner.tags.map((tag) => (
-                      <Badge key={tag.value} variant="secondary">
+                      <Badge
+                        key={tag.value}
+                        variant="secondary"
+                        className={cn(
+                          "border border-transparent",
+                          selectedTags.includes(tag.value) && "border-primary bg-primary/10",
+                        )}
+                      >
                         {tag.value}
                       </Badge>
                     ))}
