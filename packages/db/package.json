@@ -1,0 +1,30 @@
+{
+  "name": "@planeatrepeat/db",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./generated/prisma/client.ts"
+  },
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:studio:prod": "npx --yes -p dotenv-cli dotenv -c prod -- prisma studio -p 5555",
+    "db:reset": "npx --yes -p dotenv-cli dotenv -c development -- prisma migrate reset --force && npx --yes -p dotenv-cli dotenv -c development -- prisma db seed"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.1.0",
+    "@prisma/client": "^7.1.0",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.16.0",
+    "date-fns": "^2.30.0",
+    "dotenv": "^16.4.5",
+    "prisma": "^7.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
