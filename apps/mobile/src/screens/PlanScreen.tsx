@@ -1,5 +1,13 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { View, Text, ScrollView, Pressable, Linking } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  Linking,
+  ActivityIndicator,
+} from "react-native";
+import { Plus } from "lucide-react-native";
 import {
   addDays,
   format,
@@ -134,24 +142,20 @@ export function PlanScreen({ navigation }: { navigation: any }) {
   };
 
   return (
-    <Screen>
+    <Screen contentClassName="relative">
       <View className="gap-4">
         <View className="gap-2">
           <Text className="font-serif text-3xl font-bold text-foreground">
             Weekly Plan
           </Text>
-          <WeekSelect
-            setWeekOffSet={setWeekOffSet}
-            startOfDisplayedWeek={startOfDisplayedWeek}
-          />
         </View>
 
         {plannedDinnersQuery.isPending ? (
           <View className="h-[50vh] items-center justify-center">
-            <Text className="text-muted-foreground">Loading plan...</Text>
+            <ActivityIndicator size="small" color={colors.primary} />
           </View>
         ) : (
-          <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 12 }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 120, gap: 8 }}>
             {week.map((day) => {
               const plannedDinner =
                 plannedDinnersQuery.data?.plans.find((p) =>
@@ -168,6 +172,15 @@ export function PlanScreen({ navigation }: { navigation: any }) {
             })}
           </ScrollView>
         )}
+      </View>
+
+      <View className="absolute bottom-20 left-0 right-0 items-center px-4">
+        <View className="rounded-lg border border-border bg-background/95 px-3 py-2 shadow-lg">
+          <WeekSelect
+            setWeekOffSet={setWeekOffSet}
+            startOfDisplayedWeek={startOfDisplayedWeek}
+          />
+        </View>
       </View>
 
       <BottomSheetModal
@@ -208,9 +221,21 @@ export function PlanScreen({ navigation }: { navigation: any }) {
                     variant="outline"
                     onPress={() => planDinner(dinner.id)}
                     disabled={planDinnerForDateMutation.isPending}
-                    className="justify-start"
+                    className={cn(
+                      "justify-start",
+                      selectedDinner?.id === dinner.id &&
+                        "bg-accent/50 text-accent-foreground",
+                    )}
                   >
-                    <Text className="text-foreground">{dinner.name}</Text>
+                    <Text
+                      className={cn(
+                        "text-foreground",
+                        selectedDinner?.id === dinner.id &&
+                          "text-accent-foreground",
+                      )}
+                    >
+                      {dinner.name}
+                    </Text>
                   </Button>
                 ))}
               </View>
@@ -343,31 +368,45 @@ function DayCard({ date, plannedDinner, onPress }: DayCardProps) {
 
   return (
     <Pressable onPress={onPress}>
-      <Card
+      <View
         className={cn(
-          "overflow-hidden",
-          !plannedDinner && "border-dashed bg-transparent",
-          plannedDinner && "border-secondary bg-secondary/30",
-          isDateToday && "border-primary",
+          isDateToday && "rounded-lg border-2 border-primary bg-background p-[2px]",
         )}
       >
-        <CardHeader className="pb-1">
-          <Text className="text-sm font-medium text-muted-foreground">
-            {format(date, "EEE do")}
-          </Text>
-        </CardHeader>
-        <CardContent className="pt-1">
-          {plannedDinner ? (
-            <Text className="font-serif text-base font-medium text-foreground">
-              {plannedDinner.name}
-            </Text>
-          ) : (
-            <Text className="text-center text-sm text-muted-foreground">
-              Add dinner
-            </Text>
+        <Card
+          className={cn(
+            "min-h-[80px] overflow-hidden",
+            !plannedDinner && "border-dashed bg-transparent",
+            plannedDinner && "border-secondary bg-secondary/30",
           )}
-        </CardContent>
-      </Card>
+        >
+          <CardHeader className="p-3 pb-1">
+            <Text
+              className={cn(
+                "text-sm font-medium text-muted-foreground",
+                isDateToday && "font-bold text-primary",
+              )}
+            >
+              {format(date, "EEE do")}
+            </Text>
+          </CardHeader>
+          <CardContent className="p-3 pt-1">
+            {plannedDinner ? (
+              <Text
+                className="font-serif text-base font-medium text-foreground"
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {plannedDinner.name}
+              </Text>
+            ) : (
+              <View className="items-center justify-center">
+                <Plus size={24} color={colors.mutedForeground} />
+              </View>
+            )}
+          </CardContent>
+        </Card>
+      </View>
     </Pressable>
   );
 }
