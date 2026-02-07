@@ -1,4 +1,4 @@
-import { Pressable, Text, type PressableProps } from "react-native";
+import { Pressable, Text, View, type PressableProps } from "react-native";
 import { cn } from "../../utils/cn";
 
 type Variant = "secondary" | "outline";
@@ -26,14 +26,30 @@ export function Badge({
   children,
   ...props
 }: BadgeProps) {
+  const isText = typeof children === "string" || typeof children === "number";
+
   return (
     <Pressable
-      className={cn("flex-row items-center rounded-full px-2 py-1", variantClasses[variant], className)}
+      className={cn(
+        "flex-row items-center rounded-full border border-transparent px-2.5 py-0.5",
+        variantClasses[variant],
+        className,
+      )}
       {...props}
     >
-      <Text className={cn("text-xs font-medium", textVariantClasses[variant], textClassName)}>
-        {children}
-      </Text>
+      {isText ? (
+        <Text
+          className={cn(
+            "text-xs font-semibold",
+            textVariantClasses[variant],
+            textClassName,
+          )}
+        >
+          {children}
+        </Text>
+      ) : (
+        <View className="flex-row items-center gap-1">{children}</View>
+      )}
     </Pressable>
   );
 }

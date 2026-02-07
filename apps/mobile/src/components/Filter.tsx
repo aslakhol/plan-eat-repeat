@@ -1,9 +1,11 @@
-import { View } from "react-native";
+import { View, Text } from "react-native";
+import { Filter as FilterIcon, X } from "lucide-react-native";
 import { api } from "../utils/api";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { Badge } from "./ui/Badge";
 import { cn } from "../utils/cn";
+import { colors } from "../theme/colors";
 
 type Props = {
   search: string;
@@ -31,14 +33,18 @@ export function Filter({
           placeholder="Search..."
           value={search}
           onChangeText={setSearch}
-          className="flex-1"
+          className="h-10 flex-1"
         />
         <Button
           variant="outline"
           onPress={() => setShowTags(!showTags)}
-          className="px-3"
+          className="h-10 w-10 items-center justify-center rounded-md p-0"
         >
-          {showTags ? "Hide" : "Tags"}
+          <FilterIcon
+            size={16}
+            color={colors.foreground}
+            style={showTags ? { transform: [{ rotate: "180deg" }] } : undefined}
+          />
         </Button>
       </View>
       {showTags && (
@@ -82,7 +88,10 @@ function Tags({ selectedTags, setSelectedTags }: TagsProps) {
         onPress={() => setSelectedTags([])}
         className="bg-secondary"
       >
-        Clear filters
+        <Text className="text-xs font-medium text-secondary-foreground">
+          Clear filters
+        </Text>
+        <X size={12} color={colors.mutedForeground} />
       </Badge>
     </View>
   );
