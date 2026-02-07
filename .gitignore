@@ -43,3 +43,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 generated
+
+# local parity screenshots/artifacts
+parity/
