@@ -5,22 +5,31 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/invite/:inviteId",
   "/onboarding",
+  "/parity/:path*",
+  "/en/parity/:path*",
 ]);
 const shouldNotRedirect = createRouteMatcher([
   "/settings",
   "/invite/:inviteId",
   "/onboarding",
+  "/parity/:path*",
+  "/en/parity/:path*",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId, sessionClaims, redirectToSignIn } = await auth();
+  const normalizedPath = req.nextUrl.pathname.replace(/^\/en(?=\/|$)/, "");
+  const isParityRoute =
+    process.env.NODE_ENV !== "production" &&
+    (normalizedPath === "/parity" || normalizedPath.startsWith("/parity/"));
 
   const isApiRoute =
     req.nextUrl.pathname.startsWith("/api") ||
     req.nextUrl.pathname.startsWith("/ingest");
-  if (isApiRoute) {
+  if (isApiRoute || isParityRoute) {
     return NextResponse.next();
   }
+
+  const { userId, sessionClaims, redirectToSignIn } = await auth();
 
   // If the user isn't signed in and the route is private, redirect to sign-in
   if (!userId && !isPublicRoute(req)) {
@@ -47,9 +56,6 @@ export default clerkMiddleware(async (auth, req) => {
 export const config = {
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
-    "/(api|trpc)(.*)",
-    "/",
+    "/((?!api|trpc|_next|parity|en/parity|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
   ],
 };

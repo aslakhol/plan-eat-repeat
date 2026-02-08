@@ -7,12 +7,16 @@
     "dev": "turbo dev",
     "dev:web": "turbo dev --filter=@planeatrepeat/web",
     "dev:mobile": "turbo dev --filter=@planeatrepeat/mobile",
+    "dev:mobile:parity": "EXPO_PUBLIC_PARITY_BYPASS_AUTH=true EXPO_PUBLIC_PARITY_BYPASS_TOKEN=${PARITY_BYPASS_TOKEN:-parity-local-token} turbo dev --filter=@planeatrepeat/mobile",
+    "dev:mobile:parity:android": "EXPO_PUBLIC_PARITY_BYPASS_AUTH=true EXPO_PUBLIC_PARITY_BYPASS_TOKEN=${PARITY_BYPASS_TOKEN:-parity-local-token} pnpm --filter @planeatrepeat/mobile android",
     "lint": "turbo lint",
     "db:generate": "turbo db:generate",
     "db:migrate": "pnpm --filter @planeatrepeat/db db:migrate",
     "db:studio": "pnpm --filter @planeatrepeat/db db:studio",
     "db:studio:prod": "pnpm --filter @planeatrepeat/db db:studio:prod",
     "db:reset": "pnpm --filter @planeatrepeat/db db:reset",
+    "db:reset:parity": "pnpm --filter @planeatrepeat/db db:reset:parity",
+    "parity:capture": "scripts/parity/run.sh",
     "db:fix": "docker compose -f database-docker.yml down --volumes && docker compose -f database-docker.yml up --build -d && echo Waiting for databases to boot... && sleep 4 && echo Populating seed data... && pnpm run db:reset && echo Local databases wiped and ready. Restart pnpm run dev if running..."
   },
   "devDependencies": {

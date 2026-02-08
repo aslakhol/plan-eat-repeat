@@ -19,6 +19,17 @@ const getBaseUrl = () => {
   return `http://localhost:${process.env.PORT ?? 3000}`; // dev SSR should use localhost
 };
 
+const getParityHeaders = async () => {
+  const parityToken = process.env.NEXT_PUBLIC_PARITY_BYPASS_TOKEN;
+  if (!parityToken) {
+    return {};
+  }
+
+  return {
+    "x-parity-token": parityToken,
+  };
+};
+
 /** A set of type-safe react-query hooks for your tRPC API. */
 export const api = createTRPCNext<AppRouter>({
   /**
@@ -43,6 +54,7 @@ export const api = createTRPCNext<AppRouter>({
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
           transformer: superjson,
+          headers: getParityHeaders,
         }),
       ],
       queryClientConfig: {

@@ -2,6 +2,17 @@ import { Platform } from "react-native";
 import Constants from "expo-constants";
 
 export const getBaseUrl = () => {
+  const parityBypassEnabled = process.env.EXPO_PUBLIC_PARITY_BYPASS_AUTH === "true";
+  const parityApiUrl = process.env.EXPO_PUBLIC_PARITY_API_URL;
+  const parityApiPort = process.env.EXPO_PUBLIC_PARITY_API_PORT ?? "3100";
+  if (parityBypassEnabled) {
+    if (parityApiUrl) {
+      return parityApiUrl;
+    }
+    // Parity scripts set up adb reverse, so localhost resolves to host API.
+    return `http://127.0.0.1:${parityApiPort}`;
+  }
+
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (envUrl) {
     return envUrl;

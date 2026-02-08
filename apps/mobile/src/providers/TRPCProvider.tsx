@@ -9,6 +9,10 @@ import { getBaseUrl } from "../utils/baseUrl";
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
   const { getToken } = useAuth();
   const baseUrl = getBaseUrl();
+  const parityBypassEnabled = process.env.EXPO_PUBLIC_PARITY_BYPASS_AUTH === "true";
+  const parityToken =
+    process.env.EXPO_PUBLIC_PARITY_BYPASS_TOKEN ??
+    (parityBypassEnabled ? "parity-local-token" : undefined);
   const [queryClient] = useState(() => new QueryClient());
   const [trpcClient] = useState(() =>
     api.createClient({
@@ -21,9 +25,10 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
               const token = await getToken();
               return {
                 Authorization: token ? `Bearer ${token}` : "",
+                ...(parityToken ? { "x-parity-token": parityToken } : {}),
               };
             } catch {
-              return {};
+              return parityToken ? { "x-parity-token": parityToken } : {};
             }
           },
         }),

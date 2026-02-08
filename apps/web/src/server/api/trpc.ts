@@ -25,6 +25,10 @@ import { db } from "~/server/db";
 
 type CreateContextOptions = {
   auth: Awaited<ReturnType<typeof getAuth>>;
+  parityBypass: {
+    userId: string;
+    householdId: string;
+  } | null;
 };
 
 /**
@@ -41,6 +45,7 @@ const createInnerTRPCContext = (_opts: CreateContextOptions) => {
   return {
     db,
     auth: _opts.auth,
+    parityBypass: _opts.parityBypass,
   };
 };
 
@@ -51,8 +56,64 @@ const createInnerTRPCContext = (_opts: CreateContextOptions) => {
  * @see https://trpc.io/docs/context
  */
 export const createTRPCContext = (_opts: CreateNextContextOptions) => {
-  return createInnerTRPCContext({ auth: getAuth(_opts.req) });
+  return createInnerTRPCContext({
+    auth: getAuthSafe(_opts.req),
+    parityBypass: resolveParityBypass(_opts.req),
+  });
 };
+
+type TRPCContext = ReturnType<typeof createTRPCContext>;
+
+function resolveParityBypass(
+  req: CreateNextContextOptions["req"],
+): CreateContextOptions["parityBypass"] {
+  if (process.env.NODE_ENV === "production") {
+    return null;
+  }
+  if (process.env.PARITY_BYPASS_AUTH !== "true") {
+    return null;
+  }
+
+  const token = process.env.PARITY_BYPASS_TOKEN;
+  const userId = process.env.PARITY_BYPASS_USER_ID;
+  const householdId = process.env.PARITY_BYPASS_HOUSEHOLD_ID;
+  if (!token || !userId || !householdId) {
+    return null;
+  }
+
+  const rawHeader = req.headers["x-parity-token"];
+  const requestToken = Array.isArray(rawHeader) ? rawHeader[0] : rawHeader;
+  if (requestToken && requestToken !== token) {
+    return null;
+  }
+
+  return { userId, householdId };
+}
+
+function getAuthSafe(req: CreateNextContextOptions["req"]) {
+  try {
+    return getAuth(req);
+  } catch (error) {
+    if (process.env.PARITY_BYPASS_AUTH !== "true") {
+      throw error;
+    }
+    // Clerk can throw in non-browser/dev scenarios; parity mode should still work.
+    return {
+      userId: null,
+      sessionClaims: null,
+    } as Awaited<ReturnType<typeof getAuth>>;
+  }
+}
+
+function getEffectiveUserId(ctx: TRPCContext) {
+  return ctx.parityBypass?.userId ?? ctx.auth.userId;
+}
+
+function getEffectiveHouseholdId(ctx: TRPCContext) {
+  return (
+    ctx.parityBypass?.householdId ?? ctx.auth.sessionClaims?.metadata.householdId
+  );
+}
 
 /**
  * 2. INITIALIZATION
@@ -76,7 +137,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
   },
 });
 const hasHouseholdOrUndefined = t.middleware(({ next, ctx }) => {
-  const householdId = ctx.auth.sessionClaims?.metadata.householdId;
+  const householdId = getEffectiveHouseholdId(ctx);
 
   return next({
     ctx: {
@@ -85,30 +146,36 @@ const hasHouseholdOrUndefined = t.middleware(({ next, ctx }) => {
   });
 });
 const isAuthed = t.middleware(({ next, ctx }) => {
-  const householdId = ctx.auth.sessionClaims?.metadata.householdId;
+  const householdId = getEffectiveHouseholdId(ctx);
+  const userId = getEffectiveUserId(ctx);
 
-  if (!ctx.auth.userId) {
+  if (!userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({
     ctx: {
       auth: ctx.auth,
+      parityBypass: ctx.parityBypass,
       householdId,
     },
   });
 });
 
 const isAuthedAndHasHousehold = t.middleware(({ next, ctx }) => {
-  if (!ctx.auth.userId) {
+  const userId = getEffectiveUserId(ctx);
+  const householdId = getEffectiveHouseholdId(ctx);
+
+  if (!userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-  if (!ctx.auth.sessionClaims?.metadata.householdId) {
+  if (!householdId) {
     throw new TRPCError({ code: "FORBIDDEN" });
   }
   return next({
     ctx: {
       auth: ctx.auth,
-      householdId: ctx.auth.sessionClaims.metadata.householdId,
+      parityBypass: ctx.parityBypass,
+      householdId,
     },
   });
 });

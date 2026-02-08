@@ -45,4 +45,4 @@ yarn-error.log*
 generated
 
 # local parity screenshots/artifacts
-parity/
+/parity/

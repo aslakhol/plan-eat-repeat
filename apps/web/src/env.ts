@@ -29,6 +29,7 @@ export const env = createEnv({
     NEXT_PUBLIC_POSTHOG_API_KEY: z.string().min(1),
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
     NEXT_PUBLIC_APP_URL: z.string().url(),
+    NEXT_PUBLIC_PARITY_BYPASS_TOKEN: z.string().min(1).optional(),
   },
 
   /**
@@ -39,6 +40,8 @@ export const env = createEnv({
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_PARITY_BYPASS_TOKEN:
+      process.env.NEXT_PUBLIC_PARITY_BYPASS_TOKEN,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
