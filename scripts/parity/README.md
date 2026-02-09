@@ -1,85 +1,51 @@
 # Automated Parity Workflow (Web + Android Emulator)
 
-This workflow captures parity screenshots for `plan` and `dinners` without manual phone interaction:
-- Web screenshots are captured by Playwright.
-- Mobile screenshots are captured from Android via deep links.
-  - Dev build: `planeatrepeat://plan`, `planeatrepeat://dinners`
-  - Expo Go fallback: `exp://127.0.0.1:8081/--/plan`, `exp://127.0.0.1:8081/--/dinners`
-- Side-by-side outputs are generated with ImageMagick.
+This workflow captures screenshots for `plan` and `dinners` from both apps and composes side-by-side comparisons.
+
+It is intentionally simple:
+- It uses your current development DB data.
+- It does not reset or reseed the DB.
+- It uses explicit screen-ready markers in the mobile app (`parity-ready-plan` / `parity-ready-dinners`) before capturing.
 
 ## Prereqs
 - `pnpm`, `adb`, and ImageMagick (`magick`) installed.
 - Android SDK emulator installed (or any connected Android device).
 - One mobile runtime installed on the emulator/device:
-  - Preferred: app dev build (`com.planeatrepeat.mobile`), or
+  - Preferred: app dev build (`com.planeatrepeat.mobile`)
   - Fallback: Expo Go (`host.exp.exponent`)
-- Web env configured for bypass (set automatically by `run.sh`, overridable):
-  - `PARITY_BYPASS_AUTH=true`
-  - `PARITY_BYPASS_TOKEN=<token>`
-  - `PARITY_BYPASS_USER_ID=parity-user`
-  - `PARITY_BYPASS_HOUSEHOLD_ID=parity-household`
-- Mobile parity envs (set automatically when starting parity mobile scripts):
-  - `EXPO_PUBLIC_PARITY_BYPASS_AUTH=true`
-  - `EXPO_PUBLIC_PARITY_BYPASS_TOKEN=<same token as web>`
-  - `EXPO_PUBLIC_PARITY_API_URL=http://127.0.0.1:3100` (or custom parity web port)
-
-## One-time setup
-1. Ensure local DB and env are configured.
-2. Install browser dependency once:
+- Browser dependency installed once:
 ```bash
 pnpm --filter @planeatrepeat/web exec playwright install chromium
 ```
-3. Install one Android runtime once:
-```bash
-pnpm dev:mobile:parity:android
-```
 
-If you use Expo Go fallback, keep a parity mobile dev server running:
-```bash
-pnpm dev:mobile:parity
-```
-
-## Daily parity capture
+## Run parity capture
 From repo root:
 ```bash
 pnpm parity:capture
 ```
 
-By default this command resets local DB with deterministic parity seed (`PARITY_RESET_DB=true`).
-It also starts:
-- a web parity server on `PARITY_WEB_PORT` (default `3100`) for mobile API calls
-- a mobile parity dev server on `PARITY_EXPO_PORT` (default `8081`) if one is not already running
+What this command does:
+- Captures web parity routes with Playwright.
+- Ensures web API server is reachable for mobile app data.
+- Starts mobile dev server when needed.
+- Opens mobile `plan` and `dinners` via deep links.
+- Waits for explicit mobile ready markers.
+- Captures screenshots and composes side-by-side outputs.
 
-To skip DB reset:
-```bash
-PARITY_RESET_DB=false pnpm parity:capture
-```
-
-To skip mobile server auto-start:
-```bash
-PARITY_START_MOBILE_SERVER=false pnpm parity:capture
-```
-
-For deterministic runs, existing web/mobile dev servers on parity ports will fail the script by default.
-To explicitly reuse already-running servers:
+## Useful env overrides
+- Reuse existing servers:
 ```bash
 PARITY_REUSE_WEB_SERVER=true PARITY_REUSE_MOBILE_SERVER=true pnpm parity:capture
 ```
-
-If mobile is slow to boot/load (especially Expo Go cold start), increase capture wait:
+- Increase mobile wait window:
 ```bash
 PARITY_SCREENSHOT_WAIT_SECONDS=150 pnpm parity:capture
 ```
-
-Mobile capture waits for seeded parity content by default (`Burger Night` / `Spaghetti Carbonara`).
-If your dataset differs, override the ready regex:
+- Override mobile readiness pattern (regex):
 ```bash
-PARITY_SCREENSHOT_READY_PATTERN='Weekly Plan|Dinners' pnpm parity:capture
+PARITY_SCREENSHOT_READY_PATTERN='parity-ready-plan|parity-ready-dinners' pnpm parity:capture
 ```
-
-If deep-link routing is flaky, capture also taps the target bottom tab as a fallback before screenshot.
-
-To adjust web capture framing without code changes:
+- Adjust web capture framing:
 ```bash
 PARITY_WEB_VIEWPORT_WIDTH=412 PARITY_WEB_VIEWPORT_HEIGHT=915 pnpm parity:capture
 ```
@@ -92,13 +58,7 @@ PARITY_WEB_VIEWPORT_WIDTH=412 PARITY_WEB_VIEWPORT_HEIGHT=915 pnpm parity:capture
 - `parity/side-by-side/plan.png`
 - `parity/side-by-side/dinners.png`
 
-## Useful commands
-Reset DB with parity dataset only:
-```bash
-pnpm db:reset:parity
-```
-
-Capture one mobile screen directly:
+## Single-screen mobile capture
 ```bash
 scripts/parity/capture-mobile-screen.sh plan
 ```

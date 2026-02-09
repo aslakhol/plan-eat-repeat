@@ -55,18 +55,16 @@ const createInnerTRPCContext = (_opts: CreateContextOptions) => {
  *
  * @see https://trpc.io/docs/context
  */
-export const createTRPCContext = (_opts: CreateNextContextOptions) => {
+export const createTRPCContext = async (_opts: CreateNextContextOptions) => {
   return createInnerTRPCContext({
     auth: getAuthSafe(_opts.req),
-    parityBypass: resolveParityBypass(_opts.req),
+    parityBypass: await resolveParityBypass(),
   });
 };
 
-type TRPCContext = ReturnType<typeof createTRPCContext>;
+type TRPCContext = Awaited<ReturnType<typeof createTRPCContext>>;
 
-function resolveParityBypass(
-  req: CreateNextContextOptions["req"],
-): CreateContextOptions["parityBypass"] {
+async function resolveParityBypass(): Promise<CreateContextOptions["parityBypass"]> {
   if (process.env.NODE_ENV === "production") {
     return null;
   }
@@ -74,20 +72,50 @@ function resolveParityBypass(
     return null;
   }
 
-  const token = process.env.PARITY_BYPASS_TOKEN;
-  const userId = process.env.PARITY_BYPASS_USER_ID;
-  const householdId = process.env.PARITY_BYPASS_HOUSEHOLD_ID;
-  if (!token || !userId || !householdId) {
+  const configuredUserId = process.env.PARITY_BYPASS_USER_ID;
+  const configuredHouseholdId = process.env.PARITY_BYPASS_HOUSEHOLD_ID;
+
+  if (configuredUserId && configuredHouseholdId) {
+    return {
+      userId: configuredUserId,
+      householdId: configuredHouseholdId,
+    };
+  }
+
+  const firstMembership = await db.membership.findFirst({
+    select: {
+      userId: true,
+      householdId: true,
+    },
+    orderBy: {
+      id: "asc",
+    },
+  });
+
+  if (firstMembership) {
+    return {
+      userId: configuredUserId ?? firstMembership.userId,
+      householdId: configuredHouseholdId ?? firstMembership.householdId,
+    };
+  }
+
+  const firstHousehold = await db.household.findFirst({
+    select: {
+      id: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  if (!firstHousehold) {
     return null;
   }
 
-  const rawHeader = req.headers["x-parity-token"];
-  const requestToken = Array.isArray(rawHeader) ? rawHeader[0] : rawHeader;
-  if (requestToken && requestToken !== token) {
-    return null;
-  }
-
-  return { userId, householdId };
+  return {
+    userId: configuredUserId ?? "parity-bypass-user",
+    householdId: configuredHouseholdId ?? firstHousehold.id,
+  };
 }
 
 function getAuthSafe(req: CreateNextContextOptions["req"]) {
@@ -154,7 +182,10 @@ const isAuthed = t.middleware(({ next, ctx }) => {
   }
   return next({
     ctx: {
-      auth: ctx.auth,
+      auth: {
+        ...ctx.auth,
+        userId,
+      },
       parityBypass: ctx.parityBypass,
       householdId,
     },
@@ -173,7 +204,10 @@ const isAuthedAndHasHousehold = t.middleware(({ next, ctx }) => {
   }
   return next({
     ctx: {
-      auth: ctx.auth,
+      auth: {
+        ...ctx.auth,
+        userId,
+      },
       parityBypass: ctx.parityBypass,
       householdId,
     },

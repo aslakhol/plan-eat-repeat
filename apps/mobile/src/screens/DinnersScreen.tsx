@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
 import { ChefHat } from "lucide-react-native";
 import {
   BottomSheetBackdrop,
@@ -121,48 +128,56 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
             <ActivityIndicator size="small" color={colors.primary} />
           </View>
         ) : (
-          <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 12 }}>
-            <Pressable onPress={openNewDinner}>
-              <Card className="border-dashed bg-transparent">
-                <CardContent className="items-center gap-1 py-3">
-                  <ChefHat size={20} color={colors.mutedForeground} />
-                  <Text className="text-sm font-medium text-muted-foreground">
-                    Add new dinner
-                  </Text>
-                </CardContent>
-              </Card>
-            </Pressable>
-
-            {dinners?.map((dinner) => (
-              <Pressable key={dinner.id} onPress={() => openDinner(dinner)}>
-                <Card className="bg-card">
-                  <CardHeader className="p-3 pb-1">
-                    <CardTitle
-                      className="text-base font-medium leading-tight"
-                      numberOfLines={2}
-                      ellipsizeMode="tail"
-                    >
-                      {dinner.name}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-row flex-wrap gap-2 p-3 pt-1">
-                    {dinner.tags.map((tag) => (
-                      <Badge
-                        key={tag.value}
-                        variant="secondary"
-                        className={cn(
-                          "border border-transparent",
-                          selectedTags.includes(tag.value) && "border-primary bg-primary/10",
-                        )}
-                      >
-                        {tag.value}
-                      </Badge>
-                    ))}
+          <>
+            <View
+              accessible
+              accessibilityLabel="parity-ready-dinners"
+              style={styles.parityMarker}
+            />
+            <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 12 }}>
+              <Pressable onPress={openNewDinner}>
+                <Card className="border-dashed bg-transparent">
+                  <CardContent className="items-center gap-1 py-3">
+                    <ChefHat size={20} color={colors.mutedForeground} />
+                    <Text className="text-sm font-medium text-muted-foreground">
+                      Add new dinner
+                    </Text>
                   </CardContent>
                 </Card>
               </Pressable>
-            ))}
-          </ScrollView>
+
+              {dinners?.map((dinner) => (
+                <Pressable key={dinner.id} onPress={() => openDinner(dinner)}>
+                  <Card className="bg-card">
+                    <CardHeader className="p-3 pb-1">
+                      <CardTitle
+                        className="text-base font-medium leading-tight"
+                        numberOfLines={2}
+                        ellipsizeMode="tail"
+                      >
+                        {dinner.name}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-row flex-wrap gap-2 p-3 pt-1">
+                      {dinner.tags.map((tag) => (
+                        <Badge
+                          key={tag.value}
+                          variant="secondary"
+                          className={cn(
+                            "border border-transparent",
+                            selectedTags.includes(tag.value) &&
+                              "border-primary bg-primary/10",
+                          )}
+                        >
+                          {tag.value}
+                        </Badge>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </>
         )}
       </View>
 
@@ -222,3 +237,12 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  parityMarker: {
+    position: "absolute",
+    width: 1,
+    height: 1,
+    opacity: 0,
+  },
+});

@@ -136,15 +136,16 @@ focus_target_tab() {
 }
 
 ready_pattern_override="${PARITY_SCREENSHOT_READY_PATTERN:-}"
-required_patterns=()
+ready_marker=""
+fallback_patterns=()
 case "$screen_name" in
   plan)
-    # Require both shell and seeded content.
-    required_patterns=("Weekly Plan" "Burger Night")
+    ready_marker="parity-ready-plan"
+    fallback_patterns=("Weekly Plan")
     ;;
   dinners)
-    # Require dinners screen + seeded content.
-    required_patterns=("Dinners" "Add new dinner" "Spaghetti Carbonara")
+    ready_marker="parity-ready-dinners"
+    fallback_patterns=("Dinners" "Add new dinner")
     ;;
 esac
 
@@ -155,7 +156,11 @@ screen_is_ready() {
     return $?
   fi
 
-  for marker in "${required_patterns[@]}"; do
+  if [ -n "$ready_marker" ] && printf "%s" "$ui_xml" | grep -Fq "$ready_marker"; then
+    return 0
+  fi
+
+  for marker in "${fallback_patterns[@]}"; do
     if ! printf "%s" "$ui_xml" | grep -Fq "$marker"; then
       return 1
     fi
@@ -193,7 +198,7 @@ if ! wait_for_screen_ready; then
   if [ -n "$ready_pattern_override" ]; then
     echo "Looked for text pattern: ${ready_pattern_override}"
   else
-    echo "Missing required markers: ${required_patterns[*]}"
+    echo "Missing markers. Expected parity marker '${ready_marker}' or fallback: ${fallback_patterns[*]}"
   fi
   echo "You can tune:"
   echo "  PARITY_SCREENSHOT_WAIT_SECONDS (default ${max_wait_seconds})"

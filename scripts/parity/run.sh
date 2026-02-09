@@ -25,13 +25,8 @@ cleanup() {
 trap cleanup EXIT
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  echo "Usage: run.sh [--no-reset-db]"
-  echo "Env: PARITY_RESET_DB=true|false (default: true)"
+  echo "Usage: run.sh"
   exit 0
-fi
-
-if [ "${1:-}" = "--no-reset-db" ]; then
-  export PARITY_RESET_DB="false"
 fi
 
 if ! command -v pnpm >/dev/null 2>&1; then
@@ -49,25 +44,11 @@ if ! command -v magick >/dev/null 2>&1; then
   exit 1
 fi
 
-parity_token="${PARITY_BYPASS_TOKEN:-parity-local-token}"
-parity_user_id="${PARITY_BYPASS_USER_ID:-parity-user}"
-parity_household_id="${PARITY_BYPASS_HOUSEHOLD_ID:-parity-household}"
-
 export PARITY_BYPASS_AUTH="true"
-export PARITY_BYPASS_TOKEN="$parity_token"
-export PARITY_BYPASS_USER_ID="$parity_user_id"
-export PARITY_BYPASS_HOUSEHOLD_ID="$parity_household_id"
-export NEXT_PUBLIC_PARITY_BYPASS_TOKEN="$parity_token"
+export NEXT_PUBLIC_PARITY_BYPASS_TOKEN="${NEXT_PUBLIC_PARITY_BYPASS_TOKEN:-parity-capture}"
 export PARITY_WEB_PORT="$web_port"
 
-echo "Using parity household '$PARITY_BYPASS_HOUSEHOLD_ID' and user '$PARITY_BYPASS_USER_ID'."
-
-if [ "${PARITY_RESET_DB:-true}" = "true" ]; then
-  echo "Resetting DB with deterministic parity seed (PARITY_RESET_DB=true)..."
-  pnpm db:reset:parity
-else
-  echo "Skipping DB reset (PARITY_RESET_DB=false)."
-fi
+echo "Running parity capture against current development data (no DB reset)."
 
 mkdir -p "$root_dir/parity/web" "$root_dir/parity/mobile" "$root_dir/parity/side-by-side"
 
@@ -77,10 +58,7 @@ pnpm --filter @planeatrepeat/web parity:capture
 if ! curl --silent --output /dev/null --max-time 2 "http://${host_loopback}:${web_port}/parity/plan" >/dev/null 2>&1; then
   echo "Starting web parity server on port ${web_port} for mobile API calls..."
   PARITY_BYPASS_AUTH="true" \
-    PARITY_BYPASS_TOKEN="$parity_token" \
-    PARITY_BYPASS_USER_ID="$parity_user_id" \
-    PARITY_BYPASS_HOUSEHOLD_ID="$parity_household_id" \
-    NEXT_PUBLIC_PARITY_BYPASS_TOKEN="$parity_token" \
+    NEXT_PUBLIC_PARITY_BYPASS_TOKEN="$NEXT_PUBLIC_PARITY_BYPASS_TOKEN" \
     pnpm --filter @planeatrepeat/web exec next dev -H localhost -p "${web_port}" > /tmp/parity-web-dev.log 2>&1 &
   web_server_pid="$!"
   started_web_server="true"
@@ -112,7 +90,6 @@ if [ "${PARITY_START_MOBILE_SERVER:-true}" = "true" ]; then
   if ! curl --silent --output /dev/null --max-time 2 "http://${host_loopback}:${expo_port}" >/dev/null 2>&1; then
     echo "Starting mobile dev server for parity on port ${expo_port}..."
     EXPO_PUBLIC_PARITY_BYPASS_AUTH="true" \
-      EXPO_PUBLIC_PARITY_BYPASS_TOKEN="$parity_token" \
       EXPO_PUBLIC_PARITY_API_URL="http://127.0.0.1:${web_port}" \
       EXPO_PUBLIC_PARITY_API_PORT="${web_port}" \
       pnpm dev:mobile:parity > /tmp/parity-mobile-dev.log 2>&1 &
