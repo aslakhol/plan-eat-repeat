@@ -9,8 +9,15 @@ const captureWebDir = path.resolve(currentDir, "../../../capture/web");
 
 async function ensureSignedIn(page: Page) {
   for (let attempt = 1; attempt <= 8; attempt += 1) {
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    const response = await page.goto("/", { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
+
+    const status = response?.status() ?? 0;
+    if (status >= 400) {
+      throw new Error(
+        `GET / returned ${status}. The web server on port 3000 is not healthy for capture. Restart it with "pnpm dev:web" and check the server logs.`,
+      );
+    }
 
     const weeklyPlanHeading = page.getByRole("heading", { name: "Weekly Plan" });
     if (await weeklyPlanHeading.isVisible().catch(() => false)) {
@@ -27,7 +34,22 @@ async function ensureSignedIn(page: Page) {
     const localLoginButton = page.getByRole("button", { name: "local login" });
     if (await localLoginButton.isVisible().catch(() => false)) {
       await localLoginButton.click();
+      const bypassError = page.locator("p.text-destructive");
+      if (await bypassError.isVisible().catch(() => false)) {
+        const errorText = (await bypassError.textContent())?.trim();
+        throw new Error(
+          `Local login failed${errorText ? `: ${errorText}` : ""}. Check /api/dev/auth-bypass and Clerk dev bypass user setup.`,
+        );
+      }
       await page.waitForTimeout(1500);
+      continue;
+    }
+
+    const signInButton = page.getByRole("button", { name: "Sign in" });
+    if (await signInButton.isVisible().catch(() => false)) {
+      throw new Error(
+        "The app is on the signed-out landing page but `local login` is unavailable. Capture requires a Next.js dev server (`pnpm dev:web`) on localhost/127.0.0.1.",
+      );
     }
   }
 
