@@ -143,7 +143,7 @@ export function PlanScreen({ navigation }: { navigation: any }) {
   };
 
   return (
-    <Screen contentClassName="relative">
+    <Screen edges={["top", "left", "right"]} contentClassName="relative">
       <View className="flex-1 gap-4">
         <View className="gap-2">
           <Text className="font-serif text-3xl font-bold text-foreground">

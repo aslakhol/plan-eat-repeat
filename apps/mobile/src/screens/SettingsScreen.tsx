@@ -25,7 +25,7 @@ export function SettingsScreen() {
   };
 
   return (
-    <Screen>
+    <Screen edges={["top", "left", "right"]}>
       <View className="gap-4">
         <Text className="font-serif text-3xl font-bold text-foreground">
           Settings

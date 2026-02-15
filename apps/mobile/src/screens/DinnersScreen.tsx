@@ -107,7 +107,7 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
   );
 
   return (
-    <Screen>
+    <Screen edges={["top", "left", "right"]}>
       <View className="flex-1 gap-4">
         <View className="gap-2">
           <Text className="font-serif text-3xl font-bold text-foreground">

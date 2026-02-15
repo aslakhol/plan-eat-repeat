@@ -1,5 +1,8 @@
 import { View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  type Edge,
+} from "react-native-safe-area-context";
 import { cn } from "../utils/cn";
 
 type ScreenProps = {
@@ -7,6 +10,7 @@ type ScreenProps = {
   className?: string;
   contentClassName?: string;
   withPadding?: boolean;
+  edges?: Edge[];
 };
 
 export function Screen({
@@ -14,9 +18,10 @@ export function Screen({
   className,
   contentClassName,
   withPadding = true,
+  edges = ["top", "right", "bottom", "left"],
 }: ScreenProps) {
   return (
-    <SafeAreaView className={cn("flex-1 bg-background", className)}>
+    <SafeAreaView edges={edges} className={cn("flex-1 bg-background", className)}>
       <View
         className={cn(
           "flex-1",
