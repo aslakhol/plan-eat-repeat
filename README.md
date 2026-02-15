@@ -76,12 +76,14 @@ pnpm db:reset
 pnpm db:fix           # destructive local reset
 
 # screenshots
-pnpm capture
+pnpm capture         # web + mobile + side-by-side
+pnpm capture:web     # web + side-by-side (requires capture/mobile/*.png)
+pnpm capture:mobile  # mobile + side-by-side (requires capture/web/*.png)
 ```
 
 ## Capture Screenshots
 
-Use this to capture web + mobile screenshots and compose side-by-side images.
+Use these commands to capture screenshots and compose side-by-side images.
 
 ### Prerequisites
 
@@ -98,15 +100,16 @@ pnpm --filter @planeatrepeat/web exec playwright install chromium
 ### Run
 
 ```bash
-pnpm capture
+pnpm capture         # full flow
+pnpm capture:web     # web only + side-by-side refresh
+pnpm capture:mobile  # mobile only + side-by-side refresh
 ```
 
 ### What It Does
 
-1. Verifies web and mobile dev servers are reachable.
-2. Captures web screenshots for `Plan` and `Dinners`.
-3. Deep-links mobile to `plan` and `dinners`, waits for ready markers, and captures screenshots.
-4. Creates side-by-side images for comparison.
+1. `pnpm capture`: verifies web and mobile dev servers, captures both platforms, then creates side-by-side images.
+2. `pnpm capture:web`: verifies web dev server, captures web, then re-creates side-by-side images using existing mobile screenshots.
+3. `pnpm capture:mobile`: verifies web and mobile dev servers, captures mobile, then re-creates side-by-side images using existing web screenshots.
 
 ### Outputs
 
