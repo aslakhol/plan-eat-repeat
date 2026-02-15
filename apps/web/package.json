@@ -8,6 +8,7 @@
     "vercel-build": "pnpm --filter @planeatrepeat/db db:generate && pnpm --filter @planeatrepeat/db exec prisma migrate deploy && next build",
     "dev": "next dev",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "start": "next start",
     "capture": "playwright test -c playwright.capture.config.ts"
   },
