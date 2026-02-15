@@ -1,51 +1,46 @@
 # AGENTS.md
 
-This file provides guidance for AI agents working in this repository.
+Guidance for agents working in this repository.
 
-## Project Summary
-PlanEatRepeat is a dinner planning app that helps households track dinner ideas and schedule meals for specific days. It is a monorepo with a Next.js web app, an Expo mobile app, and shared packages.
+## Core Rules
+
+- Do not create commits unless asked by the user.
+- Always run `pnpm lint` and `pnpm typecheck` after finishing changes.
+- Use `pnpm` and root `turbo` scripts.
 
 ## Repo Layout
+
 - `apps/web`: Next.js 15 (Pages Router) web app.
 - `apps/mobile`: Expo (React Native) mobile app.
-- `packages/db`: Prisma schema, generated client, and DB helpers.
+- `packages/db`: Prisma schema, generated client, DB helpers, seed scripts.
 - `packages/shared`: Shared types/utilities.
 
-## Tech Stack
-- Next.js 15 (Pages Router)
-- tRPC + React Query
-- Prisma + PostgreSQL
-- Clerk auth
-- Tailwind CSS + shadcn/ui
-- Turbo + pnpm workspaces
+## Architecture Essentials
 
-## Conventions
-- Use `pnpm` and root `turbo` scripts (`pnpm dev`, `pnpm lint`, `pnpm build`).
-- Node version: `>= 24.12.0` (see `package.json`).
+- App is multi-tenant: users belong to households; dinners and plans are household-scoped.
+- Main data model is in `packages/db/prisma/schema.prisma` (Household, Dinner, Plan, Membership, Invite).
 - Web path alias: `~/` resolves to `apps/web/src`.
-- tRPC routers live in `apps/web/src/server/api/routers`.
-- Procedure helpers are in `apps/web/src/server/api/trpc.ts`: `publicProcedure`, `protectedProcedure`, `protectedProcedureWithHousehold`.
-- Data model is defined in `packages/db/prisma/schema.prisma`.
+- tRPC routers: `apps/web/src/server/api/routers`.
+- tRPC procedures: `apps/web/src/server/api/trpc.ts` (`publicProcedure`, `protectedProcedure`, `protectedProcedureWithHousehold`).
+- Clerk user sync webhook: `apps/web/src/server/webhooks/user.ts`.
 
-## Common Commands
+## Commands
+
 - `pnpm dev` (all apps)
-- `pnpm dev:web` (web only)
-- `pnpm dev:mobile` (mobile only)
+- `pnpm dev:web`
+- `pnpm dev:mobile`
 - `pnpm lint`
+- `pnpm typecheck`
 - `pnpm build`
-- `pnpm db:generate`
 - `pnpm db:migrate`
+- `pnpm db:generate`
 - `pnpm db:studio`
 - `pnpm db:reset`
 - `pnpm db:fix` (destructive: wipes local DB and seeds it)
 
-## Local Setup
-- Copy `.env.example` to `.env` and fill required values (Clerk keys, DB URL).
-- Start Postgres: `docker compose -f database-docker.yml up -d`.
-- Initialize/seed DB: `pnpm db:reset` or `pnpm db:fix`.
-
 ## Editing Notes
+
 - Do not edit generated Prisma client in `packages/db/generated`.
-- Avoid changing build outputs (e.g., `.next`).
+- Avoid changing build outputs (for example `.next`).
 - For DB changes: update `schema.prisma`, run `pnpm db:migrate`, then `pnpm db:generate` if needed.
-- For UI work, prefer existing shadcn/ui components in `apps/web/src/components/ui`.
+- For web UI, prefer existing shadcn/ui components in `apps/web/src/components/ui`.
