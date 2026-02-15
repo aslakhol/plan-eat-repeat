@@ -28,8 +28,7 @@ import { AppLayout } from "~/components/AppLayout";
 
 if (
   typeof window !== "undefined" &&
-  env.NEXT_PUBLIC_POSTHOG_API_KEY &&
-  !env.NEXT_PUBLIC_PARITY_BYPASS_TOKEN
+  env.NEXT_PUBLIC_POSTHOG_API_KEY
 ) {
   posthog.init(env.NEXT_PUBLIC_POSTHOG_API_KEY, {
     api_host:

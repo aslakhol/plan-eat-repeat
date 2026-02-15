@@ -25,10 +25,6 @@ import { db } from "~/server/db";
 
 type CreateContextOptions = {
   auth: Awaited<ReturnType<typeof getAuth>>;
-  parityBypass: {
-    userId: string;
-    householdId: string;
-  } | null;
 };
 
 /**
@@ -45,7 +41,6 @@ const createInnerTRPCContext = (_opts: CreateContextOptions) => {
   return {
     db,
     auth: _opts.auth,
-    parityBypass: _opts.parityBypass,
   };
 };
 
@@ -55,112 +50,9 @@ const createInnerTRPCContext = (_opts: CreateContextOptions) => {
  *
  * @see https://trpc.io/docs/context
  */
-export const createTRPCContext = async (_opts: CreateNextContextOptions) => {
-  return createInnerTRPCContext({
-    auth: getAuthSafe(_opts.req),
-    parityBypass: await resolveParityBypass(),
-  });
+export const createTRPCContext = (_opts: CreateNextContextOptions) => {
+  return createInnerTRPCContext({ auth: getAuth(_opts.req) });
 };
-
-type TRPCContext = Awaited<ReturnType<typeof createTRPCContext>>;
-
-async function resolveParityBypass(): Promise<CreateContextOptions["parityBypass"]> {
-  if (process.env.NODE_ENV === "production") {
-    return null;
-  }
-  if (process.env.PARITY_BYPASS_AUTH !== "true") {
-    return null;
-  }
-
-  const configuredUserId = process.env.PARITY_BYPASS_USER_ID;
-  const configuredHouseholdId = process.env.PARITY_BYPASS_HOUSEHOLD_ID;
-
-  if (configuredUserId && configuredHouseholdId) {
-    return {
-      userId: configuredUserId,
-      householdId: configuredHouseholdId,
-    };
-  }
-
-  const firstMembership = await db.membership.findFirst({
-    select: {
-      userId: true,
-      householdId: true,
-    },
-    orderBy: {
-      id: "asc",
-    },
-  });
-
-  if (firstMembership) {
-    return {
-      userId: configuredUserId ?? firstMembership.userId,
-      householdId: configuredHouseholdId ?? firstMembership.householdId,
-    };
-  }
-
-  const firstHousehold = await db.household.findFirst({
-    select: {
-      id: true,
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
-
-  if (!firstHousehold) {
-    return null;
-  }
-
-  return {
-    userId: configuredUserId ?? "parity-bypass-user",
-    householdId: configuredHouseholdId ?? firstHousehold.id,
-  };
-}
-
-function getAuthSafe(req: CreateNextContextOptions["req"]) {
-  try {
-    return getAuth(req);
-  } catch (error) {
-    if (process.env.PARITY_BYPASS_AUTH !== "true") {
-      throw error;
-    }
-    // Clerk can throw in non-browser/dev scenarios; parity mode should still work.
-    return {
-      userId: null,
-      sessionClaims: null,
-    } as Awaited<ReturnType<typeof getAuth>>;
-  }
-}
-
-function getEffectiveUserId(ctx: TRPCContext) {
-  return ctx.parityBypass?.userId ?? ctx.auth.userId;
-}
-
-async function getEffectiveHouseholdId(ctx: TRPCContext) {
-  if (ctx.parityBypass?.householdId) {
-    return ctx.parityBypass.householdId;
-  }
-
-  const sessionHouseholdId = ctx.auth.sessionClaims?.metadata?.householdId;
-  if (typeof sessionHouseholdId === "string" && sessionHouseholdId.length > 0) {
-    return sessionHouseholdId;
-  }
-
-  const userId = ctx.auth.userId;
-  if (!userId) {
-    return undefined;
-  }
-
-  // Mobile session tokens may not carry household metadata; fall back to DB membership.
-  const membership = await ctx.db.membership.findFirst({
-    where: { userId },
-    select: { householdId: true },
-    orderBy: { id: "asc" },
-  });
-
-  return membership?.householdId;
-}
 
 /**
  * 2. INITIALIZATION
@@ -183,8 +75,8 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
     };
   },
 });
-const hasHouseholdOrUndefined = t.middleware(async ({ next, ctx }) => {
-  const householdId = await getEffectiveHouseholdId(ctx);
+const hasHouseholdOrUndefined = t.middleware(({ next, ctx }) => {
+  const householdId = ctx.auth.sessionClaims?.metadata.householdId;
 
   return next({
     ctx: {
@@ -192,43 +84,31 @@ const hasHouseholdOrUndefined = t.middleware(async ({ next, ctx }) => {
     },
   });
 });
-const isAuthed = t.middleware(async ({ next, ctx }) => {
-  const householdId = await getEffectiveHouseholdId(ctx);
-  const userId = getEffectiveUserId(ctx);
+const isAuthed = t.middleware(({ next, ctx }) => {
+  const householdId = ctx.auth.sessionClaims?.metadata.householdId;
 
-  if (!userId) {
+  if (!ctx.auth.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({
     ctx: {
-      auth: {
-        ...ctx.auth,
-        userId,
-      },
-      parityBypass: ctx.parityBypass,
+      auth: ctx.auth,
       householdId,
     },
   });
 });
 
-const isAuthedAndHasHousehold = t.middleware(async ({ next, ctx }) => {
-  const userId = getEffectiveUserId(ctx);
-  const householdId = await getEffectiveHouseholdId(ctx);
-
-  if (!userId) {
+const isAuthedAndHasHousehold = t.middleware(({ next, ctx }) => {
+  if (!ctx.auth.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-  if (!householdId) {
+  if (!ctx.auth.sessionClaims?.metadata.householdId) {
     throw new TRPCError({ code: "FORBIDDEN" });
   }
   return next({
     ctx: {
-      auth: {
-        ...ctx.auth,
-        userId,
-      },
-      parityBypass: ctx.parityBypass,
-      householdId,
+      auth: ctx.auth,
+      householdId: ctx.auth.sessionClaims.metadata.householdId,
     },
   });
 });

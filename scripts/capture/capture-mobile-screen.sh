@@ -21,14 +21,11 @@ if ! command -v adb >/dev/null 2>&1; then
 fi
 
 root_dir="$(git rev-parse --show-toplevel)"
-output_path="${2:-$root_dir/parity/mobile/${screen_name}.png}"
-expo_port="${PARITY_EXPO_PORT:-8081}"
-web_port="${PARITY_WEB_PORT:-3000}"
-max_wait_seconds="${PARITY_SCREENSHOT_WAIT_SECONDS:-90}"
-reopen_every_seconds="${PARITY_REOPEN_DEEPLINK_SECONDS:-12}"
-if [ "$reopen_every_seconds" -le 0 ]; then
-  reopen_every_seconds=12
-fi
+output_path="${2:-$root_dir/capture/mobile/${screen_name}.png}"
+expo_port=8081
+web_port=3000
+max_wait_seconds=90
+reopen_every_seconds=12
 
 find_online_device() {
   adb devices | awk 'NR > 1 && $2 == "device" { print $1; exit }'
@@ -41,14 +38,14 @@ if [ -z "$device_serial" ]; then
     exit 1
   fi
 
-  avd_name="${PARITY_ANDROID_AVD:-$(emulator -list-avds | head -n 1)}"
+  avd_name="$(emulator -list-avds | head -n 1)"
   if [ -z "$avd_name" ]; then
     echo "No Android AVD found. Create one in Android Studio first."
     exit 1
   fi
 
   echo "Starting Android emulator '$avd_name'..."
-  emulator -avd "$avd_name" -no-snapshot-load -no-boot-anim >/tmp/parity-emulator.log 2>&1 &
+  emulator -avd "$avd_name" -no-snapshot-load -no-boot-anim >/tmp/capture-emulator.log 2>&1 &
 
   echo "Waiting for emulator to come online..."
   for _ in $(seq 1 180); do
@@ -81,7 +78,6 @@ has_expo_go="$("${adb_cmd[@]}" shell pm list packages host.exp.exponent | grep -
 
 "${adb_cmd[@]}" shell input keyevent KEYCODE_WAKEUP || true
 "${adb_cmd[@]}" shell wm dismiss-keyguard || true
-# Route device localhost web API calls to host machine for parity.
 "${adb_cmd[@]}" reverse "tcp:${web_port}" "tcp:${web_port}" >/dev/null 2>&1 || true
 
 target_package=""
@@ -90,17 +86,15 @@ if [ "$has_dev_build" -gt 0 ]; then
   deep_link_url="planeatrepeat://${screen_name}"
   target_package="com.planeatrepeat.mobile"
 elif [ "$has_expo_go" -gt 0 ]; then
-  # Allow emulator/USB devices to access local Expo server via loopback.
   "${adb_cmd[@]}" reverse "tcp:${expo_port}" "tcp:${expo_port}" >/dev/null 2>&1 || true
-
-  deep_link_url="${PARITY_EXPO_DEV_URL:-exp://127.0.0.1:${expo_port}/--/${screen_name}}"
+  deep_link_url="exp://127.0.0.1:${expo_port}/--/${screen_name}"
   target_package="host.exp.exponent"
 else
   echo "No compatible mobile app found on '$device_serial'."
   echo "Install either:"
   echo "  1) com.planeatrepeat.mobile (dev build), or"
   echo "  2) Expo Go (host.exp.exponent), then run:"
-  echo "     pnpm dev:mobile:parity:android"
+  echo "     pnpm dev:mobile"
   exit 1
 fi
 
@@ -135,26 +129,35 @@ focus_target_tab() {
   esac
 }
 
-ready_pattern_override="${PARITY_SCREENSHOT_READY_PATTERN:-}"
 ready_marker=""
 fallback_patterns=()
 case "$screen_name" in
   plan)
-    ready_marker="parity-ready-plan"
+    ready_marker="capture-ready-plan"
     fallback_patterns=("Weekly Plan")
     ;;
   dinners)
-    ready_marker="parity-ready-dinners"
+    ready_marker="capture-ready-dinners"
     fallback_patterns=("Dinners" "Add new dinner")
     ;;
 esac
 
+is_auth_screen() {
+  local ui_xml="$1"
+
+  if printf "%s" "$ui_xml" | grep -Fq "local login"; then
+    return 0
+  fi
+
+  if printf "%s" "$ui_xml" | grep -Fq "Continue with Google"; then
+    return 0
+  fi
+
+  return 1
+}
+
 screen_is_ready() {
   local ui_xml="$1"
-  if [ -n "$ready_pattern_override" ]; then
-    printf "%s" "$ui_xml" | grep -Eq "$ready_pattern_override"
-    return $?
-  fi
 
   if [ -n "$ready_marker" ] && printf "%s" "$ui_xml" | grep -Fq "$ready_marker"; then
     return 0
@@ -165,26 +168,33 @@ screen_is_ready() {
       return 1
     fi
   done
+
   return 0
 }
 
 wait_for_screen_ready() {
-  "${adb_cmd[@]}" shell rm -f /sdcard/parity-ui.xml >/dev/null 2>&1 || true
+  "${adb_cmd[@]}" shell rm -f /sdcard/capture-ui.xml >/dev/null 2>&1 || true
 
   for second in $(seq 1 "$max_wait_seconds"); do
-    ui_xml=""
-    if "${adb_cmd[@]}" shell uiautomator dump /sdcard/parity-ui.xml >/dev/null 2>&1; then
-      ui_xml="$("${adb_cmd[@]}" shell cat /sdcard/parity-ui.xml 2>/dev/null | tr -d '\r' || true)"
-    fi
-
-    if screen_is_ready "$ui_xml"; then
-      return 0
-    fi
-
     if [ "$second" -eq 1 ] || [ $(( second % reopen_every_seconds )) -eq 0 ]; then
       open_target_screen
       # Deep-links can be flaky in Expo Go/dev builds; force the tab as fallback.
       focus_target_tab
+    fi
+
+    ui_xml=""
+    if "${adb_cmd[@]}" shell uiautomator dump /sdcard/capture-ui.xml >/dev/null 2>&1; then
+      ui_xml="$("${adb_cmd[@]}" shell cat /sdcard/capture-ui.xml 2>/dev/null | tr -d '\r' || true)"
+    fi
+
+    if is_auth_screen "$ui_xml"; then
+      echo "Mobile app is still signed out."
+      echo "Open the app, tap 'local login', and run 'pnpm capture' again."
+      return 2
+    fi
+
+    if screen_is_ready "$ui_xml"; then
+      return 0
     fi
 
     sleep 1
@@ -193,21 +203,20 @@ wait_for_screen_ready() {
   return 1
 }
 
-if ! wait_for_screen_ready; then
-  echo "Timed out waiting for '${screen_name}' screen to render."
-  if [ -n "$ready_pattern_override" ]; then
-    echo "Looked for text pattern: ${ready_pattern_override}"
-  else
-    echo "Missing markers. Expected parity marker '${ready_marker}' or fallback: ${fallback_patterns[*]}"
+if wait_for_screen_ready; then
+  :
+else
+  status=$?
+  if [ "$status" -eq 2 ]; then
+    exit 1
   fi
-  echo "You can tune:"
-  echo "  PARITY_SCREENSHOT_WAIT_SECONDS (default ${max_wait_seconds})"
-  echo "  PARITY_SCREENSHOT_READY_PATTERN (regex)"
-  echo "  PARITY_REOPEN_DEEPLINK_SECONDS (default ${reopen_every_seconds})"
+
+  echo "Timed out waiting for '${screen_name}' screen to render."
+  echo "Expected capture marker '${ready_marker}' or fallback: ${fallback_patterns[*]}"
   exit 1
 fi
 
-sleep "${PARITY_SCREENSHOT_DELAY_SECONDS:-1}"
+sleep 1
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ADB_SERIAL="$device_serial" "$script_dir/capture-android.sh" "$output_path"

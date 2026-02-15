@@ -27,9 +27,6 @@ const config = {
   i18n: {
     locales: ["en"],
     defaultLocale: "en",
-    ...(process.env.PARITY_BYPASS_AUTH === "true"
-      ? { localeDetection: false }
-      : {}),
   },
 };
 

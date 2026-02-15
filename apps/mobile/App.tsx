@@ -17,7 +17,6 @@ import { AuthScreen } from "./src/screens/AuthScreen";
 import { colors } from "./src/theme/colors";
 
 export default function App() {
-  const parityBypassEnabled = process.env.EXPO_PUBLIC_PARITY_BYPASS_AUTH === "true";
   const [fontsLoaded] = useFonts({
     Quicksand_400Regular,
     YoungSerif_400Regular,
@@ -38,31 +37,25 @@ export default function App() {
           <SafeAreaProvider>
             <BottomSheetModalProvider>
               <NavigationContainer linking={linking}>
-                {parityBypassEnabled ? (
-                  <AppTabs />
-                ) : (
-                  <>
-                    <ClerkLoaded>
-                      <SignedIn>
-                        <AppTabs />
-                      </SignedIn>
-                      <SignedOut>
-                        <AuthScreen />
-                      </SignedOut>
-                    </ClerkLoaded>
-                    <ClerkLoading>
-                      <View
-                        style={{
-                          flex: 1,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <ActivityIndicator color={colors.primary} />
-                      </View>
-                    </ClerkLoading>
-                  </>
-                )}
+                <ClerkLoaded>
+                  <SignedIn>
+                    <AppTabs />
+                  </SignedIn>
+                  <SignedOut>
+                    <AuthScreen />
+                  </SignedOut>
+                </ClerkLoaded>
+                <ClerkLoading>
+                  <View
+                    style={{
+                      flex: 1,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <ActivityIndicator color={colors.primary} />
+                  </View>
+                </ClerkLoading>
               </NavigationContainer>
             </BottomSheetModalProvider>
           </SafeAreaProvider>

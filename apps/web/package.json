@@ -9,7 +9,7 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "parity:capture": "playwright test -c playwright.parity.config.ts"
+    "capture": "playwright test -c playwright.capture.config.ts"
   },
   "dependencies": {
     "@planeatrepeat/db": "workspace:*",

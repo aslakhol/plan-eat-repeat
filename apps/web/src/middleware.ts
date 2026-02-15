@@ -5,27 +5,18 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/invite/:inviteId",
   "/onboarding",
-  "/parity/:path*",
-  "/en/parity/:path*",
 ]);
 const shouldNotRedirect = createRouteMatcher([
   "/settings",
   "/invite/:inviteId",
   "/onboarding",
-  "/parity/:path*",
-  "/en/parity/:path*",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const normalizedPath = req.nextUrl.pathname.replace(/^\/en(?=\/|$)/, "");
-  const isParityRoute =
-    process.env.NODE_ENV !== "production" &&
-    (normalizedPath === "/parity" || normalizedPath.startsWith("/parity/"));
-
   const isApiRoute =
     req.nextUrl.pathname.startsWith("/api") ||
     req.nextUrl.pathname.startsWith("/ingest");
-  if (isApiRoute || isParityRoute) {
+  if (isApiRoute) {
     return NextResponse.next();
   }
 
@@ -57,6 +48,6 @@ export const config = {
   matcher: [
     "/(api|trpc)(.*)",
     // Skip Next.js internals and all static files, unless found in search params
-    "/((?!api|trpc|_next|parity|en/parity|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/((?!api|trpc|_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
   ],
 };

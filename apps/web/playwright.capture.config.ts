@@ -4,9 +4,9 @@ import { defineConfig } from "@playwright/test";
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFilePath);
-const viewportWidth = Number(process.env.PARITY_WEB_VIEWPORT_WIDTH ?? "430");
-const viewportHeight = Number(process.env.PARITY_WEB_VIEWPORT_HEIGHT ?? "932");
-const webPort = Number(process.env.PARITY_WEB_PORT ?? "3000");
+const webPort = 3000;
+const viewportWidth = 430;
+const viewportHeight = 932;
 
 export default defineConfig({
   testDir: path.join(currentDir, "tests"),

@@ -159,8 +159,8 @@ export function PlanScreen({ navigation }: { navigation: any }) {
           <>
             <View
               accessible
-              accessibilityLabel="parity-ready-plan"
-              style={styles.parityMarker}
+              accessibilityLabel="capture-ready-plan"
+              style={styles.captureMarker}
             />
             <ScrollView contentContainerStyle={{ paddingBottom: 120, gap: 8 }}>
               {week.map((day) => {
@@ -366,7 +366,7 @@ export function PlanScreen({ navigation }: { navigation: any }) {
 }
 
 const styles = StyleSheet.create({
-  parityMarker: {
+  captureMarker: {
     position: "absolute",
     width: 1,
     height: 1,

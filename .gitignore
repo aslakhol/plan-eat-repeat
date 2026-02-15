@@ -45,5 +45,5 @@ yarn-error.log*
 *.tsbuildinfo
 generated
 
-# local parity screenshots/artifacts
-/parity/
+# local capture screenshots/artifacts
+/capture/

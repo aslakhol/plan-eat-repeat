@@ -131,8 +131,8 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
           <>
             <View
               accessible
-              accessibilityLabel="parity-ready-dinners"
-              style={styles.parityMarker}
+              accessibilityLabel="capture-ready-dinners"
+              style={styles.captureMarker}
             />
             <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 12 }}>
               <Pressable onPress={openNewDinner}>
@@ -239,7 +239,7 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  parityMarker: {
+  captureMarker: {
     position: "absolute",
     width: 1,
     height: 1,
