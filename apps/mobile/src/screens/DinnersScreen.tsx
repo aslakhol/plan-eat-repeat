@@ -108,7 +108,7 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
 
   return (
     <Screen>
-      <View className="gap-4">
+      <View className="flex-1 gap-4">
         <View className="gap-2">
           <Text className="font-serif text-3xl font-bold text-foreground">
             Dinners
@@ -134,11 +134,14 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
               accessibilityLabel="capture-ready-dinners"
               style={styles.captureMarker}
             />
-            <ScrollView contentContainerStyle={{ paddingBottom: 32, gap: 12 }}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{ paddingBottom: 24, gap: 12 }}
+            >
               <Pressable onPress={openNewDinner}>
-                <Card className="border-dashed bg-transparent">
-                  <CardContent className="items-center gap-1 py-3">
-                    <ChefHat size={20} color={colors.mutedForeground} />
+                <Card className="min-h-[100px] border-dashed bg-transparent">
+                  <CardContent className="flex-1 items-center justify-center gap-2 p-4">
+                    <ChefHat size={24} color={colors.mutedForeground} />
                     <Text className="text-sm font-medium text-muted-foreground">
                       Add new dinner
                     </Text>
@@ -148,8 +151,8 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
 
               {dinners?.map((dinner) => (
                 <Pressable key={dinner.id} onPress={() => openDinner(dinner)}>
-                  <Card className="bg-card">
-                    <CardHeader className="p-3 pb-1">
+                  <Card className="min-h-[100px] bg-card">
+                    <CardHeader className="p-4 pb-2">
                       <CardTitle
                         className="text-base font-medium leading-tight"
                         numberOfLines={2}
@@ -158,7 +161,7 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
                         {dinner.name}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="flex-row flex-wrap gap-2 p-3 pt-1">
+                    <CardContent className="flex-row flex-wrap gap-2 p-4 pt-2">
                       {dinner.tags.map((tag) => (
                         <Badge
                           key={tag.value}

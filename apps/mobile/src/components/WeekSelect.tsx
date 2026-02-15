@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react-native";
 import { View, Text } from "react-native";
 import { Button } from "./ui/Button";
+import { colors } from "../theme/colors";
 
 type WeekSelectProps = {
   setWeekOffSet: React.Dispatch<React.SetStateAction<number>>;
@@ -20,7 +21,7 @@ export function WeekSelect({
         onPress={() => setWeekOffSet((prev) => prev - 1)}
         className="h-8 w-8 items-center justify-center p-0"
       >
-        <ChevronLeft size={14} color="hsl(24, 10%, 10%)" />
+        <ChevronLeft size={14} color={colors.foreground} />
       </Button>
       <Button
         variant="outline"
@@ -28,7 +29,7 @@ export function WeekSelect({
         onPress={() => setWeekOffSet(0)}
         className="h-8 w-8 items-center justify-center p-0"
       >
-        <Calendar size={14} color="hsl(24, 10%, 10%)" />
+        <Calendar size={14} color={colors.foreground} />
       </Button>
       <Button
         variant="outline"
@@ -36,7 +37,7 @@ export function WeekSelect({
         onPress={() => setWeekOffSet((prev) => prev + 1)}
         className="h-8 w-8 items-center justify-center p-0"
       >
-        <ChevronRight size={14} color="hsl(24, 10%, 10%)" />
+        <ChevronRight size={14} color={colors.foreground} />
       </Button>
       <Text className="px-3 text-sm font-medium text-foreground">
         Week {format(startOfDisplayedWeek, "w, MMMM, yyyy")}

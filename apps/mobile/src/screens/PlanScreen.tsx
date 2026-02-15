@@ -144,7 +144,7 @@ export function PlanScreen({ navigation }: { navigation: any }) {
 
   return (
     <Screen contentClassName="relative">
-      <View className="gap-4">
+      <View className="flex-1 gap-4">
         <View className="gap-2">
           <Text className="font-serif text-3xl font-bold text-foreground">
             Weekly Plan
@@ -162,7 +162,10 @@ export function PlanScreen({ navigation }: { navigation: any }) {
               accessibilityLabel="capture-ready-plan"
               style={styles.captureMarker}
             />
-            <ScrollView contentContainerStyle={{ paddingBottom: 120, gap: 8 }}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{ paddingBottom: 156, gap: 8 }}
+            >
               {week.map((day) => {
                 const plannedDinner =
                   plannedDinnersQuery.data?.plans.find((p) =>
@@ -182,8 +185,8 @@ export function PlanScreen({ navigation }: { navigation: any }) {
         )}
       </View>
 
-      <View className="absolute bottom-20 left-0 right-0 items-center px-4">
-        <View className="rounded-lg border border-border bg-background/95 px-3 py-2 shadow-lg">
+      <View className="absolute bottom-4 left-0 right-0 items-center px-4">
+        <View className="rounded-lg border border-border bg-background/95 p-2 shadow-lg">
           <WeekSelect
             setWeekOffSet={setWeekOffSet}
             startOfDisplayedWeek={startOfDisplayedWeek}
