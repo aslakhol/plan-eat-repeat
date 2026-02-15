@@ -8,6 +8,7 @@ import { colors } from "../theme/colors";
 export type AppTabsParamList = {
   Plan: undefined;
   Dinners: { openNew?: boolean; dinnerId?: number } | undefined;
+  Settings: undefined;
 };
 
 const Tab = createBottomTabNavigator<AppTabsParamList>();

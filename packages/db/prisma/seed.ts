@@ -1,8 +1,8 @@
-import { PrismaClient, type Dinner } from "../generated/prisma/client.ts";
+import { PrismaClient, type Dinner } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import { addDays, startOfWeek, subWeeks } from "date-fns";
-import { users, households, tags, dinners } from "./seed.data.ts";
+import { users, households, tags, dinners } from "./seed.data";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);

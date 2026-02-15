@@ -1,4 +1,4 @@
-import { MembershipRole } from "../generated/prisma/client.ts";
+import { MembershipRole } from "../generated/prisma/client";
 
 export interface SeedUser {
   id: string;

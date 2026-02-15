@@ -1,10 +1,12 @@
+import type { ReactNode } from "react";
 import { Pressable, Text, type PressableProps, View } from "react-native";
 import { cn } from "../../utils/cn";
 
 type Variant = "default" | "outline" | "secondary" | "destructive" | "ghost";
 type Size = "sm" | "md" | "lg";
 
-type ButtonProps = PressableProps & {
+type ButtonProps = Omit<PressableProps, "children"> & {
+  children?: ReactNode;
   variant?: Variant;
   size?: Size;
   className?: string;

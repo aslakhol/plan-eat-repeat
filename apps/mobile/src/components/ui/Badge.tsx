@@ -1,9 +1,11 @@
+import type { ReactNode } from "react";
 import { Pressable, Text, View, type PressableProps } from "react-native";
 import { cn } from "../../utils/cn";
 
 type Variant = "secondary" | "outline";
 
-type BadgeProps = PressableProps & {
+type BadgeProps = Omit<PressableProps, "children"> & {
+  children?: ReactNode;
   variant?: Variant;
   className?: string;
   textClassName?: string;
