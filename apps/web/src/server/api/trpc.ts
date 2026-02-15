@@ -137,10 +137,29 @@ function getEffectiveUserId(ctx: TRPCContext) {
   return ctx.parityBypass?.userId ?? ctx.auth.userId;
 }
 
-function getEffectiveHouseholdId(ctx: TRPCContext) {
-  return (
-    ctx.parityBypass?.householdId ?? ctx.auth.sessionClaims?.metadata.householdId
-  );
+async function getEffectiveHouseholdId(ctx: TRPCContext) {
+  if (ctx.parityBypass?.householdId) {
+    return ctx.parityBypass.householdId;
+  }
+
+  const sessionHouseholdId = ctx.auth.sessionClaims?.metadata?.householdId;
+  if (typeof sessionHouseholdId === "string" && sessionHouseholdId.length > 0) {
+    return sessionHouseholdId;
+  }
+
+  const userId = ctx.auth.userId;
+  if (!userId) {
+    return undefined;
+  }
+
+  // Mobile session tokens may not carry household metadata; fall back to DB membership.
+  const membership = await ctx.db.membership.findFirst({
+    where: { userId },
+    select: { householdId: true },
+    orderBy: { id: "asc" },
+  });
+
+  return membership?.householdId;
 }
 
 /**
@@ -164,8 +183,8 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
     };
   },
 });
-const hasHouseholdOrUndefined = t.middleware(({ next, ctx }) => {
-  const householdId = getEffectiveHouseholdId(ctx);
+const hasHouseholdOrUndefined = t.middleware(async ({ next, ctx }) => {
+  const householdId = await getEffectiveHouseholdId(ctx);
 
   return next({
     ctx: {
@@ -173,8 +192,8 @@ const hasHouseholdOrUndefined = t.middleware(({ next, ctx }) => {
     },
   });
 });
-const isAuthed = t.middleware(({ next, ctx }) => {
-  const householdId = getEffectiveHouseholdId(ctx);
+const isAuthed = t.middleware(async ({ next, ctx }) => {
+  const householdId = await getEffectiveHouseholdId(ctx);
   const userId = getEffectiveUserId(ctx);
 
   if (!userId) {
@@ -192,9 +211,9 @@ const isAuthed = t.middleware(({ next, ctx }) => {
   });
 });
 
-const isAuthedAndHasHousehold = t.middleware(({ next, ctx }) => {
+const isAuthedAndHasHousehold = t.middleware(async ({ next, ctx }) => {
   const userId = getEffectiveUserId(ctx);
-  const householdId = getEffectiveHouseholdId(ctx);
+  const householdId = await getEffectiveHouseholdId(ctx);
 
   if (!userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });

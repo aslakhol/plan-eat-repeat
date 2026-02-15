@@ -6,6 +6,7 @@ It is intentionally simple:
 - It uses your current development DB data.
 - It does not reset or reseed the DB.
 - It uses explicit screen-ready markers in the mobile app (`parity-ready-plan` / `parity-ready-dinners`) before capturing.
+- It expects your dev servers to already be running.
 
 ## Prereqs
 - `pnpm`, `adb`, and ImageMagick (`magick`) installed.
@@ -18,6 +19,18 @@ It is intentionally simple:
 pnpm --filter @planeatrepeat/web exec playwright install chromium
 ```
 
+## Start dev servers
+Run these in separate terminals:
+```bash
+pnpm dev:web:parity
+pnpm dev:mobile:simulator
+```
+
+Alternative mobile command (if you want Expo Go manually):
+```bash
+pnpm dev:mobile:expo-go
+```
+
 ## Run parity capture
 From repo root:
 ```bash
@@ -26,16 +39,16 @@ pnpm parity:capture
 
 What this command does:
 - Captures web parity routes with Playwright.
-- Ensures web API server is reachable for mobile app data.
-- Starts mobile dev server when needed.
+- Uses your running web server for both web capture and mobile API calls.
+- Uses your running Expo server on port `8081`.
 - Opens mobile `plan` and `dinners` via deep links.
 - Waits for explicit mobile ready markers.
 - Captures screenshots and composes side-by-side outputs.
 
 ## Useful env overrides
-- Reuse existing servers:
+- Custom web or Expo ports:
 ```bash
-PARITY_REUSE_WEB_SERVER=true PARITY_REUSE_MOBILE_SERVER=true pnpm parity:capture
+PARITY_WEB_PORT=3001 PARITY_EXPO_PORT=8082 pnpm parity:capture
 ```
 - Increase mobile wait window:
 ```bash

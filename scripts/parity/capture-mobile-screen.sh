@@ -23,7 +23,7 @@ fi
 root_dir="$(git rev-parse --show-toplevel)"
 output_path="${2:-$root_dir/parity/mobile/${screen_name}.png}"
 expo_port="${PARITY_EXPO_PORT:-8081}"
-web_port="${PARITY_WEB_PORT:-3100}"
+web_port="${PARITY_WEB_PORT:-3000}"
 max_wait_seconds="${PARITY_SCREENSHOT_WAIT_SECONDS:-90}"
 reopen_every_seconds="${PARITY_REOPEN_DEEPLINK_SECONDS:-12}"
 if [ "$reopen_every_seconds" -le 0 ]; then
@@ -106,7 +106,7 @@ fi
 
 open_target_screen() {
   echo "Opening ${deep_link_url} in ${target_package} on '$device_serial'..."
-  "${adb_cmd[@]}" shell am start -W \
+  "${adb_cmd[@]}" shell am start \
     -a android.intent.action.VIEW \
     -d "$deep_link_url" \
     "$target_package" >/dev/null
