@@ -8,17 +8,32 @@ const currentDir = path.dirname(currentFilePath);
 const captureWebDir = path.resolve(currentDir, "../../../capture/web");
 
 async function ensureSignedIn(page: Page) {
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  for (let attempt = 1; attempt <= 8; attempt += 1) {
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
 
-  const localLoginButton = page.getByRole("button", { name: "local login" });
-  if (await localLoginButton.isVisible().catch(() => false)) {
-    await localLoginButton.click();
+    const weeklyPlanHeading = page.getByRole("heading", { name: "Weekly Plan" });
+    if (await weeklyPlanHeading.isVisible().catch(() => false)) {
+      return;
+    }
+
+    const settingsHeading = page.getByRole("heading", { name: "Settings" });
+    if (await settingsHeading.isVisible().catch(() => false)) {
+      throw new Error(
+        "Signed in but redirected to Settings. The local bypass user likely has no household metadata, so Plan/Dinners cannot be captured.",
+      );
+    }
+
+    const localLoginButton = page.getByRole("button", { name: "local login" });
+    if (await localLoginButton.isVisible().catch(() => false)) {
+      await localLoginButton.click();
+      await page.waitForTimeout(1500);
+    }
   }
 
   await expect(page.getByRole("heading", { name: "Weekly Plan" })).toBeVisible({
     timeout: 30_000,
   });
-  await page.waitForLoadState("networkidle");
 }
 
 async function captureScreen(
