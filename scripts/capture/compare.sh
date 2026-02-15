@@ -30,8 +30,31 @@ capture_dir="$root_dir/capture"
 side_dir="$capture_dir/side-by-side"
 mkdir -p "$side_dir"
 
+temp_dir="$(mktemp -d)"
+trap 'rm -rf "$temp_dir"' EXIT
+
+mobile_width="$(magick identify -format '%w' "$mobile_path")"
+mobile_height="$(magick identify -format '%h' "$mobile_path")"
+
+normalized_web_path="$temp_dir/web-normalized.png"
+normalized_mobile_path="$temp_dir/mobile-normalized.png"
+
+magick "$web_path" \
+  -resize "${mobile_width}x${mobile_height}" \
+  -background white \
+  -gravity center \
+  -extent "${mobile_width}x${mobile_height}" \
+  "$normalized_web_path"
+
+magick "$mobile_path" \
+  -resize "${mobile_width}x${mobile_height}" \
+  -background white \
+  -gravity center \
+  -extent "${mobile_width}x${mobile_height}" \
+  "$normalized_mobile_path"
+
 side_path="$side_dir/${name}.png"
 
-magick montage "$web_path" "$mobile_path" -tile 2x1 -geometry +12+0 "$side_path"
+magick "$normalized_web_path" "$normalized_mobile_path" +append "$side_path"
 
 echo "Side-by-side: $side_path"

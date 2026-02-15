@@ -52,7 +52,7 @@ async function captureScreen(
   await page.waitForTimeout(400);
   await page.screenshot({
     path: path.join(captureWebDir, outputFileName),
-    fullPage: true,
+    fullPage: false,
     type: "png",
   });
 }
