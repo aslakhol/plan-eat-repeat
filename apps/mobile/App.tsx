@@ -12,6 +12,7 @@ import { YoungSerif_400Regular } from "@expo-google-fonts/young-serif";
 import { ClerkProvider } from "./src/providers/ClerkProvider";
 import { TRPCProvider } from "./src/providers/TRPCProvider";
 import { AppTabs } from "./src/navigation/AppTabs";
+import { linking } from "./src/navigation/linking";
 import { AuthScreen } from "./src/screens/AuthScreen";
 import { colors } from "./src/theme/colors";
 
@@ -35,7 +36,7 @@ export default function App() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <SafeAreaProvider>
             <BottomSheetModalProvider>
-              <NavigationContainer>
+              <NavigationContainer linking={linking}>
                 <ClerkLoaded>
                   <SignedIn>
                     <AppTabs />

@@ -26,7 +26,11 @@ const quicksand = Quicksand({
 
 import { AppLayout } from "~/components/AppLayout";
 
-if (typeof window !== "undefined" && env.NEXT_PUBLIC_POSTHOG_API_KEY) {
+if (
+  typeof window !== "undefined" &&
+  env.NEXT_PUBLIC_POSTHOG_API_KEY &&
+  !window.navigator.webdriver
+) {
   posthog.init(env.NEXT_PUBLIC_POSTHOG_API_KEY, {
     api_host:
       process.env.NODE_ENV === "development"

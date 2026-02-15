@@ -6,6 +6,7 @@ import {
   Pressable,
   Linking,
   ActivityIndicator,
+  StyleSheet,
 } from "react-native";
 import { Plus } from "lucide-react-native";
 import {
@@ -155,22 +156,29 @@ export function PlanScreen({ navigation }: { navigation: any }) {
             <ActivityIndicator size="small" color={colors.primary} />
           </View>
         ) : (
-          <ScrollView contentContainerStyle={{ paddingBottom: 120, gap: 8 }}>
-            {week.map((day) => {
-              const plannedDinner =
-                plannedDinnersQuery.data?.plans.find((p) =>
-                  isSameDay(p.date, day),
-                )?.dinner;
-              return (
-                <DayCard
-                  key={day.toString()}
-                  date={day}
-                  plannedDinner={plannedDinner}
-                  onPress={() => openSheet(day, plannedDinner)}
-                />
-              );
-            })}
-          </ScrollView>
+          <>
+            <View
+              accessible
+              accessibilityLabel="capture-ready-plan"
+              style={styles.captureMarker}
+            />
+            <ScrollView contentContainerStyle={{ paddingBottom: 120, gap: 8 }}>
+              {week.map((day) => {
+                const plannedDinner =
+                  plannedDinnersQuery.data?.plans.find((p) =>
+                    isSameDay(p.date, day),
+                  )?.dinner;
+                return (
+                  <DayCard
+                    key={day.toString()}
+                    date={day}
+                    plannedDinner={plannedDinner}
+                    onPress={() => openSheet(day, plannedDinner)}
+                  />
+                );
+              })}
+            </ScrollView>
+          </>
         )}
       </View>
 
@@ -356,6 +364,15 @@ export function PlanScreen({ navigation }: { navigation: any }) {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  captureMarker: {
+    position: "absolute",
+    width: 1,
+    height: 1,
+    opacity: 0,
+  },
+});
 
 type DayCardProps = {
   date: Date;

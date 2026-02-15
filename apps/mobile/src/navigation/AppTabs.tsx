@@ -5,7 +5,12 @@ import { DinnersScreen } from "../screens/DinnersScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
 import { colors } from "../theme/colors";
 
-const Tab = createBottomTabNavigator();
+export type AppTabsParamList = {
+  Plan: undefined;
+  Dinners: { openNew?: boolean; dinnerId?: number } | undefined;
+};
+
+const Tab = createBottomTabNavigator<AppTabsParamList>();
 
 export function AppTabs() {
   return (

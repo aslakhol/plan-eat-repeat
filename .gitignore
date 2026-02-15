@@ -5,6 +5,7 @@ node_modules
 
 # testing
 coverage
+apps/web/test-results/
 
 # database
 *.sqlite
@@ -44,5 +45,5 @@ yarn-error.log*
 *.tsbuildinfo
 generated
 
-# local parity screenshots/artifacts
-parity/
+# local capture screenshots/artifacts
+/capture/
