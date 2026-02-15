@@ -1,7 +1,7 @@
 import { cn } from "../../lib/utils";
 import { type dinnerFormSchema, type DinnerWithTags } from "../../utils/types";
 import { DinnerForm } from "./DinnerForm";
-import { z } from "zod";
+import { type z } from "zod";
 import { api } from "../../utils/api";
 import { toast } from "../../components/ui/use-toast";
 import { usePostHog } from "posthog-js/react";
@@ -137,7 +137,7 @@ const DinnerListItem = ({ dinner, selectedTags }: DinnerListItemProps) => {
                     variant="secondary"
                     className={cn(
                       selectedTags.includes(tag.value) &&
-                        "border border-primary bg-primary/10",
+                      "border border-primary bg-primary/10",
                     )}
                   >
                     {tag.value}
