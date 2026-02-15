@@ -1,7 +1,8 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Calendar, UtensilsCrossed } from "lucide-react-native";
+import { Calendar, Settings, UtensilsCrossed } from "lucide-react-native";
 import { PlanScreen } from "../screens/PlanScreen";
 import { DinnersScreen } from "../screens/DinnersScreen";
+import { SettingsScreen } from "../screens/SettingsScreen";
 import { colors } from "../theme/colors";
 
 const Tab = createBottomTabNavigator();
@@ -37,6 +38,16 @@ export function AppTabs() {
         options={{
           tabBarIcon: ({ color, size }) => (
             <UtensilsCrossed color={color} size={size ?? 20} />
+          ),
+        }}
+      />
+      {/* TODO(TEMP): Replace with full mobile settings implementation. */}
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Settings color={color} size={size ?? 20} />
           ),
         }}
       />
