@@ -5,7 +5,7 @@ Guidance for agents working in this repository.
 ## Core Rules
 
 - Do not create commits unless asked by the user.
-- Always run `pnpm lint` and `pnpm typecheck` after finishing changes.
+- Always run `pnpm lint` and `pnpm typecheck` making edits to code.
 - Use `pnpm` and root `turbo` scripts.
 
 ## Repo Layout
