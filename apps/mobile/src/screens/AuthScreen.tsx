@@ -92,7 +92,7 @@ export function AuthScreen() {
   return (
     <Screen contentClassName="items-center justify-center gap-8" withPadding>
       <View className="items-center gap-4 px-6">
-        <Text className="font-serif text-4xl font-bold text-foreground text-center">
+        <Text className="font-serif text-4xl text-foreground text-center">
           Plan. Eat. Repeat.
         </Text>
         <Text className="text-center text-base text-muted-foreground">
@@ -135,10 +135,6 @@ export function AuthScreen() {
             local login
           </Button>
         )}
-
-        <Text className="text-center text-xs text-muted-foreground">
-          Email and password sign-in will be added to match web parity.
-        </Text>
 
         {error && (
           <Text className="text-center text-xs text-destructive">{error}</Text>

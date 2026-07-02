@@ -23,7 +23,9 @@ import {
   BottomSheetModal,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
+import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { DinnerWithTags } from "@planeatrepeat/shared";
+import type { AppTabsParamList } from "../navigation/AppTabs";
 import { api } from "../utils/api";
 import { cn } from "../utils/cn";
 import { Screen } from "../components/Screen";
@@ -36,8 +38,9 @@ import { colors } from "../theme/colors";
 
 type SheetMode = "plan" | "planned";
 
-export function PlanScreen({ navigation }: { navigation: any }) {
-  // TODO: Add PostHog tracking + wake lock parity after the core flows settle.
+export function PlanScreen({
+  navigation,
+}: BottomTabScreenProps<AppTabsParamList, "Plan">) {
   const [weekOffSet, setWeekOffSet] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDinner, setSelectedDinner] = useState<DinnerWithTags | null>(
@@ -146,7 +149,7 @@ export function PlanScreen({ navigation }: { navigation: any }) {
     <Screen edges={["top", "left", "right"]} contentClassName="relative">
       <View className="flex-1 gap-4">
         <View className="gap-2">
-          <Text className="font-serif text-3xl font-bold text-foreground">
+          <Text className="font-serif text-3xl text-foreground">
             Weekly Plan
           </Text>
         </View>
@@ -211,7 +214,7 @@ export function PlanScreen({ navigation }: { navigation: any }) {
                 <Text className="text-sm text-muted-foreground">
                   {selectedDate ? format(selectedDate, "EEEE, LLLL do, y") : ""}
                 </Text>
-                <Text className="font-serif text-2xl font-semibold text-foreground">
+                <Text className="font-serif text-2xl text-foreground">
                   {selectedDinner?.name ?? "Nothing planned yet"}
                 </Text>
               </View>
@@ -291,7 +294,7 @@ export function PlanScreen({ navigation }: { navigation: any }) {
                 <Text className="text-sm text-muted-foreground">
                   {selectedDate ? format(selectedDate, "EEEE, LLLL do, y") : ""}
                 </Text>
-                <Text className="font-serif text-2xl font-semibold text-foreground">
+                <Text className="font-serif text-2xl text-foreground">
                   {selectedDinner?.name ?? ""}
                 </Text>
               </View>
@@ -413,7 +416,7 @@ function DayCard({ date, plannedDinner, onPress }: DayCardProps) {
           <CardContent className="p-3 pt-1">
             {plannedDinner ? (
               <Text
-                className="font-serif text-base font-medium text-foreground"
+                className="font-serif text-base text-foreground"
                 numberOfLines={2}
                 ellipsizeMode="tail"
               >

@@ -51,7 +51,6 @@ export function AppTabs() {
           ),
         }}
       />
-      {/* TODO(TEMP): Replace with full mobile settings implementation. */}
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}

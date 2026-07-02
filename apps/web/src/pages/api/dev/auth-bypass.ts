@@ -5,7 +5,11 @@ const DEV_BYPASS_EMAIL = "aslakhol@gmail.com";
 const SIGN_IN_TOKEN_TTL_SECONDS = 60;
 
 const isLocalHostname = (hostname: string) => {
-  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1") {
+  if (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1"
+  ) {
     return true;
   }
 
@@ -18,8 +22,7 @@ const isLocalHostname = (hostname: string) => {
 };
 
 const getRequestHostname = (req: NextApiRequest) => {
-  const rawHost =
-    req.headers["x-forwarded-host"] ?? req.headers.host ?? "";
+  const rawHost = req.headers["x-forwarded-host"] ?? req.headers.host ?? "";
   const value = Array.isArray(rawHost) ? rawHost[0] : rawHost;
   const firstHost = (value ?? "").split(",")[0]?.trim() ?? "";
   return firstHost.split(":")[0] ?? "";

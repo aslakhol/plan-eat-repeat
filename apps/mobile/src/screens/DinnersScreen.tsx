@@ -13,7 +13,9 @@ import {
   BottomSheetModal,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
+import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { DinnerWithTags } from "@planeatrepeat/shared";
+import type { AppTabsParamList } from "../navigation/AppTabs";
 import { api } from "../utils/api";
 import { Screen } from "../components/Screen";
 import { Filter } from "../components/Filter";
@@ -23,10 +25,7 @@ import { DinnerForm } from "../components/dinners/DinnerForm";
 import { colors } from "../theme/colors";
 import { cn } from "../utils/cn";
 
-type DinnersScreenProps = {
-  navigation: any;
-  route: { params?: { openNew?: boolean; dinnerId?: number } };
-};
+type DinnersScreenProps = BottomTabScreenProps<AppTabsParamList, "Dinners">;
 
 export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
   const dinnersQuery = api.dinner.dinners.useQuery();
@@ -110,7 +109,7 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
     <Screen edges={["top", "left", "right"]}>
       <View className="flex-1 gap-4">
         <View className="gap-2">
-          <Text className="font-serif text-3xl font-bold text-foreground">
+          <Text className="font-serif text-3xl text-foreground">
             Dinners
           </Text>
           <Filter
@@ -154,7 +153,7 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
                   <Card className="min-h-[100px] bg-card">
                     <CardHeader className="p-4 pb-2">
                       <CardTitle
-                        className="text-base font-medium leading-tight"
+                        className="text-base leading-tight"
                         numberOfLines={2}
                         ellipsizeMode="tail"
                       >
@@ -196,7 +195,7 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
         >
           <View className="gap-4">
-            <Text className="font-serif text-2xl font-semibold text-foreground">
+            <Text className="font-serif text-2xl text-foreground">
               {selectedDinner ? "Edit dinner" : "New dinner"}
             </Text>
             <DinnerForm
