@@ -38,6 +38,8 @@ export const Day = ({ date, plannedDinner }: Props) => {
     <ResponsiveModal open={dialogOpen} onOpenChange={onOpenChange}>
       <ResponsiveModalTrigger asChild>
         <Card
+          data-testid="plan-day-trigger"
+          data-date={format(date, "yyyy-MM-dd")}
           className={cn(
             "group relative flex h-full min-h-[80px] cursor-pointer flex-col overflow-hidden transition-colors hover:bg-accent/50 sm:min-h-[140px]",
             !plannedDinner &&

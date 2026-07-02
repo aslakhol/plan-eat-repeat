@@ -12,7 +12,8 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:studio:prod": "npx --yes -p dotenv-cli dotenv -c prod -- prisma studio -p 5555",
-    "db:reset": "npx --yes -p dotenv-cli dotenv -c development -- prisma migrate reset --force && npx --yes -p dotenv-cli dotenv -c development -- prisma db seed"
+    "db:reset": "npx --yes -p dotenv-cli dotenv -c development -- prisma migrate reset --force && npx --yes -p dotenv-cli dotenv -c development -- prisma db seed",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.1.0",

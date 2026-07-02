@@ -28,9 +28,94 @@ The project was Bootstrapped with [create-t3-app](https://create.t3.gg/).
 - [Supabase](https://supabase.com/)
 - [Clerk](https://clerk.com/)
 
-## Database
+## Local Setup
 
-Locally we're using docker to run a postgres database.
-Use `make db:fix` to wipe the database and start it fresh.
-To make a migration you use `npm run db:migrate`.
-The migration is deployed to vercel automatically when pushing to main by `vercel-build`.
+### Install
+
+```bash
+pnpm install
+cp .env.example .env
+```
+
+### Database
+
+Start Postgres:
+
+```bash
+docker compose -f database-docker.yml up -d
+```
+
+Initialize/seed local DB:
+
+```bash
+pnpm db:reset
+```
+
+Reset everything (destructive local reset):
+
+```bash
+pnpm db:fix
+```
+
+## Commands
+
+```bash
+# run
+pnpm dev:web          # web
+pnpm dev:mobile       # mobile (Android)
+pnpm dev              # all dev tasks
+
+# quality/build
+pnpm lint
+pnpm build
+
+# database
+pnpm db:migrate
+pnpm db:studio
+pnpm db:reset
+pnpm db:fix           # destructive local reset
+
+# screenshots
+pnpm capture         # web + mobile + side-by-side
+pnpm capture:web     # web + side-by-side (requires capture/mobile/*.png)
+pnpm capture:mobile  # mobile + side-by-side (requires capture/web/*.png)
+```
+
+## Capture Screenshots
+
+Use these commands to capture screenshots and compose side-by-side images.
+
+### Prerequisites
+
+- `pnpm dev:web` is running on `http://localhost:3000`
+- `pnpm dev:mobile` is running on `http://localhost:8081`
+- Mobile app is logged in (tap `local login` once after startup)
+- `adb` and ImageMagick (`magick`) are installed
+- Playwright Chromium is installed once:
+
+```bash
+pnpm --filter @planeatrepeat/web exec playwright install chromium
+```
+
+### Run
+
+```bash
+pnpm capture         # full flow
+pnpm capture:web     # web only + side-by-side refresh
+pnpm capture:mobile  # mobile only + side-by-side refresh
+```
+
+### What It Does
+
+1. `pnpm capture`: verifies web and mobile dev servers, captures both platforms, then creates side-by-side images.
+2. `pnpm capture:web`: verifies web dev server, captures web, then re-creates side-by-side images using existing mobile screenshots.
+3. `pnpm capture:mobile`: verifies web and mobile dev servers, captures mobile, then re-creates side-by-side images using existing web screenshots.
+
+### Outputs
+
+- `capture/web/plan.png`
+- `capture/web/dinners.png`
+- `capture/mobile/plan.png`
+- `capture/mobile/dinners.png`
+- `capture/side-by-side/plan.png`
+- `capture/side-by-side/dinners.png`

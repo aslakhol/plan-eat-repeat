@@ -5,6 +5,7 @@ node_modules
 
 # testing
 coverage
+apps/web/test-results/
 
 # database
 *.sqlite
@@ -43,3 +44,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 generated
+
+# local capture screenshots/artifacts
+/capture/

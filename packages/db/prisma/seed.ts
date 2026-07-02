@@ -1,8 +1,8 @@
-import { PrismaClient, type Dinner } from "../generated/prisma/client.ts";
+import { PrismaClient, type Dinner } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import { addDays, startOfWeek, subWeeks } from "date-fns";
-import { users, households, tags, dinners } from "./seed.data.ts";
+import { users, households, tags, dinners } from "./seed.data";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -24,7 +24,12 @@ async function main() {
 
   console.log("🌱 Starting seed script...");
 
-  // Create users
+  await seedDefault();
+
+  console.log("Seeding completed!");
+}
+
+async function seedDefault() {
   const createdUsers = await Promise.all(
     users.map((user) =>
       prisma.user.upsert({
@@ -40,7 +45,6 @@ async function main() {
     createdUsers.map((u) => `${u.firstName} ${u.lastName}`).join(", "),
   );
 
-  // Create households with members
   const createdHouseholds = await Promise.all(
     households.map(async (household) => {
       const created = await prisma.household.create({
@@ -58,7 +62,6 @@ async function main() {
     }),
   );
 
-  // Create tags
   await Promise.all(
     tags.map((tagValue) =>
       prisma.tag.create({
@@ -69,7 +72,6 @@ async function main() {
     ),
   );
 
-  // Create dinners for each household
   for (const household of createdHouseholds) {
     const createdDinners = await Promise.all(
       dinners.map((dinner) =>
@@ -86,19 +88,16 @@ async function main() {
       ),
     );
 
-    // Create dinner plans for weeks
     const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
     const nextWeekStart = addDays(currentWeekStart, 7);
     const prevWeekStart = subWeeks(currentWeekStart, 1);
 
-    await createWeekPlans(prevWeekStart, createdDinners);
-    await createWeekPlans(currentWeekStart, createdDinners);
-    await createWeekPlans(nextWeekStart, createdDinners);
+    await createRandomWeekPlans(prevWeekStart, createdDinners);
+    await createRandomWeekPlans(currentWeekStart, createdDinners);
+    await createRandomWeekPlans(nextWeekStart, createdDinners);
 
     console.log(`Created dinners and plans for household: ${household.name}`);
   }
-
-  console.log("Seeding completed!");
 }
 
 // Helper function to get random dinner
@@ -110,8 +109,7 @@ function getRandomDinner(dinners: Dinner[]): Dinner {
   return dinner;
 }
 
-// Helper function to create week plans
-async function createWeekPlans(weekStart: Date, dinners: Dinner[]) {
+async function createRandomWeekPlans(weekStart: Date, dinners: Dinner[]) {
   for (let i = 0; i < 7; i++) {
     // 80% chance to have a dinner planned
     if (Math.random() < 0.8) {

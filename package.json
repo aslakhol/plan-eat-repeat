@@ -6,13 +6,17 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "dev:web": "turbo dev --filter=@planeatrepeat/web",
-    "dev:mobile": "turbo dev --filter=@planeatrepeat/mobile",
+    "dev:mobile": "turbo dev --filter=@planeatrepeat/mobile -- --android",
     "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
     "db:generate": "turbo db:generate",
     "db:migrate": "pnpm --filter @planeatrepeat/db db:migrate",
     "db:studio": "pnpm --filter @planeatrepeat/db db:studio",
     "db:studio:prod": "pnpm --filter @planeatrepeat/db db:studio:prod",
     "db:reset": "pnpm --filter @planeatrepeat/db db:reset",
+    "capture": "scripts/capture/run.sh",
+    "capture:web": "scripts/capture/run-web.sh",
+    "capture:mobile": "scripts/capture/run-mobile.sh",
     "db:fix": "docker compose -f database-docker.yml down --volumes && docker compose -f database-docker.yml up --build -d && echo Waiting for databases to boot... && sleep 4 && echo Populating seed data... && pnpm run db:reset && echo Local databases wiped and ready. Restart pnpm run dev if running..."
   },
   "devDependencies": {
@@ -22,5 +26,16 @@
   "packageManager": "pnpm@9.15.2",
   "engines": {
     "node": ">=24.12.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "tailwindcss": "3.4.17",
+      "nativewind": "4.2.1",
+      "react-native-reanimated": "4.1.1",
+      "react-native-worklets": "0.5.1",
+      "react-native-screens": "4.16.0",
+      "react-native-gesture-handler": "2.28.0",
+      "react-native-safe-area-context": "5.6.0"
+    }
   }
 }

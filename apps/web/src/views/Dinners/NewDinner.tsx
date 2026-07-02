@@ -1,6 +1,6 @@
 import { type dinnerFormSchema } from "../../utils/types";
 import { DinnerForm } from "./DinnerForm";
-import { z } from "zod";
+import { type z } from "zod";
 import { api } from "../../utils/api";
 import { toast } from "../../components/ui/use-toast";
 import { usePostHog } from "posthog-js/react";
