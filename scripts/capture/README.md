@@ -29,6 +29,9 @@ pnpm capture:web     # web + side-by-side (requires capture/mobile/*.png)
 pnpm capture:mobile  # mobile + side-by-side (requires capture/web/*.png)
 ```
 
+Scene authoring guide:
+- `/Users/aslak/repos/plan-eat-repeat/scripts/capture/SCENES.md`
+
 ## Outputs
 - `capture/web/plan.png`
 - `capture/web/dinners.png`

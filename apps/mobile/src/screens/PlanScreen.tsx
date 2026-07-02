@@ -235,14 +235,14 @@ export function PlanScreen({ navigation }: { navigation: any }) {
                     className={cn(
                       "justify-start",
                       selectedDinner?.id === dinner.id &&
-                        "bg-accent/50 text-accent-foreground",
+                      "bg-accent/50 text-accent-foreground",
                     )}
                   >
                     <Text
                       className={cn(
                         "text-foreground",
                         selectedDinner?.id === dinner.id &&
-                          "text-accent-foreground",
+                        "text-accent-foreground",
                       )}
                     >
                       {dinner.name}

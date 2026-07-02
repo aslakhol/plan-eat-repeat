@@ -63,6 +63,7 @@ async function captureScreen(
   pagePath: string,
   heading: string,
   outputFileName: string,
+  prepare?: (page: Page) => Promise<void>,
 ) {
   await mkdir(captureWebDir, { recursive: true });
 
@@ -71,6 +72,10 @@ async function captureScreen(
     timeout: 30_000,
   });
   await page.waitForLoadState("networkidle");
+  if (prepare) {
+    await prepare(page);
+    await page.waitForLoadState("networkidle");
+  }
   await page.waitForTimeout(400);
   await page.screenshot({
     path: path.join(captureWebDir, outputFileName),
@@ -87,4 +92,24 @@ test("capture plan screenshot", async ({ page }) => {
 test("capture dinners screenshot", async ({ page }) => {
   await ensureSignedIn(page);
   await captureScreen(page, "/dinners", "Dinners", "dinners.png");
+});
+
+test("capture plan first-day drawer screenshot", async ({ page }) => {
+  await ensureSignedIn(page);
+  await captureScreen(
+    page,
+    "/",
+    "Weekly Plan",
+    "plan-first-day-drawer.png",
+    async (currentPage) => {
+      const firstDay = currentPage.getByTestId("plan-day-trigger").first();
+      await expect(firstDay).toBeVisible({ timeout: 30_000 });
+      await firstDay.click();
+
+      const planDayButtons = currentPage.locator(
+        "button:has-text('Surprise me!'), button:has-text('Change plan')",
+      );
+      await expect(planDayButtons.first()).toBeVisible({ timeout: 30_000 });
+    },
+  );
 });
