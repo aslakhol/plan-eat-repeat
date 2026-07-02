@@ -57,6 +57,47 @@ Reset everything (destructive local reset):
 pnpm db:fix
 ```
 
+## Testing the Mobile App on Your Phone
+
+The easiest way to test the mobile app is with [Expo Go](https://expo.dev/go) on an Android phone, with the phone and your Mac on the same Wi-Fi network.
+
+### One-time setup
+
+1. Install Expo Go from the Play Store on the phone.
+2. Set up the mobile env file:
+
+```bash
+cp apps/mobile/.env.example apps/mobile/.env
+```
+
+Fill in `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` (same Clerk dev instance as the web app). Leave `EXPO_PUBLIC_API_URL` commented out — the app infers your Mac's IP from the Metro connection.
+
+### Every time
+
+1. Start the database and web API on the Mac (see Local Setup above for first-time DB seeding):
+
+```bash
+docker compose -f database-docker.yml up -d
+pnpm dev:web
+```
+
+2. Start the mobile dev server in another terminal:
+
+```bash
+pnpm dev:mobile
+```
+
+3. Open Expo Go on the phone and scan the QR code from the `dev:mobile` terminal.
+4. When the app loads, tap **local login** to sign in as aslakhol@gmail.com. This uses a dev-only bypass endpoint that only exists when the web server runs in development mode on a local network — no OAuth dance needed.
+
+You should land on the Weekly Plan with the seeded dinners available. Changes you make in `apps/mobile` hot-reload on the phone.
+
+### Gotchas
+
+- **Web must run on port 3000.** The app assumes the API is at `http://<your-mac-ip>:3000`. If something else is squatting on port 3000, Next.js silently picks another port and the app can't reach the API — either free up the port, or uncomment `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` and set it to `http://<your-mac-ip>:<actual-port>` (find your IP with `ipconfig getifaddr en0`), then restart `pnpm dev:mobile`.
+- **macOS firewall**: accept the "allow incoming connections" prompt for Node the first time, or the phone can't reach Metro or the API.
+- **"local login" fails with 403/404**: the web server is not in dev mode, or the phone isn't hitting it over the local network. Check that opening `http://<your-mac-ip>:3000` in the phone's browser shows the web app.
+
 ## Commands
 
 ```bash
