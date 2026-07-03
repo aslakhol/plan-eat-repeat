@@ -304,8 +304,7 @@ export function AuthScreen() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{
             flexGrow: 1,
-            justifyContent: "center",
-            paddingVertical: 16,
+            paddingVertical: 24,
           }}
         >
           <View className="items-center gap-8">
