@@ -87,14 +87,14 @@ pnpm dev:web
 pnpm dev:mobile
 ```
 
-3. Open Expo Go on the phone and scan the QR code from the `dev:mobile` terminal.
+3. Open Expo Go on the phone and scan the QR code from the terminal.
 4. When the app loads, tap **local login** to sign in as aslakhol@gmail.com. This uses a dev-only bypass endpoint that only exists when the web server runs in development mode on a local network — no OAuth dance needed.
 
 You should land on the Weekly Plan with the seeded dinners available. Changes you make in `apps/mobile` hot-reload on the phone.
 
 ### Gotchas
 
-- **Web must run on port 3000.** The app assumes the API is at `http://<your-mac-ip>:3000`. If something else is squatting on port 3000, Next.js silently picks another port and the app can't reach the API — either free up the port, or uncomment `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` and set it to `http://<your-mac-ip>:<actual-port>` (find your IP with `ipconfig getifaddr en0`), then restart `pnpm dev:mobile`.
+- **Web must run on port 3000.** The app assumes the API is at `http://<your-mac-ip>:3000`. If something else is squatting on port 3000, Next.js silently picks another port and the app can't reach the API — either free up the port, or uncomment `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` and set it to `http://<your-mac-ip>:<actual-port>` (find your IP with `ipconfig getifaddr en0`), then restart the mobile dev server.
 - **macOS firewall**: accept the "allow incoming connections" prompt for Node the first time, or the phone can't reach Metro or the API.
 - **"local login" fails with 403/404**: the web server is not in dev mode, or the phone isn't hitting it over the local network. Check that opening `http://<your-mac-ip>:3000` in the phone's browser shows the web app.
 
@@ -102,9 +102,10 @@ You should land on the Weekly Plan with the seeded dinners available. Changes yo
 
 ```bash
 # run
-pnpm dev:web          # web
-pnpm dev:mobile       # mobile (Android)
-pnpm dev              # all dev tasks
+pnpm dev:web              # web
+pnpm dev:mobile           # mobile (QR code, for Expo Go on a physical phone)
+pnpm dev:mobile:android   # mobile (Android emulator/device via adb)
+pnpm dev                  # all dev tasks
 
 # quality/build
 pnpm lint
@@ -129,7 +130,7 @@ Use these commands to capture screenshots and compose side-by-side images.
 ### Prerequisites
 
 - `pnpm dev:web` is running on `http://localhost:3000`
-- `pnpm dev:mobile` is running on `http://localhost:8081`
+- `pnpm dev:mobile:android` is running on `http://localhost:8081`
 - Mobile app is logged in (tap `local login` once after startup)
 - `adb` and ImageMagick (`magick`) are installed
 - Playwright Chromium is installed once:

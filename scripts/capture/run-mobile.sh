@@ -50,7 +50,7 @@ fi
 if ! curl --fail --silent --output /dev/null --max-time 2 "http://${host_loopback}:${expo_port}" >/dev/null 2>&1; then
   echo "Mobile dev server is not reachable on http://${host_loopback}:${expo_port}."
   echo "Start it in another terminal:"
-  echo "  pnpm dev:mobile"
+  echo "  pnpm dev:mobile:android"
   exit 1
 fi
 

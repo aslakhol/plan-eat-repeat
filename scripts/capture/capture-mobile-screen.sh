@@ -94,7 +94,7 @@ else
   echo "Install either:"
   echo "  1) com.planeatrepeat.mobile (dev build), or"
   echo "  2) Expo Go (host.exp.exponent), then run:"
-  echo "     pnpm dev:mobile"
+  echo "     pnpm dev:mobile:android"
   exit 1
 fi
 

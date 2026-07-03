@@ -17,7 +17,7 @@ pnpm --filter @planeatrepeat/web exec playwright install chromium
 Start servers in separate terminals:
 ```bash
 pnpm dev:web
-pnpm dev:mobile
+pnpm dev:mobile:android
 ```
 
 Before capture, log in on mobile once by tapping `local login`.
