@@ -25,6 +25,9 @@ export const householdRouter = createTRPCRouter({
     }
 
     if (!ctx.householdId) {
+      if (ctx.auth.sessionClaims?.metadata.householdId) {
+        await updateClerkHouseholdMetadata(ctx.auth.userId, null);
+      }
       return { household: null };
     }
 
