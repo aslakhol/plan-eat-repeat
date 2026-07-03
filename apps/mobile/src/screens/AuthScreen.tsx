@@ -40,16 +40,21 @@ export function AuthScreen() {
   const [emailMode, setEmailMode] = React.useState<EmailMode>("signIn");
   const [verificationMode, setVerificationMode] =
     React.useState<VerificationMode>(null);
+  const [firstName, setFirstName] = React.useState("");
+  const [lastName, setLastName] = React.useState("");
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [verificationCode, setVerificationCode] = React.useState("");
 
   const baseUrl = React.useMemo(() => getBaseUrl(), []);
+  const trimmedFirstName = firstName.trim();
+  const trimmedLastName = lastName.trim();
   const trimmedEmailAddress = emailAddress.trim();
   const isBusy = !!loadingProvider || isBypassing || isEmailLoading;
   const canSubmitEmail =
     !!trimmedEmailAddress &&
     !!password &&
+    (emailMode === "signIn" || (!!trimmedFirstName && !!trimmedLastName)) &&
     !isBusy &&
     isLoaded &&
     isSignUpLoaded;
@@ -138,6 +143,8 @@ export function AuthScreen() {
         await signUp.create({
           emailAddress: trimmedEmailAddress,
           password,
+          firstName: trimmedFirstName,
+          lastName: trimmedLastName,
         });
         await signUp.prepareEmailAddressVerification({
           strategy: "email_code",
@@ -217,7 +224,7 @@ export function AuthScreen() {
           !signUpAttempt.createdSessionId
         ) {
           throw new Error(
-            "Your account needs additional information before sign-up can be completed.",
+            "Sign-up is missing required account details. Please start again.",
           );
         }
 
@@ -391,6 +398,30 @@ export function AuthScreen() {
                   </View>
 
                   <View className="gap-3">
+                    {emailMode === "signUp" && (
+                      <>
+                        <Input
+                          value={firstName}
+                          onChangeText={setFirstName}
+                          placeholder="First name"
+                          autoCapitalize="words"
+                          autoComplete="given-name"
+                          textContentType="givenName"
+                          returnKeyType="next"
+                          editable={!isBusy}
+                        />
+                        <Input
+                          value={lastName}
+                          onChangeText={setLastName}
+                          placeholder="Last name"
+                          autoCapitalize="words"
+                          autoComplete="family-name"
+                          textContentType="familyName"
+                          returnKeyType="next"
+                          editable={!isBusy}
+                        />
+                      </>
+                    )}
                     <Input
                       value={emailAddress}
                       onChangeText={setEmailAddress}
