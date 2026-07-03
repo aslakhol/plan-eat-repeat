@@ -10,32 +10,25 @@ import { addDays } from "date-fns";
 import { MembershipRole } from "@planeatrepeat/db";
 import { env } from "~/env";
 import { clerkClient } from "@clerk/nextjs/server";
+import { TRPCError } from "@trpc/server";
+import { randomUUID } from "node:crypto";
 
 const onboardingDinnerSchema = z.object({
-  name: z.string(),
+  name: z.string().trim().min(1).max(200),
   date: z.date(),
 });
 
 export const householdRouter = createTRPCRouter({
   household: publicProcedure.query(async ({ ctx }) => {
-    if (!ctx.auth.userId && !ctx.householdId) {
-      throw new Error("No user or household id provided");
+    if (!ctx.auth.userId) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
     }
 
-    if (!ctx.householdId && ctx.auth.userId) {
-      const household = await ctx.db.household.findFirst({
-        where: { Members: { some: { userId: ctx.auth.userId } } },
-      });
-
-      await (
-        await clerkClient()
-      ).users.updateUserMetadata(ctx.auth.userId, {
-        publicMetadata: {
-          householdId: household?.id ?? null,
-        },
-      });
-
-      return { household };
+    if (!ctx.householdId) {
+      if (ctx.auth.sessionClaims?.metadata.householdId) {
+        await updateClerkHouseholdMetadata(ctx.auth.userId, null);
+      }
+      return { household: null };
     }
 
     const household = await ctx.db.household.findUnique({
@@ -43,59 +36,69 @@ export const householdRouter = createTRPCRouter({
       include: { Members: true },
     });
 
+    if (
+      ctx.auth.sessionClaims?.metadata.householdId !== (household?.id ?? null)
+    ) {
+      await updateClerkHouseholdMetadata(
+        ctx.auth.userId,
+        household?.id ?? null,
+      );
+    }
+
     return { household };
   }),
   createHousehold: protectedProcedure
     .input(
       z.object({
-        name: z.string(),
-        slug: z.string(),
-        onboardingDinners: z.array(onboardingDinnerSchema).optional(),
+        name: z.string().trim().min(1).max(100),
+        slug: z.string().trim().max(100),
+        onboardingDinners: z.array(onboardingDinnerSchema).max(31).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const existingMembership = await ctx.db.membership.findFirst({
-        where: { userId: ctx.auth.userId },
-      });
-      if (existingMembership) {
-        throw new Error("You can only be part of one household");
-      }
-
-      const household = await ctx.db.household.create({
-        data: {
-          name: input.name,
-          slug: input.slug,
-          Members: { create: { userId: ctx.auth.userId, role: "ADMIN" } },
-        },
-        include: { Members: true },
-      });
-
-      if (input.onboardingDinners) {
-        // Create dinners and plans from onboarding data
-        for (const dinnerData of input.onboardingDinners) {
-          const dinner = await ctx.db.dinner.create({
-            data: {
-              name: dinnerData.name,
-              householdId: household.id,
-            },
-          });
-
-          await ctx.db.plan.create({
-            data: {
-              date: dinnerData.date,
-              dinnerId: dinner.id,
-            },
+      const household = await ctx.db.$transaction(async (tx) => {
+        const existingMembership = await tx.membership.findFirst({
+          where: { userId: ctx.auth.userId },
+        });
+        if (existingMembership) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "You can only be part of one household",
           });
         }
-      }
 
-      await (
-        await clerkClient()
-      ).users.updateUserMetadata(ctx.auth.userId, {
-        publicMetadata: {
-          householdId: household.id,
-        },
+        const baseSlug = normalizeSlug(input.slug || input.name);
+        const slugExists = await tx.household.findUnique({
+          where: { slug: baseSlug },
+          select: { id: true },
+        });
+        const slug = slugExists
+          ? `${baseSlug}-${randomUUID().slice(0, 8)}`
+          : baseSlug;
+
+        return tx.household.create({
+          data: {
+            name: input.name,
+            slug,
+            Members: {
+              create: { userId: ctx.auth.userId, role: "ADMIN" },
+            },
+            Dinners: {
+              create: (input.onboardingDinners ?? []).map((dinnerData) => ({
+                name: dinnerData.name,
+                Plan: {
+                  create: {
+                    date: dinnerData.date,
+                  },
+                },
+              })),
+            },
+          },
+          include: { Members: true },
+        });
       });
+
+      await updateClerkHouseholdMetadata(ctx.auth.userId, household.id);
 
       return { household };
     }),
@@ -237,13 +240,10 @@ export const householdRouter = createTRPCRouter({
         },
       });
 
-      await (
-        await clerkClient()
-      ).users.updateUserMetadata(ctx.auth.userId, {
-        publicMetadata: {
-          householdId: membership.householdId,
-        },
-      });
+      await updateClerkHouseholdMetadata(
+        ctx.auth.userId,
+        membership.householdId,
+      );
 
       return { membership };
     }),
@@ -268,13 +268,7 @@ export const householdRouter = createTRPCRouter({
         where: { id: memberId },
       });
 
-      await (
-        await clerkClient()
-      ).users.updateUserMetadata(member.userId, {
-        publicMetadata: {
-          householdId: null,
-        },
-      });
+      await updateClerkHouseholdMetadata(member.userId, null);
 
       return { member };
     }),
@@ -282,4 +276,30 @@ export const householdRouter = createTRPCRouter({
 
 const generateInviteLink = (inviteId: string) => {
   return `${env.NEXT_PUBLIC_APP_URL}invite/${inviteId}`;
+};
+
+const normalizeSlug = (value: string) => {
+  const slug = value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+  return slug || "household";
+};
+
+const updateClerkHouseholdMetadata = async (
+  userId: string,
+  householdId: string | null,
+) => {
+  try {
+    await (
+      await clerkClient()
+    ).users.updateUserMetadata(userId, {
+      publicMetadata: {
+        householdId,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to update Clerk household metadata", error);
+  }
 };
