@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useSession } from "@clerk/clerk-expo";
+import { useSession, useUser } from "@clerk/clerk-expo";
 import * as SecureStore from "expo-secure-store";
 import { addDays, format, startOfDay, subDays } from "date-fns";
 import {
@@ -45,6 +45,7 @@ const slugify = (value: string) =>
 export function OnboardingScreen() {
   const utils = api.useUtils();
   const { session } = useSession();
+  const { user } = useUser();
   const [currentDinner, setCurrentDinner] = React.useState("");
   const [dinners, setDinners] = React.useState<OnboardingDinner[]>([]);
   const [householdName, setHouseholdName] = React.useState("");
@@ -53,18 +54,33 @@ export function OnboardingScreen() {
   const [joinError, setJoinError] = React.useState<string | null>(null);
   const [isRestoring, setIsRestoring] = React.useState(true);
   const today = React.useMemo(() => startOfDay(new Date()), []);
+  const storageKey = user ? `${STORAGE_KEY}:${user.id}` : null;
 
   React.useEffect(() => {
+    if (!storageKey) return;
+
     let isMounted = true;
+    setIsRestoring(true);
 
     const restoreDinners = async () => {
       try {
-        const savedDinners = await SecureStore.getItemAsync(STORAGE_KEY);
+        const storedForUser = await SecureStore.getItemAsync(storageKey);
+        const legacyDinners = storedForUser
+          ? null
+          : await SecureStore.getItemAsync(STORAGE_KEY);
+        const savedDinners = storedForUser ?? legacyDinners;
         if (!savedDinners || !isMounted) return;
+
+        if (legacyDinners) {
+          await Promise.allSettled([
+            SecureStore.setItemAsync(storageKey, legacyDinners),
+            SecureStore.deleteItemAsync(STORAGE_KEY),
+          ]);
+        }
 
         const parsed = JSON.parse(savedDinners) as unknown;
         if (!Array.isArray(parsed)) {
-          await SecureStore.deleteItemAsync(STORAGE_KEY);
+          await SecureStore.deleteItemAsync(storageKey);
           return;
         }
 
@@ -86,7 +102,10 @@ export function OnboardingScreen() {
 
         setDinners(restoredDinners);
       } catch {
-        await SecureStore.deleteItemAsync(STORAGE_KEY);
+        await Promise.allSettled([
+          SecureStore.deleteItemAsync(storageKey),
+          SecureStore.deleteItemAsync(STORAGE_KEY),
+        ]);
       } finally {
         if (isMounted) setIsRestoring(false);
       }
@@ -97,27 +116,42 @@ export function OnboardingScreen() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [storageKey]);
+
+  const clearStoredDinners = () =>
+    Promise.allSettled([
+      ...(storageKey ? [SecureStore.deleteItemAsync(storageKey)] : []),
+      SecureStore.deleteItemAsync(STORAGE_KEY),
+    ]);
 
   const createHouseholdMutation = api.household.createHousehold.useMutation({
-    async onSuccess() {
-      await SecureStore.deleteItemAsync(STORAGE_KEY);
-      await session?.reload();
-      await utils.household.household.invalidate();
+    async onSuccess(data) {
+      utils.household.household.setData(undefined, {
+        household: data.household,
+      });
+      await Promise.allSettled([
+        clearStoredDinners(),
+        session ? session.reload() : Promise.resolve(),
+        utils.household.household.invalidate(),
+      ]);
     },
     onError(err) {
       setCreateError(err.message);
+      void utils.household.household.invalidate();
     },
   });
 
   const joinHouseholdMutation = api.household.join.useMutation({
     async onSuccess() {
-      await SecureStore.deleteItemAsync(STORAGE_KEY);
-      await session?.reload();
-      await utils.household.household.invalidate();
+      await Promise.allSettled([
+        clearStoredDinners(),
+        session ? session.reload() : Promise.resolve(),
+        utils.household.household.invalidate(),
+      ]);
     },
     onError(err) {
       setJoinError(err.message);
+      void utils.household.household.invalidate();
     },
   });
 
@@ -145,14 +179,19 @@ export function OnboardingScreen() {
 
     setDinners(updatedDinners);
     setCurrentDinner("");
-    void SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(updatedDinners));
+    if (storageKey) {
+      void SecureStore.setItemAsync(
+        storageKey,
+        JSON.stringify(updatedDinners),
+      ).catch(() => undefined);
+    }
   };
 
   const onReset = () => {
     setDinners([]);
     setCurrentDinner("");
     setCreateError(null);
-    void SecureStore.deleteItemAsync(STORAGE_KEY);
+    void clearStoredDinners();
   };
 
   const onCreateHousehold = () => {
@@ -191,8 +230,7 @@ export function OnboardingScreen() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{
             flexGrow: 1,
-            justifyContent: "center",
-            paddingVertical: 16,
+            paddingVertical: 24,
           }}
         >
           <View className="gap-6">
@@ -345,7 +383,11 @@ const parseInviteId = (value: string) => {
 
   const invitePathMatch = trimmedValue.match(/(?:^|\/)invite\/([^/?#]+)/i);
   if (invitePathMatch?.[1]) {
-    return decodeURIComponent(invitePathMatch[1]);
+    try {
+      return decodeURIComponent(invitePathMatch[1]);
+    } catch {
+      return invitePathMatch[1];
+    }
   }
 
   return trimmedValue;

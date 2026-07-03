@@ -241,18 +241,18 @@ export type MembershipOrderByWithRelationInput = {
 
 export type MembershipWhereUniqueInput = Prisma.AtLeast<{
   id?: number
+  userId?: string
   householdId_userId?: Prisma.MembershipHouseholdIdUserIdCompoundUniqueInput
   AND?: Prisma.MembershipWhereInput | Prisma.MembershipWhereInput[]
   OR?: Prisma.MembershipWhereInput[]
   NOT?: Prisma.MembershipWhereInput | Prisma.MembershipWhereInput[]
   householdId?: Prisma.StringFilter<"Membership"> | string
-  userId?: Prisma.StringFilter<"Membership"> | string
   role?: Prisma.EnumMembershipRoleFilter<"Membership"> | $Enums.MembershipRole
   createdAt?: Prisma.DateTimeFilter<"Membership"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Membership"> | Date | string
   household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-}, "id" | "householdId_userId">
+}, "id" | "userId" | "householdId_userId">
 
 export type MembershipOrderByWithAggregationInput = {
   id?: Prisma.SortOrder

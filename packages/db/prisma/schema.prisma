@@ -70,7 +70,7 @@ model Membership {
     household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
     householdId String
     user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId      String
+    userId      String    @unique
 
     role      MembershipRole
     createdAt DateTime       @default(now())

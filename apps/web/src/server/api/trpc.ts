@@ -7,7 +7,7 @@
  * need to use are documented accordingly near the end.
  */
 
-import { getAuth } from "@clerk/nextjs/server";
+import { clerkClient, getAuth } from "@clerk/nextjs/server";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 import superjson from "superjson";
@@ -75,8 +75,44 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
     };
   },
 });
-const hasHouseholdOrUndefined = t.middleware(({ next, ctx }) => {
-  const householdId = ctx.auth.sessionClaims?.metadata.householdId;
+const ensureDatabaseUser = async (
+  ctx: ReturnType<typeof createInnerTRPCContext>,
+  userId: string,
+) => {
+  const existingUser = await ctx.db.user.findUnique({
+    where: { id: userId },
+    select: { id: true },
+  });
+  if (existingUser) return;
+
+  const clerkUser = await (await clerkClient()).users.getUser(userId);
+  await ctx.db.user.upsert({
+    where: { id: userId },
+    update: {},
+    create: {
+      id: userId,
+      firstName: clerkUser.firstName,
+      lastName: clerkUser.lastName,
+      imageUrl: clerkUser.imageUrl,
+    },
+  });
+};
+
+const getHouseholdIdForUser = async (
+  ctx: ReturnType<typeof createInnerTRPCContext>,
+  userId: string,
+) => {
+  const membership = await ctx.db.membership.findFirst({
+    where: { userId },
+    select: { householdId: true },
+  });
+  return membership?.householdId;
+};
+
+const hasHouseholdOrUndefined = t.middleware(async ({ next, ctx }) => {
+  const householdId = ctx.auth.userId
+    ? await getHouseholdIdForUser(ctx, ctx.auth.userId)
+    : undefined;
 
   return next({
     ctx: {
@@ -84,12 +120,13 @@ const hasHouseholdOrUndefined = t.middleware(({ next, ctx }) => {
     },
   });
 });
-const isAuthed = t.middleware(({ next, ctx }) => {
-  const householdId = ctx.auth.sessionClaims?.metadata.householdId;
-
+const isAuthed = t.middleware(async ({ next, ctx }) => {
   if (!ctx.auth.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
+  await ensureDatabaseUser(ctx, ctx.auth.userId);
+  const householdId = await getHouseholdIdForUser(ctx, ctx.auth.userId);
+
   return next({
     ctx: {
       auth: ctx.auth,
@@ -98,17 +135,20 @@ const isAuthed = t.middleware(({ next, ctx }) => {
   });
 });
 
-const isAuthedAndHasHousehold = t.middleware(({ next, ctx }) => {
+const isAuthedAndHasHousehold = t.middleware(async ({ next, ctx }) => {
   if (!ctx.auth.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-  if (!ctx.auth.sessionClaims?.metadata.householdId) {
+  await ensureDatabaseUser(ctx, ctx.auth.userId);
+  const householdId = await getHouseholdIdForUser(ctx, ctx.auth.userId);
+
+  if (!householdId) {
     throw new TRPCError({ code: "FORBIDDEN" });
   }
   return next({
     ctx: {
       auth: ctx.auth,
-      householdId: ctx.auth.sessionClaims.metadata.householdId,
+      householdId,
     },
   });
 });
