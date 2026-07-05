@@ -29,7 +29,7 @@ export const NewDinner = () => {
       toast({
         title: `${result.dinner.name} created`,
       });
-      setDialogOpen(false);
+      void router.push(`/dinners/${result.dinner.id}`);
     },
     onSettled: () => {
       void utils.dinner.dinners.invalidate();

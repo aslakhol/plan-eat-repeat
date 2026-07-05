@@ -22,3 +22,5 @@ export const recipeSchema = z.object({
 });
 
 export type RecipeInput = z.infer<typeof recipeSchema>;
+
+export const formatAmount = (amount: number) => String(amount);
