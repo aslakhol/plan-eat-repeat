@@ -47,3 +47,6 @@ generated
 
 # local capture screenshots/artifacts
 /capture/
+
+# claude code local config
+.claude/

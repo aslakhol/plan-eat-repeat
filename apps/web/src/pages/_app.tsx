@@ -32,10 +32,8 @@ if (
   !window.navigator.webdriver
 ) {
   posthog.init(env.NEXT_PUBLIC_POSTHOG_API_KEY, {
-    api_host:
-      process.env.NODE_ENV === "development"
-        ? "http://localhost:3000/ingest"
-        : "https://www.planeatrepeat.com/ingest",
+    // Relative so it works on any dev port and on the LAN address phones use
+    api_host: "/ingest",
     loaded: (posthog) => {
       if (process.env.NODE_ENV === "development") posthog.debug();
     },
