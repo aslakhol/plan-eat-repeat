@@ -39,6 +39,7 @@ import {
   UNITS,
   type DinnerWithRecipe,
   amountInputSchema,
+  dinnerNameSchema,
   recipeIngredientSchema,
 } from "@planeatrepeat/shared";
 import { api } from "../../utils/api";
@@ -55,7 +56,7 @@ const editorIngredientSchema = recipeIngredientSchema.extend({
 });
 
 const recipeEditorSchema = z.object({
-  name: z.string().trim().min(1, "Add a dinner name"),
+  name: dinnerNameSchema,
   tags: z.array(z.string()),
   newTag: z.string().optional(),
   link: z.union([z.literal(""), z.string().url("Enter a valid URL")]),

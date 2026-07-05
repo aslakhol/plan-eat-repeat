@@ -18,8 +18,13 @@ export type DinnerWithRecipe = DinnerWithTags & {
   >;
 };
 
+export const dinnerNameSchema = z
+  .string()
+  .trim()
+  .min(1, "Add a dinner name");
+
 export const dinnerFormSchema = z.object({
-  name: z.string().min(1),
+  name: dinnerNameSchema,
   tags: z.array(z.string()),
   newTag: asOptionalStringWithoutEmpty(z.string().max(20).min(1)),
   link: asOptionalStringWithoutEmpty(z.string().url()),
