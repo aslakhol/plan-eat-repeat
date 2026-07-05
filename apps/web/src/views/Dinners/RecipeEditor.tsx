@@ -32,7 +32,7 @@ import { FancyCombobox } from "../../components/ui/FancyCombobox";
 import { DeleteDinnerButton } from "./DeleteDinnerButton";
 
 const editorIngredientSchema = recipeIngredientSchema.extend({
-  name: z.string().trim().min(1, "Name this ingredient or remove the row"),
+  name: z.string().trim().min(1, "Name required"),
   amount: z.number().positive("Amount must be more than 0").nullable(),
   note: z.string(),
 });
