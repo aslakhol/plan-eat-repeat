@@ -32,6 +32,8 @@ import { FancyCombobox } from "../../components/ui/FancyCombobox";
 import { DeleteDinnerButton } from "./DeleteDinnerButton";
 
 const editorIngredientSchema = recipeIngredientSchema.extend({
+  name: z.string().trim().min(1, "Name this ingredient or remove the row"),
+  amount: z.number().positive("Amount must be more than 0").nullable(),
   note: z.string(),
 });
 
@@ -230,9 +232,6 @@ export const RecipeEditor = ({
                 form={form}
                 partIndex={partIndex}
                 multiMode={multiMode}
-                ingredientNames={
-                  ingredientNamesQuery.data?.ingredientNames ?? []
-                }
                 canMoveUp={partIndex > 0}
                 canMoveDown={partIndex < parts.fields.length - 1}
                 onMoveUp={() => parts.move(partIndex, partIndex - 1)}
@@ -250,6 +249,14 @@ export const RecipeEditor = ({
               <Plus />
               {parts.fields.length === 0 ? "Add recipe" : "Add part"}
             </Button>
+
+            <datalist id="recipe-ingredient-names">
+              {(ingredientNamesQuery.data?.ingredientNames ?? []).map(
+                (name) => (
+                  <option key={name} value={name} />
+                ),
+              )}
+            </datalist>
           </div>
 
           <div className="space-y-2 border-t border-[hsl(40_15%_86%)] pt-5">
@@ -279,7 +286,6 @@ type PartEditorProps = {
   form: UseFormReturn<RecipeEditorValues>;
   partIndex: number;
   multiMode: boolean;
-  ingredientNames: string[];
   canMoveUp: boolean;
   canMoveDown: boolean;
   onMoveUp: () => void;
@@ -291,7 +297,6 @@ const PartEditor = ({
   form,
   partIndex,
   multiMode,
-  ingredientNames,
   canMoveUp,
   canMoveDown,
   onMoveUp,
@@ -496,12 +501,6 @@ const PartEditor = ({
             </div>
           );
         })}
-
-        <datalist id="recipe-ingredient-names">
-          {ingredientNames.map((name) => (
-            <option key={name} value={name} />
-          ))}
-        </datalist>
 
         <AddButton
           label="Add ingredient"

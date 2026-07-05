@@ -31,6 +31,13 @@ export const NewDinner = () => {
       });
       void router.push(`/dinners/${result.dinner.id}`);
     },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Could not create dinner",
+        description: error.message,
+      });
+    },
     onSettled: () => {
       void utils.dinner.dinners.invalidate();
     },
