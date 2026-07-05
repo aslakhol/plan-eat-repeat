@@ -16,7 +16,7 @@ import { Quicksand_400Regular } from "@expo-google-fonts/quicksand";
 import { YoungSerif_400Regular } from "@expo-google-fonts/young-serif";
 import { ClerkProvider } from "./src/providers/ClerkProvider";
 import { TRPCProvider } from "./src/providers/TRPCProvider";
-import { AppTabs } from "./src/navigation/AppTabs";
+import { RootNavigator } from "./src/navigation/RootNavigator";
 import { OnboardingScreen } from "./src/screens/OnboardingScreen";
 import { linking } from "./src/navigation/linking";
 import { AuthScreen } from "./src/screens/AuthScreen";
@@ -112,5 +112,5 @@ function HouseholdGate() {
     return <OnboardingScreen />;
   }
 
-  return <AppTabs />;
+  return <RootNavigator />;
 }
