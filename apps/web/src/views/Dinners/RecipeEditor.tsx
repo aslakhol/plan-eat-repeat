@@ -383,7 +383,7 @@ const PartEditor = ({
     >
       {multiMode && (
         <div className="mb-4 space-y-1.5">
-          <FieldLabel>Part name</FieldLabel>
+          <FieldLabel>Part</FieldLabel>
           <div className="grid grid-cols-[1fr_auto] items-center gap-2">
             <Input
               {...form.register(`recipe.parts.${partIndex}.name`)}

@@ -434,7 +434,7 @@ function PartEditor({
     >
       {multiMode && (
         <View className="mb-4 gap-1.5">
-          <FieldLabel>Part name</FieldLabel>
+          <FieldLabel>Part</FieldLabel>
           <View className="flex-row items-center gap-2">
             <Controller
               control={form.control}
