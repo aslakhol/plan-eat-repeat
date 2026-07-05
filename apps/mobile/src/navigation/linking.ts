@@ -7,6 +7,9 @@ const expoPrefix = ExpoLinking.createURL("/");
 export const linking: LinkingOptions<RootStackParamList> = {
   prefixes: [expoPrefix, "planeatrepeat://"],
   config: {
+    // Keep the tabs beneath DinnerDetail when opened via deep link,
+    // so back navigation returns to the app instead of exiting.
+    initialRouteName: "Tabs",
     screens: {
       Tabs: {
         screens: {

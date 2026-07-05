@@ -25,6 +25,7 @@ import {
   X,
 } from "lucide-react-native";
 import { format } from "date-fns";
+import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation, usePreventRemove } from "@react-navigation/native";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,9 +47,25 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Textarea } from "../ui/Textarea";
 
+// Amounts are edited as text so partial input like "1," or "0.5" survives
+// re-renders; parseAmount converts back to a number on save.
+export const parseAmount = (value: string) => {
+  const normalized = value.trim().replace(",", ".");
+  if (normalized === "") return null;
+  const parsed = Number(normalized);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
 const editorIngredientSchema = recipeIngredientSchema.extend({
   name: z.string().trim().min(1, "Name required"),
-  amount: z.number().positive("Amount must be more than 0").nullable(),
+  amount: z
+    .string()
+    .trim()
+    .refine((value) => {
+      if (value === "") return true;
+      const parsed = Number(value.replace(",", "."));
+      return !Number.isNaN(parsed) && parsed > 0;
+    }, "Amount must be a number more than 0"),
   note: z.string(),
 });
 
@@ -114,7 +131,8 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
             name: part.name ?? "",
             ingredients: part.ingredients.map((ingredient) => ({
               name: ingredient.name,
-              amount: ingredient.amount,
+              amount:
+                ingredient.amount === null ? "" : String(ingredient.amount),
               unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
               note: ingredient.note ?? "",
             })),
@@ -130,6 +148,7 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
     const watchedParts = form.watch("recipe.parts");
     const servings = form.watch("recipe.servings");
     const navigation = useNavigation();
+    const headerHeight = useHeaderHeight();
     const multiMode =
       watchedParts.length > 1 ||
       watchedParts.some((part) => part.name.trim().length > 0);
@@ -179,7 +198,7 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
       <KeyboardAvoidingView
         className="bg-background flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 92 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? headerHeight : 0}
       >
         <ScrollView
           keyboardShouldPersistTaps="handled"
@@ -190,90 +209,94 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
           }}
         >
           <View className="gap-5">
-            <Controller
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <Input
-                  value={field.value}
-                  onBlur={field.onBlur}
-                  onChangeText={field.onChange}
-                  accessibilityLabel="Dinner name"
-                  className="h-12 bg-white text-lg font-semibold"
-                  placeholder="Dinner name"
-                />
-              )}
-            />
-            <FieldError message={form.formState.errors.name?.message} />
-
-            <View className="flex-row gap-2">
-              <View className="border-border h-11 w-[116px] flex-row overflow-hidden rounded-md border bg-white">
-                <Pressable
-                  accessibilityLabel="Decrease servings"
-                  className="border-border w-9 items-center justify-center border-r"
-                  onPress={() =>
-                    form.setValue(
-                      "recipe.servings",
-                      Math.max(1, (servings ?? 2) - 1),
-                      { shouldDirty: true },
-                    )
-                  }
-                >
-                  <Minus size={16} color={colors.mutedForeground} />
-                </Pressable>
-                <Controller
-                  control={form.control}
-                  name="recipe.servings"
-                  render={({ field }) => (
-                    <Input
-                      value={field.value === null ? "" : String(field.value)}
-                      onBlur={field.onBlur}
-                      onChangeText={(value) =>
-                        field.onChange(value === "" ? null : Number(value))
-                      }
-                      accessibilityLabel="Number of servings"
-                      keyboardType="number-pad"
-                      className="min-w-0 flex-1 rounded-none border-0 bg-transparent px-1 text-center font-bold"
-                      placeholder="–"
-                    />
-                  )}
-                />
-                <Pressable
-                  accessibilityLabel="Increase servings"
-                  className="border-border w-9 items-center justify-center border-l"
-                  onPress={() =>
-                    form.setValue("recipe.servings", (servings ?? 0) + 1, {
-                      shouldDirty: true,
-                    })
-                  }
-                >
-                  <Plus size={16} color={colors.mutedForeground} />
-                </Pressable>
-              </View>
-
+            <View>
               <Controller
                 control={form.control}
-                name="link"
+                name="name"
                 render={({ field }) => (
                   <Input
                     value={field.value}
                     onBlur={field.onBlur}
                     onChangeText={field.onChange}
-                    accessibilityLabel="Recipe link"
-                    autoCapitalize="none"
-                    keyboardType="url"
-                    className="h-11 min-w-0 flex-1 bg-white"
-                    placeholder="Recipe link"
+                    accessibilityLabel="Dinner name"
+                    className="h-12 bg-white text-lg font-semibold"
+                    placeholder="Dinner name"
                   />
                 )}
               />
+              <FieldError message={form.formState.errors.name?.message} />
             </View>
-            <FieldError
-              message={
-                form.formState.errors.link?.message ??
-                form.formState.errors.recipe?.servings?.message
-              }
-            />
+
+            <View>
+              <View className="flex-row gap-2">
+                <View className="border-border h-11 w-[116px] flex-row overflow-hidden rounded-md border bg-white">
+                  <Pressable
+                    accessibilityLabel="Decrease servings"
+                    className="border-border w-9 items-center justify-center border-r"
+                    onPress={() =>
+                      form.setValue(
+                        "recipe.servings",
+                        Math.max(1, (servings ?? 2) - 1),
+                        { shouldDirty: true },
+                      )
+                    }
+                  >
+                    <Minus size={16} color={colors.mutedForeground} />
+                  </Pressable>
+                  <Controller
+                    control={form.control}
+                    name="recipe.servings"
+                    render={({ field }) => (
+                      <Input
+                        value={field.value === null ? "" : String(field.value)}
+                        onBlur={field.onBlur}
+                        onChangeText={(value) =>
+                          field.onChange(value === "" ? null : Number(value))
+                        }
+                        accessibilityLabel="Number of servings"
+                        keyboardType="number-pad"
+                        className="min-w-0 flex-1 rounded-none border-0 bg-transparent px-1 text-center font-bold"
+                        placeholder="–"
+                      />
+                    )}
+                  />
+                  <Pressable
+                    accessibilityLabel="Increase servings"
+                    className="border-border w-9 items-center justify-center border-l"
+                    onPress={() =>
+                      form.setValue("recipe.servings", (servings ?? 0) + 1, {
+                        shouldDirty: true,
+                      })
+                    }
+                  >
+                    <Plus size={16} color={colors.mutedForeground} />
+                  </Pressable>
+                </View>
+
+                <Controller
+                  control={form.control}
+                  name="link"
+                  render={({ field }) => (
+                    <Input
+                      value={field.value}
+                      onBlur={field.onBlur}
+                      onChangeText={field.onChange}
+                      accessibilityLabel="Recipe link"
+                      autoCapitalize="none"
+                      keyboardType="url"
+                      className="h-11 min-w-0 flex-1 bg-white"
+                      placeholder="Recipe link"
+                    />
+                  )}
+                />
+              </View>
+              <FieldError
+                message={
+                  form.formState.errors.link?.message ??
+                  form.formState.errors.recipe?.servings?.message
+                }
+              />
+            </View>
 
             <EditorTags form={form} />
 
@@ -298,7 +321,6 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
               <Button
                 variant="secondary"
                 className="mt-4 w-full"
-                textClassName="font-serif text-primary"
                 onPress={() => parts.append(emptyPart())}
               >
                 <Plus size={17} color={colors.primary} />
@@ -487,11 +509,9 @@ function PartEditor({
                   name={`recipe.parts.${partIndex}.ingredients.${ingredientIndex}.amount`}
                   render={({ field }) => (
                     <Input
-                      value={field.value === null ? "" : String(field.value)}
+                      value={field.value}
                       onBlur={field.onBlur}
-                      onChangeText={(value) =>
-                        field.onChange(value === "" ? null : Number(value))
-                      }
+                      onChangeText={field.onChange}
                       accessibilityLabel={`Ingredient ${ingredientIndex + 1} amount`}
                       keyboardType="decimal-pad"
                       className="h-10 w-[52px] bg-white px-1 text-center font-bold"
@@ -562,10 +582,14 @@ function PartEditor({
                 <View className="mt-2 gap-2">
                   {suggestions.length > 0 && (
                     <View className="border-border overflow-hidden rounded-md border bg-white">
-                      {suggestions.map((suggestion) => (
+                      {suggestions.map((suggestion, suggestionIndex) => (
                         <Pressable
                           key={suggestion}
-                          className="border-b border-[hsl(40,15%,92%)] px-3 py-2.5 last:border-b-0"
+                          className={cn(
+                            "px-3 py-2.5",
+                            suggestionIndex < suggestions.length - 1 &&
+                              "border-b border-[hsl(40,15%,92%)]",
+                          )}
                           onPress={() => {
                             form.setValue(
                               `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.name`,
@@ -666,7 +690,7 @@ function PartEditor({
           label="Add ingredient"
           onPress={() =>
             ingredients.append({
-              amount: null,
+              amount: "",
               unit: null,
               name: "",
               note: "",

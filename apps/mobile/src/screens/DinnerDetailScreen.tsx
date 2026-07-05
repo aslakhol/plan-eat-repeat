@@ -5,6 +5,7 @@ import { recipeSchema } from "@planeatrepeat/shared";
 import type { RootStackParamList } from "../navigation/RootNavigator";
 import {
   RecipeEditor,
+  parseAmount,
   type RecipeEditorHandle,
   type RecipeEditorValues,
 } from "../components/dinners/RecipeEditor";
@@ -136,7 +137,7 @@ export function DinnerDetailScreen({ navigation, route }: Props) {
         name: textOrNull(part.name),
         ingredients: part.ingredients.map((ingredient) => ({
           name: ingredient.name,
-          amount: ingredient.amount,
+          amount: parseAmount(ingredient.amount),
           unit: ingredient.unit,
           note: textOrNull(ingredient.note),
         })),
