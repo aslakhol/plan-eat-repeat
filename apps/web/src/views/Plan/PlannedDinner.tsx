@@ -87,7 +87,7 @@ export const PlannedDinner = ({
           </Button>
           <ClearDay date={date} closeDialog={closeDialog} />
           <Button variant={"outline"} asChild>
-            <Link href={`/dinners/${dinner.id}`}>Edit dinner</Link>
+            <Link href={`/dinners/${dinner.id}`}>View dinner</Link>
           </Button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
+  Alert,
   StyleSheet,
 } from "react-native";
 import { ChefHat } from "lucide-react-native";
@@ -14,12 +15,18 @@ import {
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
-import type { DinnerWithTags } from "@planeatrepeat/shared";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { AppTabsParamList } from "../navigation/AppTabs";
+import type { RootStackParamList } from "../navigation/RootNavigator";
 import { api } from "../utils/api";
 import { Screen } from "../components/Screen";
 import { Filter } from "../components/Filter";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { DinnerForm } from "../components/dinners/DinnerForm";
 import { colors } from "../theme/colors";
@@ -34,41 +41,23 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTags, setShowTags] = useState(false);
-  const [selectedDinner, setSelectedDinner] = useState<DinnerWithTags | null>(
-    null,
-  );
-
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ["85%"], []);
 
   const createDinnerMutation = api.dinner.create.useMutation({
-    onSuccess: () => {
+    onSuccess: (result) => {
       void utils.dinner.dinners.invalidate();
       bottomSheetRef.current?.dismiss();
+      navigation
+        .getParent<NativeStackNavigationProp<RootStackParamList>>()
+        ?.navigate("DinnerDetail", { dinnerId: result.dinner.id });
     },
-  });
-
-  const updateDinnerMutation = api.dinner.edit.useMutation({
-    onSuccess: () => {
-      void utils.dinner.dinners.invalidate();
-      bottomSheetRef.current?.dismiss();
-    },
-  });
-
-  const deleteDinnerMutation = api.dinner.delete.useMutation({
-    onSuccess: () => {
-      void utils.dinner.dinners.invalidate();
-      bottomSheetRef.current?.dismiss();
+    onError: (error) => {
+      Alert.alert("Could not save dinner", error.message);
     },
   });
 
   const openNewDinner = () => {
-    setSelectedDinner(null);
-    bottomSheetRef.current?.present();
-  };
-
-  const openDinner = (dinner: DinnerWithTags) => {
-    setSelectedDinner(dinner);
     bottomSheetRef.current?.present();
   };
 
@@ -77,16 +66,7 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
       openNewDinner();
       navigation.setParams({ openNew: undefined });
     }
-    if (route.params?.dinnerId && dinnersQuery.data?.dinners) {
-      const dinner = dinnersQuery.data.dinners.find(
-        (d) => d.id === route.params?.dinnerId,
-      );
-      if (dinner) {
-        openDinner(dinner);
-        navigation.setParams({ dinnerId: undefined });
-      }
-    }
-  }, [route.params, dinnersQuery.data, navigation]);
+  }, [route.params?.openNew, navigation]);
 
   const dinners = dinnersQuery.data?.dinners
     .filter(
@@ -109,9 +89,7 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
     <Screen edges={["top", "left", "right"]}>
       <View className="flex-1 gap-4">
         <View className="gap-2">
-          <Text className="font-serif text-3xl text-foreground">
-            Dinners
-          </Text>
+          <Text className="text-foreground font-serif text-3xl">Dinners</Text>
           <Filter
             search={search}
             setSearch={setSearch}
@@ -141,7 +119,7 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
                 <Card className="min-h-[100px] border-dashed bg-transparent">
                   <CardContent className="flex-1 items-center justify-center gap-2 p-4">
                     <ChefHat size={24} color={colors.mutedForeground} />
-                    <Text className="text-sm font-medium text-muted-foreground">
+                    <Text className="text-muted-foreground text-sm font-medium">
                       Add new dinner
                     </Text>
                   </CardContent>
@@ -149,8 +127,17 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
               </Pressable>
 
               {dinners?.map((dinner) => (
-                <Pressable key={dinner.id} onPress={() => openDinner(dinner)}>
-                  <Card className="min-h-[100px] bg-card">
+                <Pressable
+                  key={dinner.id}
+                  onPress={() =>
+                    navigation
+                      .getParent<
+                        NativeStackNavigationProp<RootStackParamList>
+                      >()
+                      ?.navigate("DinnerDetail", { dinnerId: dinner.id })
+                  }
+                >
+                  <Card className="bg-card min-h-[100px]">
                     <CardHeader className="p-4 pb-2">
                       <CardTitle
                         className="text-base leading-tight"
@@ -195,43 +182,20 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
         >
           <View className="gap-4">
-            <Text className="font-serif text-2xl text-foreground">
-              {selectedDinner ? "Edit dinner" : "New dinner"}
+            <Text className="text-foreground font-serif text-2xl">
+              New dinner
             </Text>
             <DinnerForm
-              existingDinner={selectedDinner}
               onCancel={() => bottomSheetRef.current?.dismiss()}
-              isPending={
-                createDinnerMutation.isPending ||
-                updateDinnerMutation.isPending ||
-                deleteDinnerMutation.isPending
-              }
+              isPending={createDinnerMutation.isPending}
               onSubmit={(values) => {
-                if (selectedDinner) {
-                  updateDinnerMutation.mutate({
-                    dinnerId: selectedDinner.id,
-                    dinnerName: values.name,
-                    tagList: values.tags,
-                    link: values.link,
-                    notes: values.notes,
-                  });
-                } else {
-                  createDinnerMutation.mutate({
-                    dinnerName: values.name,
-                    tagList: values.tags,
-                    link: values.link,
-                    notes: values.notes,
-                  });
-                }
+                createDinnerMutation.mutate({
+                  dinnerName: values.name,
+                  tagList: values.tags,
+                  link: values.link,
+                  notes: values.notes,
+                });
               }}
-              onDelete={
-                selectedDinner
-                  ? () =>
-                      deleteDinnerMutation.mutate({
-                        dinnerId: selectedDinner.id,
-                      })
-                  : undefined
-              }
             />
           </View>
         </BottomSheetScrollView>

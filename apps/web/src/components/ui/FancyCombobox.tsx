@@ -111,6 +111,7 @@ export const FancyCombobox = ({
               <Badge key={option.value} variant="secondary">
                 {option.label}
                 <button
+                  type="button"
                   className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {

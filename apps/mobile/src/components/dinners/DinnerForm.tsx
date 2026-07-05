@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { View, Text, Alert } from "react-native";
+import { View, Text } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { dinnerFormSchema, type DinnerWithTags } from "@planeatrepeat/shared";
+import { dinnerFormSchema } from "@planeatrepeat/shared";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Textarea } from "../ui/Textarea";
@@ -18,28 +18,20 @@ type DinnerFormValues = {
 };
 
 type Props = {
-  existingDinner?: DinnerWithTags | null;
   onSubmit: (values: DinnerFormValues) => void;
-  onDelete?: (values: DinnerFormValues) => void;
   onCancel: () => void;
   isPending: boolean;
 };
 
-export function DinnerForm({
-  existingDinner,
-  onSubmit,
-  onDelete,
-  onCancel,
-  isPending,
-}: Props) {
+export function DinnerForm({ onSubmit, onCancel, isPending }: Props) {
   const form = useForm<DinnerFormValues>({
     resolver: zodResolver(dinnerFormSchema),
     defaultValues: {
-      name: existingDinner?.name ?? "",
-      tags: existingDinner?.tags.map((tag) => tag.value) ?? [],
+      name: "",
+      tags: [],
       newTag: "",
-      link: existingDinner?.link ?? "",
-      notes: existingDinner?.notes ?? "",
+      link: "",
+      notes: "",
     },
   });
 
@@ -64,18 +56,6 @@ export function DinnerForm({
     );
   };
 
-  const handleDelete = () => {
-    if (!onDelete) return;
-    Alert.alert("Delete dinner", "Are you sure you want to delete this dinner?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => form.handleSubmit(onDelete)(),
-      },
-    ]);
-  };
-
   return (
     <View className="gap-5">
       <Controller
@@ -83,14 +63,14 @@ export function DinnerForm({
         name="name"
         render={({ field }) => (
           <View className="gap-2">
-            <Text className="text-sm font-medium text-foreground">Name</Text>
+            <Text className="text-foreground text-sm font-medium">Name</Text>
             <Input value={field.value} onChangeText={field.onChange} />
           </View>
         )}
       />
 
       <View className="gap-2">
-        <Text className="text-sm font-medium text-foreground">Tags</Text>
+        <Text className="text-foreground text-sm font-medium">Tags</Text>
         <View className="flex-row flex-wrap gap-2">
           {tags.map((tag) => (
             <Badge key={tag} variant="secondary" onPress={() => removeTag(tag)}>
@@ -116,11 +96,7 @@ export function DinnerForm({
         {!!existingTags?.length && (
           <View className="flex-row flex-wrap gap-2">
             {existingTags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="outline"
-                onPress={() => addTag(tag)}
-              >
+              <Badge key={tag} variant="outline" onPress={() => addTag(tag)}>
                 {tag}
               </Badge>
             ))}
@@ -133,7 +109,7 @@ export function DinnerForm({
         name="link"
         render={({ field }) => (
           <View className="gap-2">
-            <Text className="text-sm font-medium text-foreground">Link</Text>
+            <Text className="text-foreground text-sm font-medium">Link</Text>
             <Input value={field.value} onChangeText={field.onChange} />
           </View>
         )}
@@ -144,7 +120,7 @@ export function DinnerForm({
         name="notes"
         render={({ field }) => (
           <View className="gap-2">
-            <Text className="text-sm font-medium text-foreground">Notes</Text>
+            <Text className="text-foreground text-sm font-medium">Notes</Text>
             <Textarea value={field.value} onChangeText={field.onChange} />
           </View>
         )}
@@ -154,11 +130,6 @@ export function DinnerForm({
         <Button onPress={form.handleSubmit(onSubmit)} disabled={isPending}>
           Save
         </Button>
-        {existingDinner && onDelete && (
-          <Button variant="destructive" onPress={handleDelete} disabled={isPending}>
-            Delete
-          </Button>
-        )}
         <Button variant="outline" onPress={onCancel}>
           Cancel
         </Button>
