@@ -349,12 +349,29 @@ const PartEditor = ({
   const open = (id: string) => setExpandedId(id);
   const toggle = (id: string) =>
     setExpandedId((current) => (current === id ? null : id));
-  const collapseOnBlur =
-    (id: string) => (event: React.FocusEvent<HTMLDivElement>) => {
-      if (!event.currentTarget.contains(event.relatedTarget)) {
-        setExpandedId((current) => (current === id ? null : current));
+
+  // Collapse on click-outside via a document `click` listener, never on
+  // blur or pointerdown: collapsing shifts the layout, and doing that
+  // between mousedown and mouseup moves whatever the user is pressing
+  // (e.g. the add buttons below the row) out from under the cursor, so the
+  // click never lands. `click` fires after the pressed element's own
+  // handler has run.
+  useEffect(() => {
+    if (expandedId === null) return;
+
+    const collapse = (event: MouseEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const rowId = target
+        ?.closest("[data-row-id]")
+        ?.getAttribute("data-row-id");
+      if (rowId !== expandedId) {
+        setExpandedId((current) => (current === expandedId ? null : current));
       }
     };
+
+    document.addEventListener("click", collapse);
+    return () => document.removeEventListener("click", collapse);
+  }, [expandedId]);
 
   return (
     <section
@@ -413,7 +430,7 @@ const PartEditor = ({
           return (
             <div
               key={ingredient.id}
-              onBlur={collapseOnBlur(ingredient.id)}
+              data-row-id={ingredient.id}
               className={cn(
                 "border-b border-[hsl(40_15%_92%)] px-1 py-1.5",
                 isExpanded &&
@@ -543,7 +560,7 @@ const PartEditor = ({
             return (
               <div
                 key={step.id}
-                onBlur={collapseOnBlur(step.id)}
+                data-row-id={step.id}
                 className={cn(
                   "border-b border-[hsl(40_15%_92%)] px-1 py-1.5",
                   isExpanded &&
