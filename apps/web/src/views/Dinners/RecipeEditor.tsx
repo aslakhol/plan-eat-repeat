@@ -419,9 +419,6 @@ const PartEditor = ({
       <div className="mt-1">
         {ingredients.fields.map((ingredient, ingredientIndex) => {
           const isExpanded = expandedId === ingredient.id;
-          const note = form.watch(
-            `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.note`,
-          );
           const ingredientError =
             form.formState.errors.recipe?.parts?.[partIndex]?.ingredients?.[
               ingredientIndex
@@ -446,6 +443,7 @@ const PartEditor = ({
                   inputMode="decimal"
                   aria-label={`Ingredient ${ingredientIndex + 1} amount`}
                   className="focus:border-primary focus:ring-primary/15 h-9 min-w-0 rounded-md border bg-white px-1 text-center font-bold outline-none focus:ring-[3px]"
+                  onFocus={() => open(ingredient.id)}
                 />
                 <Controller
                   control={form.control}
@@ -455,6 +453,7 @@ const PartEditor = ({
                       ref={field.ref}
                       value={field.value ?? ""}
                       onBlur={field.onBlur}
+                      onFocus={() => open(ingredient.id)}
                       onChange={(event) =>
                         field.onChange(event.target.value || null)
                       }
@@ -476,9 +475,10 @@ const PartEditor = ({
                       `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.name`,
                     )}
                     list="recipe-ingredient-names"
-                    className="h-9 min-w-0 bg-white px-2"
+                    className="h-9 min-w-0 bg-white px-2 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-list-button]:hidden"
                     placeholder="Ingredient"
                     aria-label={`Ingredient ${ingredientIndex + 1} name`}
+                    onFocus={() => open(ingredient.id)}
                   />
                   <FieldError message={ingredientError?.name?.message} />
                 </div>
@@ -489,11 +489,12 @@ const PartEditor = ({
                       ? "Hide ingredient controls"
                       : "Show ingredient controls"
                   }
-                  className={cn(
-                    "text-muted-foreground flex h-9 items-center justify-center rounded-md",
-                    note && "text-primary",
-                  )}
-                  onClick={() => toggle(ingredient.id)}
+                  aria-expanded={isExpanded}
+                  className="text-muted-foreground flex h-9 items-center justify-center rounded-md [&_svg]:pointer-events-none"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    toggle(ingredient.id);
+                  }}
                 >
                   {isExpanded ? <ChevronDown /> : <ChevronRight />}
                 </button>
@@ -590,8 +591,12 @@ const PartEditor = ({
                     aria-label={
                       isExpanded ? "Hide step controls" : "Show step controls"
                     }
-                    className="text-muted-foreground flex h-10 items-center justify-center rounded-md"
-                    onClick={() => toggle(step.id)}
+                    aria-expanded={isExpanded}
+                    className="text-muted-foreground flex h-10 items-center justify-center rounded-md [&_svg]:pointer-events-none"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      toggle(step.id);
+                    }}
                   >
                     {isExpanded ? <ChevronDown /> : <ChevronRight />}
                   </button>
