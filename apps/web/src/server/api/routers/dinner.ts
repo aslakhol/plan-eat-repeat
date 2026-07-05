@@ -128,32 +128,30 @@ export const dinnerRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const householdId = ctx.householdId;
 
-      const dinner = await ctx.db.$transaction(async (tx) =>
-        tx.dinner.create({
-          data: {
-            name: input.dinnerName,
-            link: input.link,
-            notes: input.notes,
-            householdId,
-            servings:
-              input.recipe === undefined
-                ? undefined
-                : recipeServings(input.recipe),
-            tags: {
-              connectOrCreate: input.tagList.map((tag) => {
-                return {
-                  where: { value: tag },
-                  create: { value: tag },
-                };
-              }),
-            },
-            parts:
-              input.recipe === undefined
-                ? undefined
-                : { create: createRecipeParts(input.recipe.parts) },
+      const dinner = await ctx.db.dinner.create({
+        data: {
+          name: input.dinnerName,
+          link: input.link,
+          notes: input.notes,
+          householdId,
+          servings:
+            input.recipe === undefined
+              ? undefined
+              : recipeServings(input.recipe),
+          tags: {
+            connectOrCreate: input.tagList.map((tag) => {
+              return {
+                where: { value: tag },
+                create: { value: tag },
+              };
+            }),
           },
-        }),
-      );
+          parts:
+            input.recipe === undefined
+              ? undefined
+              : { create: createRecipeParts(input.recipe.parts) },
+        },
+      });
 
       return {
         dinner,
