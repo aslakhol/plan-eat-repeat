@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  dinnerNameSchema,
   recipeSchema,
   type DinnerWithRecipe,
   type RecipeInput,
@@ -118,7 +119,7 @@ export const dinnerRouter = createTRPCRouter({
   create: protectedProcedureWithHousehold
     .input(
       z.object({
-        dinnerName: z.string().min(3),
+        dinnerName: dinnerNameSchema,
         tagList: z.array(z.string()),
         link: z.string().nullable().optional(),
         notes: z.string().nullable().optional(),
@@ -160,7 +161,7 @@ export const dinnerRouter = createTRPCRouter({
   edit: protectedProcedureWithHousehold
     .input(
       z.object({
-        dinnerName: z.string().min(3),
+        dinnerName: dinnerNameSchema,
         dinnerId: z.number(),
         tagList: z.array(z.string()),
         link: z.string().nullable().optional(),
