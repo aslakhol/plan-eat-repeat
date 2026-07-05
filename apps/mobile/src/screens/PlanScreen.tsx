@@ -24,8 +24,10 @@ import {
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { DinnerWithTags } from "@planeatrepeat/shared";
 import type { AppTabsParamList } from "../navigation/AppTabs";
+import type { RootStackParamList } from "../navigation/RootNavigator";
 import { api } from "../utils/api";
 import { cn } from "../utils/cn";
 import { Screen } from "../components/Screen";
@@ -125,7 +127,11 @@ export function PlanScreen({
 
   const renderBackdrop = useCallback(
     (props: any) => (
-      <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />
+      <BottomSheetBackdrop
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        {...props}
+      />
     ),
     [],
   );
@@ -149,7 +155,7 @@ export function PlanScreen({
     <Screen edges={["top", "left", "right"]} contentClassName="relative">
       <View className="flex-1 gap-4">
         <View className="gap-2">
-          <Text className="font-serif text-3xl text-foreground">
+          <Text className="text-foreground font-serif text-3xl">
             Weekly Plan
           </Text>
         </View>
@@ -170,10 +176,9 @@ export function PlanScreen({
               contentContainerStyle={{ paddingBottom: 156, gap: 8 }}
             >
               {week.map((day) => {
-                const plannedDinner =
-                  plannedDinnersQuery.data?.plans.find((p) =>
-                    isSameDay(p.date, day),
-                  )?.dinner;
+                const plannedDinner = plannedDinnersQuery.data?.plans.find(
+                  (p) => isSameDay(p.date, day),
+                )?.dinner;
                 return (
                   <DayCard
                     key={day.toString()}
@@ -189,7 +194,7 @@ export function PlanScreen({
       </View>
 
       <View className="absolute bottom-4 left-0 right-0 items-center px-4">
-        <View className="rounded-lg border border-border bg-background/95 p-2 shadow-lg">
+        <View className="border-border bg-background/95 rounded-lg border p-2 shadow-lg">
           <WeekSelect
             setWeekOffSet={setWeekOffSet}
             startOfDisplayedWeek={startOfDisplayedWeek}
@@ -211,10 +216,10 @@ export function PlanScreen({
           >
             <View className="gap-4">
               <View className="gap-1">
-                <Text className="text-sm text-muted-foreground">
+                <Text className="text-muted-foreground text-sm">
                   {selectedDate ? format(selectedDate, "EEEE, LLLL do, y") : ""}
                 </Text>
-                <Text className="font-serif text-2xl text-foreground">
+                <Text className="text-foreground font-serif text-2xl">
                   {selectedDinner?.name ?? "Nothing planned yet"}
                 </Text>
               </View>
@@ -238,14 +243,14 @@ export function PlanScreen({
                     className={cn(
                       "justify-start",
                       selectedDinner?.id === dinner.id &&
-                      "bg-accent/50 text-accent-foreground",
+                        "bg-accent/50 text-accent-foreground",
                     )}
                   >
                     <Text
                       className={cn(
                         "text-foreground",
                         selectedDinner?.id === dinner.id &&
-                        "text-accent-foreground",
+                          "text-accent-foreground",
                       )}
                     >
                       {dinner.name}
@@ -291,10 +296,10 @@ export function PlanScreen({
           >
             <View className="gap-4">
               <View className="gap-1">
-                <Text className="text-sm text-muted-foreground">
+                <Text className="text-muted-foreground text-sm">
                   {selectedDate ? format(selectedDate, "EEEE, LLLL do, y") : ""}
                 </Text>
-                <Text className="font-serif text-2xl text-foreground">
+                <Text className="text-foreground font-serif text-2xl">
                   {selectedDinner?.name ?? ""}
                 </Text>
               </View>
@@ -323,7 +328,7 @@ export function PlanScreen({
                 {!!selectedDinner?.notes && (
                   <View className="gap-1">
                     {selectedDinner.notes.split("\n").map((line) => (
-                      <Text key={line} className="text-sm text-foreground">
+                      <Text key={line} className="text-foreground text-sm">
                         {line}
                       </Text>
                     ))}
@@ -353,12 +358,16 @@ export function PlanScreen({
                       variant="outline"
                       onPress={() => {
                         bottomSheetRef.current?.dismiss();
-                        navigation.navigate("Dinners", {
-                          dinnerId: selectedDinner.id,
-                        });
+                        navigation
+                          .getParent<
+                            NativeStackNavigationProp<RootStackParamList>
+                          >()
+                          ?.navigate("DinnerDetail", {
+                            dinnerId: selectedDinner.id,
+                          });
                       }}
                     >
-                      Edit dinner
+                      View recipe
                     </Button>
                   )}
                 </View>
@@ -393,7 +402,8 @@ function DayCard({ date, plannedDinner, onPress }: DayCardProps) {
     <Pressable onPress={onPress}>
       <View
         className={cn(
-          isDateToday && "rounded-lg border-2 border-primary bg-background p-[2px]",
+          isDateToday &&
+            "border-primary bg-background rounded-lg border-2 p-[2px]",
         )}
       >
         <Card
@@ -406,8 +416,8 @@ function DayCard({ date, plannedDinner, onPress }: DayCardProps) {
           <CardHeader className="p-3 pb-1">
             <Text
               className={cn(
-                "text-sm font-medium text-muted-foreground",
-                isDateToday && "font-bold text-primary",
+                "text-muted-foreground text-sm font-medium",
+                isDateToday && "text-primary font-bold",
               )}
             >
               {format(date, "EEE do")}
@@ -416,7 +426,7 @@ function DayCard({ date, plannedDinner, onPress }: DayCardProps) {
           <CardContent className="p-3 pt-1">
             {plannedDinner ? (
               <Text
-                className="font-serif text-base text-foreground"
+                className="text-foreground font-serif text-base"
                 numberOfLines={2}
                 ellipsizeMode="tail"
               >

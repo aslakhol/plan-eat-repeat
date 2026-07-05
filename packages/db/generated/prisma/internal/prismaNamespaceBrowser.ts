@@ -52,6 +52,9 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   Dinner: 'Dinner',
+  RecipePart: 'RecipePart',
+  RecipeIngredient: 'RecipeIngredient',
+  RecipeStep: 'RecipeStep',
   Tag: 'Tag',
   Plan: 'Plan',
   User: 'User',
@@ -83,10 +86,44 @@ export const DinnerScalarFieldEnum = {
   updatedAt: 'updatedAt',
   link: 'link',
   notes: 'notes',
-  householdId: 'householdId'
+  householdId: 'householdId',
+  servings: 'servings'
 } as const
 
 export type DinnerScalarFieldEnum = (typeof DinnerScalarFieldEnum)[keyof typeof DinnerScalarFieldEnum]
+
+
+export const RecipePartScalarFieldEnum = {
+  id: 'id',
+  dinnerId: 'dinnerId',
+  name: 'name',
+  order: 'order'
+} as const
+
+export type RecipePartScalarFieldEnum = (typeof RecipePartScalarFieldEnum)[keyof typeof RecipePartScalarFieldEnum]
+
+
+export const RecipeIngredientScalarFieldEnum = {
+  id: 'id',
+  partId: 'partId',
+  order: 'order',
+  name: 'name',
+  amount: 'amount',
+  unit: 'unit',
+  note: 'note'
+} as const
+
+export type RecipeIngredientScalarFieldEnum = (typeof RecipeIngredientScalarFieldEnum)[keyof typeof RecipeIngredientScalarFieldEnum]
+
+
+export const RecipeStepScalarFieldEnum = {
+  id: 'id',
+  partId: 'partId',
+  order: 'order',
+  text: 'text'
+} as const
+
+export type RecipeStepScalarFieldEnum = (typeof RecipeStepScalarFieldEnum)[keyof typeof RecipeStepScalarFieldEnum]
 
 
 export const TagScalarFieldEnum = {

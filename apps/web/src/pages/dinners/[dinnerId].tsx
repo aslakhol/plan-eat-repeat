@@ -1,15 +1,15 @@
 import Head from "next/head";
-import { DinnersView } from "../../views/Dinners/DinnersView";
+import { DinnerDetail } from "../../views/Dinners/DinnerDetail";
 
-export default function Home() {
+export default function DinnerDetailPage() {
   return (
     <>
       <Head>
-        <title>PlanEatRepeat</title>
-        <meta name="description" content="The easiest way to plan dinners" />
+        <title>Dinner · PlanEatRepeat</title>
+        <meta name="description" content="View and edit a dinner recipe" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <DinnersView />
+      <DinnerDetail />
     </>
   );
 }

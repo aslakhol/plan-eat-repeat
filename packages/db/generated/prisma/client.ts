@@ -45,6 +45,21 @@ export { Prisma }
  */
 export type Dinner = Prisma.DinnerModel
 /**
+ * Model RecipePart
+ * 
+ */
+export type RecipePart = Prisma.RecipePartModel
+/**
+ * Model RecipeIngredient
+ * 
+ */
+export type RecipeIngredient = Prisma.RecipeIngredientModel
+/**
+ * Model RecipeStep
+ * 
+ */
+export type RecipeStep = Prisma.RecipeStepModel
+/**
  * Model Tag
  * 
  */

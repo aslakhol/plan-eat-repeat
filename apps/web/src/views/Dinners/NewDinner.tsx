@@ -29,7 +29,14 @@ export const NewDinner = () => {
       toast({
         title: `${result.dinner.name} created`,
       });
-      setDialogOpen(false);
+      void router.push(`/dinners/${result.dinner.id}`);
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Could not create dinner",
+        description: error.message,
+      });
     },
     onSettled: () => {
       void utils.dinner.dinners.invalidate();

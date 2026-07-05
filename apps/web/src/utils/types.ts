@@ -1,2 +1,6 @@
 // Re-export from shared package
-export { dinnerFormSchema, type DinnerWithTags } from "@planeatrepeat/shared";
+export {
+  dinnerFormSchema,
+  type DinnerWithRecipe,
+  type DinnerWithTags,
+} from "@planeatrepeat/shared";
