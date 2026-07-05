@@ -2,7 +2,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { ArrowLeft, UtensilsCrossed } from "lucide-react";
-import { recipeSchema } from "@planeatrepeat/shared";
+import { parseAmount, recipeSchema } from "@planeatrepeat/shared";
 import { usePostHog } from "posthog-js/react";
 import { api } from "../../utils/api";
 import { toast } from "../../components/ui/use-toast";
@@ -97,7 +97,7 @@ export const DinnerDetail = () => {
         name: textOrNull(part.name),
         ingredients: part.ingredients.map((ingredient) => ({
           name: ingredient.name,
-          amount: ingredient.amount,
+          amount: parseAmount(ingredient.amount),
           unit: ingredient.unit,
           note: textOrNull(ingredient.note),
         })),

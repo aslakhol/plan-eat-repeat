@@ -95,7 +95,7 @@ export const dinners: DinnerSeed[] = [
           ingredients: [
             { name: "spaghetti", amount: 400, unit: "g", note: null },
             { name: "pancetta", amount: 150, unit: "g", note: "diced" },
-            { name: "eggs", amount: 4, unit: "stk", note: null },
+            { name: "eggs", amount: 4, unit: "pcs", note: null },
             { name: "pecorino", amount: 100, unit: "g", note: "finely grated" },
             {
               name: "black pepper",
@@ -149,8 +149,8 @@ export const dinners: DinnerSeed[] = [
               unit: "g",
               note: "cut into pieces",
             },
-            { name: "yoghurt", amount: 2, unit: "ss", note: null },
-            { name: "curry powder", amount: 2, unit: "ts", note: null },
+            { name: "yoghurt", amount: 2, unit: "tbsp", note: null },
+            { name: "curry powder", amount: 2, unit: "tsp", note: null },
           ],
           steps: [
             "Mix the chicken with yoghurt and curry powder.",
@@ -160,9 +160,9 @@ export const dinners: DinnerSeed[] = [
         {
           name: "Sauce",
           ingredients: [
-            { name: "onion", amount: 1, unit: "stk", note: "finely chopped" },
-            { name: "garlic", amount: 3, unit: "stk", note: "minced" },
-            { name: "ginger", amount: 1, unit: "ss", note: "grated" },
+            { name: "onion", amount: 1, unit: "pcs", note: "finely chopped" },
+            { name: "garlic", amount: 3, unit: "pcs", note: "minced" },
+            { name: "ginger", amount: 1, unit: "tbsp", note: "grated" },
             { name: "coconut milk", amount: 400, unit: "ml", note: null },
           ],
           steps: [

@@ -1,11 +1,10 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { recipeSchema } from "@planeatrepeat/shared";
+import { parseAmount, recipeSchema } from "@planeatrepeat/shared";
 import type { RootStackParamList } from "../navigation/RootNavigator";
 import {
   RecipeEditor,
-  parseAmount,
   type RecipeEditorHandle,
   type RecipeEditorValues,
 } from "../components/dinners/RecipeEditor";
