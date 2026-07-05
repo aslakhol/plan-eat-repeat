@@ -156,82 +156,84 @@ export const RecipeEditor = ({
         </div>
 
         <div className="space-y-5">
-          <div className="space-y-1.5">
-            <FieldLabel htmlFor="dinner-name">Name</FieldLabel>
-            <Input
-              {...form.register("name")}
-              id="dinner-name"
-              className="h-12 bg-white text-lg font-semibold"
-            />
-            <FieldError message={form.formState.errors.name?.message} />
-          </div>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <FieldLabel htmlFor="dinner-name">Name</FieldLabel>
+              <Input
+                {...form.register("name")}
+                id="dinner-name"
+                className="h-12 bg-white text-lg font-semibold"
+              />
+              <FieldError message={form.formState.errors.name?.message} />
+            </div>
 
-          <div>
-            <div className="grid grid-cols-[116px_1fr] gap-2">
-              <div className="space-y-1.5">
-                <FieldLabel>Servings</FieldLabel>
-                <div className="grid h-10 grid-cols-[32px_1fr_32px] overflow-hidden rounded-md border bg-white">
-                  <button
-                    type="button"
-                    aria-label="Decrease servings"
-                    className="text-muted-foreground hover:bg-accent flex items-center justify-center border-r"
-                    onClick={() =>
-                      form.setValue(
-                        "recipe.servings",
-                        Math.max(1, (servings ?? 2) - 1),
-                        { shouldDirty: true },
-                      )
-                    }
-                  >
-                    <Minus className="h-3.5 w-3.5" />
-                  </button>
-                  <input
-                    {...form.register("recipe.servings", {
-                      setValueAs: (value) =>
-                        value === "" ? null : Number(value),
-                    })}
-                    className="min-w-0 bg-transparent text-center font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                    type="number"
-                    min={1}
-                    inputMode="numeric"
-                    placeholder="–"
-                    aria-label="Number of servings"
+            <div>
+              <div className="grid grid-cols-[116px_1fr] gap-2">
+                <div className="space-y-1.5">
+                  <FieldLabel>Servings</FieldLabel>
+                  <div className="grid h-10 grid-cols-[32px_1fr_32px] overflow-hidden rounded-md border bg-white">
+                    <button
+                      type="button"
+                      aria-label="Decrease servings"
+                      className="text-muted-foreground hover:bg-accent flex items-center justify-center border-r"
+                      onClick={() =>
+                        form.setValue(
+                          "recipe.servings",
+                          Math.max(1, (servings ?? 2) - 1),
+                          { shouldDirty: true },
+                        )
+                      }
+                    >
+                      <Minus className="h-3.5 w-3.5" />
+                    </button>
+                    <input
+                      {...form.register("recipe.servings", {
+                        setValueAs: (value) =>
+                          value === "" ? null : Number(value),
+                      })}
+                      className="min-w-0 bg-transparent text-center font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      type="number"
+                      min={1}
+                      inputMode="numeric"
+                      placeholder="–"
+                      aria-label="Number of servings"
+                    />
+                    <button
+                      type="button"
+                      aria-label="Increase servings"
+                      className="text-muted-foreground hover:bg-accent flex items-center justify-center border-l"
+                      onClick={() =>
+                        form.setValue("recipe.servings", (servings ?? 0) + 1, {
+                          shouldDirty: true,
+                        })
+                      }
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <FieldLabel htmlFor="recipe-link">Recipe link</FieldLabel>
+                  <Input
+                    {...form.register("link")}
+                    id="recipe-link"
+                    type="url"
+                    className="bg-white"
                   />
-                  <button
-                    type="button"
-                    aria-label="Increase servings"
-                    className="text-muted-foreground hover:bg-accent flex items-center justify-center border-l"
-                    onClick={() =>
-                      form.setValue("recipe.servings", (servings ?? 0) + 1, {
-                        shouldDirty: true,
-                      })
-                    }
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </button>
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <FieldLabel htmlFor="recipe-link">Recipe link</FieldLabel>
-                <Input
-                  {...form.register("link")}
-                  id="recipe-link"
-                  type="url"
-                  className="bg-white"
-                />
-              </div>
+              <FieldError
+                message={
+                  form.formState.errors.link?.message ??
+                  form.formState.errors.recipe?.servings?.message
+                }
+              />
             </div>
-            <FieldError
-              message={
-                form.formState.errors.link?.message ??
-                form.formState.errors.recipe?.servings?.message
-              }
-            />
-          </div>
 
-          <div className="space-y-1.5">
-            <FieldLabel>Tags</FieldLabel>
-            <EditorTags form={form} />
+            <div className="space-y-1.5">
+              <FieldLabel>Tags</FieldLabel>
+              <EditorTags form={form} />
+            </div>
           </div>
 
           <div className="border-t border-[hsl(40_15%_86%)] pt-5">
@@ -323,7 +325,9 @@ const PartEditor = ({
     control: form.control,
     name: `recipe.parts.${partIndex}.steps`,
   });
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  // Only one row is expanded at a time, so focusing or expanding another
+  // row contracts the previous one; clicking outside a row contracts it too.
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const knownIds = useRef<Set<string> | null>(null);
 
   useEffect(() => {
@@ -337,20 +341,20 @@ const PartEditor = ({
 
     const newIds = ids.filter((id) => !knownIds.current?.has(id));
     if (newIds.length > 0) {
-      setExpanded((current) => new Set([...current, ...newIds]));
+      setExpandedId(newIds[newIds.length - 1] ?? null);
       knownIds.current = new Set(ids);
     }
   }, [ingredients.fields, steps.fields]);
 
-  const open = (id: string) =>
-    setExpanded((current) => new Set(current).add(id));
+  const open = (id: string) => setExpandedId(id);
   const toggle = (id: string) =>
-    setExpanded((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    setExpandedId((current) => (current === id ? null : id));
+  const collapseOnBlur =
+    (id: string) => (event: React.FocusEvent<HTMLDivElement>) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) {
+        setExpandedId((current) => (current === id ? null : current));
+      }
+    };
 
   return (
     <section
@@ -395,9 +399,9 @@ const PartEditor = ({
 
       <SectionLabel>Ingredients</SectionLabel>
 
-      <div className="mt-2">
+      <div className="mt-1">
         {ingredients.fields.map((ingredient, ingredientIndex) => {
-          const isExpanded = expanded.has(ingredient.id);
+          const isExpanded = expandedId === ingredient.id;
           const note = form.watch(
             `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.note`,
           );
@@ -409,8 +413,9 @@ const PartEditor = ({
           return (
             <div
               key={ingredient.id}
+              onBlur={collapseOnBlur(ingredient.id)}
               className={cn(
-                "border-b border-[hsl(40_15%_92%)] px-1 py-2",
+                "border-b border-[hsl(40_15%_92%)] px-1 py-1.5",
                 isExpanded &&
                   "rounded-[10px] border-transparent bg-[hsl(40_33%_95%)] shadow-[inset_0_0_0_1px_hsl(18_60%_80%)]",
               )}
@@ -527,9 +532,9 @@ const PartEditor = ({
 
       <div className="mt-5">
         <SectionLabel>Steps</SectionLabel>
-        <div className="mt-2">
+        <div className="mt-1">
           {steps.fields.map((step, stepIndex) => {
-            const isExpanded = expanded.has(step.id);
+            const isExpanded = expandedId === step.id;
             const stepError =
               form.formState.errors.recipe?.parts?.[partIndex]?.steps?.[
                 stepIndex
@@ -538,13 +543,14 @@ const PartEditor = ({
             return (
               <div
                 key={step.id}
+                onBlur={collapseOnBlur(step.id)}
                 className={cn(
-                  "border-b border-[hsl(40_15%_92%)] px-1 py-2",
+                  "border-b border-[hsl(40_15%_92%)] px-1 py-1.5",
                   isExpanded &&
                     "rounded-[10px] border-transparent bg-[hsl(40_33%_95%)] shadow-[inset_0_0_0_1px_hsl(18_60%_80%)]",
                 )}
               >
-                <div className="grid grid-cols-[18px_1fr] gap-2">
+                <div className="grid grid-cols-[18px_1fr_30px] items-start gap-2">
                   <span className="pt-2 font-serif text-[hsl(18_75%_50%)]">
                     {stepIndex + 1}
                   </span>
@@ -562,6 +568,16 @@ const PartEditor = ({
                     }}
                     style={{ fieldSizing: "content" } as CSSProperties}
                   />
+                  <button
+                    type="button"
+                    aria-label={
+                      isExpanded ? "Hide step controls" : "Show step controls"
+                    }
+                    className="text-muted-foreground flex h-10 items-center justify-center rounded-md"
+                    onClick={() => toggle(step.id)}
+                  >
+                    {isExpanded ? <ChevronDown /> : <ChevronRight />}
+                  </button>
                 </div>
                 {isExpanded && (
                   <div className="ml-[26px] mt-2">

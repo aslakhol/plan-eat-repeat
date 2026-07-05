@@ -1,6 +1,15 @@
 import { z } from "zod";
 
-export const UNITS = ["g", "kg", "ml", "dl", "l", "ss", "ts", "stk"] as const;
+export const UNITS = [
+  "g",
+  "kg",
+  "ml",
+  "dl",
+  "l",
+  "tbsp",
+  "tsp",
+  "pcs",
+] as const;
 export type Unit = (typeof UNITS)[number];
 
 export const recipeIngredientSchema = z.object({

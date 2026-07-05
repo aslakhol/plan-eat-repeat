@@ -196,106 +196,114 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
           }}
         >
           <View className="gap-5">
-            <View className="gap-1.5">
-              <FieldLabel>Name</FieldLabel>
-              <Controller
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <Input
-                    value={field.value}
-                    onBlur={field.onBlur}
-                    onChangeText={field.onChange}
-                    accessibilityLabel="Dinner name"
-                    className="h-12 bg-white text-lg font-semibold"
-                  />
-                )}
-              />
-              <FieldError message={form.formState.errors.name?.message} />
-            </View>
+            <View className="gap-4">
+              <View className="gap-1.5">
+                <FieldLabel>Name</FieldLabel>
+                <Controller
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <Input
+                      value={field.value}
+                      onBlur={field.onBlur}
+                      onChangeText={field.onChange}
+                      accessibilityLabel="Dinner name"
+                      className="h-12 bg-white text-lg font-semibold"
+                    />
+                  )}
+                />
+                <FieldError message={form.formState.errors.name?.message} />
+              </View>
 
-            <View>
-              <View className="flex-row gap-2">
-                <View className="gap-1.5">
-                  <FieldLabel>Servings</FieldLabel>
-                  <View className="border-border h-11 w-[116px] flex-row overflow-hidden rounded-md border bg-white">
-                    <Pressable
-                      accessibilityLabel="Decrease servings"
-                      className="border-border w-9 items-center justify-center border-r"
-                      onPress={() =>
-                        form.setValue(
-                          "recipe.servings",
-                          Math.max(1, (servings ?? 2) - 1),
-                          { shouldDirty: true },
-                        )
-                      }
-                    >
-                      <Minus size={16} color={colors.mutedForeground} />
-                    </Pressable>
+              <View>
+                <View className="flex-row gap-2">
+                  <View className="gap-1.5">
+                    <FieldLabel>Servings</FieldLabel>
+                    <View className="border-border h-11 w-[116px] flex-row overflow-hidden rounded-md border bg-white">
+                      <Pressable
+                        accessibilityLabel="Decrease servings"
+                        className="border-border w-9 items-center justify-center border-r"
+                        onPress={() =>
+                          form.setValue(
+                            "recipe.servings",
+                            Math.max(1, (servings ?? 2) - 1),
+                            { shouldDirty: true },
+                          )
+                        }
+                      >
+                        <Minus size={16} color={colors.mutedForeground} />
+                      </Pressable>
+                      <Controller
+                        control={form.control}
+                        name="recipe.servings"
+                        render={({ field }) => (
+                          <Input
+                            value={
+                              field.value === null ? "" : String(field.value)
+                            }
+                            onBlur={field.onBlur}
+                            onChangeText={(value) =>
+                              field.onChange(
+                                value === "" ? null : Number(value),
+                              )
+                            }
+                            accessibilityLabel="Number of servings"
+                            keyboardType="number-pad"
+                            textAlign="center"
+                            className="min-w-0 flex-1 rounded-none border-0 bg-transparent px-0 py-0 font-bold"
+                            placeholder="–"
+                          />
+                        )}
+                      />
+                      <Pressable
+                        accessibilityLabel="Increase servings"
+                        className="border-border w-9 items-center justify-center border-l"
+                        onPress={() =>
+                          form.setValue(
+                            "recipe.servings",
+                            (servings ?? 0) + 1,
+                            {
+                              shouldDirty: true,
+                            },
+                          )
+                        }
+                      >
+                        <Plus size={16} color={colors.mutedForeground} />
+                      </Pressable>
+                    </View>
+                  </View>
+
+                  <View className="min-w-0 flex-1 gap-1.5">
+                    <FieldLabel>Recipe link</FieldLabel>
                     <Controller
                       control={form.control}
-                      name="recipe.servings"
+                      name="link"
                       render={({ field }) => (
                         <Input
-                          value={
-                            field.value === null ? "" : String(field.value)
-                          }
+                          value={field.value}
                           onBlur={field.onBlur}
-                          onChangeText={(value) =>
-                            field.onChange(value === "" ? null : Number(value))
-                          }
-                          accessibilityLabel="Number of servings"
-                          keyboardType="number-pad"
-                          textAlign="center"
-                          className="min-w-0 flex-1 rounded-none border-0 bg-transparent px-0 py-0 font-bold"
-                          placeholder="–"
+                          onChangeText={field.onChange}
+                          accessibilityLabel="Recipe link"
+                          autoCapitalize="none"
+                          keyboardType="url"
+                          className="h-11 bg-white"
                         />
                       )}
                     />
-                    <Pressable
-                      accessibilityLabel="Increase servings"
-                      className="border-border w-9 items-center justify-center border-l"
-                      onPress={() =>
-                        form.setValue("recipe.servings", (servings ?? 0) + 1, {
-                          shouldDirty: true,
-                        })
-                      }
-                    >
-                      <Plus size={16} color={colors.mutedForeground} />
-                    </Pressable>
                   </View>
                 </View>
-
-                <View className="min-w-0 flex-1 gap-1.5">
-                  <FieldLabel>Recipe link</FieldLabel>
-                  <Controller
-                    control={form.control}
-                    name="link"
-                    render={({ field }) => (
-                      <Input
-                        value={field.value}
-                        onBlur={field.onBlur}
-                        onChangeText={field.onChange}
-                        accessibilityLabel="Recipe link"
-                        autoCapitalize="none"
-                        keyboardType="url"
-                        className="h-11 bg-white"
-                      />
-                    )}
-                  />
-                </View>
+                <FieldError
+                  message={
+                    form.formState.errors.link?.message ??
+                    form.formState.errors.recipe?.servings?.message
+                  }
+                />
               </View>
-              <FieldError
-                message={
-                  form.formState.errors.link?.message ??
-                  form.formState.errors.recipe?.servings?.message
-                }
-              />
-            </View>
 
-            <View className="gap-1.5">
-              <FieldLabel>Tags</FieldLabel>
-              <EditorTags form={form} />
+              <View className="gap-1.5">
+                <FieldLabel>Tags</FieldLabel>
+                <EditorTags form={form} />
+              </View>
             </View>
 
             <View className="border-t border-[hsl(40,15%,86%)] pt-5">
@@ -388,7 +396,9 @@ function PartEditor({
     control: form.control,
     name: `recipe.parts.${partIndex}.steps`,
   });
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  // Only one row is expanded at a time, so focusing or expanding another
+  // row contracts the previous one.
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [focusedIngredient, setFocusedIngredient] = useState<string | null>(
     null,
   );
@@ -405,20 +415,14 @@ function PartEditor({
 
     const newIds = ids.filter((id) => !knownIds.current?.has(id));
     if (newIds.length > 0) {
-      setExpanded((current) => new Set([...current, ...newIds]));
+      setExpandedId(newIds[newIds.length - 1] ?? null);
     }
     knownIds.current = new Set(ids);
   }, [ingredients.fields, steps.fields]);
 
-  const open = (id: string) =>
-    setExpanded((current) => new Set(current).add(id));
+  const open = (id: string) => setExpandedId(id);
   const toggle = (id: string) =>
-    setExpanded((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    setExpandedId((current) => (current === id ? null : id));
 
   return (
     <View
@@ -471,9 +475,9 @@ function PartEditor({
 
       <SectionLabel>Ingredients</SectionLabel>
 
-      <View className="mt-2">
+      <View className="mt-1">
         {ingredients.fields.map((ingredient, ingredientIndex) => {
-          const isExpanded = expanded.has(ingredient.id);
+          const isExpanded = expandedId === ingredient.id;
           const note = form.watch(
             `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.note`,
           );
@@ -499,7 +503,7 @@ function PartEditor({
             <View
               key={ingredient.id}
               className={cn(
-                "border-b border-[hsl(40,15%,92%)] px-1 py-2",
+                "border-b border-[hsl(40,15%,92%)] px-1 py-1.5",
                 isExpanded &&
                   "rounded-[10px] border border-[hsl(18,60%,80%)] bg-[hsl(40,33%,95%)]",
               )}
@@ -512,6 +516,7 @@ function PartEditor({
                     <Input
                       value={field.value}
                       onBlur={field.onBlur}
+                      onFocus={() => open(ingredient.id)}
                       onChangeText={field.onChange}
                       accessibilityLabel={`Ingredient ${ingredientIndex + 1} amount`}
                       keyboardType="decimal-pad"
@@ -704,9 +709,9 @@ function PartEditor({
 
       <View className="mt-5">
         <SectionLabel>Steps</SectionLabel>
-        <View className="mt-2">
+        <View className="mt-1">
           {steps.fields.map((step, stepIndex) => {
-            const isExpanded = expanded.has(step.id);
+            const isExpanded = expandedId === step.id;
             const stepError =
               form.formState.errors.recipe?.parts?.[partIndex]?.steps?.[
                 stepIndex
@@ -716,7 +721,7 @@ function PartEditor({
               <View
                 key={step.id}
                 className={cn(
-                  "border-b border-[hsl(40,15%,92%)] px-1 py-2",
+                  "border-b border-[hsl(40,15%,92%)] px-1 py-1.5",
                   isExpanded &&
                     "rounded-[10px] border border-[hsl(18,60%,80%)] bg-[hsl(40,33%,95%)]",
                 )}
@@ -741,6 +746,19 @@ function PartEditor({
                       />
                     )}
                   />
+                  <Pressable
+                    accessibilityLabel={
+                      isExpanded ? "Hide step controls" : "Show step controls"
+                    }
+                    className="h-10 w-[30px] items-center justify-center"
+                    onPress={() => toggle(step.id)}
+                  >
+                    {isExpanded ? (
+                      <ChevronDown size={19} color={colors.mutedForeground} />
+                    ) : (
+                      <ChevronRight size={19} color={colors.mutedForeground} />
+                    )}
+                  </Pressable>
                 </View>
                 {isExpanded && (
                   <View className="ml-[26px] mt-2">
