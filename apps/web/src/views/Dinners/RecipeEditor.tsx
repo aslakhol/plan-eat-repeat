@@ -369,8 +369,17 @@ const PartEditor = ({
       }
     };
 
-    document.addEventListener("click", collapse);
-    return () => document.removeEventListener("click", collapse);
+    // Register after the current event finishes dispatching: React can flush
+    // this effect mid-click (e.g. the add-row click that expands the new
+    // row), and the listener would otherwise see that same click as being
+    // outside the row and collapse it again.
+    const timeout = window.setTimeout(() =>
+      document.addEventListener("click", collapse),
+    );
+    return () => {
+      window.clearTimeout(timeout);
+      document.removeEventListener("click", collapse);
+    };
   }, [expandedId]);
 
   return (
@@ -491,10 +500,7 @@ const PartEditor = ({
                   }
                   aria-expanded={isExpanded}
                   className="text-muted-foreground flex h-9 items-center justify-center rounded-md [&_svg]:pointer-events-none"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    toggle(ingredient.id);
-                  }}
+                  onClick={() => toggle(ingredient.id)}
                 >
                   {isExpanded ? <ChevronDown /> : <ChevronRight />}
                 </button>
@@ -593,10 +599,7 @@ const PartEditor = ({
                     }
                     aria-expanded={isExpanded}
                     className="text-muted-foreground flex h-10 items-center justify-center rounded-md [&_svg]:pointer-events-none"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      toggle(step.id);
-                    }}
+                    onClick={() => toggle(step.id)}
                   >
                     {isExpanded ? <ChevronDown /> : <ChevronRight />}
                   </button>

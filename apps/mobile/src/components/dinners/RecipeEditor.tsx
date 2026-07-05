@@ -478,9 +478,6 @@ function PartEditor({
       <View className="mt-1">
         {ingredients.fields.map((ingredient, ingredientIndex) => {
           const isExpanded = expandedId === ingredient.id;
-          const note = form.watch(
-            `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.note`,
-          );
           const name = form.watch(
             `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.name`,
           );
@@ -574,15 +571,9 @@ function PartEditor({
                   onPress={() => toggle(ingredient.id)}
                 >
                   {isExpanded ? (
-                    <ChevronDown
-                      size={19}
-                      color={note ? colors.primary : colors.mutedForeground}
-                    />
+                    <ChevronDown size={19} color={colors.mutedForeground} />
                   ) : (
-                    <ChevronRight
-                      size={19}
-                      color={note ? colors.primary : colors.mutedForeground}
-                    />
+                    <ChevronRight size={19} color={colors.mutedForeground} />
                   )}
                 </Pressable>
               </View>

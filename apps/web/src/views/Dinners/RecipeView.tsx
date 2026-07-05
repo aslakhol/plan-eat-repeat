@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { ExternalLink } from "lucide-react";
 import { formatAmount, type DinnerWithRecipe } from "@planeatrepeat/shared";
+import { cn } from "../../lib/utils";
 import { Button } from "../../components/ui/button";
 
 type Props = {
@@ -15,6 +16,11 @@ const sourceLabel = (link: string) => {
     return link;
   }
 };
+
+const hasAmounts = (part: DinnerWithRecipe["parts"][number]) =>
+  part.ingredients.some(
+    (ingredient) => ingredient.amount !== null || ingredient.unit !== null,
+  );
 
 export const RecipeView = ({ dinner, onEdit }: Props) => {
   const hasRecipe = dinner.parts.length > 0;
@@ -92,11 +98,16 @@ export const RecipeView = ({ dinner, onEdit }: Props) => {
 
               {part.ingredients.length > 0 && (
                 // max-content sizes the amount column to the part's longest
-                // amount, and collapses it when no ingredient has one.
+                // amount; the column (and its gap) is dropped entirely when
+                // no ingredient in the part has one.
                 <div
-                  className={`grid grid-cols-[max-content_1fr] gap-x-2.5 gap-y-1 text-base leading-[1.3] ${
-                    part.name ? "mt-2.5" : "mt-0"
-                  }`}
+                  className={cn(
+                    "grid gap-y-1 text-base leading-[1.3]",
+                    hasAmounts(part)
+                      ? "grid-cols-[max-content_1fr] gap-x-2.5"
+                      : "grid-cols-1",
+                    part.name ? "mt-2.5" : "mt-0",
+                  )}
                 >
                   {part.ingredients.map((ingredient) => {
                     const amount = [
@@ -110,7 +121,9 @@ export const RecipeView = ({ dinner, onEdit }: Props) => {
 
                     return (
                       <Fragment key={ingredient.id}>
-                        <span className="font-bold">{amount}</span>
+                        {hasAmounts(part) && (
+                          <span className="font-bold">{amount}</span>
+                        )}
                         <span className="font-medium">
                           {ingredient.name}
                           {ingredient.note && (
