@@ -1,0 +1,950 @@
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  ChevronRight,
+  Minus,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react-native";
+import { format } from "date-fns";
+import { useNavigation, usePreventRemove } from "@react-navigation/native";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Controller,
+  type UseFormReturn,
+  useFieldArray,
+  useForm,
+} from "react-hook-form";
+import {
+  UNITS,
+  type DinnerWithRecipe,
+  recipeIngredientSchema,
+} from "@planeatrepeat/shared";
+import { api } from "../../utils/api";
+import { colors } from "../../theme/colors";
+import { cn } from "../../utils/cn";
+import { Button } from "../ui/Button";
+import { Input } from "../ui/Input";
+import { Textarea } from "../ui/Textarea";
+
+const editorIngredientSchema = recipeIngredientSchema.extend({
+  name: z.string().trim().min(1, "Name required"),
+  amount: z.number().positive("Amount must be more than 0").nullable(),
+  note: z.string(),
+});
+
+const recipeEditorSchema = z.object({
+  name: z.string().trim().min(1, "Add a dinner name"),
+  tags: z.array(z.string()),
+  newTag: z.string().optional(),
+  link: z.union([z.literal(""), z.string().url("Enter a valid URL")]),
+  notes: z.string(),
+  recipe: z.object({
+    servings: z.number().int().positive().nullable(),
+    parts: z.array(
+      z.object({
+        name: z.string(),
+        ingredients: z.array(editorIngredientSchema),
+        steps: z.array(
+          z.object({
+            text: z.string().trim().min(1, "Add a step or remove this row"),
+          }),
+        ),
+      }),
+    ),
+  }),
+});
+
+export type RecipeEditorValues = z.infer<typeof recipeEditorSchema>;
+
+export type RecipeEditorHandle = {
+  cancel: () => void;
+  submit: () => void;
+};
+
+type Props = {
+  dinner: DinnerWithRecipe;
+  isPending: boolean;
+  onCancel: () => void;
+  onSave: (values: RecipeEditorValues) => void;
+  onDelete: () => void;
+};
+
+const emptyPart = (): RecipeEditorValues["recipe"]["parts"][number] => ({
+  name: "",
+  ingredients: [],
+  steps: [],
+});
+
+export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
+  function RecipeEditor(
+    { dinner, isPending, onCancel, onSave, onDelete },
+    ref,
+  ) {
+    const form = useForm<RecipeEditorValues>({
+      resolver: zodResolver(recipeEditorSchema),
+      defaultValues: {
+        name: dinner.name,
+        tags: dinner.tags.map((tag) => tag.value),
+        newTag: "",
+        link: dinner.link ?? "",
+        notes: dinner.notes ?? "",
+        recipe: {
+          servings: dinner.servings,
+          parts: dinner.parts.map((part) => ({
+            name: part.name ?? "",
+            ingredients: part.ingredients.map((ingredient) => ({
+              name: ingredient.name,
+              amount: ingredient.amount,
+              unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
+              note: ingredient.note ?? "",
+            })),
+            steps: part.steps.map((step) => ({ text: step.text })),
+          })),
+        },
+      },
+    });
+    const parts = useFieldArray({
+      control: form.control,
+      name: "recipe.parts",
+    });
+    const watchedParts = form.watch("recipe.parts");
+    const servings = form.watch("recipe.servings");
+    const navigation = useNavigation();
+    const multiMode =
+      watchedParts.length > 1 ||
+      watchedParts.some((part) => part.name.trim().length > 0);
+    const ingredientNamesQuery = api.dinner.ingredientNames.useQuery();
+
+    usePreventRemove(form.formState.isDirty, ({ data }) => {
+      Alert.alert(
+        "Discard changes?",
+        "Your unsaved recipe changes will be lost.",
+        [
+          { text: "Keep editing", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => navigation.dispatch(data.action),
+          },
+        ],
+      );
+    });
+
+    const cancel = () => {
+      if (!form.formState.isDirty) {
+        onCancel();
+        return;
+      }
+
+      Alert.alert(
+        "Discard changes?",
+        "Your unsaved recipe changes will be lost.",
+        [
+          { text: "Keep editing", style: "cancel" },
+          { text: "Discard", style: "destructive", onPress: onCancel },
+        ],
+      );
+    };
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        cancel,
+        submit: () => void form.handleSubmit(onSave)(),
+      }),
+      [form, onSave],
+    );
+
+    return (
+      <KeyboardAvoidingView
+        className="bg-background flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 92 : 0}
+      >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingTop: 12,
+            paddingBottom: 48,
+          }}
+        >
+          <View className="gap-5">
+            <Controller
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <Input
+                  value={field.value}
+                  onBlur={field.onBlur}
+                  onChangeText={field.onChange}
+                  accessibilityLabel="Dinner name"
+                  className="h-12 bg-white text-lg font-semibold"
+                  placeholder="Dinner name"
+                />
+              )}
+            />
+            <FieldError message={form.formState.errors.name?.message} />
+
+            <View className="flex-row gap-2">
+              <View className="border-border h-11 w-[116px] flex-row overflow-hidden rounded-md border bg-white">
+                <Pressable
+                  accessibilityLabel="Decrease servings"
+                  className="border-border w-9 items-center justify-center border-r"
+                  onPress={() =>
+                    form.setValue(
+                      "recipe.servings",
+                      Math.max(1, (servings ?? 2) - 1),
+                      { shouldDirty: true },
+                    )
+                  }
+                >
+                  <Minus size={16} color={colors.mutedForeground} />
+                </Pressable>
+                <Controller
+                  control={form.control}
+                  name="recipe.servings"
+                  render={({ field }) => (
+                    <Input
+                      value={field.value === null ? "" : String(field.value)}
+                      onBlur={field.onBlur}
+                      onChangeText={(value) =>
+                        field.onChange(value === "" ? null : Number(value))
+                      }
+                      accessibilityLabel="Number of servings"
+                      keyboardType="number-pad"
+                      className="min-w-0 flex-1 rounded-none border-0 bg-transparent px-1 text-center font-bold"
+                      placeholder="–"
+                    />
+                  )}
+                />
+                <Pressable
+                  accessibilityLabel="Increase servings"
+                  className="border-border w-9 items-center justify-center border-l"
+                  onPress={() =>
+                    form.setValue("recipe.servings", (servings ?? 0) + 1, {
+                      shouldDirty: true,
+                    })
+                  }
+                >
+                  <Plus size={16} color={colors.mutedForeground} />
+                </Pressable>
+              </View>
+
+              <Controller
+                control={form.control}
+                name="link"
+                render={({ field }) => (
+                  <Input
+                    value={field.value}
+                    onBlur={field.onBlur}
+                    onChangeText={field.onChange}
+                    accessibilityLabel="Recipe link"
+                    autoCapitalize="none"
+                    keyboardType="url"
+                    className="h-11 min-w-0 flex-1 bg-white"
+                    placeholder="Recipe link"
+                  />
+                )}
+              />
+            </View>
+            <FieldError
+              message={
+                form.formState.errors.link?.message ??
+                form.formState.errors.recipe?.servings?.message
+              }
+            />
+
+            <EditorTags form={form} />
+
+            <View className="border-t border-[hsl(40,15%,86%)] pt-5">
+              {parts.fields.map((part, partIndex) => (
+                <PartEditor
+                  key={part.id}
+                  form={form}
+                  partIndex={partIndex}
+                  multiMode={multiMode}
+                  ingredientNames={
+                    ingredientNamesQuery.data?.ingredientNames ?? []
+                  }
+                  canMoveUp={partIndex > 0}
+                  canMoveDown={partIndex < parts.fields.length - 1}
+                  onMoveUp={() => parts.move(partIndex, partIndex - 1)}
+                  onMoveDown={() => parts.move(partIndex, partIndex + 1)}
+                  onRemove={() => parts.remove(partIndex)}
+                />
+              ))}
+
+              <Button
+                variant="secondary"
+                className="mt-4 w-full"
+                textClassName="font-serif text-primary"
+                onPress={() => parts.append(emptyPart())}
+              >
+                <Plus size={17} color={colors.primary} />
+                <Text className="text-primary font-serif text-sm">
+                  {parts.fields.length === 0 ? "Add recipe" : "Add part"}
+                </Text>
+              </Button>
+            </View>
+
+            <View className="gap-2 border-t border-[hsl(40,15%,86%)] pt-5">
+              <Text className="text-foreground font-serif text-base">Tips</Text>
+              <Controller
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <Textarea
+                    value={field.value}
+                    onBlur={field.onBlur}
+                    onChangeText={field.onChange}
+                    className="min-h-24 bg-white text-[15px]"
+                    placeholder="Anything useful to remember next time"
+                  />
+                )}
+              />
+            </View>
+
+            <DeleteDinnerButton
+              dinnerId={dinner.id}
+              isPending={isPending}
+              onDelete={onDelete}
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  },
+);
+
+type PartEditorProps = {
+  form: UseFormReturn<RecipeEditorValues>;
+  partIndex: number;
+  multiMode: boolean;
+  ingredientNames: string[];
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onRemove: () => void;
+};
+
+function PartEditor({
+  form,
+  partIndex,
+  multiMode,
+  ingredientNames,
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
+  onRemove,
+}: PartEditorProps) {
+  const ingredients = useFieldArray({
+    control: form.control,
+    name: `recipe.parts.${partIndex}.ingredients`,
+  });
+  const steps = useFieldArray({
+    control: form.control,
+    name: `recipe.parts.${partIndex}.steps`,
+  });
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [focusedIngredient, setFocusedIngredient] = useState<string | null>(
+    null,
+  );
+  const knownIds = useRef<Set<string> | null>(null);
+
+  useEffect(() => {
+    const ids = [...ingredients.fields, ...steps.fields].map(
+      (field) => field.id,
+    );
+    if (knownIds.current === null) {
+      knownIds.current = new Set(ids);
+      return;
+    }
+
+    const newIds = ids.filter((id) => !knownIds.current?.has(id));
+    if (newIds.length > 0) {
+      setExpanded((current) => new Set([...current, ...newIds]));
+    }
+    knownIds.current = new Set(ids);
+  }, [ingredients.fields, steps.fields]);
+
+  const open = (id: string) =>
+    setExpanded((current) => new Set(current).add(id));
+  const toggle = (id: string) =>
+    setExpanded((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  return (
+    <View
+      className={cn(
+        partIndex > 0 &&
+          multiMode &&
+          "mt-6 border-t border-[hsl(40,15%,86%)] pt-5",
+      )}
+    >
+      {multiMode ? (
+        <View className="mb-3 flex-row items-center gap-2">
+          <Controller
+            control={form.control}
+            name={`recipe.parts.${partIndex}.name`}
+            render={({ field }) => (
+              <Input
+                value={field.value}
+                onBlur={field.onBlur}
+                onChangeText={field.onChange}
+                accessibilityLabel={`Part ${partIndex + 1} name`}
+                className="h-11 min-w-0 flex-1 bg-white font-serif text-base"
+                placeholder="Part name (optional)"
+              />
+            )}
+          />
+          <View className="flex-row">
+            <IconButton
+              label="Move part up"
+              disabled={!canMoveUp}
+              onPress={onMoveUp}
+            >
+              <ArrowUp size={17} color={colors.mutedForeground} />
+            </IconButton>
+            <IconButton
+              label="Move part down"
+              disabled={!canMoveDown}
+              onPress={onMoveDown}
+            >
+              <ArrowDown size={17} color={colors.mutedForeground} />
+            </IconButton>
+            <IconButton label="Remove part" onPress={onRemove}>
+              <X size={18} color={colors.destructive} />
+            </IconButton>
+          </View>
+        </View>
+      ) : (
+        <SectionLabel>Ingredients</SectionLabel>
+      )}
+
+      <View className="mt-2">
+        {ingredients.fields.map((ingredient, ingredientIndex) => {
+          const isExpanded = expanded.has(ingredient.id);
+          const note = form.watch(
+            `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.note`,
+          );
+          const name = form.watch(
+            `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.name`,
+          );
+          const ingredientError =
+            form.formState.errors.recipe?.parts?.[partIndex]?.ingredients?.[
+              ingredientIndex
+            ];
+          const suggestions =
+            focusedIngredient === ingredient.id && name.trim().length > 0
+              ? ingredientNames
+                  .filter(
+                    (candidate) =>
+                      candidate.toLowerCase().includes(name.toLowerCase()) &&
+                      candidate.toLowerCase() !== name.toLowerCase(),
+                  )
+                  .slice(0, 5)
+              : [];
+
+          return (
+            <View
+              key={ingredient.id}
+              className={cn(
+                "border-b border-[hsl(40,15%,92%)] px-1 py-2",
+                isExpanded &&
+                  "rounded-[10px] border border-[hsl(18,60%,80%)] bg-[hsl(40,33%,95%)]",
+              )}
+            >
+              <View className="flex-row items-center gap-1.5">
+                <Controller
+                  control={form.control}
+                  name={`recipe.parts.${partIndex}.ingredients.${ingredientIndex}.amount`}
+                  render={({ field }) => (
+                    <Input
+                      value={field.value === null ? "" : String(field.value)}
+                      onBlur={field.onBlur}
+                      onChangeText={(value) =>
+                        field.onChange(value === "" ? null : Number(value))
+                      }
+                      accessibilityLabel={`Ingredient ${ingredientIndex + 1} amount`}
+                      keyboardType="decimal-pad"
+                      className="h-10 w-[52px] bg-white px-1 text-center font-bold"
+                      placeholder="0"
+                    />
+                  )}
+                />
+                <Controller
+                  control={form.control}
+                  name={`recipe.parts.${partIndex}.ingredients.${ingredientIndex}.unit`}
+                  render={({ field }) => (
+                    <Pressable
+                      accessibilityLabel={`Ingredient ${ingredientIndex + 1} unit`}
+                      className="border-input h-10 w-[58px] items-center justify-center rounded-md border bg-white"
+                      onPress={() => open(ingredient.id)}
+                    >
+                      <Text className="text-foreground text-sm">
+                        {field.value ?? "–"}
+                      </Text>
+                    </Pressable>
+                  )}
+                />
+                <Controller
+                  control={form.control}
+                  name={`recipe.parts.${partIndex}.ingredients.${ingredientIndex}.name`}
+                  render={({ field }) => (
+                    <Input
+                      value={field.value}
+                      onBlur={() => {
+                        field.onBlur();
+                        setTimeout(() => setFocusedIngredient(null), 150);
+                      }}
+                      onFocus={() => {
+                        open(ingredient.id);
+                        setFocusedIngredient(ingredient.id);
+                      }}
+                      onChangeText={field.onChange}
+                      accessibilityLabel={`Ingredient ${ingredientIndex + 1} name`}
+                      className="h-10 min-w-0 flex-1 bg-white px-2"
+                      placeholder="Ingredient"
+                    />
+                  )}
+                />
+                <Pressable
+                  accessibilityLabel={
+                    isExpanded
+                      ? "Hide ingredient controls"
+                      : "Show ingredient controls"
+                  }
+                  className="h-10 w-[30px] items-center justify-center"
+                  onPress={() => toggle(ingredient.id)}
+                >
+                  {isExpanded ? (
+                    <ChevronDown
+                      size={19}
+                      color={note ? colors.primary : colors.mutedForeground}
+                    />
+                  ) : (
+                    <ChevronRight
+                      size={19}
+                      color={note ? colors.primary : colors.mutedForeground}
+                    />
+                  )}
+                </Pressable>
+              </View>
+
+              {isExpanded && (
+                <View className="mt-2 gap-2">
+                  {suggestions.length > 0 && (
+                    <View className="border-border overflow-hidden rounded-md border bg-white">
+                      {suggestions.map((suggestion) => (
+                        <Pressable
+                          key={suggestion}
+                          className="border-b border-[hsl(40,15%,92%)] px-3 py-2.5 last:border-b-0"
+                          onPress={() => {
+                            form.setValue(
+                              `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.name`,
+                              suggestion,
+                              { shouldDirty: true },
+                            );
+                            setFocusedIngredient(null);
+                          }}
+                        >
+                          <Text className="text-foreground text-sm">
+                            {suggestion}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  )}
+
+                  <Controller
+                    control={form.control}
+                    name={`recipe.parts.${partIndex}.ingredients.${ingredientIndex}.unit`}
+                    render={({ field }) => (
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                        contentContainerStyle={{ gap: 6 }}
+                      >
+                        {[null, ...UNITS].map((unit) => {
+                          const selected = field.value === unit;
+                          return (
+                            <Pressable
+                              key={unit ?? "none"}
+                              accessibilityRole="radio"
+                              accessibilityState={{ selected }}
+                              className={cn(
+                                "border-border min-w-10 rounded-full border bg-white px-3 py-2",
+                                selected && "border-primary bg-primary/10",
+                              )}
+                              onPress={() => field.onChange(unit)}
+                            >
+                              <Text
+                                className={cn(
+                                  "text-muted-foreground text-center text-sm",
+                                  selected && "text-primary font-semibold",
+                                )}
+                              >
+                                {unit ?? "–"}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </ScrollView>
+                    )}
+                  />
+
+                  <Controller
+                    control={form.control}
+                    name={`recipe.parts.${partIndex}.ingredients.${ingredientIndex}.note`}
+                    render={({ field }) => (
+                      <Input
+                        value={field.value}
+                        onBlur={field.onBlur}
+                        onChangeText={field.onChange}
+                        accessibilityLabel={`Ingredient ${ingredientIndex + 1} note`}
+                        className="h-10 bg-white text-sm"
+                        placeholder="note — e.g. grated, cut in strips"
+                      />
+                    )}
+                  />
+
+                  <RowControls
+                    canMoveUp={ingredientIndex > 0}
+                    canMoveDown={
+                      ingredientIndex < ingredients.fields.length - 1
+                    }
+                    onMoveUp={() =>
+                      ingredients.move(ingredientIndex, ingredientIndex - 1)
+                    }
+                    onMoveDown={() =>
+                      ingredients.move(ingredientIndex, ingredientIndex + 1)
+                    }
+                    onRemove={() => ingredients.remove(ingredientIndex)}
+                  />
+                </View>
+              )}
+              <FieldError
+                message={
+                  ingredientError?.name?.message ??
+                  ingredientError?.amount?.message ??
+                  ingredientError?.unit?.message
+                }
+              />
+            </View>
+          );
+        })}
+
+        <AddButton
+          label="Add ingredient"
+          onPress={() =>
+            ingredients.append({
+              amount: null,
+              unit: null,
+              name: "",
+              note: "",
+            })
+          }
+        />
+      </View>
+
+      <View className="mt-5">
+        <SectionLabel>Steps</SectionLabel>
+        <View className="mt-2">
+          {steps.fields.map((step, stepIndex) => {
+            const isExpanded = expanded.has(step.id);
+            const stepError =
+              form.formState.errors.recipe?.parts?.[partIndex]?.steps?.[
+                stepIndex
+              ]?.text?.message;
+
+            return (
+              <View
+                key={step.id}
+                className={cn(
+                  "border-b border-[hsl(40,15%,92%)] px-1 py-2",
+                  isExpanded &&
+                    "rounded-[10px] border border-[hsl(18,60%,80%)] bg-[hsl(40,33%,95%)]",
+                )}
+              >
+                <View className="flex-row gap-2">
+                  <Text className="w-[18px] pt-2 font-serif text-base text-[hsl(18,75%,50%)]">
+                    {stepIndex + 1}
+                  </Text>
+                  <Controller
+                    control={form.control}
+                    name={`recipe.parts.${partIndex}.steps.${stepIndex}.text`}
+                    render={({ field }) => (
+                      <Textarea
+                        value={field.value}
+                        onBlur={field.onBlur}
+                        onFocus={() => open(step.id)}
+                        onChangeText={field.onChange}
+                        accessibilityLabel={`Step ${stepIndex + 1}`}
+                        className="min-h-10 min-w-0 flex-1 bg-white py-2 text-[15px]"
+                        placeholder="Describe this step"
+                        scrollEnabled={false}
+                      />
+                    )}
+                  />
+                </View>
+                {isExpanded && (
+                  <View className="ml-[26px] mt-2">
+                    <RowControls
+                      canMoveUp={stepIndex > 0}
+                      canMoveDown={stepIndex < steps.fields.length - 1}
+                      onMoveUp={() => steps.move(stepIndex, stepIndex - 1)}
+                      onMoveDown={() => steps.move(stepIndex, stepIndex + 1)}
+                      onRemove={() => steps.remove(stepIndex)}
+                    />
+                  </View>
+                )}
+                <View className="ml-[26px]">
+                  <FieldError message={stepError} />
+                </View>
+              </View>
+            );
+          })}
+          <AddButton
+            label="Add step"
+            onPress={() => steps.append({ text: "" })}
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function EditorTags({ form }: { form: UseFormReturn<RecipeEditorValues> }) {
+  const [tagInput, setTagInput] = useState("");
+  const tagsQuery = api.dinner.tags.useQuery(undefined, {
+    select: (data) => data.tags.map((tag) => tag.value),
+  });
+  const selected = form.watch("tags");
+
+  const addTag = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed || selected.includes(trimmed)) return;
+    form.setValue("tags", [...selected, trimmed], { shouldDirty: true });
+    setTagInput("");
+  };
+
+  return (
+    <View className="gap-2">
+      <View className="flex-row flex-wrap gap-2">
+        {selected.map((tag) => (
+          <Pressable
+            key={tag}
+            accessibilityLabel={`Remove ${tag} tag`}
+            className="bg-secondary flex-row items-center gap-1 rounded-full px-2.5 py-1.5"
+            onPress={() =>
+              form.setValue(
+                "tags",
+                selected.filter((candidate) => candidate !== tag),
+                { shouldDirty: true },
+              )
+            }
+          >
+            <Text className="text-secondary-foreground text-xs font-semibold">
+              {tag}
+            </Text>
+            <X size={12} color={colors.mutedForeground} />
+          </Pressable>
+        ))}
+        <Input
+          value={tagInput}
+          onChangeText={setTagInput}
+          onSubmitEditing={() => addTag(tagInput)}
+          returnKeyType="done"
+          className="h-9 min-w-[116px] flex-1 border-dashed bg-white"
+          placeholder="Add tag…"
+        />
+      </View>
+
+      {!!tagsQuery.data?.length && tagInput.length > 0 && (
+        <View className="flex-row flex-wrap gap-2">
+          {tagsQuery.data
+            .filter(
+              (tag) =>
+                tag.toLowerCase().includes(tagInput.toLowerCase()) &&
+                !selected.includes(tag),
+            )
+            .slice(0, 5)
+            .map((tag) => (
+              <Pressable
+                key={tag}
+                className="border-border rounded-full border bg-white px-2.5 py-1.5"
+                onPress={() => addTag(tag)}
+              >
+                <Text className="text-muted-foreground text-xs">{tag}</Text>
+              </Pressable>
+            ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+function DeleteDinnerButton({
+  dinnerId,
+  isPending,
+  onDelete,
+}: {
+  dinnerId: number;
+  isPending: boolean;
+  onDelete: () => void;
+}) {
+  const plansQuery = api.plan.plansForDinner.useQuery(
+    { dinnerId },
+    { enabled: false },
+  );
+
+  const confirmDelete = async () => {
+    const result = await plansQuery.refetch();
+    const dates =
+      result.data?.plans.map((plan) => format(plan.date, "MMMM do, y")) ?? [];
+    const affected =
+      dates.length > 0
+        ? `\n\nPlans on these dates will also be deleted:\n${dates.join("\n")}`
+        : "";
+
+    Alert.alert(
+      "Delete dinner",
+      `Are you sure? This cannot be undone.${affected}`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: onDelete },
+      ],
+    );
+  };
+
+  return (
+    <Button
+      variant="outline"
+      disabled={isPending || plansQuery.isFetching}
+      className="w-full border-[hsl(0,50%,85%)]"
+      onPress={() => void confirmDelete()}
+    >
+      <Trash2 size={17} color="hsl(0, 60%, 48%)" />
+      <Text className="text-sm font-semibold text-[hsl(0,60%,48%)]">
+        Delete dinner
+      </Text>
+    </Button>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <Text className="text-muted-foreground text-[11px] font-bold uppercase tracking-[1px]">
+      {children}
+    </Text>
+  );
+}
+
+function AddButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="mt-2 w-full border-dashed border-[hsl(40,15%,80%)] bg-transparent"
+      onPress={onPress}
+    >
+      <Plus size={16} color={colors.primary} />
+      <Text className="text-primary text-sm font-medium">{label}</Text>
+    </Button>
+  );
+}
+
+function IconButton({
+  label,
+  children,
+  disabled,
+  onPress,
+}: {
+  label: string;
+  children: React.ReactNode;
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={label}
+      disabled={disabled}
+      className={cn(
+        "h-10 w-9 items-center justify-center rounded-md",
+        disabled && "opacity-30",
+      )}
+      onPress={onPress}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
+function RowControls({
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
+  onRemove,
+}: {
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <View className="flex-row items-center justify-between">
+      <View className="flex-row">
+        <IconButton label="Move up" disabled={!canMoveUp} onPress={onMoveUp}>
+          <ArrowUp size={17} color={colors.mutedForeground} />
+        </IconButton>
+        <IconButton
+          label="Move down"
+          disabled={!canMoveDown}
+          onPress={onMoveDown}
+        >
+          <ArrowDown size={17} color={colors.mutedForeground} />
+        </IconButton>
+      </View>
+      <Pressable className="px-2 py-2" onPress={onRemove}>
+        <Text className="text-destructive text-sm font-semibold">Remove</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <Text className="text-destructive mt-1 text-xs font-medium">{message}</Text>
+  );
+}
