@@ -34,6 +34,9 @@ export function DinnerDetailScreen({ navigation, route }: Props) {
         utils.dinner.get.invalidate({ dinnerId }),
         utils.dinner.dinners.invalidate(),
         utils.dinner.ingredientNames.invalidate(),
+        // The Plan tab stays mounted beneath this screen, so it only
+        // refreshes through invalidation.
+        utils.plan.plannedDinners.invalidate(),
       ]);
       setEditing(false);
     },
@@ -44,7 +47,10 @@ export function DinnerDetailScreen({ navigation, route }: Props) {
   const deleteMutation = api.dinner.delete.useMutation({
     onSuccess: async () => {
       setEditing(false);
-      await utils.dinner.dinners.invalidate();
+      await Promise.all([
+        utils.dinner.dinners.invalidate(),
+        utils.plan.plannedDinners.invalidate(),
+      ]);
       navigation.goBack();
     },
     onError: (error) => {

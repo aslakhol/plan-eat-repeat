@@ -154,7 +154,9 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
       watchedParts.some((part) => part.name.trim().length > 0);
     const ingredientNamesQuery = api.dinner.ingredientNames.useQuery();
 
-    usePreventRemove(form.formState.isDirty, ({ data }) => {
+    // Disarm the guard while a save/delete is in flight so the goBack after a
+    // successful delete isn't intercepted by the discard prompt.
+    usePreventRemove(form.formState.isDirty && !isPending, ({ data }) => {
       Alert.alert(
         "Discard changes?",
         "Your unsaved recipe changes will be lost.",

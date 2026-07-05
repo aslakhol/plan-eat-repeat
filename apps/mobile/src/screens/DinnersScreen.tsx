@@ -5,6 +5,7 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
+  Alert,
   StyleSheet,
 } from "react-native";
 import { ChefHat } from "lucide-react-native";
@@ -50,6 +51,9 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
       navigation
         .getParent<NativeStackNavigationProp<RootStackParamList>>()
         ?.navigate("DinnerDetail", { dinnerId: result.dinner.id });
+    },
+    onError: (error) => {
+      Alert.alert("Could not save dinner", error.message);
     },
   });
 
