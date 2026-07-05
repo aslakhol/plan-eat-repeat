@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { ExternalLink } from "lucide-react";
 import { formatAmount, type DinnerWithRecipe } from "@planeatrepeat/shared";
 import { Button } from "../../components/ui/button";
@@ -81,18 +82,22 @@ export const RecipeView = ({ dinner, onEdit }: Props) => {
               key={part.id}
               className={
                 partIndex > 0
-                  ? "mt-[26px] border-t border-[hsl(40_15%_86%)]"
+                  ? "mt-[26px] border-t border-[hsl(40_15%_86%)] pt-5"
                   : undefined
               }
             >
               {part.name && (
-                <h2 className="mt-[22px] font-serif text-xl font-normal">
-                  {part.name}
-                </h2>
+                <h2 className="font-serif text-xl font-normal">{part.name}</h2>
               )}
 
               {part.ingredients.length > 0 && (
-                <div className={part.name ? "mt-2.5" : "mt-0"}>
+                // max-content sizes the amount column to the part's longest
+                // amount, and collapses it when no ingredient has one.
+                <div
+                  className={`grid grid-cols-[max-content_1fr] gap-x-2.5 gap-y-1 text-base leading-[1.3] ${
+                    part.name ? "mt-2.5" : "mt-0"
+                  }`}
+                >
                   {part.ingredients.map((ingredient) => {
                     const amount = [
                       ingredient.amount === null
@@ -104,10 +109,7 @@ export const RecipeView = ({ dinner, onEdit }: Props) => {
                       .join(" ");
 
                     return (
-                      <div
-                        key={ingredient.id}
-                        className="grid grid-cols-[74px_1fr] gap-2.5 py-0.5 text-base leading-[1.3]"
-                      >
+                      <Fragment key={ingredient.id}>
                         <span className="font-bold">{amount}</span>
                         <span className="font-medium">
                           {ingredient.name}
@@ -118,7 +120,7 @@ export const RecipeView = ({ dinner, onEdit }: Props) => {
                             </span>
                           )}
                         </span>
-                      </div>
+                      </Fragment>
                     );
                   })}
                 </div>
@@ -151,8 +153,8 @@ export const RecipeView = ({ dinner, onEdit }: Props) => {
       )}
 
       {dinner.notes && (
-        <section className="mt-[26px] border-t border-[hsl(40_15%_86%)]">
-          <h2 className="mb-1.5 mt-5 font-serif text-base font-normal">Tips</h2>
+        <section className="mt-[26px] border-t border-[hsl(40_15%_86%)] pt-5">
+          <h2 className="mb-1.5 font-serif text-base font-normal">Notes</h2>
           <p className="whitespace-pre-wrap text-[15px] font-medium leading-[1.5] text-[hsl(24_10%_25%)]">
             {dinner.notes}
           </p>

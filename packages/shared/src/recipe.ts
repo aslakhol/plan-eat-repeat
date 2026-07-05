@@ -24,3 +24,21 @@ export const recipeSchema = z.object({
 export type RecipeInput = z.infer<typeof recipeSchema>;
 
 export const formatAmount = (amount: number) => String(amount);
+
+// Editors keep amounts as text so partial input like "1," or "0.5" survives
+// re-renders and comma decimals work; parseAmount converts back on save.
+export const parseAmount = (value: string) => {
+  const normalized = value.trim().replace(",", ".");
+  if (normalized === "") return null;
+  const parsed = Number(normalized);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
+export const amountInputSchema = z
+  .string()
+  .trim()
+  .refine((value) => {
+    if (value === "") return true;
+    const parsed = Number(value.replace(",", "."));
+    return !Number.isNaN(parsed) && parsed > 0;
+  }, "Amount must be a number more than 0");

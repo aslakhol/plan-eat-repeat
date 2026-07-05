@@ -20,6 +20,7 @@ import {
 import {
   UNITS,
   type DinnerWithRecipe,
+  amountInputSchema,
   recipeIngredientSchema,
 } from "@planeatrepeat/shared";
 import { api } from "../../utils/api";
@@ -31,9 +32,11 @@ import { Form } from "../../components/ui/form";
 import { FancyCombobox } from "../../components/ui/FancyCombobox";
 import { DeleteDinnerButton } from "./DeleteDinnerButton";
 
+// Amounts are edited as text so comma decimals like "1,5" can be typed;
+// parseAmount converts back to a number on save.
 const editorIngredientSchema = recipeIngredientSchema.extend({
   name: z.string().trim().min(1, "Name required"),
-  amount: z.number().positive("Amount must be more than 0").nullable(),
+  amount: amountInputSchema,
   note: z.string(),
 });
 
@@ -96,7 +99,7 @@ export const RecipeEditor = ({
           name: part.name ?? "",
           ingredients: part.ingredients.map((ingredient) => ({
             name: ingredient.name,
-            amount: ingredient.amount,
+            amount: ingredient.amount === null ? "" : String(ingredient.amount),
             unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
             note: ingredient.note ?? "",
           })),
@@ -153,75 +156,81 @@ export const RecipeEditor = ({
         </div>
 
         <div className="space-y-5">
-          <div>
+          <div className="space-y-1.5">
+            <FieldLabel htmlFor="dinner-name">Name</FieldLabel>
             <Input
               {...form.register("name")}
-              aria-label="Dinner name"
+              id="dinner-name"
               className="h-12 bg-white text-lg font-semibold"
-              placeholder="Dinner name"
             />
             <FieldError message={form.formState.errors.name?.message} />
           </div>
 
-          <div className="grid grid-cols-[116px_1fr] gap-2">
-            <div
-              className="grid h-10 grid-cols-[32px_1fr_32px] overflow-hidden rounded-md border bg-white"
-              aria-label="Servings"
-            >
-              <button
-                type="button"
-                aria-label="Decrease servings"
-                className="text-muted-foreground hover:bg-accent flex items-center justify-center border-r"
-                onClick={() =>
-                  form.setValue(
-                    "recipe.servings",
-                    Math.max(1, (servings ?? 2) - 1),
-                    { shouldDirty: true },
-                  )
-                }
-              >
-                <Minus className="h-3.5 w-3.5" />
-              </button>
-              <input
-                {...form.register("recipe.servings", {
-                  setValueAs: (value) => (value === "" ? null : Number(value)),
-                })}
-                className="min-w-0 bg-transparent text-center font-bold outline-none"
-                type="number"
-                min={1}
-                inputMode="numeric"
-                placeholder="–"
-                aria-label="Number of servings"
-              />
-              <button
-                type="button"
-                aria-label="Increase servings"
-                className="text-muted-foreground hover:bg-accent flex items-center justify-center border-l"
-                onClick={() =>
-                  form.setValue("recipe.servings", (servings ?? 0) + 1, {
-                    shouldDirty: true,
-                  })
-                }
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
+          <div>
+            <div className="grid grid-cols-[116px_1fr] gap-2">
+              <div className="space-y-1.5">
+                <FieldLabel>Servings</FieldLabel>
+                <div className="grid h-10 grid-cols-[32px_1fr_32px] overflow-hidden rounded-md border bg-white">
+                  <button
+                    type="button"
+                    aria-label="Decrease servings"
+                    className="text-muted-foreground hover:bg-accent flex items-center justify-center border-r"
+                    onClick={() =>
+                      form.setValue(
+                        "recipe.servings",
+                        Math.max(1, (servings ?? 2) - 1),
+                        { shouldDirty: true },
+                      )
+                    }
+                  >
+                    <Minus className="h-3.5 w-3.5" />
+                  </button>
+                  <input
+                    {...form.register("recipe.servings", {
+                      setValueAs: (value) =>
+                        value === "" ? null : Number(value),
+                    })}
+                    className="min-w-0 bg-transparent text-center font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    type="number"
+                    min={1}
+                    inputMode="numeric"
+                    placeholder="–"
+                    aria-label="Number of servings"
+                  />
+                  <button
+                    type="button"
+                    aria-label="Increase servings"
+                    className="text-muted-foreground hover:bg-accent flex items-center justify-center border-l"
+                    onClick={() =>
+                      form.setValue("recipe.servings", (servings ?? 0) + 1, {
+                        shouldDirty: true,
+                      })
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <FieldLabel htmlFor="recipe-link">Recipe link</FieldLabel>
+                <Input
+                  {...form.register("link")}
+                  id="recipe-link"
+                  type="url"
+                  className="bg-white"
+                />
+              </div>
             </div>
-            <Input
-              {...form.register("link")}
-              type="url"
-              className="bg-white"
-              placeholder="Recipe link"
-              aria-label="Recipe link"
+            <FieldError
+              message={
+                form.formState.errors.link?.message ??
+                form.formState.errors.recipe?.servings?.message
+              }
             />
           </div>
-          <FieldError
-            message={
-              form.formState.errors.link?.message ??
-              form.formState.errors.recipe?.servings?.message
-            }
-          />
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
+            <FieldLabel>Tags</FieldLabel>
             <EditorTags form={form} />
           </div>
 
@@ -260,12 +269,15 @@ export const RecipeEditor = ({
           </div>
 
           <div className="space-y-2 border-t border-[hsl(40_15%_86%)] pt-5">
-            <label htmlFor="recipe-tips" className="font-serif text-base">
-              Tips
+            <label
+              htmlFor="recipe-notes"
+              className="text-muted-foreground block text-[11px] font-bold uppercase tracking-[0.1em]"
+            >
+              Notes
             </label>
             <Textarea
               {...form.register("notes")}
-              id="recipe-tips"
+              id="recipe-notes"
               className="min-h-24 bg-white text-[15px]"
               placeholder="Anything useful to remember next time"
             />
@@ -348,37 +360,40 @@ const PartEditor = ({
           "mt-6 border-t border-[hsl(40_15%_86%)] pt-5",
       )}
     >
-      {multiMode ? (
-        <div className="mb-3 grid grid-cols-[1fr_auto] items-center gap-2">
-          <Input
-            {...form.register(`recipe.parts.${partIndex}.name`)}
-            className="h-10 bg-white font-serif text-base"
-            placeholder="Part name (optional)"
-            aria-label={`Part ${partIndex + 1} name`}
-          />
-          <div className="flex">
-            <IconButton
-              label="Move part up"
-              disabled={!canMoveUp}
-              onClick={onMoveUp}
-            >
-              <ArrowUp />
-            </IconButton>
-            <IconButton
-              label="Move part down"
-              disabled={!canMoveDown}
-              onClick={onMoveDown}
-            >
-              <ArrowDown />
-            </IconButton>
-            <IconButton label="Remove part" destructive onClick={onRemove}>
-              <X />
-            </IconButton>
+      {multiMode && (
+        <div className="mb-4 space-y-1.5">
+          <FieldLabel>Part name</FieldLabel>
+          <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+            <Input
+              {...form.register(`recipe.parts.${partIndex}.name`)}
+              className="h-10 bg-white font-serif text-base"
+              placeholder="Optional"
+              aria-label={`Part ${partIndex + 1} name`}
+            />
+            <div className="flex">
+              <IconButton
+                label="Move part up"
+                disabled={!canMoveUp}
+                onClick={onMoveUp}
+              >
+                <ArrowUp />
+              </IconButton>
+              <IconButton
+                label="Move part down"
+                disabled={!canMoveDown}
+                onClick={onMoveDown}
+              >
+                <ArrowDown />
+              </IconButton>
+              <IconButton label="Remove part" destructive onClick={onRemove}>
+                <X />
+              </IconButton>
+            </div>
           </div>
         </div>
-      ) : (
-        <SectionLabel>Ingredients</SectionLabel>
       )}
+
+      <SectionLabel>Ingredients</SectionLabel>
 
       <div className="mt-2">
         {ingredients.fields.map((ingredient, ingredientIndex) => {
@@ -400,20 +415,13 @@ const PartEditor = ({
                   "rounded-[10px] border-transparent bg-[hsl(40_33%_95%)] shadow-[inset_0_0_0_1px_hsl(18_60%_80%)]",
               )}
             >
-              <div className="grid grid-cols-[52px_58px_1fr_30px] gap-1.5">
+              <div className="grid grid-cols-[60px_58px_1fr_30px] items-start gap-1.5">
                 <input
                   {...form.register(
                     `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.amount`,
-                    {
-                      setValueAs: (value) =>
-                        value === "" ? null : Number(value),
-                    },
                   )}
-                  type="number"
-                  min="0"
-                  step="any"
+                  type="text"
                   inputMode="decimal"
-                  placeholder="0"
                   aria-label={`Ingredient ${ingredientIndex + 1} amount`}
                   className="focus:border-primary focus:ring-primary/15 h-9 min-w-0 rounded-md border bg-white px-1 text-center font-bold outline-none focus:ring-[3px]"
                 />
@@ -440,15 +448,18 @@ const PartEditor = ({
                     </select>
                   )}
                 />
-                <Input
-                  {...form.register(
-                    `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.name`,
-                  )}
-                  list="recipe-ingredient-names"
-                  className="h-9 min-w-0 bg-white px-2"
-                  placeholder="Ingredient"
-                  aria-label={`Ingredient ${ingredientIndex + 1} name`}
-                />
+                <div className="min-w-0">
+                  <Input
+                    {...form.register(
+                      `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.name`,
+                    )}
+                    list="recipe-ingredient-names"
+                    className="h-9 min-w-0 bg-white px-2"
+                    placeholder="Ingredient"
+                    aria-label={`Ingredient ${ingredientIndex + 1} name`}
+                  />
+                  <FieldError message={ingredientError?.name?.message} />
+                </div>
                 <button
                   type="button"
                   aria-label={
@@ -457,7 +468,7 @@ const PartEditor = ({
                       : "Show ingredient controls"
                   }
                   className={cn(
-                    "text-muted-foreground flex items-center justify-center rounded-md",
+                    "text-muted-foreground flex h-9 items-center justify-center rounded-md",
                     note && "text-primary",
                   )}
                   onClick={() => toggle(ingredient.id)}
@@ -493,7 +504,6 @@ const PartEditor = ({
               )}
               <FieldError
                 message={
-                  ingredientError?.name?.message ??
                   ingredientError?.amount?.message ??
                   ingredientError?.unit?.message
                 }
@@ -506,7 +516,7 @@ const PartEditor = ({
           label="Add ingredient"
           onClick={() =>
             ingredients.append({
-              amount: null,
+              amount: "",
               unit: null,
               name: "",
               note: "",
@@ -620,6 +630,21 @@ const EditorTags = ({ form }: { form: UseFormReturn<RecipeEditorValues> }) => {
     />
   );
 };
+
+const FieldLabel = ({
+  htmlFor,
+  children,
+}: {
+  htmlFor?: string;
+  children: React.ReactNode;
+}) => (
+  <label
+    htmlFor={htmlFor}
+    className="text-muted-foreground block text-xs font-semibold"
+  >
+    {children}
+  </label>
+);
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   <h2 className="text-muted-foreground text-[11px] font-bold uppercase tracking-[0.1em]">

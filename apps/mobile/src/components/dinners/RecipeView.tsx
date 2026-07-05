@@ -79,41 +79,56 @@ export function RecipeView({ dinner, onEdit }: Props) {
 
       {hasRecipe ? (
         <View className="mt-6">
-          {dinner.parts.map((part, partIndex) => (
-            <View
-              key={part.id}
-              className={
-                partIndex > 0
-                  ? "mt-[26px] border-t border-[hsl(40,15%,86%)]"
-                  : undefined
-              }
-            >
-              {part.name && (
-                <Text className="text-foreground mt-[22px] font-serif text-xl">
-                  {part.name}
-                </Text>
-              )}
+          {dinner.parts.map((part, partIndex) => {
+            const amounts = part.ingredients.map((ingredient) =>
+              [
+                ingredient.amount === null
+                  ? ""
+                  : formatAmount(ingredient.amount),
+                ingredient.unit ?? "",
+              ]
+                .filter(Boolean)
+                .join(" "),
+            );
+            // Size the amount column to the part's longest amount so short
+            // amounts sit close to the names; drop the column entirely when
+            // no ingredient in the part has one.
+            const longestAmount = Math.max(
+              0,
+              ...amounts.map((amount) => amount.length),
+            );
+            const amountWidth = Math.min(104, Math.ceil(longestAmount * 9.5));
 
-              {part.ingredients.length > 0 && (
-                <View className={part.name ? "mt-2.5" : undefined}>
-                  {part.ingredients.map((ingredient) => {
-                    const amount = [
-                      ingredient.amount === null
-                        ? ""
-                        : formatAmount(ingredient.amount),
-                      ingredient.unit ?? "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ");
+            return (
+              <View
+                key={part.id}
+                className={
+                  partIndex > 0
+                    ? "mt-[26px] border-t border-[hsl(40,15%,86%)] pt-5"
+                    : undefined
+                }
+              >
+                {part.name && (
+                  <Text className="text-foreground font-serif text-xl">
+                    {part.name}
+                  </Text>
+                )}
 
-                    return (
+                {part.ingredients.length > 0 && (
+                  <View className={part.name ? "mt-2.5" : undefined}>
+                    {part.ingredients.map((ingredient, ingredientIndex) => (
                       <View
                         key={ingredient.id}
                         className="flex-row gap-2.5 py-0.5"
                       >
-                        <Text className="text-foreground w-[74px] text-base font-bold leading-[21px]">
-                          {amount}
-                        </Text>
+                        {amountWidth > 0 && (
+                          <Text
+                            className="text-foreground text-base font-bold leading-[21px]"
+                            style={{ width: amountWidth }}
+                          >
+                            {amounts[ingredientIndex]}
+                          </Text>
+                        )}
                         <Text className="text-foreground min-w-0 flex-1 text-base font-medium leading-[21px]">
                           {ingredient.name}
                           {ingredient.note && (
@@ -124,27 +139,27 @@ export function RecipeView({ dinner, onEdit }: Props) {
                           )}
                         </Text>
                       </View>
-                    );
-                  })}
-                </View>
-              )}
+                    ))}
+                  </View>
+                )}
 
-              {part.steps.length > 0 && (
-                <View className="mt-3 gap-[5px]">
-                  {part.steps.map((step, stepIndex) => (
-                    <View key={step.id} className="flex-row gap-2">
-                      <Text className="w-[22px] font-serif text-base leading-[22px] text-[hsl(18,75%,50%)]">
-                        {stepIndex + 1}
-                      </Text>
-                      <Text className="text-foreground min-w-0 flex-1 text-base font-medium leading-[22px]">
-                        {step.text}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </View>
-          ))}
+                {part.steps.length > 0 && (
+                  <View className="mt-3 gap-[5px]">
+                    {part.steps.map((step, stepIndex) => (
+                      <View key={step.id} className="flex-row gap-2">
+                        <Text className="w-[22px] font-serif text-base leading-[22px] text-[hsl(18,75%,50%)]">
+                          {stepIndex + 1}
+                        </Text>
+                        <Text className="text-foreground min-w-0 flex-1 text-base font-medium leading-[22px]">
+                          {step.text}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            );
+          })}
         </View>
       ) : (
         <View className="mt-8 items-start">
@@ -153,9 +168,9 @@ export function RecipeView({ dinner, onEdit }: Props) {
       )}
 
       {dinner.notes && (
-        <View className="mt-[26px] border-t border-[hsl(40,15%,86%)]">
-          <Text className="text-foreground mb-1.5 mt-5 font-serif text-base">
-            Tips
+        <View className="mt-[26px] border-t border-[hsl(40,15%,86%)] pt-5">
+          <Text className="text-foreground mb-1.5 font-serif text-base">
+            Notes
           </Text>
           <Text
             className="text-[15px] font-medium leading-[23px] text-[hsl(24,10%,25%)]"

@@ -38,6 +38,7 @@ import {
 import {
   UNITS,
   type DinnerWithRecipe,
+  amountInputSchema,
   recipeIngredientSchema,
 } from "@planeatrepeat/shared";
 import { api } from "../../utils/api";
@@ -47,25 +48,9 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Textarea } from "../ui/Textarea";
 
-// Amounts are edited as text so partial input like "1," or "0.5" survives
-// re-renders; parseAmount converts back to a number on save.
-export const parseAmount = (value: string) => {
-  const normalized = value.trim().replace(",", ".");
-  if (normalized === "") return null;
-  const parsed = Number(normalized);
-  return Number.isNaN(parsed) ? null : parsed;
-};
-
 const editorIngredientSchema = recipeIngredientSchema.extend({
   name: z.string().trim().min(1, "Name required"),
-  amount: z
-    .string()
-    .trim()
-    .refine((value) => {
-      if (value === "") return true;
-      const parsed = Number(value.replace(",", "."));
-      return !Number.isNaN(parsed) && parsed > 0;
-    }, "Amount must be a number more than 0"),
+  amount: amountInputSchema,
   note: z.string(),
 });
 
@@ -211,7 +196,8 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
           }}
         >
           <View className="gap-5">
-            <View>
+            <View className="gap-1.5">
+              <FieldLabel>Name</FieldLabel>
               <Controller
                 control={form.control}
                 name="name"
@@ -222,7 +208,6 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
                     onChangeText={field.onChange}
                     accessibilityLabel="Dinner name"
                     className="h-12 bg-white text-lg font-semibold"
-                    placeholder="Dinner name"
                   />
                 )}
               />
@@ -231,66 +216,74 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
 
             <View>
               <View className="flex-row gap-2">
-                <View className="border-border h-11 w-[116px] flex-row overflow-hidden rounded-md border bg-white">
-                  <Pressable
-                    accessibilityLabel="Decrease servings"
-                    className="border-border w-9 items-center justify-center border-r"
-                    onPress={() =>
-                      form.setValue(
-                        "recipe.servings",
-                        Math.max(1, (servings ?? 2) - 1),
-                        { shouldDirty: true },
-                      )
-                    }
-                  >
-                    <Minus size={16} color={colors.mutedForeground} />
-                  </Pressable>
+                <View className="gap-1.5">
+                  <FieldLabel>Servings</FieldLabel>
+                  <View className="border-border h-11 w-[116px] flex-row overflow-hidden rounded-md border bg-white">
+                    <Pressable
+                      accessibilityLabel="Decrease servings"
+                      className="border-border w-9 items-center justify-center border-r"
+                      onPress={() =>
+                        form.setValue(
+                          "recipe.servings",
+                          Math.max(1, (servings ?? 2) - 1),
+                          { shouldDirty: true },
+                        )
+                      }
+                    >
+                      <Minus size={16} color={colors.mutedForeground} />
+                    </Pressable>
+                    <Controller
+                      control={form.control}
+                      name="recipe.servings"
+                      render={({ field }) => (
+                        <Input
+                          value={
+                            field.value === null ? "" : String(field.value)
+                          }
+                          onBlur={field.onBlur}
+                          onChangeText={(value) =>
+                            field.onChange(value === "" ? null : Number(value))
+                          }
+                          accessibilityLabel="Number of servings"
+                          keyboardType="number-pad"
+                          textAlign="center"
+                          className="min-w-0 flex-1 rounded-none border-0 bg-transparent px-0 py-0 font-bold"
+                          placeholder="–"
+                        />
+                      )}
+                    />
+                    <Pressable
+                      accessibilityLabel="Increase servings"
+                      className="border-border w-9 items-center justify-center border-l"
+                      onPress={() =>
+                        form.setValue("recipe.servings", (servings ?? 0) + 1, {
+                          shouldDirty: true,
+                        })
+                      }
+                    >
+                      <Plus size={16} color={colors.mutedForeground} />
+                    </Pressable>
+                  </View>
+                </View>
+
+                <View className="min-w-0 flex-1 gap-1.5">
+                  <FieldLabel>Recipe link</FieldLabel>
                   <Controller
                     control={form.control}
-                    name="recipe.servings"
+                    name="link"
                     render={({ field }) => (
                       <Input
-                        value={field.value === null ? "" : String(field.value)}
+                        value={field.value}
                         onBlur={field.onBlur}
-                        onChangeText={(value) =>
-                          field.onChange(value === "" ? null : Number(value))
-                        }
-                        accessibilityLabel="Number of servings"
-                        keyboardType="number-pad"
-                        className="min-w-0 flex-1 rounded-none border-0 bg-transparent px-1 text-center font-bold"
-                        placeholder="–"
+                        onChangeText={field.onChange}
+                        accessibilityLabel="Recipe link"
+                        autoCapitalize="none"
+                        keyboardType="url"
+                        className="h-11 bg-white"
                       />
                     )}
                   />
-                  <Pressable
-                    accessibilityLabel="Increase servings"
-                    className="border-border w-9 items-center justify-center border-l"
-                    onPress={() =>
-                      form.setValue("recipe.servings", (servings ?? 0) + 1, {
-                        shouldDirty: true,
-                      })
-                    }
-                  >
-                    <Plus size={16} color={colors.mutedForeground} />
-                  </Pressable>
                 </View>
-
-                <Controller
-                  control={form.control}
-                  name="link"
-                  render={({ field }) => (
-                    <Input
-                      value={field.value}
-                      onBlur={field.onBlur}
-                      onChangeText={field.onChange}
-                      accessibilityLabel="Recipe link"
-                      autoCapitalize="none"
-                      keyboardType="url"
-                      className="h-11 min-w-0 flex-1 bg-white"
-                      placeholder="Recipe link"
-                    />
-                  )}
-                />
               </View>
               <FieldError
                 message={
@@ -300,7 +293,10 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
               />
             </View>
 
-            <EditorTags form={form} />
+            <View className="gap-1.5">
+              <FieldLabel>Tags</FieldLabel>
+              <EditorTags form={form} />
+            </View>
 
             <View className="border-t border-[hsl(40,15%,86%)] pt-5">
               {parts.fields.map((part, partIndex) => (
@@ -333,7 +329,7 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
             </View>
 
             <View className="gap-2 border-t border-[hsl(40,15%,86%)] pt-5">
-              <Text className="text-foreground font-serif text-base">Tips</Text>
+              <SectionLabel>Notes</SectionLabel>
               <Controller
                 control={form.control}
                 name="notes"
@@ -432,45 +428,48 @@ function PartEditor({
           "mt-6 border-t border-[hsl(40,15%,86%)] pt-5",
       )}
     >
-      {multiMode ? (
-        <View className="mb-3 flex-row items-center gap-2">
-          <Controller
-            control={form.control}
-            name={`recipe.parts.${partIndex}.name`}
-            render={({ field }) => (
-              <Input
-                value={field.value}
-                onBlur={field.onBlur}
-                onChangeText={field.onChange}
-                accessibilityLabel={`Part ${partIndex + 1} name`}
-                className="h-11 min-w-0 flex-1 bg-white font-serif text-base"
-                placeholder="Part name (optional)"
-              />
-            )}
-          />
-          <View className="flex-row">
-            <IconButton
-              label="Move part up"
-              disabled={!canMoveUp}
-              onPress={onMoveUp}
-            >
-              <ArrowUp size={17} color={colors.mutedForeground} />
-            </IconButton>
-            <IconButton
-              label="Move part down"
-              disabled={!canMoveDown}
-              onPress={onMoveDown}
-            >
-              <ArrowDown size={17} color={colors.mutedForeground} />
-            </IconButton>
-            <IconButton label="Remove part" onPress={onRemove}>
-              <X size={18} color={colors.destructive} />
-            </IconButton>
+      {multiMode && (
+        <View className="mb-4 gap-1.5">
+          <FieldLabel>Part name</FieldLabel>
+          <View className="flex-row items-center gap-2">
+            <Controller
+              control={form.control}
+              name={`recipe.parts.${partIndex}.name`}
+              render={({ field }) => (
+                <Input
+                  value={field.value}
+                  onBlur={field.onBlur}
+                  onChangeText={field.onChange}
+                  accessibilityLabel={`Part ${partIndex + 1} name`}
+                  className="h-11 min-w-0 flex-1 bg-white font-serif text-base"
+                  placeholder="Optional"
+                />
+              )}
+            />
+            <View className="flex-row">
+              <IconButton
+                label="Move part up"
+                disabled={!canMoveUp}
+                onPress={onMoveUp}
+              >
+                <ArrowUp size={17} color={colors.mutedForeground} />
+              </IconButton>
+              <IconButton
+                label="Move part down"
+                disabled={!canMoveDown}
+                onPress={onMoveDown}
+              >
+                <ArrowDown size={17} color={colors.mutedForeground} />
+              </IconButton>
+              <IconButton label="Remove part" onPress={onRemove}>
+                <X size={18} color={colors.destructive} />
+              </IconButton>
+            </View>
           </View>
         </View>
-      ) : (
-        <SectionLabel>Ingredients</SectionLabel>
       )}
+
+      <SectionLabel>Ingredients</SectionLabel>
 
       <View className="mt-2">
         {ingredients.fields.map((ingredient, ingredientIndex) => {
@@ -505,7 +504,7 @@ function PartEditor({
                   "rounded-[10px] border border-[hsl(18,60%,80%)] bg-[hsl(40,33%,95%)]",
               )}
             >
-              <View className="flex-row items-center gap-1.5">
+              <View className="flex-row items-start gap-1.5">
                 <Controller
                   control={form.control}
                   name={`recipe.parts.${partIndex}.ingredients.${ingredientIndex}.amount`}
@@ -516,8 +515,8 @@ function PartEditor({
                       onChangeText={field.onChange}
                       accessibilityLabel={`Ingredient ${ingredientIndex + 1} amount`}
                       keyboardType="decimal-pad"
-                      className="h-10 w-[52px] bg-white px-1 text-center font-bold"
-                      placeholder="0"
+                      textAlign="center"
+                      className="h-11 w-[64px] bg-white px-1 py-0 font-bold"
                     />
                   )}
                 />
@@ -527,7 +526,7 @@ function PartEditor({
                   render={({ field }) => (
                     <Pressable
                       accessibilityLabel={`Ingredient ${ingredientIndex + 1} unit`}
-                      className="border-input h-10 w-[58px] items-center justify-center rounded-md border bg-white"
+                      className="border-input h-11 w-[56px] items-center justify-center rounded-md border bg-white"
                       onPress={() => open(ingredient.id)}
                     >
                       <Text className="text-foreground text-sm">
@@ -536,34 +535,37 @@ function PartEditor({
                     </Pressable>
                   )}
                 />
-                <Controller
-                  control={form.control}
-                  name={`recipe.parts.${partIndex}.ingredients.${ingredientIndex}.name`}
-                  render={({ field }) => (
-                    <Input
-                      value={field.value}
-                      onBlur={() => {
-                        field.onBlur();
-                        setTimeout(() => setFocusedIngredient(null), 150);
-                      }}
-                      onFocus={() => {
-                        open(ingredient.id);
-                        setFocusedIngredient(ingredient.id);
-                      }}
-                      onChangeText={field.onChange}
-                      accessibilityLabel={`Ingredient ${ingredientIndex + 1} name`}
-                      className="h-10 min-w-0 flex-1 bg-white px-2"
-                      placeholder="Ingredient"
-                    />
-                  )}
-                />
+                <View className="min-w-0 flex-1">
+                  <Controller
+                    control={form.control}
+                    name={`recipe.parts.${partIndex}.ingredients.${ingredientIndex}.name`}
+                    render={({ field }) => (
+                      <Input
+                        value={field.value}
+                        onBlur={() => {
+                          field.onBlur();
+                          setTimeout(() => setFocusedIngredient(null), 150);
+                        }}
+                        onFocus={() => {
+                          open(ingredient.id);
+                          setFocusedIngredient(ingredient.id);
+                        }}
+                        onChangeText={field.onChange}
+                        accessibilityLabel={`Ingredient ${ingredientIndex + 1} name`}
+                        className="h-11 bg-white px-2.5"
+                        placeholder="Ingredient"
+                      />
+                    )}
+                  />
+                  <FieldError message={ingredientError?.name?.message} />
+                </View>
                 <Pressable
                   accessibilityLabel={
                     isExpanded
                       ? "Hide ingredient controls"
                       : "Show ingredient controls"
                   }
-                  className="h-10 w-[30px] items-center justify-center"
+                  className="h-11 w-[30px] items-center justify-center"
                   onPress={() => toggle(ingredient.id)}
                 >
                   {isExpanded ? (
@@ -679,7 +681,6 @@ function PartEditor({
               )}
               <FieldError
                 message={
-                  ingredientError?.name?.message ??
                   ingredientError?.amount?.message ??
                   ingredientError?.unit?.message
                 }
@@ -883,6 +884,14 @@ function DeleteDinnerButton({
         Delete dinner
       </Text>
     </Button>
+  );
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <Text className="text-muted-foreground text-xs font-semibold">
+      {children}
+    </Text>
   );
 }
 
