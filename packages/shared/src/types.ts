@@ -1,8 +1,22 @@
 import { z } from "zod";
 import { asOptionalStringWithoutEmpty } from "./zod";
-import type { Tag, Dinner } from "@planeatrepeat/db";
+import type {
+  Dinner,
+  RecipeIngredient,
+  RecipePart,
+  RecipeStep,
+  Tag,
+} from "@planeatrepeat/db";
 
 export type DinnerWithTags = Dinner & { tags: Tag[] };
+export type DinnerWithRecipe = DinnerWithTags & {
+  parts: Array<
+    RecipePart & {
+      ingredients: RecipeIngredient[];
+      steps: RecipeStep[];
+    }
+  >;
+};
 
 export const dinnerFormSchema = z.object({
   name: z.string().min(1),

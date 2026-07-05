@@ -9,6 +9,9 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/Dinner.ts'
+export type * from './models/RecipePart.ts'
+export type * from './models/RecipeIngredient.ts'
+export type * from './models/RecipeStep.ts'
 export type * from './models/Tag.ts'
 export type * from './models/Plan.ts'
 export type * from './models/User.ts'

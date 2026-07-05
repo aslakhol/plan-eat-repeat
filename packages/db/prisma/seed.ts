@@ -80,9 +80,32 @@ async function seedDefault() {
             name: dinner.name,
             notes: dinner.notes,
             householdId: household.id,
+            servings: dinner.recipe?.servings,
             tags: {
               connect: dinner.tags.map((tag) => ({ value: tag })),
             },
+            parts: dinner.recipe
+              ? {
+                  create: dinner.recipe.parts.map((part, partIndex) => ({
+                    name: part.name,
+                    order: partIndex,
+                    ingredients: {
+                      create: part.ingredients.map(
+                        (ingredient, ingredientIndex) => ({
+                          ...ingredient,
+                          order: ingredientIndex,
+                        }),
+                      ),
+                    },
+                    steps: {
+                      create: part.steps.map((text, stepIndex) => ({
+                        text,
+                        order: stepIndex,
+                      })),
+                    },
+                  })),
+                }
+              : undefined,
           },
         }),
       ),

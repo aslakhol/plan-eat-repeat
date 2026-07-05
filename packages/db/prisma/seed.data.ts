@@ -35,6 +35,19 @@ export interface DinnerSeed {
   name: string;
   notes?: string;
   tags: (typeof tags)[number][];
+  recipe?: {
+    servings: number;
+    parts: Array<{
+      name: string | null;
+      ingredients: Array<{
+        name: string;
+        amount: number | null;
+        unit: string | null;
+        note: string | null;
+      }>;
+      steps: string[];
+    }>;
+  };
 }
 
 const aslakUserId = "user_2oya1ep0X6tYxTRBudLctRCXs4k";
@@ -74,6 +87,32 @@ export const dinners: DinnerSeed[] = [
     notes:
       "Boil pasta. Meanwhile, fry pancetta. Mix eggs, pecorino and lots of black pepper in a bowl. When pasta is done, reserve some water and drain. Mix hot pasta with pancetta, then quickly stir in egg mixture off the heat. Add pasta water if needed. More pepper!",
     tags: ["Pasta", "Italian", "Quick", "Comfort"],
+    recipe: {
+      servings: 4,
+      parts: [
+        {
+          name: null,
+          ingredients: [
+            { name: "spaghetti", amount: 400, unit: "g", note: null },
+            { name: "pancetta", amount: 150, unit: "g", note: "diced" },
+            { name: "eggs", amount: 4, unit: "stk", note: null },
+            { name: "pecorino", amount: 100, unit: "g", note: "finely grated" },
+            {
+              name: "black pepper",
+              amount: null,
+              unit: null,
+              note: "freshly ground",
+            },
+          ],
+          steps: [
+            "Boil the spaghetti in well-salted water until al dente.",
+            "Fry the pancetta until crisp while the pasta cooks.",
+            "Whisk the eggs, pecorino, and plenty of black pepper together.",
+            "Toss the drained pasta with pancetta, remove from the heat, and stir in the egg mixture with a splash of pasta water.",
+          ],
+        },
+      ],
+    },
   },
   {
     name: "Grilled Salmon",
@@ -98,6 +137,53 @@ export const dinners: DinnerSeed[] = [
     notes:
       "Fry onion, garlic, ginger, curry paste. Add chicken and brown. Chuck in potatoes if using. Add coconut milk and stock, simmer until chicken is done. Can add frozen peas at the end. Serve with rice and naan.",
     tags: ["Asian", "Meat", "Comfort"],
+    recipe: {
+      servings: 4,
+      parts: [
+        {
+          name: "Marinade",
+          ingredients: [
+            {
+              name: "chicken thighs",
+              amount: 600,
+              unit: "g",
+              note: "cut into pieces",
+            },
+            { name: "yoghurt", amount: 2, unit: "ss", note: null },
+            { name: "curry powder", amount: 2, unit: "ts", note: null },
+          ],
+          steps: [
+            "Mix the chicken with yoghurt and curry powder.",
+            "Leave to marinate while preparing the sauce.",
+          ],
+        },
+        {
+          name: "Sauce",
+          ingredients: [
+            { name: "onion", amount: 1, unit: "stk", note: "finely chopped" },
+            { name: "garlic", amount: 3, unit: "stk", note: "minced" },
+            { name: "ginger", amount: 1, unit: "ss", note: "grated" },
+            { name: "coconut milk", amount: 400, unit: "ml", note: null },
+          ],
+          steps: [
+            "Soften the onion, garlic, and ginger.",
+            "Add the coconut milk and simmer until slightly thickened.",
+          ],
+        },
+        {
+          name: null,
+          ingredients: [
+            { name: "rice", amount: 300, unit: "g", note: null },
+            { name: "frozen peas", amount: 150, unit: "g", note: null },
+            { name: "coriander", amount: null, unit: null, note: "to serve" },
+          ],
+          steps: [
+            "Brown the marinated chicken, then add it to the sauce and cook through.",
+            "Stir in the peas for the final few minutes and serve with rice and coriander.",
+          ],
+        },
+      ],
+    },
   },
   {
     name: "Mushroom Risotto",

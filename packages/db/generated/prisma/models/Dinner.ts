@@ -28,10 +28,12 @@ export type AggregateDinner = {
 
 export type DinnerAvgAggregateOutputType = {
   id: number | null
+  servings: number | null
 }
 
 export type DinnerSumAggregateOutputType = {
   id: number | null
+  servings: number | null
 }
 
 export type DinnerMinAggregateOutputType = {
@@ -42,6 +44,7 @@ export type DinnerMinAggregateOutputType = {
   link: string | null
   notes: string | null
   householdId: string | null
+  servings: number | null
 }
 
 export type DinnerMaxAggregateOutputType = {
@@ -52,6 +55,7 @@ export type DinnerMaxAggregateOutputType = {
   link: string | null
   notes: string | null
   householdId: string | null
+  servings: number | null
 }
 
 export type DinnerCountAggregateOutputType = {
@@ -62,16 +66,19 @@ export type DinnerCountAggregateOutputType = {
   link: number
   notes: number
   householdId: number
+  servings: number
   _all: number
 }
 
 
 export type DinnerAvgAggregateInputType = {
   id?: true
+  servings?: true
 }
 
 export type DinnerSumAggregateInputType = {
   id?: true
+  servings?: true
 }
 
 export type DinnerMinAggregateInputType = {
@@ -82,6 +89,7 @@ export type DinnerMinAggregateInputType = {
   link?: true
   notes?: true
   householdId?: true
+  servings?: true
 }
 
 export type DinnerMaxAggregateInputType = {
@@ -92,6 +100,7 @@ export type DinnerMaxAggregateInputType = {
   link?: true
   notes?: true
   householdId?: true
+  servings?: true
 }
 
 export type DinnerCountAggregateInputType = {
@@ -102,6 +111,7 @@ export type DinnerCountAggregateInputType = {
   link?: true
   notes?: true
   householdId?: true
+  servings?: true
   _all?: true
 }
 
@@ -199,6 +209,7 @@ export type DinnerGroupByOutputType = {
   link: string | null
   notes: string | null
   householdId: string
+  servings: number | null
   _count: DinnerCountAggregateOutputType | null
   _avg: DinnerAvgAggregateOutputType | null
   _sum: DinnerSumAggregateOutputType | null
@@ -232,9 +243,11 @@ export type DinnerWhereInput = {
   link?: Prisma.StringNullableFilter<"Dinner"> | string | null
   notes?: Prisma.StringNullableFilter<"Dinner"> | string | null
   householdId?: Prisma.StringFilter<"Dinner"> | string
+  servings?: Prisma.IntNullableFilter<"Dinner"> | number | null
   tags?: Prisma.TagListRelationFilter
   Plan?: Prisma.PlanListRelationFilter
   Household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
+  parts?: Prisma.RecipePartListRelationFilter
 }
 
 export type DinnerOrderByWithRelationInput = {
@@ -245,9 +258,11 @@ export type DinnerOrderByWithRelationInput = {
   link?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   householdId?: Prisma.SortOrder
+  servings?: Prisma.SortOrderInput | Prisma.SortOrder
   tags?: Prisma.TagOrderByRelationAggregateInput
   Plan?: Prisma.PlanOrderByRelationAggregateInput
   Household?: Prisma.HouseholdOrderByWithRelationInput
+  parts?: Prisma.RecipePartOrderByRelationAggregateInput
 }
 
 export type DinnerWhereUniqueInput = Prisma.AtLeast<{
@@ -261,9 +276,11 @@ export type DinnerWhereUniqueInput = Prisma.AtLeast<{
   link?: Prisma.StringNullableFilter<"Dinner"> | string | null
   notes?: Prisma.StringNullableFilter<"Dinner"> | string | null
   householdId?: Prisma.StringFilter<"Dinner"> | string
+  servings?: Prisma.IntNullableFilter<"Dinner"> | number | null
   tags?: Prisma.TagListRelationFilter
   Plan?: Prisma.PlanListRelationFilter
   Household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
+  parts?: Prisma.RecipePartListRelationFilter
 }, "id">
 
 export type DinnerOrderByWithAggregationInput = {
@@ -274,6 +291,7 @@ export type DinnerOrderByWithAggregationInput = {
   link?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   householdId?: Prisma.SortOrder
+  servings?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.DinnerCountOrderByAggregateInput
   _avg?: Prisma.DinnerAvgOrderByAggregateInput
   _max?: Prisma.DinnerMaxOrderByAggregateInput
@@ -292,6 +310,7 @@ export type DinnerScalarWhereWithAggregatesInput = {
   link?: Prisma.StringNullableWithAggregatesFilter<"Dinner"> | string | null
   notes?: Prisma.StringNullableWithAggregatesFilter<"Dinner"> | string | null
   householdId?: Prisma.StringWithAggregatesFilter<"Dinner"> | string
+  servings?: Prisma.IntNullableWithAggregatesFilter<"Dinner"> | number | null
 }
 
 export type DinnerCreateInput = {
@@ -300,9 +319,11 @@ export type DinnerCreateInput = {
   updatedAt?: Date | string
   link?: string | null
   notes?: string | null
+  servings?: number | null
   tags?: Prisma.TagCreateNestedManyWithoutDinnerInput
   Plan?: Prisma.PlanCreateNestedManyWithoutDinnerInput
   Household: Prisma.HouseholdCreateNestedOneWithoutDinnersInput
+  parts?: Prisma.RecipePartCreateNestedManyWithoutDinnerInput
 }
 
 export type DinnerUncheckedCreateInput = {
@@ -313,8 +334,10 @@ export type DinnerUncheckedCreateInput = {
   link?: string | null
   notes?: string | null
   householdId: string
+  servings?: number | null
   tags?: Prisma.TagUncheckedCreateNestedManyWithoutDinnerInput
   Plan?: Prisma.PlanUncheckedCreateNestedManyWithoutDinnerInput
+  parts?: Prisma.RecipePartUncheckedCreateNestedManyWithoutDinnerInput
 }
 
 export type DinnerUpdateInput = {
@@ -323,9 +346,11 @@ export type DinnerUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  servings?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tags?: Prisma.TagUpdateManyWithoutDinnerNestedInput
   Plan?: Prisma.PlanUpdateManyWithoutDinnerNestedInput
   Household?: Prisma.HouseholdUpdateOneRequiredWithoutDinnersNestedInput
+  parts?: Prisma.RecipePartUpdateManyWithoutDinnerNestedInput
 }
 
 export type DinnerUncheckedUpdateInput = {
@@ -336,8 +361,10 @@ export type DinnerUncheckedUpdateInput = {
   link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
+  servings?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tags?: Prisma.TagUncheckedUpdateManyWithoutDinnerNestedInput
   Plan?: Prisma.PlanUncheckedUpdateManyWithoutDinnerNestedInput
+  parts?: Prisma.RecipePartUncheckedUpdateManyWithoutDinnerNestedInput
 }
 
 export type DinnerCreateManyInput = {
@@ -348,6 +375,7 @@ export type DinnerCreateManyInput = {
   link?: string | null
   notes?: string | null
   householdId: string
+  servings?: number | null
 }
 
 export type DinnerUpdateManyMutationInput = {
@@ -356,6 +384,7 @@ export type DinnerUpdateManyMutationInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  servings?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type DinnerUncheckedUpdateManyInput = {
@@ -366,6 +395,7 @@ export type DinnerUncheckedUpdateManyInput = {
   link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
+  servings?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type DinnerCountOrderByAggregateInput = {
@@ -376,10 +406,12 @@ export type DinnerCountOrderByAggregateInput = {
   link?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
+  servings?: Prisma.SortOrder
 }
 
 export type DinnerAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  servings?: Prisma.SortOrder
 }
 
 export type DinnerMaxOrderByAggregateInput = {
@@ -390,6 +422,7 @@ export type DinnerMaxOrderByAggregateInput = {
   link?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
+  servings?: Prisma.SortOrder
 }
 
 export type DinnerMinOrderByAggregateInput = {
@@ -400,10 +433,17 @@ export type DinnerMinOrderByAggregateInput = {
   link?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
+  servings?: Prisma.SortOrder
 }
 
 export type DinnerSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  servings?: Prisma.SortOrder
+}
+
+export type DinnerScalarRelationFilter = {
+  is?: Prisma.DinnerWhereInput
+  isNot?: Prisma.DinnerWhereInput
 }
 
 export type DinnerListRelationFilter = {
@@ -414,11 +454,6 @@ export type DinnerListRelationFilter = {
 
 export type DinnerOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
-}
-
-export type DinnerScalarRelationFilter = {
-  is?: Prisma.DinnerWhereInput
-  isNot?: Prisma.DinnerWhereInput
 }
 
 export type StringFieldUpdateOperationsInput = {
@@ -433,12 +468,34 @@ export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
 }
 
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type IntFieldUpdateOperationsInput = {
   set?: number
   increment?: number
   decrement?: number
   multiply?: number
   divide?: number
+}
+
+export type DinnerCreateNestedOneWithoutPartsInput = {
+  create?: Prisma.XOR<Prisma.DinnerCreateWithoutPartsInput, Prisma.DinnerUncheckedCreateWithoutPartsInput>
+  connectOrCreate?: Prisma.DinnerCreateOrConnectWithoutPartsInput
+  connect?: Prisma.DinnerWhereUniqueInput
+}
+
+export type DinnerUpdateOneRequiredWithoutPartsNestedInput = {
+  create?: Prisma.XOR<Prisma.DinnerCreateWithoutPartsInput, Prisma.DinnerUncheckedCreateWithoutPartsInput>
+  connectOrCreate?: Prisma.DinnerCreateOrConnectWithoutPartsInput
+  upsert?: Prisma.DinnerUpsertWithoutPartsInput
+  connect?: Prisma.DinnerWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DinnerUpdateToOneWithWhereWithoutPartsInput, Prisma.DinnerUpdateWithoutPartsInput>, Prisma.DinnerUncheckedUpdateWithoutPartsInput>
 }
 
 export type DinnerCreateNestedManyWithoutTagsInput = {
@@ -535,14 +592,82 @@ export type DinnerUncheckedUpdateManyWithoutHouseholdNestedInput = {
   deleteMany?: Prisma.DinnerScalarWhereInput | Prisma.DinnerScalarWhereInput[]
 }
 
+export type DinnerCreateWithoutPartsInput = {
+  name: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  link?: string | null
+  notes?: string | null
+  servings?: number | null
+  tags?: Prisma.TagCreateNestedManyWithoutDinnerInput
+  Plan?: Prisma.PlanCreateNestedManyWithoutDinnerInput
+  Household: Prisma.HouseholdCreateNestedOneWithoutDinnersInput
+}
+
+export type DinnerUncheckedCreateWithoutPartsInput = {
+  id?: number
+  name: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  link?: string | null
+  notes?: string | null
+  householdId: string
+  servings?: number | null
+  tags?: Prisma.TagUncheckedCreateNestedManyWithoutDinnerInput
+  Plan?: Prisma.PlanUncheckedCreateNestedManyWithoutDinnerInput
+}
+
+export type DinnerCreateOrConnectWithoutPartsInput = {
+  where: Prisma.DinnerWhereUniqueInput
+  create: Prisma.XOR<Prisma.DinnerCreateWithoutPartsInput, Prisma.DinnerUncheckedCreateWithoutPartsInput>
+}
+
+export type DinnerUpsertWithoutPartsInput = {
+  update: Prisma.XOR<Prisma.DinnerUpdateWithoutPartsInput, Prisma.DinnerUncheckedUpdateWithoutPartsInput>
+  create: Prisma.XOR<Prisma.DinnerCreateWithoutPartsInput, Prisma.DinnerUncheckedCreateWithoutPartsInput>
+  where?: Prisma.DinnerWhereInput
+}
+
+export type DinnerUpdateToOneWithWhereWithoutPartsInput = {
+  where?: Prisma.DinnerWhereInput
+  data: Prisma.XOR<Prisma.DinnerUpdateWithoutPartsInput, Prisma.DinnerUncheckedUpdateWithoutPartsInput>
+}
+
+export type DinnerUpdateWithoutPartsInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  servings?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tags?: Prisma.TagUpdateManyWithoutDinnerNestedInput
+  Plan?: Prisma.PlanUpdateManyWithoutDinnerNestedInput
+  Household?: Prisma.HouseholdUpdateOneRequiredWithoutDinnersNestedInput
+}
+
+export type DinnerUncheckedUpdateWithoutPartsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  householdId?: Prisma.StringFieldUpdateOperationsInput | string
+  servings?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tags?: Prisma.TagUncheckedUpdateManyWithoutDinnerNestedInput
+  Plan?: Prisma.PlanUncheckedUpdateManyWithoutDinnerNestedInput
+}
+
 export type DinnerCreateWithoutTagsInput = {
   name: string
   createdAt?: Date | string
   updatedAt?: Date | string
   link?: string | null
   notes?: string | null
+  servings?: number | null
   Plan?: Prisma.PlanCreateNestedManyWithoutDinnerInput
   Household: Prisma.HouseholdCreateNestedOneWithoutDinnersInput
+  parts?: Prisma.RecipePartCreateNestedManyWithoutDinnerInput
 }
 
 export type DinnerUncheckedCreateWithoutTagsInput = {
@@ -553,7 +678,9 @@ export type DinnerUncheckedCreateWithoutTagsInput = {
   link?: string | null
   notes?: string | null
   householdId: string
+  servings?: number | null
   Plan?: Prisma.PlanUncheckedCreateNestedManyWithoutDinnerInput
+  parts?: Prisma.RecipePartUncheckedCreateNestedManyWithoutDinnerInput
 }
 
 export type DinnerCreateOrConnectWithoutTagsInput = {
@@ -588,6 +715,7 @@ export type DinnerScalarWhereInput = {
   link?: Prisma.StringNullableFilter<"Dinner"> | string | null
   notes?: Prisma.StringNullableFilter<"Dinner"> | string | null
   householdId?: Prisma.StringFilter<"Dinner"> | string
+  servings?: Prisma.IntNullableFilter<"Dinner"> | number | null
 }
 
 export type DinnerCreateWithoutPlanInput = {
@@ -596,8 +724,10 @@ export type DinnerCreateWithoutPlanInput = {
   updatedAt?: Date | string
   link?: string | null
   notes?: string | null
+  servings?: number | null
   tags?: Prisma.TagCreateNestedManyWithoutDinnerInput
   Household: Prisma.HouseholdCreateNestedOneWithoutDinnersInput
+  parts?: Prisma.RecipePartCreateNestedManyWithoutDinnerInput
 }
 
 export type DinnerUncheckedCreateWithoutPlanInput = {
@@ -608,7 +738,9 @@ export type DinnerUncheckedCreateWithoutPlanInput = {
   link?: string | null
   notes?: string | null
   householdId: string
+  servings?: number | null
   tags?: Prisma.TagUncheckedCreateNestedManyWithoutDinnerInput
+  parts?: Prisma.RecipePartUncheckedCreateNestedManyWithoutDinnerInput
 }
 
 export type DinnerCreateOrConnectWithoutPlanInput = {
@@ -633,8 +765,10 @@ export type DinnerUpdateWithoutPlanInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  servings?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tags?: Prisma.TagUpdateManyWithoutDinnerNestedInput
   Household?: Prisma.HouseholdUpdateOneRequiredWithoutDinnersNestedInput
+  parts?: Prisma.RecipePartUpdateManyWithoutDinnerNestedInput
 }
 
 export type DinnerUncheckedUpdateWithoutPlanInput = {
@@ -645,7 +779,9 @@ export type DinnerUncheckedUpdateWithoutPlanInput = {
   link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
+  servings?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tags?: Prisma.TagUncheckedUpdateManyWithoutDinnerNestedInput
+  parts?: Prisma.RecipePartUncheckedUpdateManyWithoutDinnerNestedInput
 }
 
 export type DinnerCreateWithoutHouseholdInput = {
@@ -654,8 +790,10 @@ export type DinnerCreateWithoutHouseholdInput = {
   updatedAt?: Date | string
   link?: string | null
   notes?: string | null
+  servings?: number | null
   tags?: Prisma.TagCreateNestedManyWithoutDinnerInput
   Plan?: Prisma.PlanCreateNestedManyWithoutDinnerInput
+  parts?: Prisma.RecipePartCreateNestedManyWithoutDinnerInput
 }
 
 export type DinnerUncheckedCreateWithoutHouseholdInput = {
@@ -665,8 +803,10 @@ export type DinnerUncheckedCreateWithoutHouseholdInput = {
   updatedAt?: Date | string
   link?: string | null
   notes?: string | null
+  servings?: number | null
   tags?: Prisma.TagUncheckedCreateNestedManyWithoutDinnerInput
   Plan?: Prisma.PlanUncheckedCreateNestedManyWithoutDinnerInput
+  parts?: Prisma.RecipePartUncheckedCreateNestedManyWithoutDinnerInput
 }
 
 export type DinnerCreateOrConnectWithoutHouseholdInput = {
@@ -701,8 +841,10 @@ export type DinnerUpdateWithoutTagsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  servings?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   Plan?: Prisma.PlanUpdateManyWithoutDinnerNestedInput
   Household?: Prisma.HouseholdUpdateOneRequiredWithoutDinnersNestedInput
+  parts?: Prisma.RecipePartUpdateManyWithoutDinnerNestedInput
 }
 
 export type DinnerUncheckedUpdateWithoutTagsInput = {
@@ -713,7 +855,9 @@ export type DinnerUncheckedUpdateWithoutTagsInput = {
   link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
+  servings?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   Plan?: Prisma.PlanUncheckedUpdateManyWithoutDinnerNestedInput
+  parts?: Prisma.RecipePartUncheckedUpdateManyWithoutDinnerNestedInput
 }
 
 export type DinnerUncheckedUpdateManyWithoutTagsInput = {
@@ -724,6 +868,7 @@ export type DinnerUncheckedUpdateManyWithoutTagsInput = {
   link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
+  servings?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type DinnerCreateManyHouseholdInput = {
@@ -733,6 +878,7 @@ export type DinnerCreateManyHouseholdInput = {
   updatedAt?: Date | string
   link?: string | null
   notes?: string | null
+  servings?: number | null
 }
 
 export type DinnerUpdateWithoutHouseholdInput = {
@@ -741,8 +887,10 @@ export type DinnerUpdateWithoutHouseholdInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  servings?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tags?: Prisma.TagUpdateManyWithoutDinnerNestedInput
   Plan?: Prisma.PlanUpdateManyWithoutDinnerNestedInput
+  parts?: Prisma.RecipePartUpdateManyWithoutDinnerNestedInput
 }
 
 export type DinnerUncheckedUpdateWithoutHouseholdInput = {
@@ -752,8 +900,10 @@ export type DinnerUncheckedUpdateWithoutHouseholdInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  servings?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tags?: Prisma.TagUncheckedUpdateManyWithoutDinnerNestedInput
   Plan?: Prisma.PlanUncheckedUpdateManyWithoutDinnerNestedInput
+  parts?: Prisma.RecipePartUncheckedUpdateManyWithoutDinnerNestedInput
 }
 
 export type DinnerUncheckedUpdateManyWithoutHouseholdInput = {
@@ -763,6 +913,7 @@ export type DinnerUncheckedUpdateManyWithoutHouseholdInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  servings?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -773,11 +924,13 @@ export type DinnerUncheckedUpdateManyWithoutHouseholdInput = {
 export type DinnerCountOutputType = {
   tags: number
   Plan: number
+  parts: number
 }
 
 export type DinnerCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   tags?: boolean | DinnerCountOutputTypeCountTagsArgs
   Plan?: boolean | DinnerCountOutputTypeCountPlanArgs
+  parts?: boolean | DinnerCountOutputTypeCountPartsArgs
 }
 
 /**
@@ -804,6 +957,13 @@ export type DinnerCountOutputTypeCountPlanArgs<ExtArgs extends runtime.Types.Ext
   where?: Prisma.PlanWhereInput
 }
 
+/**
+ * DinnerCountOutputType without action
+ */
+export type DinnerCountOutputTypeCountPartsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RecipePartWhereInput
+}
+
 
 export type DinnerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -813,9 +973,11 @@ export type DinnerSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   link?: boolean
   notes?: boolean
   householdId?: boolean
+  servings?: boolean
   tags?: boolean | Prisma.Dinner$tagsArgs<ExtArgs>
   Plan?: boolean | Prisma.Dinner$PlanArgs<ExtArgs>
   Household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
+  parts?: boolean | Prisma.Dinner$partsArgs<ExtArgs>
   _count?: boolean | Prisma.DinnerCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["dinner"]>
 
@@ -827,6 +989,7 @@ export type DinnerSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   link?: boolean
   notes?: boolean
   householdId?: boolean
+  servings?: boolean
   Household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["dinner"]>
 
@@ -838,6 +1001,7 @@ export type DinnerSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   link?: boolean
   notes?: boolean
   householdId?: boolean
+  servings?: boolean
   Household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["dinner"]>
 
@@ -849,13 +1013,15 @@ export type DinnerSelectScalar = {
   link?: boolean
   notes?: boolean
   householdId?: boolean
+  servings?: boolean
 }
 
-export type DinnerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "createdAt" | "updatedAt" | "link" | "notes" | "householdId", ExtArgs["result"]["dinner"]>
+export type DinnerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "createdAt" | "updatedAt" | "link" | "notes" | "householdId" | "servings", ExtArgs["result"]["dinner"]>
 export type DinnerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   tags?: boolean | Prisma.Dinner$tagsArgs<ExtArgs>
   Plan?: boolean | Prisma.Dinner$PlanArgs<ExtArgs>
   Household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
+  parts?: boolean | Prisma.Dinner$partsArgs<ExtArgs>
   _count?: boolean | Prisma.DinnerCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type DinnerIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -871,6 +1037,7 @@ export type $DinnerPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     tags: Prisma.$TagPayload<ExtArgs>[]
     Plan: Prisma.$PlanPayload<ExtArgs>[]
     Household: Prisma.$HouseholdPayload<ExtArgs>
+    parts: Prisma.$RecipePartPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -880,6 +1047,7 @@ export type $DinnerPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     link: string | null
     notes: string | null
     householdId: string
+    servings: number | null
   }, ExtArgs["result"]["dinner"]>
   composites: {}
 }
@@ -1277,6 +1445,7 @@ export interface Prisma__DinnerClient<T, Null = never, ExtArgs extends runtime.T
   tags<T extends Prisma.Dinner$tagsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Dinner$tagsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   Plan<T extends Prisma.Dinner$PlanArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Dinner$PlanArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PlanPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   Household<T extends Prisma.HouseholdDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.HouseholdDefaultArgs<ExtArgs>>): Prisma.Prisma__HouseholdClient<runtime.Types.Result.GetResult<Prisma.$HouseholdPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  parts<T extends Prisma.Dinner$partsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Dinner$partsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RecipePartPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1313,6 +1482,7 @@ export interface DinnerFieldRefs {
   readonly link: Prisma.FieldRef<"Dinner", 'String'>
   readonly notes: Prisma.FieldRef<"Dinner", 'String'>
   readonly householdId: Prisma.FieldRef<"Dinner", 'String'>
+  readonly servings: Prisma.FieldRef<"Dinner", 'Int'>
 }
     
 
@@ -1754,6 +1924,30 @@ export type Dinner$PlanArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   distinct?: Prisma.PlanScalarFieldEnum | Prisma.PlanScalarFieldEnum[]
+}
+
+/**
+ * Dinner.parts
+ */
+export type Dinner$partsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RecipePart
+   */
+  select?: Prisma.RecipePartSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RecipePart
+   */
+  omit?: Prisma.RecipePartOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RecipePartInclude<ExtArgs> | null
+  where?: Prisma.RecipePartWhereInput
+  orderBy?: Prisma.RecipePartOrderByWithRelationInput | Prisma.RecipePartOrderByWithRelationInput[]
+  cursor?: Prisma.RecipePartWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RecipePartScalarFieldEnum | Prisma.RecipePartScalarFieldEnum[]
 }
 
 /**

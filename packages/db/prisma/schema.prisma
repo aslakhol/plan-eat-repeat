@@ -11,18 +11,55 @@ datasource db {
 }
 
 model Dinner {
-    id          Int       @id @default(autoincrement())
+    id          Int          @id @default(autoincrement())
     name        String
     tags        Tag[]
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
     Plan        Plan[]
     link        String?
     notes       String?
-    Household   Household @relation(fields: [householdId], references: [id])
+    Household   Household    @relation(fields: [householdId], references: [id])
     householdId String
+    servings    Int?
+    parts       RecipePart[]
 
     @@index([name])
+}
+
+model RecipePart {
+    id          Int                @id @default(autoincrement())
+    dinner      Dinner             @relation(fields: [dinnerId], references: [id], onDelete: Cascade)
+    dinnerId    Int
+    name        String?
+    order       Int
+    ingredients RecipeIngredient[]
+    steps       RecipeStep[]
+
+    @@index([dinnerId])
+}
+
+model RecipeIngredient {
+    id     Int        @id @default(autoincrement())
+    part   RecipePart @relation(fields: [partId], references: [id], onDelete: Cascade)
+    partId Int
+    order  Int
+    name   String
+    amount Float?
+    unit   String?
+    note   String?
+
+    @@index([partId])
+}
+
+model RecipeStep {
+    id     Int        @id @default(autoincrement())
+    part   RecipePart @relation(fields: [partId], references: [id], onDelete: Cascade)
+    partId Int
+    order  Int
+    text   String
+
+    @@index([partId])
 }
 
 model Tag {
