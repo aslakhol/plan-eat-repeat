@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cn } from "../../lib/utils";
 import { type DinnerWithTags } from "../../utils/types";
-import { NewDinner } from "./NewDinner";
+import { ChefHat } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import {
   Card,
@@ -18,7 +18,16 @@ type Props = {
 export const DinnerList = ({ dinners, selectedTags }: Props) => {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <NewDinner />
+      <Link href="/dinners/new" className="block h-full">
+        <Card className="hover:border-primary/50 hover:bg-accent/50 flex h-full min-h-[100px] cursor-pointer flex-col items-center justify-center border-dashed bg-transparent transition-colors">
+          <CardContent className="text-muted-foreground hover:text-primary flex h-full flex-col items-center justify-center gap-2 p-4">
+            <ChefHat className="h-6 w-6 sm:h-8 sm:w-8" />
+            <span className="text-sm font-medium sm:text-base">
+              Add new dinner
+            </span>
+          </CardContent>
+        </Card>
+      </Link>
       {dinners.map((dinner) => (
         <Link
           key={dinner.id}

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { asOptionalStringWithoutEmpty } from "./zod";
 import type {
   Dinner,
   RecipeIngredient,
@@ -18,15 +17,4 @@ export type DinnerWithRecipe = DinnerWithTags & {
   >;
 };
 
-export const dinnerNameSchema = z
-  .string()
-  .trim()
-  .min(1, "Add a dinner name");
-
-export const dinnerFormSchema = z.object({
-  name: dinnerNameSchema,
-  tags: z.array(z.string()),
-  newTag: asOptionalStringWithoutEmpty(z.string().max(20).min(1)),
-  link: asOptionalStringWithoutEmpty(z.string().url()),
-  notes: asOptionalStringWithoutEmpty(z.string()),
-});
+export const dinnerNameSchema = z.string().trim().min(1, "Add a dinner name");

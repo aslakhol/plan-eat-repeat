@@ -6,7 +6,8 @@ import { Button } from "../../components/ui/button";
 
 type Props = {
   dinner: DinnerWithRecipe;
-  onEdit: () => void;
+  onEdit?: () => void;
+  showEditButton?: boolean;
 };
 
 const sourceLabel = (link: string) => {
@@ -22,7 +23,11 @@ const hasAmounts = (part: DinnerWithRecipe["parts"][number]) =>
     (ingredient) => ingredient.amount !== null || ingredient.unit !== null,
   );
 
-export const RecipeView = ({ dinner, onEdit }: Props) => {
+export const RecipeView = ({
+  dinner,
+  onEdit,
+  showEditButton = true,
+}: Props) => {
   const hasRecipe = dinner.parts.length > 0;
 
   return (
@@ -32,15 +37,17 @@ export const RecipeView = ({ dinner, onEdit }: Props) => {
           <h1 className="min-w-0 flex-1 font-serif text-[26px] font-normal leading-[1.2]">
             {dinner.name}
           </h1>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="text-muted-foreground h-auto bg-white px-3 py-1.5 text-[13px] font-semibold"
-            onClick={onEdit}
-          >
-            Edit
-          </Button>
+          {showEditButton && onEdit && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-muted-foreground h-auto bg-white px-3 py-1.5 text-[13px] font-semibold"
+              onClick={onEdit}
+            >
+              Edit
+            </Button>
+          )}
         </div>
 
         {dinner.tags.length > 0 && (
@@ -157,12 +164,14 @@ export const RecipeView = ({ dinner, onEdit }: Props) => {
             </section>
           ))}
         </div>
-      ) : (
+      ) : showEditButton && onEdit ? (
         <div className="mt-8">
           <Button type="button" onClick={onEdit}>
             Add recipe
           </Button>
         </div>
+      ) : (
+        <p className="text-muted-foreground mt-8 text-sm">No recipe yet.</p>
       )}
 
       {dinner.notes && (

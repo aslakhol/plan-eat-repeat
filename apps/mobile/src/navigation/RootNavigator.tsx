@@ -2,11 +2,13 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import type { NavigatorScreenParams } from "@react-navigation/native";
 import { AppTabs, type AppTabsParamList } from "./AppTabs";
 import { DinnerDetailScreen } from "../screens/DinnerDetailScreen";
+import { NewDinnerScreen } from "../screens/NewDinnerScreen";
 import { colors } from "../theme/colors";
 
 export type RootStackParamList = {
   Tabs: NavigatorScreenParams<AppTabsParamList> | undefined;
-  DinnerDetail: { dinnerId: number };
+  DinnerDetail: { dinnerId: number; edit?: boolean };
+  NewDinner: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -28,6 +30,11 @@ export function RootNavigator() {
         name="Tabs"
         component={AppTabs}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="NewDinner"
+        component={NewDinnerScreen}
+        options={{ title: "New dinner" }}
       />
       <Stack.Screen
         name="DinnerDetail"

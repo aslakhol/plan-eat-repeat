@@ -22,6 +22,8 @@ import {
   type DinnerWithRecipe,
   amountInputSchema,
   dinnerNameSchema,
+  parseAmount,
+  recipeSchema,
   recipeIngredientSchema,
 } from "@planeatrepeat/shared";
 import { api } from "../../utils/api";
@@ -66,11 +68,11 @@ const recipeEditorSchema = z.object({
 export type RecipeEditorValues = z.infer<typeof recipeEditorSchema>;
 
 type Props = {
-  dinner: DinnerWithRecipe;
+  dinner?: DinnerWithRecipe;
   isPending: boolean;
   onCancel: () => void;
   onSave: (values: RecipeEditorValues) => void;
-  onDelete: () => void;
+  onDelete?: () => void;
 };
 
 const emptyPart = (): RecipeEditorValues["recipe"]["parts"][number] => ({
@@ -89,23 +91,25 @@ export const RecipeEditor = ({
   const form = useForm<RecipeEditorValues>({
     resolver: zodResolver(recipeEditorSchema),
     defaultValues: {
-      name: dinner.name,
-      tags: dinner.tags.map((tag) => tag.value),
+      name: dinner?.name ?? "",
+      tags: dinner?.tags.map((tag) => tag.value) ?? [],
       newTag: "",
-      link: dinner.link ?? "",
-      notes: dinner.notes ?? "",
+      link: dinner?.link ?? "",
+      notes: dinner?.notes ?? "",
       recipe: {
-        servings: dinner.servings,
-        parts: dinner.parts.map((part) => ({
-          name: part.name ?? "",
-          ingredients: part.ingredients.map((ingredient) => ({
-            name: ingredient.name,
-            amount: ingredient.amount === null ? "" : String(ingredient.amount),
-            unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
-            note: ingredient.note ?? "",
-          })),
-          steps: part.steps.map((step) => ({ text: step.text })),
-        })),
+        servings: dinner?.servings ?? null,
+        parts:
+          dinner?.parts.map((part) => ({
+            name: part.name ?? "",
+            ingredients: part.ingredients.map((ingredient) => ({
+              name: ingredient.name,
+              amount:
+                ingredient.amount === null ? "" : String(ingredient.amount),
+              unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
+              note: ingredient.note ?? "",
+            })),
+            steps: part.steps.map((step) => ({ text: step.text })),
+          })) ?? [],
       },
     },
   });
@@ -144,7 +148,9 @@ export const RecipeEditor = ({
           >
             Cancel
           </Button>
-          <h1 className="font-serif text-base font-normal">Edit recipe</h1>
+          <h1 className="font-serif text-base font-normal">
+            {dinner ? "Edit recipe" : "New dinner"}
+          </h1>
           <Button
             type="submit"
             size="sm"
@@ -152,7 +158,7 @@ export const RecipeEditor = ({
             disabled={isPending}
           >
             {isPending && <Loader2 className="animate-spin" />}
-            Save
+            {dinner ? "Save" : "Create"}
           </Button>
         </div>
 
@@ -286,15 +292,46 @@ export const RecipeEditor = ({
             />
           </div>
 
-          <DeleteDinnerButton
-            dinnerId={dinner.id}
-            isPending={isPending}
-            onDelete={onDelete}
-          />
+          {dinner && onDelete && (
+            <DeleteDinnerButton
+              dinnerId={dinner.id}
+              isPending={isPending}
+              onDelete={onDelete}
+            />
+          )}
         </div>
       </form>
     </Form>
   );
+};
+
+export const dinnerFromEditorValues = (values: RecipeEditorValues) => ({
+  dinnerName: values.name,
+  tagList: values.tags,
+  link: textOrNull(values.link),
+  notes: textOrNull(values.notes),
+  recipe: recipeFromEditorValues(values),
+});
+
+const recipeFromEditorValues = (values: RecipeEditorValues) =>
+  recipeSchema.parse({
+    servings: values.recipe.parts.length === 0 ? null : values.recipe.servings,
+    parts: values.recipe.parts.map((part) => ({
+      name: textOrNull(part.name),
+      ingredients: part.ingredients.map((ingredient) => ({
+        name: ingredient.name,
+        amount: parseAmount(ingredient.amount),
+        unit: ingredient.unit,
+        note: textOrNull(ingredient.note),
+      })),
+      steps: part.steps.map((step) => step.text),
+    })),
+  });
+
+const textOrNull = (value: string | undefined) => {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  return trimmed;
 };
 
 type PartEditorProps = {

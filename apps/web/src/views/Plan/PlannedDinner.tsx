@@ -1,5 +1,5 @@
 import { Button } from "../../components/ui/button";
-import { type DinnerWithTags } from "../../utils/types";
+import { type DinnerWithRecipe } from "../../utils/types";
 import { format } from "date-fns";
 import {
   ResponsiveModalContent,
@@ -9,12 +9,12 @@ import {
 } from "../../components/ResponsiveModal";
 import { ClearDay } from "./ClearDay";
 import Link from "next/link";
-import { Badge } from "../../components/ui/badge";
 import useWakeLock from "react-use-wake-lock";
 import { useEffect } from "react";
+import { RecipeView } from "../Dinners/RecipeView";
 
 type Props = {
-  dinner: DinnerWithTags;
+  dinner: DinnerWithRecipe;
   date: Date;
   closeDialog: () => void;
   setChangePlan: (change: boolean) => void;
@@ -47,49 +47,28 @@ export const PlannedDinner = ({
   }, [isSupported, isOpen, request, release]);
 
   return (
-    <ResponsiveModalContent className="flex flex-col">
-      <ResponsiveModalHeader>
+    <ResponsiveModalContent className="flex h-[85dvh] max-h-[85dvh] max-w-[640px] flex-col overflow-hidden">
+      <ResponsiveModalHeader className="shrink-0 pr-6">
         <ResponsiveModalDescription>
-          {format(date, "EEEE, LLLL  do, y")}
+          {format(date, "EEEE, LLLL do, y")}
         </ResponsiveModalDescription>
-        <ResponsiveModalTitle>{dinner.name}</ResponsiveModalTitle>
+        <ResponsiveModalTitle className="sr-only">
+          {dinner.name}
+        </ResponsiveModalTitle>
       </ResponsiveModalHeader>
-      <div className="flex flex-col gap-2">
-        {dinner.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {dinner.tags.map((tag) => (
-              <Badge key={tag.value} variant="secondary">
-                {tag.value}
-              </Badge>
-            ))}
-          </div>
-        )}
-        {dinner.link && (
-          <a
-            className="line-clamp-1 max-w-md text-sm text-blue-500 underline"
-            href={dinner.link}
-            target="_blank"
-          >
-            {dinner.link}
-          </a>
-        )}
-        {dinner.notes && (
-          <div className="min-h-[100px]">
-            {dinner.notes.split("\n").map((line) => (
-              <p key={line}>{line}</p>
-            ))}
-          </div>
-        )}
 
-        <div className="flex w-full gap-2">
-          <Button variant={"outline"} onClick={() => setChangePlan(true)}>
-            Change plan
-          </Button>
-          <ClearDay date={date} closeDialog={closeDialog} />
-          <Button variant={"outline"} asChild>
-            <Link href={`/dinners/${dinner.id}`}>View dinner</Link>
-          </Button>
-        </div>
+      <div className="flex shrink-0 flex-wrap gap-2">
+        <Button variant="outline" onClick={() => setChangePlan(true)}>
+          Change dinner
+        </Button>
+        <ClearDay date={date} closeDialog={closeDialog} />
+        <Button variant="outline" asChild>
+          <Link href={`/dinners/${dinner.id}?edit=1`}>Edit</Link>
+        </Button>
+      </div>
+
+      <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 pt-2">
+        <RecipeView dinner={dinner} showEditButton={false} />
       </div>
     </ResponsiveModalContent>
   );

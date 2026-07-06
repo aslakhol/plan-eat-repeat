@@ -1,10 +1,10 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { parseAmount, recipeSchema } from "@planeatrepeat/shared";
 import type { RootStackParamList } from "../navigation/RootNavigator";
 import {
   RecipeEditor,
+  dinnerFromEditorValues,
   type RecipeEditorHandle,
   type RecipeEditorValues,
 } from "../components/dinners/RecipeEditor";
@@ -15,14 +15,9 @@ import { colors } from "../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "DinnerDetail">;
 
-const textOrNull = (value: string | undefined) => {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : null;
-};
-
 export function DinnerDetailScreen({ navigation, route }: Props) {
   const { dinnerId } = route.params;
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(route.params.edit ?? false);
   const editorRef = useRef<RecipeEditorHandle>(null);
   const utils = api.useUtils();
 
@@ -135,28 +130,9 @@ export function DinnerDetailScreen({ navigation, route }: Props) {
   const dinner = dinnerQuery.data.dinner;
 
   const save = (values: RecipeEditorValues) => {
-    const recipe = recipeSchema.parse({
-      servings:
-        values.recipe.parts.length === 0 ? null : values.recipe.servings,
-      parts: values.recipe.parts.map((part) => ({
-        name: textOrNull(part.name),
-        ingredients: part.ingredients.map((ingredient) => ({
-          name: ingredient.name,
-          amount: parseAmount(ingredient.amount),
-          unit: ingredient.unit,
-          note: textOrNull(ingredient.note),
-        })),
-        steps: part.steps.map((step) => step.text),
-      })),
-    });
-
     editMutation.mutate({
       dinnerId: dinner.id,
-      dinnerName: values.name,
-      tagList: values.tags,
-      link: textOrNull(values.link),
-      notes: textOrNull(values.notes),
-      recipe,
+      ...dinnerFromEditorValues(values),
     });
   };
 

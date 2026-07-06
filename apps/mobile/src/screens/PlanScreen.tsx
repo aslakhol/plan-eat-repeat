@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   Pressable,
-  Linking,
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
@@ -25,7 +24,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { DinnerWithTags } from "@planeatrepeat/shared";
+import type { DinnerWithRecipe, DinnerWithTags } from "@planeatrepeat/shared";
 import type { AppTabsParamList } from "../navigation/AppTabs";
 import type { RootStackParamList } from "../navigation/RootNavigator";
 import { api } from "../utils/api";
@@ -33,9 +32,9 @@ import { cn } from "../utils/cn";
 import { Screen } from "../components/Screen";
 import { WeekSelect } from "../components/WeekSelect";
 import { Button } from "../components/ui/Button";
-import { Badge } from "../components/ui/Badge";
 import { Card, CardContent, CardHeader } from "../components/ui/Card";
 import { Filter } from "../components/Filter";
+import { RecipeViewContent } from "../components/dinners/RecipeView";
 import { colors } from "../theme/colors";
 
 type SheetMode = "plan" | "planned";
@@ -45,7 +44,7 @@ export function PlanScreen({
 }: BottomTabScreenProps<AppTabsParamList, "Plan">) {
   const [weekOffSet, setWeekOffSet] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedDinner, setSelectedDinner] = useState<DinnerWithTags | null>(
+  const [selectedDinner, setSelectedDinner] = useState<DinnerWithRecipe | null>(
     null,
   );
   const [sheetMode, setSheetMode] = useState<SheetMode>("plan");
@@ -54,7 +53,7 @@ export function PlanScreen({
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => ["80%"], []);
+  const snapPoints = useMemo(() => ["90%"], []);
 
   const trpc = api.useUtils();
   const startOfCurrentWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -100,7 +99,7 @@ export function PlanScreen({
   });
 
   const openSheet = useCallback(
-    (date: Date, dinner?: DinnerWithTags) => {
+    (date: Date, dinner?: DinnerWithRecipe) => {
       setSelectedDate(date);
       setSelectedDinner(dinner ?? null);
       setSheetMode(dinner ? "planned" : "plan");
@@ -264,7 +263,11 @@ export function PlanScreen({
                   variant="outline"
                   onPress={() => {
                     bottomSheetRef.current?.dismiss();
-                    navigation.navigate("Dinners", { openNew: true });
+                    navigation
+                      .getParent<
+                        NativeStackNavigationProp<RootStackParamList>
+                      >()
+                      ?.navigate("NewDinner");
                   }}
                 >
                   New dinner
@@ -295,83 +298,51 @@ export function PlanScreen({
             contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
           >
             <View className="gap-4">
-              <View className="gap-1">
-                <Text className="text-muted-foreground text-sm">
-                  {selectedDate ? format(selectedDate, "EEEE, LLLL do, y") : ""}
-                </Text>
-                <Text className="text-foreground font-serif text-2xl">
-                  {selectedDinner?.name ?? ""}
-                </Text>
-              </View>
+              <Text className="text-muted-foreground text-sm">
+                {selectedDate ? format(selectedDate, "EEEE, LLLL do, y") : ""}
+              </Text>
 
-              <View className="gap-3">
-                {!!selectedDinner?.tags.length && (
-                  <View className="flex-row flex-wrap gap-2">
-                    {selectedDinner.tags.map((tag) => (
-                      <Badge key={tag.value} variant="secondary">
-                        {tag.value}
-                      </Badge>
-                    ))}
-                  </View>
-                )}
-
-                {!!selectedDinner?.link && (
-                  <Pressable
-                    onPress={() => Linking.openURL(selectedDinner.link ?? "")}
-                  >
-                    <Text className="text-sm text-blue-600 underline">
-                      {selectedDinner.link}
-                    </Text>
-                  </Pressable>
-                )}
-
-                {!!selectedDinner?.notes && (
-                  <View className="gap-1">
-                    {selectedDinner.notes.split("\n").map((line) => (
-                      <Text key={line} className="text-foreground text-sm">
-                        {line}
-                      </Text>
-                    ))}
-                  </View>
-                )}
-
-                <View className="flex-row flex-wrap gap-2">
+              <View className="flex-row flex-wrap gap-2">
+                <Button variant="outline" onPress={() => setSheetMode("plan")}>
+                  Change dinner
+                </Button>
+                {selectedDate && (
                   <Button
                     variant="outline"
-                    onPress={() => setSheetMode("plan")}
+                    onPress={() =>
+                      unplanDayMutation.mutate({ date: selectedDate })
+                    }
+                    disabled={unplanDayMutation.isPending}
                   >
-                    Change plan
+                    Clear day
                   </Button>
-                  {selectedDate && (
-                    <Button
-                      variant="outline"
-                      onPress={() =>
-                        unplanDayMutation.mutate({ date: selectedDate })
-                      }
-                      disabled={unplanDayMutation.isPending}
-                    >
-                      Clear day
-                    </Button>
-                  )}
-                  {selectedDinner && (
-                    <Button
-                      variant="outline"
-                      onPress={() => {
-                        bottomSheetRef.current?.dismiss();
-                        navigation
-                          .getParent<
-                            NativeStackNavigationProp<RootStackParamList>
-                          >()
-                          ?.navigate("DinnerDetail", {
-                            dinnerId: selectedDinner.id,
-                          });
-                      }}
-                    >
-                      View recipe
-                    </Button>
-                  )}
-                </View>
+                )}
+                {selectedDinner && (
+                  <Button
+                    variant="outline"
+                    onPress={() => {
+                      bottomSheetRef.current?.dismiss();
+                      navigation
+                        .getParent<
+                          NativeStackNavigationProp<RootStackParamList>
+                        >()
+                        ?.navigate("DinnerDetail", {
+                          dinnerId: selectedDinner.id,
+                          edit: true,
+                        });
+                    }}
+                  >
+                    Edit
+                  </Button>
+                )}
               </View>
+
+              {selectedDinner && (
+                <RecipeViewContent
+                  dinner={selectedDinner}
+                  showEditButton={false}
+                />
+              )}
             </View>
           </BottomSheetScrollView>
         )}

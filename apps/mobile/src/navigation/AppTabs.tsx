@@ -7,7 +7,7 @@ import { colors } from "../theme/colors";
 
 export type AppTabsParamList = {
   Plan: undefined;
-  Dinners: { openNew?: boolean } | undefined;
+  Dinners: undefined;
   Settings: undefined;
 };
 

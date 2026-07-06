@@ -24,7 +24,7 @@ Each scene should define:
 `capture plan first-day drawer screenshot` in `/Users/aslak/repos/plan-eat-repeat/apps/web/tests/capture.spec.ts`:
 - Goes to `/`
 - Clicks the first `plan-day-trigger`
-- Waits for drawer state (`Surprise me!` or `Change plan`)
+- Waits for drawer state (`Surprise me!` or `Change dinner`)
 - Saves `capture/web/plan-first-day-drawer.png`
 
 ## Mobile Scenes (Future)

@@ -18,6 +18,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
           Settings: "settings",
         },
       },
+      NewDinner: "dinners/new",
       DinnerDetail: {
         path: "dinners/:dinnerId",
         parse: {

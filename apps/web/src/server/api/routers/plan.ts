@@ -23,7 +23,20 @@ export const planRouter = createTRPCRouter({
           },
           dinner: { householdId: ctx.householdId },
         },
-        include: { dinner: { include: { tags: true } } },
+        include: {
+          dinner: {
+            include: {
+              tags: true,
+              parts: {
+                orderBy: { order: "asc" },
+                include: {
+                  ingredients: { orderBy: { order: "asc" } },
+                  steps: { orderBy: { order: "asc" } },
+                },
+              },
+            },
+          },
+        },
         orderBy: { date: "asc" },
       });
 
