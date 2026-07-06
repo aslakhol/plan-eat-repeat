@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import {
   dinnerNameSchema,
   recipeSchema,
@@ -12,6 +13,9 @@ import {
   protectedProcedureWithHousehold,
 } from "~/server/api/trpc";
 import { type DinnerWithTags } from "~/utils/types";
+import { acquireRecipeSource } from "~/server/ai/acquireRecipeSource";
+import { extractRecipe } from "~/server/ai/extractRecipe";
+import { RecipeImportError } from "~/server/ai/recipeImportError";
 
 const createRecipeParts = (parts: RecipeInput["parts"]) =>
   parts.map((part, partIndex) => ({
@@ -33,6 +37,47 @@ const createRecipeParts = (parts: RecipeInput["parts"]) =>
 
 const recipeServings = (recipe: RecipeInput) =>
   recipe.parts.length === 0 ? null : recipe.servings;
+
+const imageImportSchema = z
+  .array(
+    z.object({
+      data: z
+        .string()
+        .min(1)
+        .max(4_000_000)
+        .regex(/^[A-Za-z0-9+/]+={0,2}$/, "Invalid image data"),
+      mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+    }),
+  )
+  .min(1)
+  .max(4)
+  .refine(
+    (images) =>
+      images.reduce((total, image) => total + image.data.length, 0) <=
+      4_000_000,
+    "Images are too large. Remove a photo or retake them at a lower resolution.",
+  );
+
+const runRecipeImport = async <T>(operation: () => Promise<T>) => {
+  try {
+    return await operation();
+  } catch (cause) {
+    const importError =
+      cause instanceof RecipeImportError
+        ? cause
+        : new RecipeImportError(
+            "EXTRACTION_FAILED",
+            "We could not extract a recipe from that source. Please try again.",
+            { cause },
+          );
+
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: importError.message,
+      cause: importError,
+    });
+  }
+};
 
 export const dinnerRouter = createTRPCRouter({
   tags: publicProcedure.query(async ({ ctx }) => {
@@ -115,6 +160,59 @@ export const dinnerRouter = createTRPCRouter({
       ingredientNames: ingredients.map((ingredient) => ingredient.name),
     };
   }),
+
+  importFromUrl: protectedProcedureWithHousehold
+    .input(z.object({ url: z.string().url() }))
+    .mutation(async ({ ctx, input }) =>
+      runRecipeImport(async () => {
+        const [text, household] = await Promise.all([
+          acquireRecipeSource(input.url),
+          ctx.db.household.findUniqueOrThrow({
+            where: { id: ctx.householdId },
+            select: { importInstructions: true },
+          }),
+        ]);
+        const draft = await extractRecipe({
+          parts: [{ type: "text", text }],
+          instructions: household.importInstructions ?? undefined,
+        });
+        return { ...draft, sourceUrl: input.url };
+      }),
+    ),
+
+  importFromText: protectedProcedureWithHousehold
+    .input(z.object({ text: z.string().trim().min(50).max(100_000) }))
+    .mutation(async ({ ctx, input }) =>
+      runRecipeImport(async () => {
+        const household = await ctx.db.household.findUniqueOrThrow({
+          where: { id: ctx.householdId },
+          select: { importInstructions: true },
+        });
+        return extractRecipe({
+          parts: [{ type: "text", text: input.text }],
+          instructions: household.importInstructions ?? undefined,
+        });
+      }),
+    ),
+
+  importFromImages: protectedProcedureWithHousehold
+    .input(z.object({ images: imageImportSchema }))
+    .mutation(async ({ ctx, input }) =>
+      runRecipeImport(async () => {
+        const household = await ctx.db.household.findUniqueOrThrow({
+          where: { id: ctx.householdId },
+          select: { importInstructions: true },
+        });
+        return extractRecipe({
+          parts: input.images.map((image) => ({
+            type: "image" as const,
+            image: Uint8Array.from(Buffer.from(image.data, "base64")),
+            mimeType: image.mimeType,
+          })),
+          instructions: household.importInstructions ?? undefined,
+        });
+      }),
+    ),
 
   create: protectedProcedureWithHousehold
     .input(

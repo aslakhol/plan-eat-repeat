@@ -92,14 +92,15 @@ model User {
 }
 
 model Household {
-    id        String       @id @default(cuid())
-    name      String
-    slug      String       @unique
-    createdAt DateTime     @default(now())
-    updatedAt DateTime     @updatedAt
-    Dinners   Dinner[]
-    Members   Membership[]
-    Invite    Invite[]
+    id                 String       @id @default(cuid())
+    name               String
+    slug               String       @unique
+    importInstructions String?
+    createdAt          DateTime     @default(now())
+    updatedAt          DateTime     @updatedAt
+    Dinners            Dinner[]
+    Members            Membership[]
+    Invite             Invite[]
 }
 
 model Membership {

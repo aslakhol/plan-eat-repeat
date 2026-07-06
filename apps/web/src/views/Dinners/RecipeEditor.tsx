@@ -20,6 +20,7 @@ import {
 import {
   UNITS,
   type DinnerWithRecipe,
+  type RecipeDraft,
   amountInputSchema,
   dinnerNameSchema,
   parseAmount,
@@ -69,6 +70,7 @@ export type RecipeEditorValues = z.infer<typeof recipeEditorSchema>;
 
 type Props = {
   dinner?: DinnerWithRecipe;
+  draft?: RecipeDraft;
   isPending: boolean;
   onCancel: () => void;
   onSave: (values: RecipeEditorValues) => void;
@@ -83,6 +85,7 @@ const emptyPart = (): RecipeEditorValues["recipe"]["parts"][number] => ({
 
 export const RecipeEditor = ({
   dinner,
+  draft,
   isPending,
   onCancel,
   onSave,
@@ -91,13 +94,13 @@ export const RecipeEditor = ({
   const form = useForm<RecipeEditorValues>({
     resolver: zodResolver(recipeEditorSchema),
     defaultValues: {
-      name: dinner?.name ?? "",
+      name: dinner?.name ?? draft?.name ?? "",
       tags: dinner?.tags.map((tag) => tag.value) ?? [],
       newTag: "",
-      link: dinner?.link ?? "",
+      link: dinner?.link ?? draft?.sourceUrl ?? "",
       notes: dinner?.notes ?? "",
       recipe: {
-        servings: dinner?.servings ?? null,
+        servings: dinner?.servings ?? draft?.recipe.servings ?? null,
         parts:
           dinner?.parts.map((part) => ({
             name: part.name ?? "",
@@ -109,7 +112,19 @@ export const RecipeEditor = ({
               note: ingredient.note ?? "",
             })),
             steps: part.steps.map((step) => ({ text: step.text })),
-          })) ?? [],
+          })) ??
+          draft?.recipe.parts.map((part) => ({
+            name: part.name ?? "",
+            ingredients: part.ingredients.map((ingredient) => ({
+              name: ingredient.name,
+              amount:
+                ingredient.amount === null ? "" : String(ingredient.amount),
+              unit: ingredient.unit,
+              note: ingredient.note ?? "",
+            })),
+            steps: part.steps.map((text) => ({ text })),
+          })) ??
+          [],
       },
     },
   });

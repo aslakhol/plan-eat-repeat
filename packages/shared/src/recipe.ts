@@ -32,6 +32,12 @@ export const recipeSchema = z.object({
 
 export type RecipeInput = z.infer<typeof recipeSchema>;
 
+export type RecipeDraft = {
+  name: string;
+  recipe: RecipeInput;
+  sourceUrl?: string;
+};
+
 export const formatAmount = (amount: number) => String(amount);
 
 // Editors keep amounts as text so partial input like "1," or "0.5" survives
