@@ -1,19 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
   ScrollView,
   Pressable,
   ActivityIndicator,
-  Alert,
   StyleSheet,
 } from "react-native";
 import { ChefHat } from "lucide-react-native";
-import {
-  BottomSheetBackdrop,
-  BottomSheetModal,
-  BottomSheetScrollView,
-} from "@gorhom/bottom-sheet";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { AppTabsParamList } from "../navigation/AppTabs";
@@ -28,45 +22,17 @@ import {
   CardTitle,
 } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
-import { DinnerForm } from "../components/dinners/DinnerForm";
 import { colors } from "../theme/colors";
 import { cn } from "../utils/cn";
 
 type DinnersScreenProps = BottomTabScreenProps<AppTabsParamList, "Dinners">;
 
-export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
+export function DinnersScreen({ navigation }: DinnersScreenProps) {
   const dinnersQuery = api.dinner.dinners.useQuery();
-  const utils = api.useUtils();
 
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTags, setShowTags] = useState(false);
-  const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => ["85%"], []);
-
-  const createDinnerMutation = api.dinner.create.useMutation({
-    onSuccess: (result) => {
-      void utils.dinner.dinners.invalidate();
-      bottomSheetRef.current?.dismiss();
-      navigation
-        .getParent<NativeStackNavigationProp<RootStackParamList>>()
-        ?.navigate("DinnerDetail", { dinnerId: result.dinner.id });
-    },
-    onError: (error) => {
-      Alert.alert("Could not save dinner", error.message);
-    },
-  });
-
-  const openNewDinner = () => {
-    bottomSheetRef.current?.present();
-  };
-
-  useEffect(() => {
-    if (route.params?.openNew) {
-      openNewDinner();
-      navigation.setParams({ openNew: undefined });
-    }
-  }, [route.params?.openNew, navigation]);
 
   const dinners = dinnersQuery.data?.dinners
     .filter(
@@ -80,10 +46,6 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
           dinner.tags.map((t) => t.value).includes(tag),
         ),
     );
-
-  const renderBackdrop = (props: any) => (
-    <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />
-  );
 
   return (
     <Screen edges={["top", "left", "right"]}>
@@ -115,7 +77,13 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
               style={{ flex: 1 }}
               contentContainerStyle={{ paddingBottom: 24, gap: 12 }}
             >
-              <Pressable onPress={openNewDinner}>
+              <Pressable
+                onPress={() =>
+                  navigation
+                    .getParent<NativeStackNavigationProp<RootStackParamList>>()
+                    ?.navigate("NewDinner")
+                }
+              >
                 <Card className="min-h-[100px] border-dashed bg-transparent">
                   <CardContent className="flex-1 items-center justify-center gap-2 p-4">
                     <ChefHat size={24} color={colors.mutedForeground} />
@@ -169,37 +137,6 @@ export function DinnersScreen({ navigation, route }: DinnersScreenProps) {
           </>
         )}
       </View>
-
-      <BottomSheetModal
-        ref={bottomSheetRef}
-        snapPoints={snapPoints}
-        enableDynamicSizing={false}
-        backdropComponent={renderBackdrop}
-        backgroundStyle={{ backgroundColor: colors.background }}
-        handleIndicatorStyle={{ backgroundColor: colors.mutedForeground }}
-      >
-        <BottomSheetScrollView
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
-        >
-          <View className="gap-4">
-            <Text className="text-foreground font-serif text-2xl">
-              New dinner
-            </Text>
-            <DinnerForm
-              onCancel={() => bottomSheetRef.current?.dismiss()}
-              isPending={createDinnerMutation.isPending}
-              onSubmit={(values) => {
-                createDinnerMutation.mutate({
-                  dinnerName: values.name,
-                  tagList: values.tags,
-                  link: values.link,
-                  notes: values.notes,
-                });
-              }}
-            />
-          </View>
-        </BottomSheetScrollView>
-      </BottomSheetModal>
     </Screen>
   );
 }

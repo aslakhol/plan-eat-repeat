@@ -5,7 +5,8 @@ import { Button } from "../ui/Button";
 
 type Props = {
   dinner: DinnerWithRecipe;
-  onEdit: () => void;
+  onEdit?: () => void;
+  showEditButton?: boolean;
 };
 
 const sourceLabel = (link: string) => {
@@ -16,9 +17,7 @@ const sourceLabel = (link: string) => {
   }
 };
 
-export function RecipeView({ dinner, onEdit }: Props) {
-  const hasRecipe = dinner.parts.length > 0;
-
+export function RecipeView(props: Props) {
   return (
     <ScrollView
       className="bg-background flex-1"
@@ -28,6 +27,20 @@ export function RecipeView({ dinner, onEdit }: Props) {
         paddingBottom: 40,
       }}
     >
+      <RecipeViewContent {...props} />
+    </ScrollView>
+  );
+}
+
+export function RecipeViewContent({
+  dinner,
+  onEdit,
+  showEditButton = true,
+}: Props) {
+  const hasRecipe = dinner.parts.length > 0;
+
+  return (
+    <>
       <View className="gap-3">
         <Text
           className="text-foreground font-serif text-[26px] leading-[31px]"
@@ -161,10 +174,14 @@ export function RecipeView({ dinner, onEdit }: Props) {
             );
           })}
         </View>
-      ) : (
+      ) : showEditButton && onEdit ? (
         <View className="mt-8 items-start">
           <Button onPress={onEdit}>Add recipe</Button>
         </View>
+      ) : (
+        <Text className="text-muted-foreground mt-8 text-sm">
+          No recipe yet.
+        </Text>
       )}
 
       {dinner.notes && (
@@ -181,11 +198,11 @@ export function RecipeView({ dinner, onEdit }: Props) {
         </View>
       )}
 
-      {!hasRecipe && !dinner.notes && (
+      {showEditButton && !hasRecipe && !dinner.notes && (
         <Text className="text-muted-foreground mt-5 text-sm">
           Add ingredients and steps whenever you’re ready.
         </Text>
       )}
-    </ScrollView>
+    </>
   );
 }

@@ -107,7 +107,7 @@ test("capture plan first-day drawer screenshot", async ({ page }) => {
       await firstDay.click();
 
       const planDayButtons = currentPage.locator(
-        "button:has-text('Surprise me!'), button:has-text('Change plan')",
+        "button:has-text('Surprise me!'), button:has-text('Change dinner')",
       );
       await expect(planDayButtons.first()).toBeVisible({ timeout: 30_000 });
     },

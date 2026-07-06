@@ -1,7 +1,7 @@
 import { format, isToday } from "date-fns";
 import { cn } from "../../lib/utils";
 import { PlannedDinner } from "./PlannedDinner";
-import { type DinnerWithTags } from "../../utils/types";
+import { type DinnerWithRecipe } from "../../utils/types";
 import { useState } from "react";
 import { PlanDay } from "./PlanDay";
 import {
@@ -18,7 +18,7 @@ import { Plus } from "lucide-react";
 
 type Props = {
   date: Date;
-  plannedDinner?: DinnerWithTags;
+  plannedDinner?: DinnerWithRecipe;
 };
 
 export const Day = ({ date, plannedDinner }: Props) => {
@@ -41,19 +41,19 @@ export const Day = ({ date, plannedDinner }: Props) => {
           data-testid="plan-day-trigger"
           data-date={format(date, "yyyy-MM-dd")}
           className={cn(
-            "group relative flex h-full min-h-[80px] cursor-pointer flex-col overflow-hidden transition-colors hover:bg-accent/50 sm:min-h-[140px]",
+            "hover:bg-accent/50 group relative flex h-full min-h-[80px] cursor-pointer flex-col overflow-hidden transition-colors sm:min-h-[140px]",
             !plannedDinner &&
-              "border-dashed bg-transparent hover:border-primary/50",
+              "hover:border-primary/50 border-dashed bg-transparent",
             plannedDinner &&
               "border-secondary bg-secondary/30 hover:bg-secondary/50",
-            isDateToday && "ring-2 ring-primary ring-offset-2",
+            isDateToday && "ring-primary ring-2 ring-offset-2",
           )}
         >
           <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
             <CardTitle
               className={cn(
-                "flex items-center justify-between font-sans text-sm font-medium text-muted-foreground",
-                isDateToday && "font-bold text-primary",
+                "text-muted-foreground flex items-center justify-between font-sans text-sm font-medium",
+                isDateToday && "text-primary font-bold",
               )}
             >
               {format(date, "EEE do")}
@@ -65,7 +65,7 @@ export const Day = ({ date, plannedDinner }: Props) => {
                 {plannedDinner.name}
               </p>
             ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground/50 transition-colors group-hover:text-primary/50">
+              <div className="text-muted-foreground/50 group-hover:text-primary/50 flex h-full items-center justify-center transition-colors">
                 <Plus className="h-6 w-6 sm:h-8 sm:w-8" />
               </div>
             )}
