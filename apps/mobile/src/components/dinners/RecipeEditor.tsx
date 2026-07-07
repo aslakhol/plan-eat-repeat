@@ -89,6 +89,8 @@ export type RecipeEditorHandle = {
 type Props = {
   dinner?: DinnerWithRecipe;
   initialValues?: RecipeEditorValues;
+  showImportReview?: boolean;
+  importReviewSourceUrl?: string | null;
   isPending: boolean;
   onCancel: () => void;
   onSave: (values: RecipeEditorValues) => void;
@@ -163,7 +165,16 @@ const editorValuesFromDinner = (
 
 export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
   function RecipeEditor(
-    { dinner, initialValues, isPending, onCancel, onSave, onDelete },
+    {
+      dinner,
+      initialValues,
+      showImportReview = false,
+      importReviewSourceUrl,
+      isPending,
+      onCancel,
+      onSave,
+      onDelete,
+    },
     ref,
   ) {
     const form = useForm<RecipeEditorValues>({
@@ -244,6 +255,19 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
           }}
         >
           <View className="gap-5">
+            {showImportReview && (
+              <View className="border-[hsl(18,60%,80%)] bg-[hsl(40,33%,95%)] rounded-md border px-3 py-2">
+                <Text className="text-foreground text-sm font-semibold">
+                  {importReviewSourceUrl
+                    ? `Imported from ${sourceLabel(importReviewSourceUrl)}`
+                    : "Imported recipe draft"}
+                </Text>
+                <Text className="text-muted-foreground text-sm">
+                  Check the details, then save.
+                </Text>
+              </View>
+            )}
+
             <View className="gap-4">
               <View className="gap-1.5">
                 <FieldLabel>Name</FieldLabel>
@@ -442,6 +466,14 @@ const textOrNull = (value: string | undefined) => {
   const trimmed = value?.trim();
   if (!trimmed) return null;
   return trimmed;
+};
+
+const sourceLabel = (sourceUrl: string) => {
+  try {
+    return new URL(sourceUrl).hostname.replace(/^www\./, "");
+  } catch {
+    return sourceUrl;
+  }
 };
 
 type PartEditorProps = {

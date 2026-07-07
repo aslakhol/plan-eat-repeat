@@ -70,6 +70,8 @@ export type RecipeEditorValues = z.infer<typeof recipeEditorSchema>;
 type Props = {
   dinner?: DinnerWithRecipe;
   initialValues?: RecipeEditorValues;
+  showImportReview?: boolean;
+  importReviewSourceUrl?: string | null;
   isPending: boolean;
   onCancel: () => void;
   onSave: (values: RecipeEditorValues) => void;
@@ -145,6 +147,8 @@ const editorValuesFromDinner = (
 export const RecipeEditor = ({
   dinner,
   initialValues,
+  showImportReview = false,
+  importReviewSourceUrl,
   isPending,
   onCancel,
   onSave,
@@ -208,6 +212,19 @@ export const RecipeEditor = ({
         </div>
 
         <div className="space-y-5">
+          {showImportReview && (
+            <div className="rounded-md border border-[hsl(18_60%_80%)] bg-[hsl(40_33%_95%)] px-3 py-2 text-sm">
+              <p className="font-medium">
+                {importReviewSourceUrl
+                  ? `Imported from ${sourceLabel(importReviewSourceUrl)}`
+                  : "Imported recipe draft"}
+              </p>
+              <p className="text-muted-foreground">
+                Check the details, then save.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-4">
             <div className="space-y-1.5">
               <FieldLabel htmlFor="dinner-name">Name</FieldLabel>
@@ -377,6 +394,14 @@ const textOrNull = (value: string | undefined) => {
   const trimmed = value?.trim();
   if (!trimmed) return null;
   return trimmed;
+};
+
+const sourceLabel = (sourceUrl: string) => {
+  try {
+    return new URL(sourceUrl).hostname.replace(/^www\./, "");
+  } catch {
+    return sourceUrl;
+  }
 };
 
 type PartEditorProps = {

@@ -159,6 +159,8 @@ export const CreateDinner = () => {
       <RecipeEditor
         key={draftKey}
         initialValues={draft}
+        showImportReview
+        importReviewSourceUrl={draft.link}
         isPending={createMutation.isPending}
         onCancel={cancelDraft}
         onSave={createDinner}

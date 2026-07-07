@@ -318,6 +318,8 @@ export function NewDinnerScreen({ navigation }: Props) {
       key={draftKey}
       ref={editorRef}
       initialValues={draft ?? undefined}
+      showImportReview={mode === "draft"}
+      importReviewSourceUrl={draft?.link}
       isPending={createMutation.isPending}
       onCancel={() => navigation.goBack()}
       onSave={createDinner}
