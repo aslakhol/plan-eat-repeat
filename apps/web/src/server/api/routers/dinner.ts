@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import {
   dinnerNameSchema,
   recipeSchema,
@@ -11,6 +12,11 @@ import {
   publicProcedure,
   protectedProcedureWithHousehold,
 } from "~/server/api/trpc";
+import {
+  ImportRecipeError,
+  importRecipeFromText,
+  importRecipeFromUrl,
+} from "~/server/recipes/importRecipe";
 import { type DinnerWithTags } from "~/utils/types";
 
 const createRecipeParts = (parts: RecipeInput["parts"]) =>
@@ -33,6 +39,22 @@ const createRecipeParts = (parts: RecipeInput["parts"]) =>
 
 const recipeServings = (recipe: RecipeInput) =>
   recipe.parts.length === 0 ? null : recipe.servings;
+
+const toImportTRPCError = (error: unknown) => {
+  if (error instanceof ImportRecipeError) {
+    return new TRPCError({
+      code: "BAD_REQUEST",
+      message: error.code,
+      cause: error,
+    });
+  }
+
+  return new TRPCError({
+    code: "INTERNAL_SERVER_ERROR",
+    message: "EXTRACTION_FAILED",
+    cause: error,
+  });
+};
 
 export const dinnerRouter = createTRPCRouter({
   tags: publicProcedure.query(async ({ ctx }) => {
@@ -115,6 +137,30 @@ export const dinnerRouter = createTRPCRouter({
       ingredientNames: ingredients.map((ingredient) => ingredient.name),
     };
   }),
+
+  importFromUrl: protectedProcedureWithHousehold
+    .input(z.object({ url: z.string().url() }))
+    .mutation(async ({ input }) => {
+      try {
+        const draft = await importRecipeFromUrl({ url: input.url });
+        return {
+          ...draft,
+          sourceUrl: input.url,
+        };
+      } catch (error) {
+        throw toImportTRPCError(error);
+      }
+    }),
+
+  importFromText: protectedProcedureWithHousehold
+    .input(z.object({ text: z.string().trim().min(1) }))
+    .mutation(async ({ input }) => {
+      try {
+        return await importRecipeFromText({ text: input.text });
+      } catch (error) {
+        throw toImportTRPCError(error);
+      }
+    }),
 
   create: protectedProcedureWithHousehold
     .input(

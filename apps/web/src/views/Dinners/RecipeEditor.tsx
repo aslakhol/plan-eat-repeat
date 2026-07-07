@@ -69,6 +69,7 @@ export type RecipeEditorValues = z.infer<typeof recipeEditorSchema>;
 
 type Props = {
   dinner?: DinnerWithRecipe;
+  initialValues?: RecipeEditorValues;
   isPending: boolean;
   onCancel: () => void;
   onSave: (values: RecipeEditorValues) => void;
@@ -81,8 +82,69 @@ const emptyPart = (): RecipeEditorValues["recipe"]["parts"][number] => ({
   steps: [],
 });
 
+export const emptyEditorValues = (): RecipeEditorValues => ({
+  name: "",
+  tags: [],
+  newTag: "",
+  link: "",
+  notes: "",
+  recipe: {
+    servings: null,
+    parts: [],
+  },
+});
+
+export const editorValuesFromRecipeInput = (input: {
+  name: string;
+  recipe: z.infer<typeof recipeSchema>;
+  link?: string | null;
+}): RecipeEditorValues => ({
+  name: input.name,
+  tags: [],
+  newTag: "",
+  link: input.link ?? "",
+  notes: "",
+  recipe: {
+    servings: input.recipe.servings,
+    parts: input.recipe.parts.map((part) => ({
+      name: part.name ?? "",
+      ingredients: part.ingredients.map((ingredient) => ({
+        name: ingredient.name,
+        amount: ingredient.amount === null ? "" : String(ingredient.amount),
+        unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
+        note: ingredient.note ?? "",
+      })),
+      steps: part.steps.map((text) => ({ text })),
+    })),
+  },
+});
+
+const editorValuesFromDinner = (
+  dinner: DinnerWithRecipe,
+): RecipeEditorValues => ({
+  name: dinner.name,
+  tags: dinner.tags.map((tag) => tag.value),
+  newTag: "",
+  link: dinner.link ?? "",
+  notes: dinner.notes ?? "",
+  recipe: {
+    servings: dinner.servings ?? null,
+    parts: dinner.parts.map((part) => ({
+      name: part.name ?? "",
+      ingredients: part.ingredients.map((ingredient) => ({
+        name: ingredient.name,
+        amount: ingredient.amount === null ? "" : String(ingredient.amount),
+        unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
+        note: ingredient.note ?? "",
+      })),
+      steps: part.steps.map((step) => ({ text: step.text })),
+    })),
+  },
+});
+
 export const RecipeEditor = ({
   dinner,
+  initialValues,
   isPending,
   onCancel,
   onSave,
@@ -90,28 +152,11 @@ export const RecipeEditor = ({
 }: Props) => {
   const form = useForm<RecipeEditorValues>({
     resolver: zodResolver(recipeEditorSchema),
-    defaultValues: {
-      name: dinner?.name ?? "",
-      tags: dinner?.tags.map((tag) => tag.value) ?? [],
-      newTag: "",
-      link: dinner?.link ?? "",
-      notes: dinner?.notes ?? "",
-      recipe: {
-        servings: dinner?.servings ?? null,
-        parts:
-          dinner?.parts.map((part) => ({
-            name: part.name ?? "",
-            ingredients: part.ingredients.map((ingredient) => ({
-              name: ingredient.name,
-              amount:
-                ingredient.amount === null ? "" : String(ingredient.amount),
-              unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
-              note: ingredient.note ?? "",
-            })),
-            steps: part.steps.map((step) => ({ text: step.text })),
-          })) ?? [],
-      },
-    },
+    defaultValues:
+      initialValues ??
+      (dinner === undefined
+        ? emptyEditorValues()
+        : editorValuesFromDinner(dinner)),
   });
   const parts = useFieldArray({
     control: form.control,
