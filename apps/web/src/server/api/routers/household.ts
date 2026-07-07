@@ -52,6 +52,7 @@ export const householdRouter = createTRPCRouter({
       z.object({
         name: z.string().trim().min(1).max(100),
         slug: z.string().trim().max(100),
+        importInstructions: z.string().trim().max(1000).optional(),
         onboardingDinners: z.array(onboardingDinnerSchema).max(31).optional(),
       }),
     )
@@ -80,6 +81,8 @@ export const householdRouter = createTRPCRouter({
           data: {
             name: input.name,
             slug,
+            importInstructions:
+              input.importInstructions === "" ? null : input.importInstructions,
             Members: {
               create: { userId: ctx.auth.userId, role: "ADMIN" },
             },
@@ -103,12 +106,22 @@ export const householdRouter = createTRPCRouter({
       return { household };
     }),
   updateHousehold: protectedProcedureWithHousehold
-    .input(z.object({ name: z.string(), slug: z.string() }))
+    .input(
+      z.object({
+        name: z.string(),
+        slug: z.string(),
+        importInstructions: z.string().trim().max(1000).nullable(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
-      const { name, slug } = input;
       const household = await ctx.db.household.update({
         where: { id: ctx.householdId },
-        data: { name, slug },
+        data: {
+          name: input.name,
+          slug: input.slug,
+          importInstructions:
+            input.importInstructions === "" ? null : input.importInstructions,
+        },
       });
 
       return { household };
