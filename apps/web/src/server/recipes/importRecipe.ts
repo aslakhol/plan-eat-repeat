@@ -6,6 +6,7 @@ import { extractRecipe, type ExtractResult } from "~/server/ai/extractRecipe";
 
 export const importRecipeErrorCodes = [
   "FETCH_FAILED",
+  "SITE_BLOCKED",
   "PAGE_UNREADABLE",
   "NO_RECIPE_FOUND",
   "EXTRACTION_FAILED",
@@ -102,7 +103,9 @@ const fetchHtml = async (url: string) => {
     });
 
     if (!response.ok) {
-      throw new ImportRecipeError("FETCH_FAILED");
+      throw new ImportRecipeError(
+        isBlockedStatus(response.status) ? "SITE_BLOCKED" : "FETCH_FAILED",
+      );
     }
 
     const contentType = response.headers.get("content-type");
@@ -239,6 +242,12 @@ const trimForModel = (text: string) =>
   text.length > MAX_TEXT_PART_LENGTH
     ? text.slice(0, MAX_TEXT_PART_LENGTH)
     : text;
+
+// Status codes that mean the site refused us (bot protection / rate limiting /
+// Cloudflare "under attack") rather than a broken link — the URL is fine, so
+// the UI should point at the paste fallback, not "double-check the URL".
+const isBlockedStatus = (status: number) =>
+  status === 401 || status === 403 || status === 429 || status === 503;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;

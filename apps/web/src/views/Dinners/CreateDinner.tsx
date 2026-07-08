@@ -17,6 +17,7 @@ import {
 
 type ImportErrorCode =
   | "FETCH_FAILED"
+  | "SITE_BLOCKED"
   | "PAGE_UNREADABLE"
   | "NO_RECIPE_FOUND"
   | "EXTRACTION_FAILED";
@@ -93,6 +94,7 @@ export const CreateDinner = () => {
       setImportError(code);
       if (
         code === "FETCH_FAILED" ||
+        code === "SITE_BLOCKED" ||
         code === "PAGE_UNREADABLE" ||
         code === "NO_RECIPE_FOUND"
       ) {
@@ -304,6 +306,7 @@ export const CreateDinner = () => {
 const importErrorCode = (message: string): ImportErrorCode => {
   if (
     message === "FETCH_FAILED" ||
+    message === "SITE_BLOCKED" ||
     message === "PAGE_UNREADABLE" ||
     message === "NO_RECIPE_FOUND" ||
     message === "EXTRACTION_FAILED"
@@ -317,6 +320,9 @@ const importErrorCode = (message: string): ImportErrorCode => {
 const importErrorMessage = (code: ImportErrorCode) => {
   if (code === "FETCH_FAILED") {
     return "We couldn't open that link. Double-check the URL, or paste the recipe text below.";
+  }
+  if (code === "SITE_BLOCKED") {
+    return "This site blocks automated requests, so we couldn't read it. Paste the recipe text below and we'll structure it for you.";
   }
   if (code === "PAGE_UNREADABLE") {
     return "We couldn't read this page automatically — some sites build their recipe with JavaScript, so there's nothing on the page for us to grab. Paste the recipe text below and we'll structure it for you.";
