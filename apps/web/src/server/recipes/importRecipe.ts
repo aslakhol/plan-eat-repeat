@@ -1,5 +1,3 @@
-import "server-only";
-
 import { Readability } from "@mozilla/readability";
 import * as cheerio from "cheerio";
 import { parseHTML } from "linkedom";

@@ -1,5 +1,3 @@
-import "server-only";
-
 import { anthropic } from "@ai-sdk/anthropic";
 import { generateObject, type FilePart, type TextPart } from "ai";
 import { z } from "zod";
