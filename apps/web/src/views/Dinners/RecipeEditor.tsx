@@ -84,7 +84,7 @@ const emptyPart = (): RecipeEditorValues["recipe"]["parts"][number] => ({
   steps: [],
 });
 
-export const emptyEditorValues = (): RecipeEditorValues => ({
+const emptyEditorValues = (): RecipeEditorValues => ({
   name: "",
   tags: [],
   newTag: "",
@@ -94,6 +94,18 @@ export const emptyEditorValues = (): RecipeEditorValues => ({
     servings: null,
     parts: [],
   },
+});
+
+const editorIngredient = (ingredient: {
+  name: string;
+  amount: number | null;
+  unit: string | null;
+  note: string | null;
+}) => ({
+  name: ingredient.name,
+  amount: ingredient.amount === null ? "" : String(ingredient.amount),
+  unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
+  note: ingredient.note ?? "",
 });
 
 export const editorValuesFromRecipeInput = (input: {
@@ -110,12 +122,7 @@ export const editorValuesFromRecipeInput = (input: {
     servings: input.recipe.servings,
     parts: input.recipe.parts.map((part) => ({
       name: part.name ?? "",
-      ingredients: part.ingredients.map((ingredient) => ({
-        name: ingredient.name,
-        amount: ingredient.amount === null ? "" : String(ingredient.amount),
-        unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
-        note: ingredient.note ?? "",
-      })),
+      ingredients: part.ingredients.map(editorIngredient),
       steps: part.steps.map((text) => ({ text })),
     })),
   },
@@ -133,12 +140,7 @@ const editorValuesFromDinner = (
     servings: dinner.servings ?? null,
     parts: dinner.parts.map((part) => ({
       name: part.name ?? "",
-      ingredients: part.ingredients.map((ingredient) => ({
-        name: ingredient.name,
-        amount: ingredient.amount === null ? "" : String(ingredient.amount),
-        unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
-        note: ingredient.note ?? "",
-      })),
+      ingredients: part.ingredients.map(editorIngredient),
       steps: part.steps.map((step) => ({ text: step.text })),
     })),
   },

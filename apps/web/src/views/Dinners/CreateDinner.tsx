@@ -1,8 +1,13 @@
-import { type FormEvent, type ReactNode, useMemo, useState } from "react";
+import { type FormEvent, type ReactNode, useState } from "react";
 import { useRouter } from "next/router";
 import { usePostHog } from "posthog-js/react";
 import { Loader2, LinkIcon, Pencil, Wand2 } from "lucide-react";
-import { z } from "zod";
+import {
+  type ImportRecipeErrorCode,
+  importErrorCodeFromMessage,
+  importErrorMessages,
+  validUrlOrNull,
+} from "@planeatrepeat/shared";
 import { toast } from "../../components/ui/use-toast";
 import { api } from "../../utils/api";
 import { Button } from "../../components/ui/button";
@@ -15,13 +20,6 @@ import {
   type RecipeEditorValues,
 } from "./RecipeEditor";
 
-type ImportErrorCode =
-  | "FETCH_FAILED"
-  | "SITE_BLOCKED"
-  | "PAGE_UNREADABLE"
-  | "NO_RECIPE_FOUND"
-  | "EXTRACTION_FAILED";
-
 type CreateMode = "choose" | "manual" | "import" | "draft";
 
 const loadingCopy = [
@@ -30,8 +28,6 @@ const loadingCopy = [
   "Normalizing ingredients and steps",
 ];
 
-const urlSchema = z.string().url();
-
 export const CreateDinner = () => {
   const router = useRouter();
   const posthog = usePostHog();
@@ -39,14 +35,12 @@ export const CreateDinner = () => {
   const [mode, setMode] = useState<CreateMode>("choose");
   const [url, setUrl] = useState("");
   const [pasteText, setPasteText] = useState("");
-  const [importError, setImportError] = useState<ImportErrorCode | null>(null);
+  const [importError, setImportError] = useState<ImportRecipeErrorCode | null>(
+    null,
+  );
   const [showPasteFallback, setShowPasteFallback] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [draft, setDraft] = useState<RecipeEditorValues | null>(null);
-  const draftKey = useMemo(
-    () => (draft ? `${draft.name}-${draft.link}` : "manual"),
-    [draft],
-  );
 
   const createMutation = api.dinner.create.useMutation({
     onSuccess: async (result) => {
@@ -90,14 +84,9 @@ export const CreateDinner = () => {
       setMode("draft");
     },
     onError: (error) => {
-      const code = importErrorCode(error.message);
+      const code = importErrorCodeFromMessage(error.message);
       setImportError(code);
-      if (
-        code === "FETCH_FAILED" ||
-        code === "SITE_BLOCKED" ||
-        code === "PAGE_UNREADABLE" ||
-        code === "NO_RECIPE_FOUND"
-      ) {
+      if (code !== "EXTRACTION_FAILED") {
         setShowPasteFallback(true);
       }
     },
@@ -114,20 +103,17 @@ export const CreateDinner = () => {
       setLoadingStep(loadingCopy.length - 1);
     },
     onSuccess: (result) => {
-      const sourceUrl = urlSchema.safeParse(url.trim()).success
-        ? url.trim()
-        : null;
       setDraft(
         editorValuesFromRecipeInput({
           name: result.name,
           recipe: result.recipe,
-          link: sourceUrl,
+          link: validUrlOrNull(url),
         }),
       );
       setMode("draft");
     },
     onError: (error) => {
-      setImportError(importErrorCode(error.message));
+      setImportError(importErrorCodeFromMessage(error.message));
     },
   });
 
@@ -149,12 +135,12 @@ export const CreateDinner = () => {
 
   const submitUrlImport = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const parsed = urlSchema.safeParse(url.trim());
-    if (!parsed.success) {
+    const sourceUrl = validUrlOrNull(url);
+    if (!sourceUrl) {
       setImportError("FETCH_FAILED");
       return;
     }
-    importFromUrlMutation.mutate({ url: parsed.data });
+    importFromUrlMutation.mutate({ url: sourceUrl });
   };
 
   const submitTextImport = (event: FormEvent<HTMLFormElement>) => {
@@ -178,7 +164,7 @@ export const CreateDinner = () => {
   if (mode === "draft" && draft) {
     return (
       <RecipeEditor
-        key={draftKey}
+        key={`${draft.name}-${draft.link}`}
         initialValues={draft}
         showImportReview
         importReviewSourceUrl={draft.link}
@@ -268,7 +254,7 @@ export const CreateDinner = () => {
           {importError && (
             <div className="space-y-4 rounded-md border border-[hsl(18_60%_80%)] bg-[hsl(40_33%_95%)] p-3">
               <p className="text-foreground text-sm">
-                {importErrorMessage(importError)}
+                {importErrorMessages[importError]}
               </p>
               {showPasteFallback && (
                 <form className="space-y-3" onSubmit={submitTextImport}>
@@ -301,36 +287,6 @@ export const CreateDinner = () => {
       )}
     </div>
   );
-};
-
-const importErrorCode = (message: string): ImportErrorCode => {
-  if (
-    message === "FETCH_FAILED" ||
-    message === "SITE_BLOCKED" ||
-    message === "PAGE_UNREADABLE" ||
-    message === "NO_RECIPE_FOUND" ||
-    message === "EXTRACTION_FAILED"
-  ) {
-    return message;
-  }
-
-  return "EXTRACTION_FAILED";
-};
-
-const importErrorMessage = (code: ImportErrorCode) => {
-  if (code === "FETCH_FAILED") {
-    return "We couldn't open that link. Double-check the URL, or paste the recipe text below.";
-  }
-  if (code === "SITE_BLOCKED") {
-    return "This site blocks automated requests, so we couldn't read it. Paste the recipe text below and we'll structure it for you.";
-  }
-  if (code === "PAGE_UNREADABLE") {
-    return "We couldn't read this page automatically — some sites build their recipe with JavaScript, so there's nothing on the page for us to grab. Paste the recipe text below and we'll structure it for you.";
-  }
-  if (code === "NO_RECIPE_FOUND") {
-    return "We opened the page but couldn't find a recipe on it. If there is one, paste the text below.";
-  }
-  return "We couldn't turn that source into a recipe. Try pasting the recipe text below.";
 };
 
 const FieldLabel = ({

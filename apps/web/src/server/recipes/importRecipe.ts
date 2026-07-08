@@ -1,18 +1,9 @@
 import { Readability } from "@mozilla/readability";
 import * as cheerio from "cheerio";
 import { parseHTML } from "linkedom";
+import { type ImportRecipeErrorCode } from "@planeatrepeat/shared";
 
 import { extractRecipe, type ExtractResult } from "~/server/ai/extractRecipe";
-
-export const importRecipeErrorCodes = [
-  "FETCH_FAILED",
-  "SITE_BLOCKED",
-  "PAGE_UNREADABLE",
-  "NO_RECIPE_FOUND",
-  "EXTRACTION_FAILED",
-] as const;
-
-export type ImportRecipeErrorCode = (typeof importRecipeErrorCodes)[number];
 
 export class ImportRecipeError extends Error {
   constructor(
@@ -29,66 +20,52 @@ const WAYBACK_TIMEOUT_MS = 12_000;
 const WAYBACK_AVAILABILITY_ENDPOINT =
   "https://archive.org/wayback/available?url=";
 const MIN_READABLE_TEXT_LENGTH = 400;
-const MAX_TEXT_PART_LENGTH = 40_000;
+const MAX_TEXT_LENGTH = 40_000;
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36 PlanEatRepeatRecipeImport/1.0";
 
-type RecipeTextPart = { type: "text"; text: string };
 type JsonLdObject = Record<string, unknown>;
 
-export const importRecipeFromUrl = async (input: {
-  url: string;
-  instructions?: string;
-}): Promise<ExtractResult> => {
-  const source = await acquireRecipeTextFromUrl(input.url);
-
-  try {
-    return await extractRecipe({
-      parts: [source],
-      instructions: input.instructions,
-    });
-  } catch (error) {
-    throw new ImportRecipeError("EXTRACTION_FAILED", errorMessage(error));
-  }
-};
-
-export const importRecipeFromText = async (input: {
-  text: string;
-  instructions?: string;
-}): Promise<ExtractResult> => {
-  try {
-    return await extractRecipe({
-      parts: [{ type: "text", text: trimForModel(input.text) }],
-      instructions: input.instructions,
-    });
-  } catch (error) {
-    throw new ImportRecipeError("EXTRACTION_FAILED", errorMessage(error));
-  }
-};
-
-export const acquireRecipeTextFromUrl = async (
+export const importRecipeFromUrl = async (
   url: string,
-): Promise<RecipeTextPart> => {
+): Promise<ExtractResult> => {
+  const source = await acquireRecipeTextFromUrl(url);
+  return extractOrThrow(source);
+};
+
+export const importRecipeFromText = async (
+  text: string,
+): Promise<ExtractResult> => extractOrThrow(trimForModel(text));
+
+const extractOrThrow = async (source: string): Promise<ExtractResult> => {
+  try {
+    return await extractRecipe(source);
+  } catch (error) {
+    throw new ImportRecipeError("EXTRACTION_FAILED", errorMessage(error));
+  }
+};
+
+const acquireRecipeTextFromUrl = async (url: string): Promise<string> => {
   try {
     const html = await fetchHtml(url);
-    return recipePartFromHtml(html, url);
+    return recipeTextFromHtml(html, url);
   } catch (error) {
     // Bot-protected sites (Cloudflare et al.) refuse our fetch. Try the
     // Wayback Machine's cached copy before giving up. If that misses, we
     // re-throw the original SITE_BLOCKED — the user just sees the same error,
     // with no mention that we attempted an archive lookup.
     if (error instanceof ImportRecipeError && error.code === "SITE_BLOCKED") {
-      const archived = await recipeFromWayback(url);
+      const archived = await recipeTextFromWayback(url);
       if (archived) return archived;
     }
     throw error;
   }
 };
 
-const recipePartFromHtml = (html: string, url: string): RecipeTextPart => {
+const recipeTextFromHtml = (html: string, url: string): string => {
   const jsonLdRecipe = findJsonLdRecipe(html);
   if (jsonLdRecipe) {
-    return { type: "text", text: JSON.stringify(jsonLdRecipe) };
+    return JSON.stringify(jsonLdRecipe);
   }
 
   const readableText = extractReadableText(html, url);
@@ -96,20 +73,18 @@ const recipePartFromHtml = (html: string, url: string): RecipeTextPart => {
     throw new ImportRecipeError("NO_RECIPE_FOUND");
   }
 
-  return { type: "text", text: trimForModel(readableText) };
+  return trimForModel(readableText);
 };
 
-// Best-effort archive lookup: returns a recipe part if the Wayback Machine has
+// Best-effort archive lookup: returns recipe text if the Wayback Machine has
 // a usable snapshot, otherwise null. Never throws — any miss falls back to the
 // original live-fetch error.
-const recipeFromWayback = async (
-  url: string,
-): Promise<RecipeTextPart | null> => {
+const recipeTextFromWayback = async (url: string): Promise<string | null> => {
   const html = await fetchArchivedHtml(url);
   if (!html) return null;
 
   try {
-    return recipePartFromHtml(html, url);
+    return recipeTextFromHtml(html, url);
   } catch {
     return null;
   }
@@ -227,14 +202,7 @@ const findRecipeNode = (value: unknown): JsonLdObject | null => {
     return value;
   }
 
-  const graph = value["@graph"];
-  if (graph) {
-    const recipe = findRecipeNode(graph);
-    if (recipe) return recipe;
-  }
-
   for (const nested of Object.values(value)) {
-    if (typeof nested !== "object" || nested === null) continue;
     const recipe = findRecipeNode(nested);
     if (recipe) return recipe;
   }
@@ -308,10 +276,7 @@ const looksLikeRecipe = (text: string) => {
   );
 };
 
-const trimForModel = (text: string) =>
-  text.length > MAX_TEXT_PART_LENGTH
-    ? text.slice(0, MAX_TEXT_PART_LENGTH)
-    : text;
+const trimForModel = (text: string) => text.slice(0, MAX_TEXT_LENGTH);
 
 // Status codes that mean the site refused us (bot protection / rate limiting /
 // Cloudflare "under attack") rather than a broken link — the URL is fine, so

@@ -142,7 +142,7 @@ export const dinnerRouter = createTRPCRouter({
     .input(z.object({ url: z.string().url() }))
     .mutation(async ({ input }) => {
       try {
-        const draft = await importRecipeFromUrl({ url: input.url });
+        const draft = await importRecipeFromUrl(input.url);
         return {
           ...draft,
           sourceUrl: input.url,
@@ -156,7 +156,7 @@ export const dinnerRouter = createTRPCRouter({
     .input(z.object({ text: z.string().trim().min(1) }))
     .mutation(async ({ input }) => {
       try {
-        return await importRecipeFromText({ text: input.text });
+        return await importRecipeFromText(input.text);
       } catch (error) {
         throw toImportTRPCError(error);
       }

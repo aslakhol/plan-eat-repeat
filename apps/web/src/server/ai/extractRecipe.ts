@@ -1,17 +1,9 @@
 import { anthropic } from "@ai-sdk/anthropic";
-import { generateText, Output, type FilePart, type TextPart } from "ai";
+import { generateText, Output } from "ai";
 import { z } from "zod";
 import { UNITS, recipeSchema, type RecipeInput } from "@planeatrepeat/shared";
 
 import { env } from "~/env";
-
-export type ExtractInput = {
-  parts: Array<
-    | { type: "text"; text: string }
-    | { type: "image"; image: Uint8Array; mimeType: string }
-  >;
-  instructions?: string;
-};
 
 export type ExtractResult = { name: string; recipe: RecipeInput };
 
@@ -35,28 +27,8 @@ Ingredient name should be the ingredient itself. Put preparation notes such as "
 Map recipe sections to recipe parts. For simple recipes with no named sections, use a single part with name null. Preserve step order and ingredient order.`;
 
 export const extractRecipe = async (
-  input: ExtractInput,
+  source: string,
 ): Promise<ExtractResult> => {
-  const content: Array<TextPart | FilePart> = input.parts.map((part) => {
-    if (part.type === "text") {
-      return { type: "text", text: part.text };
-    }
-
-    return {
-      type: "file",
-      data: part.image,
-      mediaType: part.mimeType,
-    };
-  });
-
-  const instructions = input.instructions?.trim();
-  if (instructions) {
-    content.unshift({
-      type: "text",
-      text: `Household import preferences, bounded by the required schema and source fidelity:\n${instructions}`,
-    });
-  }
-
   const result = await generateText({
     model: anthropic(env.AI_EXTRACT_MODEL),
     output: Output.object({
@@ -64,12 +36,7 @@ export const extractRecipe = async (
       name: "ExtractedRecipe",
     }),
     system: systemPrompt,
-    messages: [
-      {
-        role: "user",
-        content,
-      },
-    ],
+    prompt: source,
   });
 
   return result.output;

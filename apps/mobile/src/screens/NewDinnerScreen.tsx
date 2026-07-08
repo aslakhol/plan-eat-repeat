@@ -2,7 +2,6 @@ import {
   type ReactNode,
   useCallback,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -16,6 +15,12 @@ import {
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Link as LinkIcon, Pencil, Wand2 } from "lucide-react-native";
+import {
+  type ImportRecipeErrorCode,
+  importErrorCodeFromMessage,
+  importErrorMessages,
+  validUrlOrNull,
+} from "@planeatrepeat/shared";
 import type { RootStackParamList } from "../navigation/RootNavigator";
 import {
   RecipeEditor,
@@ -32,12 +37,6 @@ import { Textarea } from "../components/ui/Textarea";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NewDinner">;
 type CreateMode = "choose" | "manual" | "import" | "draft";
-type ImportErrorCode =
-  | "FETCH_FAILED"
-  | "SITE_BLOCKED"
-  | "PAGE_UNREADABLE"
-  | "NO_RECIPE_FOUND"
-  | "EXTRACTION_FAILED";
 
 const loadingCopy = [
   "Fetching the page",
@@ -50,14 +49,12 @@ export function NewDinnerScreen({ navigation }: Props) {
   const [mode, setMode] = useState<CreateMode>("choose");
   const [url, setUrl] = useState("");
   const [pasteText, setPasteText] = useState("");
-  const [importError, setImportError] = useState<ImportErrorCode | null>(null);
+  const [importError, setImportError] = useState<ImportRecipeErrorCode | null>(
+    null,
+  );
   const [showPasteFallback, setShowPasteFallback] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [draft, setDraft] = useState<RecipeEditorValues | null>(null);
-  const draftKey = useMemo(
-    () => (draft ? `${draft.name}-${draft.link}` : "manual"),
-    [draft],
-  );
   const utils = api.useUtils();
   const createMutation = api.dinner.create.useMutation({
     onSuccess: async (result) => {
@@ -96,14 +93,9 @@ export function NewDinnerScreen({ navigation }: Props) {
       setMode("draft");
     },
     onError: (error) => {
-      const code = importErrorCode(error.message);
+      const code = importErrorCodeFromMessage(error.message);
       setImportError(code);
-      if (
-        code === "FETCH_FAILED" ||
-        code === "SITE_BLOCKED" ||
-        code === "PAGE_UNREADABLE" ||
-        code === "NO_RECIPE_FOUND"
-      ) {
+      if (code !== "EXTRACTION_FAILED") {
         setShowPasteFallback(true);
       }
     },
@@ -130,7 +122,7 @@ export function NewDinnerScreen({ navigation }: Props) {
       setMode("draft");
     },
     onError: (error) => {
-      setImportError(importErrorCode(error.message));
+      setImportError(importErrorCodeFromMessage(error.message));
     },
   });
 
@@ -295,7 +287,7 @@ export function NewDinnerScreen({ navigation }: Props) {
           {importError && (
             <View className="gap-4 rounded-md border border-[hsl(18,60%,80%)] bg-[hsl(40,33%,95%)] p-3">
               <Text className="text-foreground text-sm">
-                {importErrorMessage(importError)}
+                {importErrorMessages[importError]}
               </Text>
               {showPasteFallback && (
                 <View className="gap-3">
@@ -333,7 +325,7 @@ export function NewDinnerScreen({ navigation }: Props) {
 
   return (
     <RecipeEditor
-      key={draftKey}
+      key={draft ? `${draft.name}-${draft.link}` : "manual"}
       ref={editorRef}
       initialValues={draft ?? undefined}
       showImportReview={mode === "draft"}
@@ -344,44 +336,6 @@ export function NewDinnerScreen({ navigation }: Props) {
     />
   );
 }
-
-const validUrlOrNull = (value: string) => {
-  try {
-    return new URL(value.trim()).toString();
-  } catch {
-    return null;
-  }
-};
-
-const importErrorCode = (message: string): ImportErrorCode => {
-  if (
-    message === "FETCH_FAILED" ||
-    message === "SITE_BLOCKED" ||
-    message === "PAGE_UNREADABLE" ||
-    message === "NO_RECIPE_FOUND" ||
-    message === "EXTRACTION_FAILED"
-  ) {
-    return message;
-  }
-
-  return "EXTRACTION_FAILED";
-};
-
-const importErrorMessage = (code: ImportErrorCode) => {
-  if (code === "FETCH_FAILED") {
-    return "We couldn't open that link. Double-check the URL, or paste the recipe text below.";
-  }
-  if (code === "SITE_BLOCKED") {
-    return "This site blocks automated requests, so we couldn't read it. Paste the recipe text below and we'll structure it for you.";
-  }
-  if (code === "PAGE_UNREADABLE") {
-    return "We couldn't read this page automatically — some sites build their recipe with JavaScript, so there's nothing on the page for us to grab. Paste the recipe text below and we'll structure it for you.";
-  }
-  if (code === "NO_RECIPE_FOUND") {
-    return "We opened the page but couldn't find a recipe on it. If there is one, paste the text below.";
-  }
-  return "We couldn't turn that source into a recipe. Try pasting the recipe text below.";
-};
 
 function FieldLabel({ children }: { children: ReactNode }) {
   return (
