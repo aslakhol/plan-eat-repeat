@@ -46,6 +46,7 @@ export function NewDinnerScreen({ navigation }: Props) {
   const [url, setUrl] = useState("");
   const [pasteText, setPasteText] = useState("");
   const [importError, setImportError] = useState<ImportErrorCode | null>(null);
+  const [showPasteFallback, setShowPasteFallback] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [draft, setDraft] = useState<RecipeEditorValues | null>(null);
   const draftKey = useMemo(
@@ -90,7 +91,11 @@ export function NewDinnerScreen({ navigation }: Props) {
       setMode("draft");
     },
     onError: (error) => {
-      setImportError(importErrorCode(error.message));
+      const code = importErrorCode(error.message);
+      setImportError(code);
+      if (code === "FETCH_FAILED" || code === "NO_RECIPE_FOUND") {
+        setShowPasteFallback(true);
+      }
     },
     onSettled: (_data, _error, _variables, context) => {
       if (context?.interval) {
@@ -258,7 +263,11 @@ export function NewDinnerScreen({ navigation }: Props) {
               <Button
                 variant="ghost"
                 disabled={isImporting}
-                onPress={() => setMode("choose")}
+                onPress={() => {
+                  setImportError(null);
+                  setShowPasteFallback(false);
+                  setMode("choose");
+                }}
               >
                 Back
               </Button>
@@ -278,8 +287,7 @@ export function NewDinnerScreen({ navigation }: Props) {
               <Text className="text-destructive text-sm font-semibold">
                 {importErrorMessage(importError)}
               </Text>
-              {(importError === "FETCH_FAILED" ||
-                importError === "NO_RECIPE_FOUND") && (
+              {showPasteFallback && (
                 <View className="gap-3">
                   <View className="gap-1.5">
                     <FieldLabel>Paste recipe text</FieldLabel>

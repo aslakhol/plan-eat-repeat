@@ -35,6 +35,7 @@ export const CreateDinner = () => {
   const [url, setUrl] = useState("");
   const [pasteText, setPasteText] = useState("");
   const [importError, setImportError] = useState<ImportErrorCode | null>(null);
+  const [showPasteFallback, setShowPasteFallback] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [draft, setDraft] = useState<RecipeEditorValues | null>(null);
   const draftKey = useMemo(
@@ -84,7 +85,11 @@ export const CreateDinner = () => {
       setMode("draft");
     },
     onError: (error) => {
-      setImportError(importErrorCode(error.message));
+      const code = importErrorCode(error.message);
+      setImportError(code);
+      if (code === "FETCH_FAILED" || code === "NO_RECIPE_FOUND") {
+        setShowPasteFallback(true);
+      }
     },
     onSettled: (_data, _error, _variables, context) => {
       if (context?.interval) {
@@ -123,6 +128,12 @@ export const CreateDinner = () => {
 
   const cancelDraft = () => {
     setDraft(null);
+    setMode("choose");
+  };
+
+  const backToChoose = () => {
+    setImportError(null);
+    setShowPasteFallback(false);
     setMode("choose");
   };
 
@@ -231,7 +242,7 @@ export const CreateDinner = () => {
                 type="button"
                 variant="ghost"
                 disabled={isImporting}
-                onClick={() => setMode("choose")}
+                onClick={backToChoose}
               >
                 Back
               </Button>
@@ -249,8 +260,7 @@ export const CreateDinner = () => {
               <p className="text-destructive text-sm font-medium">
                 {importErrorMessage(importError)}
               </p>
-              {(importError === "FETCH_FAILED" ||
-                importError === "NO_RECIPE_FOUND") && (
+              {showPasteFallback && (
                 <form className="space-y-3" onSubmit={submitTextImport}>
                   <div className="space-y-1.5">
                     <FieldLabel htmlFor="recipe-import-text">
