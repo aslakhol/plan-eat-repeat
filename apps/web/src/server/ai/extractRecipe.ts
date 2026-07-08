@@ -1,5 +1,5 @@
 import { anthropic } from "@ai-sdk/anthropic";
-import { generateObject, type FilePart, type TextPart } from "ai";
+import { generateText, Output, type FilePart, type TextPart } from "ai";
 import { z } from "zod";
 import { UNITS, recipeSchema, type RecipeInput } from "@planeatrepeat/shared";
 
@@ -57,10 +57,12 @@ export const extractRecipe = async (
     });
   }
 
-  const result = await generateObject({
+  const result = await generateText({
     model: anthropic(env.AI_EXTRACT_MODEL),
-    schema: extractRecipeSchema,
-    schemaName: "ExtractedRecipe",
+    output: Output.object({
+      schema: extractRecipeSchema,
+      name: "ExtractedRecipe",
+    }),
     system: systemPrompt,
     messages: [
       {
@@ -70,5 +72,5 @@ export const extractRecipe = async (
     ],
   });
 
-  return result.object;
+  return result.output;
 };
