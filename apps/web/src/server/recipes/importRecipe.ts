@@ -6,6 +6,7 @@ import { extractRecipe, type ExtractResult } from "~/server/ai/extractRecipe";
 
 export const importRecipeErrorCodes = [
   "FETCH_FAILED",
+  "PAGE_UNREADABLE",
   "NO_RECIPE_FOUND",
   "EXTRACTION_FAILED",
 ] as const;
@@ -106,7 +107,7 @@ const fetchHtml = async (url: string) => {
 
     const contentType = response.headers.get("content-type");
     if (contentType && !contentType.toLowerCase().includes("text/html")) {
-      throw new ImportRecipeError("NO_RECIPE_FOUND");
+      throw new ImportRecipeError("PAGE_UNREADABLE");
     }
 
     return await response.text();
@@ -186,7 +187,7 @@ const extractReadableText = (html: string, url: string) => {
     .trim();
 
   if (text.length < MIN_READABLE_TEXT_LENGTH) {
-    throw new ImportRecipeError("NO_RECIPE_FOUND");
+    throw new ImportRecipeError("PAGE_UNREADABLE");
   }
 
   return `Source URL: ${url}\n\n${text}`;

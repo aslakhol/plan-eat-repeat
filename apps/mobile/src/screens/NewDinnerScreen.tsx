@@ -32,7 +32,11 @@ import { Textarea } from "../components/ui/Textarea";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NewDinner">;
 type CreateMode = "choose" | "manual" | "import" | "draft";
-type ImportErrorCode = "FETCH_FAILED" | "NO_RECIPE_FOUND" | "EXTRACTION_FAILED";
+type ImportErrorCode =
+  | "FETCH_FAILED"
+  | "PAGE_UNREADABLE"
+  | "NO_RECIPE_FOUND"
+  | "EXTRACTION_FAILED";
 
 const loadingCopy = [
   "Fetching the page",
@@ -93,7 +97,11 @@ export function NewDinnerScreen({ navigation }: Props) {
     onError: (error) => {
       const code = importErrorCode(error.message);
       setImportError(code);
-      if (code === "FETCH_FAILED" || code === "NO_RECIPE_FOUND") {
+      if (
+        code === "FETCH_FAILED" ||
+        code === "PAGE_UNREADABLE" ||
+        code === "NO_RECIPE_FOUND"
+      ) {
         setShowPasteFallback(true);
       }
     },
@@ -283,8 +291,8 @@ export function NewDinnerScreen({ navigation }: Props) {
           )}
 
           {importError && (
-            <View className="border-border gap-4 rounded-md border bg-white p-3">
-              <Text className="text-destructive text-sm font-semibold">
+            <View className="gap-4 rounded-md border border-[hsl(18,60%,80%)] bg-[hsl(40,33%,95%)] p-3">
+              <Text className="text-foreground text-sm">
                 {importErrorMessage(importError)}
               </Text>
               {showPasteFallback && (
@@ -346,6 +354,7 @@ const validUrlOrNull = (value: string) => {
 const importErrorCode = (message: string): ImportErrorCode => {
   if (
     message === "FETCH_FAILED" ||
+    message === "PAGE_UNREADABLE" ||
     message === "NO_RECIPE_FOUND" ||
     message === "EXTRACTION_FAILED"
   ) {
@@ -357,12 +366,15 @@ const importErrorCode = (message: string): ImportErrorCode => {
 
 const importErrorMessage = (code: ImportErrorCode) => {
   if (code === "FETCH_FAILED") {
-    return "Could not fetch that page.";
+    return "We couldn't open that link. Double-check the URL, or paste the recipe text below.";
+  }
+  if (code === "PAGE_UNREADABLE") {
+    return "We couldn't read this page automatically — some sites build their recipe with JavaScript, so there's nothing on the page for us to grab. Paste the recipe text below and we'll structure it for you.";
   }
   if (code === "NO_RECIPE_FOUND") {
-    return "No recipe was found on that page.";
+    return "We opened the page but couldn't find a recipe on it. If there is one, paste the text below.";
   }
-  return "Could not extract a recipe from that source.";
+  return "We couldn't turn that source into a recipe. Try pasting the recipe text below.";
 };
 
 function FieldLabel({ children }: { children: ReactNode }) {
