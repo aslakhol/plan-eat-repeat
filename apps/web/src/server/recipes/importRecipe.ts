@@ -25,6 +25,9 @@ export class ImportRecipeError extends Error {
 }
 
 const FETCH_TIMEOUT_MS = 12_000;
+const WAYBACK_TIMEOUT_MS = 12_000;
+const WAYBACK_AVAILABILITY_ENDPOINT =
+  "https://archive.org/wayback/available?url=";
 const MIN_READABLE_TEXT_LENGTH = 400;
 const MAX_TEXT_PART_LENGTH = 40_000;
 const USER_AGENT =
@@ -66,14 +69,26 @@ export const importRecipeFromText = async (input: {
 export const acquireRecipeTextFromUrl = async (
   url: string,
 ): Promise<RecipeTextPart> => {
-  const html = await fetchHtml(url);
-  const jsonLdRecipe = findJsonLdRecipe(html);
+  try {
+    const html = await fetchHtml(url);
+    return recipePartFromHtml(html, url);
+  } catch (error) {
+    // Bot-protected sites (Cloudflare et al.) refuse our fetch. Try the
+    // Wayback Machine's cached copy before giving up. If that misses, we
+    // re-throw the original SITE_BLOCKED — the user just sees the same error,
+    // with no mention that we attempted an archive lookup.
+    if (error instanceof ImportRecipeError && error.code === "SITE_BLOCKED") {
+      const archived = await recipeFromWayback(url);
+      if (archived) return archived;
+    }
+    throw error;
+  }
+};
 
+const recipePartFromHtml = (html: string, url: string): RecipeTextPart => {
+  const jsonLdRecipe = findJsonLdRecipe(html);
   if (jsonLdRecipe) {
-    return {
-      type: "text",
-      text: JSON.stringify(jsonLdRecipe),
-    };
+    return { type: "text", text: JSON.stringify(jsonLdRecipe) };
   }
 
   const readableText = extractReadableText(html, url);
@@ -81,25 +96,67 @@ export const acquireRecipeTextFromUrl = async (
     throw new ImportRecipeError("NO_RECIPE_FOUND");
   }
 
-  return {
-    type: "text",
-    text: trimForModel(readableText),
-  };
+  return { type: "text", text: trimForModel(readableText) };
+};
+
+// Best-effort archive lookup: returns a recipe part if the Wayback Machine has
+// a usable snapshot, otherwise null. Never throws — any miss falls back to the
+// original live-fetch error.
+const recipeFromWayback = async (
+  url: string,
+): Promise<RecipeTextPart | null> => {
+  const html = await fetchArchivedHtml(url);
+  if (!html) return null;
+
+  try {
+    return recipePartFromHtml(html, url);
+  } catch {
+    return null;
+  }
+};
+
+const fetchArchivedHtml = async (url: string): Promise<string | null> => {
+  let timestamp: string;
+  try {
+    const res = await timedFetch(
+      WAYBACK_AVAILABILITY_ENDPOINT + encodeURIComponent(url),
+      WAYBACK_TIMEOUT_MS,
+    );
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as {
+      archived_snapshots?: {
+        closest?: { available?: boolean; timestamp?: string };
+      };
+    };
+    const closest = data.archived_snapshots?.closest;
+    if (!closest?.available || !closest.timestamp) return null;
+    timestamp = closest.timestamp;
+  } catch {
+    return null;
+  }
+
+  try {
+    // The `id_` modifier returns the original archived HTML, without the
+    // archive.org toolbar/URL rewrites, so our normal extraction works on it.
+    const res = await timedFetch(
+      `https://web.archive.org/web/${timestamp}id_/${url}`,
+      WAYBACK_TIMEOUT_MS,
+      { "User-Agent": USER_AGENT },
+    );
+    if (!res.ok) return null;
+    return await res.text();
+  } catch {
+    return null;
+  }
 };
 
 const fetchHtml = async (url: string) => {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
   try {
-    const response = await fetch(url, {
-      headers: {
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9,nb;q=0.8,nn;q=0.7",
-        "User-Agent": USER_AGENT,
-      },
-      signal: controller.signal,
+    const response = await timedFetch(url, FETCH_TIMEOUT_MS, {
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "en-US,en;q=0.9,nb;q=0.8,nn;q=0.7",
+      "User-Agent": USER_AGENT,
     });
 
     if (!response.ok) {
@@ -117,6 +174,19 @@ const fetchHtml = async (url: string) => {
   } catch (error) {
     if (error instanceof ImportRecipeError) throw error;
     throw new ImportRecipeError("FETCH_FAILED", errorMessage(error));
+  }
+};
+
+const timedFetch = async (
+  url: string,
+  timeoutMs: number,
+  headers?: Record<string, string>,
+) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, { headers, signal: controller.signal });
   } finally {
     clearTimeout(timeout);
   }
