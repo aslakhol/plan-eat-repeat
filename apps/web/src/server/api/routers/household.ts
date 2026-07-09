@@ -22,6 +22,7 @@ const importInstructionsSchema = z
   .string()
   .trim()
   .max(1000, "Import instructions must be at most 1000 characters")
+  .transform((instructions) => (instructions === "" ? null : instructions))
   .nullable()
   .optional();
 
@@ -88,8 +89,7 @@ export const householdRouter = createTRPCRouter({
           data: {
             name: input.name,
             slug,
-            importInstructions:
-              input.importInstructions === "" ? null : input.importInstructions,
+            importInstructions: input.importInstructions,
             Members: {
               create: { userId: ctx.auth.userId, role: "ADMIN" },
             },
@@ -127,8 +127,7 @@ export const householdRouter = createTRPCRouter({
           name: input.name,
           slug: input.slug,
           ...(input.importInstructions !== undefined && {
-            importInstructions:
-              input.importInstructions === "" ? null : input.importInstructions,
+            importInstructions: input.importInstructions,
           }),
         },
       });

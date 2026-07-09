@@ -116,7 +116,7 @@ export const EditHousehold = ({ household }: EditHouseholdProps) => {
     updateHouseholdMutation.mutate({
       name: data.name,
       slug: data.slug,
-      importInstructions: data.importInstructions.trim() || null,
+      importInstructions: data.importInstructions,
     });
   };
 
