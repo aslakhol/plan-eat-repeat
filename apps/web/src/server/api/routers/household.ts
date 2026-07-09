@@ -115,8 +115,8 @@ export const householdRouter = createTRPCRouter({
   updateHousehold: protectedProcedureWithHousehold
     .input(
       z.object({
-        name: z.string(),
-        slug: z.string(),
+        name: z.string().trim().min(1).max(100).optional(),
+        slug: z.string().trim().min(1).max(100).optional(),
         importInstructions: importInstructionsSchema,
       }),
     )
@@ -124,8 +124,8 @@ export const householdRouter = createTRPCRouter({
       const household = await ctx.db.household.update({
         where: { id: ctx.householdId },
         data: {
-          name: input.name,
-          slug: input.slug,
+          ...(input.name !== undefined && { name: input.name }),
+          ...(input.slug !== undefined && { slug: input.slug }),
           ...(input.importInstructions !== undefined && {
             importInstructions: input.importInstructions,
           }),

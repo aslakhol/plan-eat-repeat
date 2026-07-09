@@ -19,6 +19,18 @@ import {
   importRecipeFromUrl,
 } from "~/server/recipes/importRecipe";
 import { type DinnerWithTags } from "~/utils/types";
+import { type PrismaClient } from "@planeatrepeat/db";
+
+const householdImportInstructions = async (
+  db: PrismaClient,
+  householdId: string,
+) => {
+  const household = await db.household.findUniqueOrThrow({
+    where: { id: householdId },
+    select: { importInstructions: true },
+  });
+  return household.importInstructions;
+};
 
 const createRecipeParts = (parts: RecipeInput["parts"]) =>
   parts.map((part, partIndex) => ({
@@ -145,14 +157,11 @@ export const dinnerRouter = createTRPCRouter({
     .input(z.object({ url: z.string().url() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const household = await ctx.db.household.findUniqueOrThrow({
-          where: { id: ctx.householdId },
-          select: { importInstructions: true },
-        });
-        const draft = await importRecipeFromUrl(
-          input.url,
-          household.importInstructions,
+        const instructions = await householdImportInstructions(
+          ctx.db,
+          ctx.householdId,
         );
+        const draft = await importRecipeFromUrl(input.url, instructions);
         return {
           ...draft,
           sourceUrl: input.url,
@@ -166,14 +175,11 @@ export const dinnerRouter = createTRPCRouter({
     .input(z.object({ text: z.string().trim().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const household = await ctx.db.household.findUniqueOrThrow({
-          where: { id: ctx.householdId },
-          select: { importInstructions: true },
-        });
-        return await importRecipeFromText(
-          input.text,
-          household.importInstructions,
+        const instructions = await householdImportInstructions(
+          ctx.db,
+          ctx.householdId,
         );
+        return await importRecipeFromText(input.text, instructions);
       } catch (error) {
         throw toImportTRPCError(error);
       }

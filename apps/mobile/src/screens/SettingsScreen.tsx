@@ -150,8 +150,6 @@ export function SettingsScreen() {
                     onPress={() => {
                       setImportInstructionsError(null);
                       updateHouseholdMutation.mutate({
-                        name: household.name,
-                        slug: household.slug,
                         importInstructions,
                       });
                     }}
