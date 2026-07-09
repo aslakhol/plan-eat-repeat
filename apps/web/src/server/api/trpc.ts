@@ -12,6 +12,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import { ImportRecipeError } from "@planeatrepeat/shared";
 
 import { db } from "~/server/db";
 
@@ -71,6 +72,8 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
         ...shape.data,
         zodError:
           error.cause instanceof ZodError ? error.cause.flatten() : null,
+        importErrorCode:
+          error.cause instanceof ImportRecipeError ? error.cause.code : null,
       },
     };
   },

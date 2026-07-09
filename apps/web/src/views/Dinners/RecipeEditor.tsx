@@ -25,6 +25,7 @@ import {
   parseAmount,
   recipeSchema,
   recipeIngredientSchema,
+  sourceLabel,
 } from "@planeatrepeat/shared";
 import { api } from "../../utils/api";
 import { cn } from "../../lib/utils";
@@ -69,6 +70,8 @@ export type RecipeEditorValues = z.infer<typeof recipeEditorSchema>;
 
 type Props = {
   dinner?: DinnerWithRecipe;
+  initialValues?: RecipeEditorValues;
+  showImportReview?: boolean;
   isPending: boolean;
   onCancel: () => void;
   onSave: (values: RecipeEditorValues) => void;
@@ -81,8 +84,72 @@ const emptyPart = (): RecipeEditorValues["recipe"]["parts"][number] => ({
   steps: [],
 });
 
+const emptyEditorValues = (): RecipeEditorValues => ({
+  name: "",
+  tags: [],
+  newTag: "",
+  link: "",
+  notes: "",
+  recipe: {
+    servings: null,
+    parts: [],
+  },
+});
+
+const editorIngredient = (ingredient: {
+  name: string;
+  amount: number | null;
+  unit: string | null;
+  note: string | null;
+}) => ({
+  name: ingredient.name,
+  amount: ingredient.amount === null ? "" : String(ingredient.amount),
+  unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
+  note: ingredient.note ?? "",
+});
+
+export const editorValuesFromRecipeInput = (input: {
+  name: string;
+  recipe: z.infer<typeof recipeSchema>;
+  link?: string | null;
+}): RecipeEditorValues => ({
+  name: input.name,
+  tags: [],
+  newTag: "",
+  link: input.link ?? "",
+  notes: "",
+  recipe: {
+    servings: input.recipe.servings,
+    parts: input.recipe.parts.map((part) => ({
+      name: part.name ?? "",
+      ingredients: part.ingredients.map(editorIngredient),
+      steps: part.steps.map((text) => ({ text })),
+    })),
+  },
+});
+
+const editorValuesFromDinner = (
+  dinner: DinnerWithRecipe,
+): RecipeEditorValues => ({
+  name: dinner.name,
+  tags: dinner.tags.map((tag) => tag.value),
+  newTag: "",
+  link: dinner.link ?? "",
+  notes: dinner.notes ?? "",
+  recipe: {
+    servings: dinner.servings ?? null,
+    parts: dinner.parts.map((part) => ({
+      name: part.name ?? "",
+      ingredients: part.ingredients.map(editorIngredient),
+      steps: part.steps.map((step) => ({ text: step.text })),
+    })),
+  },
+});
+
 export const RecipeEditor = ({
   dinner,
+  initialValues,
+  showImportReview = false,
   isPending,
   onCancel,
   onSave,
@@ -90,28 +157,11 @@ export const RecipeEditor = ({
 }: Props) => {
   const form = useForm<RecipeEditorValues>({
     resolver: zodResolver(recipeEditorSchema),
-    defaultValues: {
-      name: dinner?.name ?? "",
-      tags: dinner?.tags.map((tag) => tag.value) ?? [],
-      newTag: "",
-      link: dinner?.link ?? "",
-      notes: dinner?.notes ?? "",
-      recipe: {
-        servings: dinner?.servings ?? null,
-        parts:
-          dinner?.parts.map((part) => ({
-            name: part.name ?? "",
-            ingredients: part.ingredients.map((ingredient) => ({
-              name: ingredient.name,
-              amount:
-                ingredient.amount === null ? "" : String(ingredient.amount),
-              unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
-              note: ingredient.note ?? "",
-            })),
-            steps: part.steps.map((step) => ({ text: step.text })),
-          })) ?? [],
-      },
-    },
+    defaultValues:
+      initialValues ??
+      (dinner === undefined
+        ? emptyEditorValues()
+        : editorValuesFromDinner(dinner)),
   });
   const parts = useFieldArray({
     control: form.control,
@@ -163,6 +213,19 @@ export const RecipeEditor = ({
         </div>
 
         <div className="space-y-5">
+          {showImportReview && (
+            <div className="rounded-md border border-[hsl(18_60%_80%)] bg-[hsl(40_33%_95%)] px-3 py-2 text-sm">
+              <p className="font-medium">
+                {initialValues?.link
+                  ? `Imported from ${sourceLabel(initialValues.link)}`
+                  : "Imported recipe draft"}
+              </p>
+              <p className="text-muted-foreground">
+                Check the details, then save.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-4">
             <div className="space-y-1.5">
               <FieldLabel htmlFor="dinner-name">Name</FieldLabel>
@@ -710,7 +773,7 @@ const EditorTags = ({ form }: { form: UseFormReturn<RecipeEditorValues> }) => {
   );
 };
 
-const FieldLabel = ({
+export const FieldLabel = ({
   htmlFor,
   children,
 }: {

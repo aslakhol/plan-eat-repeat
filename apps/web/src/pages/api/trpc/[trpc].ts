@@ -5,6 +5,10 @@ import { env } from "~/env";
 import { appRouter } from "~/server/api/root";
 import { createTRPCContext } from "~/server/api/trpc";
 
+export const config = {
+  maxDuration: 60,
+};
+
 // Create the tRPC handler
 const handler = createNextApiHandler({
   router: appRouter,
@@ -25,7 +29,10 @@ export default function corsHandler(req: NextApiRequest, res: NextApiResponse) {
   if (env.NODE_ENV === "development") {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization",
+    );
   }
 
   // Handle preflight

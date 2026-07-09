@@ -1,6 +1,9 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import {
+  ImportRecipeError,
   dinnerNameSchema,
+  importErrorMessages,
   recipeSchema,
   type DinnerWithRecipe,
   type RecipeInput,
@@ -11,6 +14,10 @@ import {
   publicProcedure,
   protectedProcedureWithHousehold,
 } from "~/server/api/trpc";
+import {
+  importRecipeFromText,
+  importRecipeFromUrl,
+} from "~/server/recipes/importRecipe";
 import { type DinnerWithTags } from "~/utils/types";
 
 const createRecipeParts = (parts: RecipeInput["parts"]) =>
@@ -33,6 +40,24 @@ const createRecipeParts = (parts: RecipeInput["parts"]) =>
 
 const recipeServings = (recipe: RecipeInput) =>
   recipe.parts.length === 0 ? null : recipe.servings;
+
+// The machine code rides error.data.importErrorCode (lifted from `cause` by
+// the errorFormatter in trpc.ts); message stays human-readable.
+const toImportTRPCError = (error: unknown) => {
+  if (error instanceof ImportRecipeError) {
+    return new TRPCError({
+      code: "BAD_REQUEST",
+      message: importErrorMessages[error.code],
+      cause: error,
+    });
+  }
+
+  return new TRPCError({
+    code: "INTERNAL_SERVER_ERROR",
+    message: importErrorMessages.EXTRACTION_FAILED,
+    cause: error,
+  });
+};
 
 export const dinnerRouter = createTRPCRouter({
   tags: publicProcedure.query(async ({ ctx }) => {
@@ -115,6 +140,30 @@ export const dinnerRouter = createTRPCRouter({
       ingredientNames: ingredients.map((ingredient) => ingredient.name),
     };
   }),
+
+  importFromUrl: protectedProcedureWithHousehold
+    .input(z.object({ url: z.string().url() }))
+    .mutation(async ({ input }) => {
+      try {
+        const draft = await importRecipeFromUrl(input.url);
+        return {
+          ...draft,
+          sourceUrl: input.url,
+        };
+      } catch (error) {
+        throw toImportTRPCError(error);
+      }
+    }),
+
+  importFromText: protectedProcedureWithHousehold
+    .input(z.object({ text: z.string().trim().min(1) }))
+    .mutation(async ({ input }) => {
+      try {
+        return await importRecipeFromText(input.text);
+      } catch (error) {
+        throw toImportTRPCError(error);
+      }
+    }),
 
   create: protectedProcedureWithHousehold
     .input(
