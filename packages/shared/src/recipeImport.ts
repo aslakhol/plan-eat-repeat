@@ -8,6 +8,11 @@ export const importRecipeErrorCodes = [
 
 export type ImportRecipeErrorCode = (typeof importRecipeErrorCodes)[number];
 
+// Image uploads are base64 encoded, so this leaves room below Vercel's 4.5 MB
+// request limit for the surrounding tRPC payload.
+export const MAX_RECIPE_IMPORT_IMAGES = 4;
+export const MAX_RECIPE_IMPORT_IMAGE_DATA_LENGTH = 4_000_000;
+
 // Thrown by the server import pipeline; the tRPC errorFormatter lifts the
 // code into error.data.importErrorCode so clients get it typed.
 export class ImportRecipeError extends Error {
