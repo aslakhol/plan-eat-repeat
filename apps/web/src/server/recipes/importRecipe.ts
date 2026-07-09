@@ -39,7 +39,7 @@ export const importRecipeFromImages = async (
   extractOrThrow(
     images.map((image) => ({
       type: "image" as const,
-      image: Uint8Array.from(Buffer.from(image.data, "base64")),
+      image: Buffer.from(image.data, "base64"),
       mimeType: image.mimeType,
     })),
     instructions,

@@ -83,7 +83,7 @@ export const extractRecipe = async (
   });
 
   if (!result.output.isRecipe) {
-    throw new ImportRecipeError("NO_RECIPE_FOUND");
+    throw new ImportRecipeError("EXTRACTION_FAILED");
   }
 
   return {

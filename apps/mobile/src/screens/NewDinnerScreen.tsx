@@ -174,7 +174,17 @@ export function NewDinnerScreen({ navigation }: Props) {
     },
   });
 
+  const isImporting =
+    importFromUrlMutation.isPending || importFromTextMutation.isPending;
+  const isPreparingOrImportingImages =
+    preparingImages || importFromImagesMutation.isPending;
+  const isCurrentModeBusy =
+    (mode === "import" && isImporting) ||
+    (mode === "photos" && isPreparingOrImportingImages);
+
   const cancelCurrent = useCallback(() => {
+    if (isCurrentModeBusy) return;
+
     if (mode === "draft") {
       setDraft(null);
       setMode("choose");
@@ -190,7 +200,7 @@ export function NewDinnerScreen({ navigation }: Props) {
     }
 
     navigation.goBack();
-  }, [mode, navigation]);
+  }, [isCurrentModeBusy, mode, navigation]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -200,7 +210,10 @@ export function NewDinnerScreen({ navigation }: Props) {
       headerLeft: () => (
         <Pressable
           accessibilityRole="button"
-          className="min-h-11 justify-center pr-3"
+          disabled={isCurrentModeBusy}
+          className={`min-h-11 justify-center pr-3${
+            isCurrentModeBusy ? " opacity-60" : ""
+          }`}
           onPress={cancelCurrent}
         >
           <Text className="text-muted-foreground text-sm font-semibold">
@@ -231,7 +244,13 @@ export function NewDinnerScreen({ navigation }: Props) {
             )
           : undefined,
     });
-  }, [cancelCurrent, createMutation.isPending, mode, navigation]);
+  }, [
+    cancelCurrent,
+    createMutation.isPending,
+    isCurrentModeBusy,
+    mode,
+    navigation,
+  ]);
 
   const createDinner = (values: RecipeEditorValues) => {
     createMutation.mutate(dinnerFromEditorValues(values));
@@ -374,11 +393,6 @@ export function NewDinnerScreen({ navigation }: Props) {
       images: images.map(({ data, mimeType }) => ({ data, mimeType })),
     });
   };
-
-  const isImporting =
-    importFromUrlMutation.isPending || importFromTextMutation.isPending;
-  const isPreparingOrImportingImages =
-    preparingImages || importFromImagesMutation.isPending;
 
   if (mode === "choose") {
     return (
