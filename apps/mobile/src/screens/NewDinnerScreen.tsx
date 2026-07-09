@@ -217,7 +217,7 @@ export function NewDinnerScreen({ navigation }: Props) {
           onPress={cancelCurrent}
         >
           <Text className="text-muted-foreground text-sm font-semibold">
-            {mode === "choose" ? "Cancel" : "Back"}
+            {mode === "choose" || mode === "manual" ? "Cancel" : "Back"}
           </Text>
         </Pressable>
       ),
@@ -358,10 +358,19 @@ export function NewDinnerScreen({ navigation }: Props) {
       return;
     }
 
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ["images"],
-      quality: 1,
-    });
+    let result: ImagePicker.ImagePickerResult;
+    try {
+      result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ["images"],
+        quality: 1,
+      });
+    } catch (error) {
+      Alert.alert(
+        "Camera unavailable",
+        error instanceof Error ? error.message : "Please try again.",
+      );
+      return;
+    }
     if (!result.canceled) {
       await preparePhotoAssets(result.assets, options);
     }
@@ -377,12 +386,21 @@ export function NewDinnerScreen({ navigation }: Props) {
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsMultipleSelection: true,
-      quality: 1,
-      selectionLimit: MAX_RECIPE_IMPORT_IMAGES - images.length,
-    });
+    let result: ImagePicker.ImagePickerResult;
+    try {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsMultipleSelection: true,
+        quality: 1,
+        selectionLimit: MAX_RECIPE_IMPORT_IMAGES - images.length,
+      });
+    } catch (error) {
+      Alert.alert(
+        "Photo library unavailable",
+        error instanceof Error ? error.message : "Please try again.",
+      );
+      return;
+    }
     if (!result.canceled) {
       await preparePhotoAssets(result.assets);
     }
@@ -419,8 +437,8 @@ export function NewDinnerScreen({ navigation }: Props) {
             className="justify-start"
             onPress={() => setMode("manual")}
           >
-            <Pencil size={18} color={colors.secondaryForeground} />
-            <Text className="text-secondary-foreground text-sm font-semibold">
+            <Pencil size={18} color={colors.foreground} />
+            <Text className="text-foreground text-sm font-semibold">
               Create manually
             </Text>
           </Button>
