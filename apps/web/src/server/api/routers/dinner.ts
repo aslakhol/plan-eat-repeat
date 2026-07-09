@@ -19,6 +19,18 @@ import {
   importRecipeFromUrl,
 } from "~/server/recipes/importRecipe";
 import { type DinnerWithTags } from "~/utils/types";
+import { type PrismaClient } from "@planeatrepeat/db";
+
+const householdImportInstructions = async (
+  db: PrismaClient,
+  householdId: string,
+) => {
+  const household = await db.household.findUniqueOrThrow({
+    where: { id: householdId },
+    select: { importInstructions: true },
+  });
+  return household.importInstructions;
+};
 
 const createRecipeParts = (parts: RecipeInput["parts"]) =>
   parts.map((part, partIndex) => ({
@@ -143,9 +155,13 @@ export const dinnerRouter = createTRPCRouter({
 
   importFromUrl: protectedProcedureWithHousehold
     .input(z.object({ url: z.string().url() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
-        const draft = await importRecipeFromUrl(input.url);
+        const instructions = await householdImportInstructions(
+          ctx.db,
+          ctx.householdId,
+        );
+        const draft = await importRecipeFromUrl(input.url, instructions);
         return {
           ...draft,
           sourceUrl: input.url,
@@ -157,9 +173,13 @@ export const dinnerRouter = createTRPCRouter({
 
   importFromText: protectedProcedureWithHousehold
     .input(z.object({ text: z.string().trim().min(1) }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
-        return await importRecipeFromText(input.text);
+        const instructions = await householdImportInstructions(
+          ctx.db,
+          ctx.householdId,
+        );
+        return await importRecipeFromText(input.text, instructions);
       } catch (error) {
         throw toImportTRPCError(error);
       }
