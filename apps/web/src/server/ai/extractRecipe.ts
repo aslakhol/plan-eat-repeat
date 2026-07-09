@@ -17,7 +17,7 @@ const systemPrompt = `You extract structured dinner recipes for review before sa
 Return only data that is supported by the provided source. Keep the recipe's original language for the name, ingredient names, notes, part names, and steps.
 
 Normalize ingredient units to one of these exact values: ${UNITS.join(", ")}.
-- Map Norwegian long and short forms to the shared units when present: gram -> g, kilo/kilogram -> kg, milliliter -> ml, desiliter -> dl, liter -> l, spiseskje/ss -> ss, tablespoon/tbsp -> tbsp, teskje/ts -> ts, teaspoon/tsp -> tsp, stk/stykk/piece/pieces -> pcs.
+- Map long, short, and Norwegian forms to the shared units when present: gram -> g, kilo/kilogram -> kg, milliliter -> ml, desiliter -> dl, liter -> l, spiseskje/ss/tablespoon -> tbsp, teskje/ts/teaspoon -> tsp, stk/stykk/piece/pieces -> pcs.
 - If no exact shared unit applies, set unit to null and keep the source wording in note when useful.
 
 Never guess amounts. If an amount is unstated, approximate, vague, or only implied (for example "a handful", "some", "to taste"), set amount to null. Set unit to null unless the unit is explicitly stated and normalized above.

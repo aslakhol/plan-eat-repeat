@@ -1,30 +1,18 @@
 import { Readability } from "@mozilla/readability";
-import * as cheerio from "cheerio";
 import { parseHTML } from "linkedom";
-import { type ImportRecipeErrorCode } from "@planeatrepeat/shared";
+import { ImportRecipeError } from "@planeatrepeat/shared";
 
 import { extractRecipe, type ExtractResult } from "~/server/ai/extractRecipe";
 
-export class ImportRecipeError extends Error {
-  constructor(
-    public readonly code: ImportRecipeErrorCode,
-    message: string = code,
-  ) {
-    super(message);
-    this.name = "ImportRecipeError";
-  }
-}
-
 const FETCH_TIMEOUT_MS = 12_000;
 const WAYBACK_TIMEOUT_MS = 12_000;
-const WAYBACK_AVAILABILITY_ENDPOINT =
-  "https://archive.org/wayback/available?url=";
 const MIN_READABLE_TEXT_LENGTH = 400;
 const MAX_TEXT_LENGTH = 40_000;
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36 PlanEatRepeatRecipeImport/1.0";
 
 type JsonLdObject = Record<string, unknown>;
+type ParsedDocument = ReturnType<typeof parseHTML>["document"];
 
 export const importRecipeFromUrl = async (
   url: string,
@@ -63,12 +51,15 @@ const acquireRecipeTextFromUrl = async (url: string): Promise<string> => {
 };
 
 const recipeTextFromHtml = (html: string, url: string): string => {
-  const jsonLdRecipe = findJsonLdRecipe(html);
+  const { document } = parseHTML(html);
+
+  const jsonLdRecipe = findJsonLdRecipe(document);
   if (jsonLdRecipe) {
-    return JSON.stringify(jsonLdRecipe);
+    return trimForModel(JSON.stringify(jsonLdRecipe));
   }
 
-  const readableText = extractReadableText(html, url);
+  // Readability mutates the document, so it must run after the JSON-LD pass.
+  const readableText = extractReadableText(document, url);
   if (!looksLikeRecipe(readableText)) {
     throw new ImportRecipeError("NO_RECIPE_FOUND");
   }
@@ -91,31 +82,13 @@ const recipeTextFromWayback = async (url: string): Promise<string | null> => {
 };
 
 const fetchArchivedHtml = async (url: string): Promise<string | null> => {
-  let timestamp: string;
   try {
+    // "2" is a partial timestamp Wayback resolves to the closest snapshot
+    // (302 redirect, 404 when none exists); the `id_` modifier returns the
+    // original archived HTML without the archive.org toolbar/URL rewrites,
+    // so our normal extraction works on it.
     const res = await timedFetch(
-      WAYBACK_AVAILABILITY_ENDPOINT + encodeURIComponent(url),
-      WAYBACK_TIMEOUT_MS,
-    );
-    if (!res.ok) return null;
-
-    const data = (await res.json()) as {
-      archived_snapshots?: {
-        closest?: { available?: boolean; timestamp?: string };
-      };
-    };
-    const closest = data.archived_snapshots?.closest;
-    if (!closest?.available || !closest.timestamp) return null;
-    timestamp = closest.timestamp;
-  } catch {
-    return null;
-  }
-
-  try {
-    // The `id_` modifier returns the original archived HTML, without the
-    // archive.org toolbar/URL rewrites, so our normal extraction works on it.
-    const res = await timedFetch(
-      `https://web.archive.org/web/${timestamp}id_/${url}`,
+      `https://web.archive.org/web/2id_/${url}`,
       WAYBACK_TIMEOUT_MS,
       { "User-Agent": USER_AGENT },
     );
@@ -167,12 +140,13 @@ const timedFetch = async (
   }
 };
 
-const findJsonLdRecipe = (html: string): JsonLdObject | null => {
-  const $ = cheerio.load(html);
-  const scripts = $('script[type="application/ld+json"]');
+const findJsonLdRecipe = (document: ParsedDocument): JsonLdObject | null => {
+  const scripts = document.querySelectorAll(
+    'script[type="application/ld+json"]',
+  ) as ArrayLike<{ textContent: string | null }>;
 
-  for (const script of scripts.toArray()) {
-    const raw = $(script).text().trim();
+  for (const script of Array.from(scripts)) {
+    const raw = script.textContent?.trim();
     if (!raw) continue;
 
     try {
@@ -216,8 +190,7 @@ const isRecipeType = (type: unknown) => {
   return false;
 };
 
-const extractReadableText = (html: string, url: string) => {
-  const { document } = parseHTML(html);
+const extractReadableText = (document: ParsedDocument, url: string) => {
   const reader = new Readability(document, { keepClasses: false });
   const article = reader.parse();
   const text = [article?.title, article?.textContent]
@@ -235,7 +208,9 @@ const extractReadableText = (html: string, url: string) => {
 };
 
 const looksLikeRecipe = (text: string) => {
-  const normalized = text.toLowerCase();
+  // Collapse all whitespace to single spaces and pad the ends so the
+  // space-delimited unit tokens also match at line breaks and boundaries.
+  const normalized = ` ${text.toLowerCase().replace(/\s+/g, " ")} `;
   const ingredientSignals = [
     "ingredient",
     "ingredients",
@@ -281,8 +256,13 @@ const trimForModel = (text: string) => text.slice(0, MAX_TEXT_LENGTH);
 // Status codes that mean the site refused us (bot protection / rate limiting /
 // Cloudflare "under attack") rather than a broken link — the URL is fine, so
 // the UI should point at the paste fallback, not "double-check the URL".
+// 402 is included because some sites (e.g. seriouseats) use it for bot walls.
 const isBlockedStatus = (status: number) =>
-  status === 401 || status === 403 || status === 429 || status === 503;
+  status === 401 ||
+  status === 402 ||
+  status === 403 ||
+  status === 429 ||
+  status === 503;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;

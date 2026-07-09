@@ -1,10 +1,4 @@
-import {
-  type ReactNode,
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -17,12 +11,12 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Link as LinkIcon, Pencil, Wand2 } from "lucide-react-native";
 import {
   type ImportRecipeErrorCode,
-  importErrorCodeFromMessage,
   importErrorMessages,
   validUrlOrNull,
 } from "@planeatrepeat/shared";
 import type { RootStackParamList } from "../navigation/RootNavigator";
 import {
+  FieldLabel,
   RecipeEditor,
   dinnerFromEditorValues,
   editorValuesFromRecipeInput,
@@ -93,11 +87,8 @@ export function NewDinnerScreen({ navigation }: Props) {
       setMode("draft");
     },
     onError: (error) => {
-      const code = importErrorCodeFromMessage(error.message);
-      setImportError(code);
-      if (code !== "EXTRACTION_FAILED") {
-        setShowPasteFallback(true);
-      }
+      setImportError(error.data?.importErrorCode ?? "EXTRACTION_FAILED");
+      setShowPasteFallback(true);
     },
     onSettled: (_data, _error, _variables, context) => {
       if (context?.interval) {
@@ -122,7 +113,7 @@ export function NewDinnerScreen({ navigation }: Props) {
       setMode("draft");
     },
     onError: (error) => {
-      setImportError(importErrorCodeFromMessage(error.message));
+      setImportError(error.data?.importErrorCode ?? "EXTRACTION_FAILED");
     },
   });
 
@@ -185,6 +176,7 @@ export function NewDinnerScreen({ navigation }: Props) {
     const sourceUrl = validUrlOrNull(url);
     if (!sourceUrl) {
       setImportError("FETCH_FAILED");
+      setShowPasteFallback(true);
       return;
     }
 
@@ -329,18 +321,9 @@ export function NewDinnerScreen({ navigation }: Props) {
       ref={editorRef}
       initialValues={draft ?? undefined}
       showImportReview={mode === "draft"}
-      importReviewSourceUrl={draft?.link}
       isPending={createMutation.isPending}
       onCancel={() => navigation.goBack()}
       onSave={createDinner}
     />
-  );
-}
-
-function FieldLabel({ children }: { children: ReactNode }) {
-  return (
-    <Text className="text-muted-foreground text-[11px] font-bold uppercase tracking-[0.1em]">
-      {children}
-    </Text>
   );
 }

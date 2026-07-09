@@ -43,6 +43,7 @@ import {
   parseAmount,
   recipeSchema,
   recipeIngredientSchema,
+  sourceLabel,
 } from "@planeatrepeat/shared";
 import { api } from "../../utils/api";
 import { colors } from "../../theme/colors";
@@ -90,7 +91,6 @@ type Props = {
   dinner?: DinnerWithRecipe;
   initialValues?: RecipeEditorValues;
   showImportReview?: boolean;
-  importReviewSourceUrl?: string | null;
   isPending: boolean;
   onCancel: () => void;
   onSave: (values: RecipeEditorValues) => void;
@@ -171,7 +171,6 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
       dinner,
       initialValues,
       showImportReview = false,
-      importReviewSourceUrl,
       isPending,
       onCancel,
       onSave,
@@ -260,8 +259,8 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
             {showImportReview && (
               <View className="border-[hsl(18,60%,80%)] bg-[hsl(40,33%,95%)] rounded-md border px-3 py-2">
                 <Text className="text-foreground text-sm font-semibold">
-                  {importReviewSourceUrl
-                    ? `Imported from ${sourceLabel(importReviewSourceUrl)}`
+                  {initialValues?.link
+                    ? `Imported from ${sourceLabel(initialValues.link)}`
                     : "Imported recipe draft"}
                 </Text>
                 <Text className="text-muted-foreground text-sm">
@@ -468,14 +467,6 @@ const textOrNull = (value: string | undefined) => {
   const trimmed = value?.trim();
   if (!trimmed) return null;
   return trimmed;
-};
-
-const sourceLabel = (sourceUrl: string) => {
-  try {
-    return new URL(sourceUrl).hostname.replace(/^www\./, "");
-  } catch {
-    return sourceUrl;
-  }
 };
 
 type PartEditorProps = {
@@ -1009,7 +1000,7 @@ function DeleteDinnerButton({
   );
 }
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
+export function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
     <Text className="text-muted-foreground text-xs font-semibold">
       {children}

@@ -8,8 +8,6 @@ export const UNITS = [
   "l",
   "tbsp",
   "tsp",
-  "ss",
-  "ts",
   "pcs",
 ] as const;
 export type Unit = (typeof UNITS)[number];

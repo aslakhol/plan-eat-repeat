@@ -1,10 +1,9 @@
-import { type FormEvent, type ReactNode, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { useRouter } from "next/router";
 import { usePostHog } from "posthog-js/react";
 import { Loader2, LinkIcon, Pencil, Wand2 } from "lucide-react";
 import {
   type ImportRecipeErrorCode,
-  importErrorCodeFromMessage,
   importErrorMessages,
   validUrlOrNull,
 } from "@planeatrepeat/shared";
@@ -14,6 +13,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import {
+  FieldLabel,
   RecipeEditor,
   dinnerFromEditorValues,
   editorValuesFromRecipeInput,
@@ -84,11 +84,8 @@ export const CreateDinner = () => {
       setMode("draft");
     },
     onError: (error) => {
-      const code = importErrorCodeFromMessage(error.message);
-      setImportError(code);
-      if (code !== "EXTRACTION_FAILED") {
-        setShowPasteFallback(true);
-      }
+      setImportError(error.data?.importErrorCode ?? "EXTRACTION_FAILED");
+      setShowPasteFallback(true);
     },
     onSettled: (_data, _error, _variables, context) => {
       if (context?.interval) {
@@ -113,7 +110,7 @@ export const CreateDinner = () => {
       setMode("draft");
     },
     onError: (error) => {
-      setImportError(importErrorCodeFromMessage(error.message));
+      setImportError(error.data?.importErrorCode ?? "EXTRACTION_FAILED");
     },
   });
 
@@ -138,6 +135,7 @@ export const CreateDinner = () => {
     const sourceUrl = validUrlOrNull(url);
     if (!sourceUrl) {
       setImportError("FETCH_FAILED");
+      setShowPasteFallback(true);
       return;
     }
     importFromUrlMutation.mutate({ url: sourceUrl });
@@ -167,7 +165,6 @@ export const CreateDinner = () => {
         key={`${draft.name}-${draft.link}`}
         initialValues={draft}
         showImportReview
-        importReviewSourceUrl={draft.link}
         isPending={createMutation.isPending}
         onCancel={cancelDraft}
         onSave={createDinner}
@@ -288,18 +285,3 @@ export const CreateDinner = () => {
     </div>
   );
 };
-
-const FieldLabel = ({
-  children,
-  htmlFor,
-}: {
-  children: ReactNode;
-  htmlFor: string;
-}) => (
-  <label
-    htmlFor={htmlFor}
-    className="text-muted-foreground block text-[11px] font-bold uppercase tracking-[0.1em]"
-  >
-    {children}
-  </label>
-);

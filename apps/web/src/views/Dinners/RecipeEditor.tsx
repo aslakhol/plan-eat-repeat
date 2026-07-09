@@ -25,6 +25,7 @@ import {
   parseAmount,
   recipeSchema,
   recipeIngredientSchema,
+  sourceLabel,
 } from "@planeatrepeat/shared";
 import { api } from "../../utils/api";
 import { cn } from "../../lib/utils";
@@ -71,7 +72,6 @@ type Props = {
   dinner?: DinnerWithRecipe;
   initialValues?: RecipeEditorValues;
   showImportReview?: boolean;
-  importReviewSourceUrl?: string | null;
   isPending: boolean;
   onCancel: () => void;
   onSave: (values: RecipeEditorValues) => void;
@@ -150,7 +150,6 @@ export const RecipeEditor = ({
   dinner,
   initialValues,
   showImportReview = false,
-  importReviewSourceUrl,
   isPending,
   onCancel,
   onSave,
@@ -217,8 +216,8 @@ export const RecipeEditor = ({
           {showImportReview && (
             <div className="rounded-md border border-[hsl(18_60%_80%)] bg-[hsl(40_33%_95%)] px-3 py-2 text-sm">
               <p className="font-medium">
-                {importReviewSourceUrl
-                  ? `Imported from ${sourceLabel(importReviewSourceUrl)}`
+                {initialValues?.link
+                  ? `Imported from ${sourceLabel(initialValues.link)}`
                   : "Imported recipe draft"}
               </p>
               <p className="text-muted-foreground">
@@ -396,14 +395,6 @@ const textOrNull = (value: string | undefined) => {
   const trimmed = value?.trim();
   if (!trimmed) return null;
   return trimmed;
-};
-
-const sourceLabel = (sourceUrl: string) => {
-  try {
-    return new URL(sourceUrl).hostname.replace(/^www\./, "");
-  } catch {
-    return sourceUrl;
-  }
 };
 
 type PartEditorProps = {
@@ -782,7 +773,7 @@ const EditorTags = ({ form }: { form: UseFormReturn<RecipeEditorValues> }) => {
   );
 };
 
-const FieldLabel = ({
+export const FieldLabel = ({
   htmlFor,
   children,
 }: {

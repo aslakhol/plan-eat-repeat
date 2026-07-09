@@ -8,14 +8,17 @@ export const importRecipeErrorCodes = [
 
 export type ImportRecipeErrorCode = (typeof importRecipeErrorCodes)[number];
 
-// The server sends the code in the TRPCError message; anything unexpected
-// collapses to the generic extraction failure.
-export const importErrorCodeFromMessage = (
-  message: string,
-): ImportRecipeErrorCode =>
-  (importRecipeErrorCodes as readonly string[]).includes(message)
-    ? (message as ImportRecipeErrorCode)
-    : "EXTRACTION_FAILED";
+// Thrown by the server import pipeline; the tRPC errorFormatter lifts the
+// code into error.data.importErrorCode so clients get it typed.
+export class ImportRecipeError extends Error {
+  constructor(
+    public readonly code: ImportRecipeErrorCode,
+    message: string = code,
+  ) {
+    super(message);
+    this.name = "ImportRecipeError";
+  }
+}
 
 export const importErrorMessages: Record<ImportRecipeErrorCode, string> = {
   FETCH_FAILED:
@@ -35,5 +38,13 @@ export const validUrlOrNull = (value: string) => {
     return new URL(value.trim()).toString();
   } catch {
     return null;
+  }
+};
+
+export const sourceLabel = (link: string) => {
+  try {
+    return new URL(link).hostname.replace(/^www\./, "");
+  } catch {
+    return link;
   }
 };

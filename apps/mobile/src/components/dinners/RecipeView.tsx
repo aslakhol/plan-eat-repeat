@@ -1,20 +1,16 @@
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { ExternalLink } from "lucide-react-native";
-import { formatAmount, type DinnerWithRecipe } from "@planeatrepeat/shared";
+import {
+  formatAmount,
+  sourceLabel,
+  type DinnerWithRecipe,
+} from "@planeatrepeat/shared";
 import { Button } from "../ui/Button";
 
 type Props = {
   dinner: DinnerWithRecipe;
   onEdit?: () => void;
   showEditButton?: boolean;
-};
-
-const sourceLabel = (link: string) => {
-  try {
-    return new URL(link).hostname.replace(/^www\./, "");
-  } catch {
-    return link;
-  }
 };
 
 export function RecipeView(props: Props) {
