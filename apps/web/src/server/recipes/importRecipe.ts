@@ -16,18 +16,23 @@ type ParsedDocument = ReturnType<typeof parseHTML>["document"];
 
 export const importRecipeFromUrl = async (
   url: string,
+  instructions?: string | null,
 ): Promise<ExtractResult> => {
   const source = await acquireRecipeTextFromUrl(url);
-  return extractOrThrow(source);
+  return extractOrThrow(source, instructions);
 };
 
 export const importRecipeFromText = async (
   text: string,
-): Promise<ExtractResult> => extractOrThrow(trimForModel(text));
+  instructions?: string | null,
+): Promise<ExtractResult> => extractOrThrow(trimForModel(text), instructions);
 
-const extractOrThrow = async (source: string): Promise<ExtractResult> => {
+const extractOrThrow = async (
+  source: string,
+  instructions?: string | null,
+): Promise<ExtractResult> => {
   try {
-    return await extractRecipe(source);
+    return await extractRecipe(source, instructions);
   } catch (error) {
     throw new ImportRecipeError("EXTRACTION_FAILED", errorMessage(error));
   }

@@ -143,9 +143,16 @@ export const dinnerRouter = createTRPCRouter({
 
   importFromUrl: protectedProcedureWithHousehold
     .input(z.object({ url: z.string().url() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
-        const draft = await importRecipeFromUrl(input.url);
+        const household = await ctx.db.household.findUniqueOrThrow({
+          where: { id: ctx.householdId },
+          select: { importInstructions: true },
+        });
+        const draft = await importRecipeFromUrl(
+          input.url,
+          household.importInstructions,
+        );
         return {
           ...draft,
           sourceUrl: input.url,
@@ -157,9 +164,16 @@ export const dinnerRouter = createTRPCRouter({
 
   importFromText: protectedProcedureWithHousehold
     .input(z.object({ text: z.string().trim().min(1) }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
-        return await importRecipeFromText(input.text);
+        const household = await ctx.db.household.findUniqueOrThrow({
+          where: { id: ctx.householdId },
+          select: { importInstructions: true },
+        });
+        return await importRecipeFromText(
+          input.text,
+          household.importInstructions,
+        );
       } catch (error) {
         throw toImportTRPCError(error);
       }

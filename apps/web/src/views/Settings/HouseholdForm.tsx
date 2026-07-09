@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "../../components/ui/input";
+import { Textarea } from "../../components/ui/textarea";
 import {
   FormControl,
   FormField,
@@ -29,6 +30,7 @@ import { useRouter } from "next/router";
 const householdFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   slug: z.string().min(3, "Slug must be at least 3 characters"),
+  importInstructions: z.string().max(1000),
 });
 
 type HouseholdFormData = z.infer<typeof householdFormSchema>;
@@ -43,6 +45,7 @@ export const NewHousehold = () => {
     defaultValues: {
       name: "",
       slug: "",
+      importInstructions: "",
     },
   });
 
@@ -95,6 +98,7 @@ export const EditHousehold = ({ household }: EditHouseholdProps) => {
     defaultValues: {
       name: household.name,
       slug: household.slug,
+      importInstructions: household.importInstructions ?? "",
     },
   });
 
@@ -112,6 +116,7 @@ export const EditHousehold = ({ household }: EditHouseholdProps) => {
     updateHouseholdMutation.mutate({
       name: data.name,
       slug: data.slug,
+      importInstructions: data.importInstructions.trim() || null,
     });
   };
 
@@ -182,6 +187,28 @@ const HouseholdForm = ({
                 The slug is used to identify your household. It will be part of
                 the URL for your household invitations.
               </FormDescription>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="importInstructions"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Recipe import instructions</FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  maxLength={1000}
+                  placeholder="Keep steps short and explain techniques for beginners"
+                />
+              </FormControl>
+              <FormDescription>
+                Shape every imported recipe. For example: “Skriv på nynorsk”,
+                “Keep steps short”, or “Explain techniques for beginners”.
+              </FormDescription>
+              <FormMessage />
             </FormItem>
           )}
         />

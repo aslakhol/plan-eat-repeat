@@ -18,6 +18,13 @@ const onboardingDinnerSchema = z.object({
   date: z.date(),
 });
 
+const importInstructionsSchema = z
+  .string()
+  .trim()
+  .max(1000, "Import instructions must be at most 1000 characters")
+  .nullable()
+  .optional();
+
 export const householdRouter = createTRPCRouter({
   household: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.auth.userId) {
@@ -52,6 +59,7 @@ export const householdRouter = createTRPCRouter({
       z.object({
         name: z.string().trim().min(1).max(100),
         slug: z.string().trim().max(100),
+        importInstructions: importInstructionsSchema,
         onboardingDinners: z.array(onboardingDinnerSchema).max(31).optional(),
       }),
     )
@@ -80,6 +88,8 @@ export const householdRouter = createTRPCRouter({
           data: {
             name: input.name,
             slug,
+            importInstructions:
+              input.importInstructions === "" ? null : input.importInstructions,
             Members: {
               create: { userId: ctx.auth.userId, role: "ADMIN" },
             },
@@ -103,12 +113,24 @@ export const householdRouter = createTRPCRouter({
       return { household };
     }),
   updateHousehold: protectedProcedureWithHousehold
-    .input(z.object({ name: z.string(), slug: z.string() }))
+    .input(
+      z.object({
+        name: z.string(),
+        slug: z.string(),
+        importInstructions: importInstructionsSchema,
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
-      const { name, slug } = input;
       const household = await ctx.db.household.update({
         where: { id: ctx.householdId },
-        data: { name, slug },
+        data: {
+          name: input.name,
+          slug: input.slug,
+          ...(input.importInstructions !== undefined && {
+            importInstructions:
+              input.importInstructions === "" ? null : input.importInstructions,
+          }),
+        },
       });
 
       return { household };
