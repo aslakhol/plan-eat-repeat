@@ -2,7 +2,11 @@ import { Readability } from "@mozilla/readability";
 import { parseHTML } from "linkedom";
 import { ImportRecipeError } from "@planeatrepeat/shared";
 
-import { extractRecipe, type ExtractResult } from "~/server/ai/extractRecipe";
+import {
+  extractRecipe,
+  type ExtractInput,
+  type ExtractResult,
+} from "~/server/ai/extractRecipe";
 
 const FETCH_TIMEOUT_MS = 12_000;
 const WAYBACK_TIMEOUT_MS = 12_000;
@@ -19,21 +23,36 @@ export const importRecipeFromUrl = async (
   instructions?: string | null,
 ): Promise<ExtractResult> => {
   const source = await acquireRecipeTextFromUrl(url);
-  return extractOrThrow(source, instructions);
+  return extractOrThrow([{ type: "text", text: source }], instructions);
 };
 
 export const importRecipeFromText = async (
   text: string,
   instructions?: string | null,
-): Promise<ExtractResult> => extractOrThrow(trimForModel(text), instructions);
+): Promise<ExtractResult> =>
+  extractOrThrow([{ type: "text", text: trimForModel(text) }], instructions);
+
+export const importRecipeFromImages = async (
+  images: Array<{ data: string; mimeType: string }>,
+  instructions?: string | null,
+): Promise<ExtractResult> =>
+  extractOrThrow(
+    images.map((image) => ({
+      type: "image" as const,
+      image: Uint8Array.from(Buffer.from(image.data, "base64")),
+      mimeType: image.mimeType,
+    })),
+    instructions,
+  );
 
 const extractOrThrow = async (
-  source: string,
+  parts: ExtractInput["parts"],
   instructions?: string | null,
 ): Promise<ExtractResult> => {
   try {
-    return await extractRecipe(source, instructions);
+    return await extractRecipe({ parts, instructions });
   } catch (error) {
+    if (error instanceof ImportRecipeError) throw error;
     throw new ImportRecipeError("EXTRACTION_FAILED", errorMessage(error));
   }
 };
