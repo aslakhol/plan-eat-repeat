@@ -14,7 +14,9 @@ import {
 import {
   MAX_RECIPE_IMPORT_IMAGE_DATA_LENGTH,
   MAX_RECIPE_IMPORT_IMAGES,
+  YOUTUBE_NO_RECIPE_FOUND_MESSAGE,
   type ImportRecipeErrorCode,
+  isYouTubeVideoUrl,
   importErrorMessages,
   validUrlOrNull,
 } from "@planeatrepeat/shared";
@@ -37,10 +39,19 @@ type PreparedImage = {
   data: string;
   mimeType: "image/jpeg";
 };
+type ImportFailure = {
+  code: ImportRecipeErrorCode;
+  isYouTube: boolean;
+};
 
 const loadingCopy = [
   "Fetching the page",
   "Looking for structured recipe data",
+  "Normalizing ingredients and steps",
+];
+const youtubeLoadingCopy = [
+  "Fetching video details",
+  "Reading the video's description and captions…",
   "Normalizing ingredients and steps",
 ];
 const photoLoadingCopy = ["Reading your photos…", "Writing up the recipe…"];
@@ -110,9 +121,7 @@ export const CreateDinner = () => {
   const [mode, setMode] = useState<CreateMode>("choose");
   const [url, setUrl] = useState("");
   const [pasteText, setPasteText] = useState("");
-  const [importError, setImportError] = useState<ImportRecipeErrorCode | null>(
-    null,
-  );
+  const [importError, setImportError] = useState<ImportFailure | null>(null);
   const [showPasteFallback, setShowPasteFallback] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [draft, setDraft] = useState<RecipeEditorValues | null>(null);
@@ -143,13 +152,13 @@ export const CreateDinner = () => {
   });
 
   const importFromUrlMutation = api.dinner.importFromUrl.useMutation({
-    onMutate: () => {
+    onMutate: ({ url: sourceUrl }) => {
+      const isYouTube = isYouTubeVideoUrl(sourceUrl);
+      const steps = isYouTube ? youtubeLoadingCopy : loadingCopy;
       setImportError(null);
       setLoadingStep(0);
       const interval = window.setInterval(() => {
-        setLoadingStep((current) =>
-          Math.min(current + 1, loadingCopy.length - 1),
-        );
+        setLoadingStep((current) => Math.min(current + 1, steps.length - 1));
       }, 3_000);
 
       return { interval };
@@ -164,8 +173,11 @@ export const CreateDinner = () => {
       );
       setMode("draft");
     },
-    onError: (error) => {
-      setImportError(error.data?.importErrorCode ?? "EXTRACTION_FAILED");
+    onError: (error, variables) => {
+      setImportError({
+        code: error.data?.importErrorCode ?? "EXTRACTION_FAILED",
+        isYouTube: isYouTubeVideoUrl(variables.url),
+      });
       setShowPasteFallback(true);
     },
     onSettled: (_data, _error, _variables, context) => {
@@ -174,6 +186,10 @@ export const CreateDinner = () => {
       }
     },
   });
+
+  const submittedSourceIsYouTube = isYouTubeVideoUrl(
+    importFromUrlMutation.variables?.url ?? "",
+  );
 
   const importFromTextMutation = api.dinner.importFromText.useMutation({
     onMutate: () => {
@@ -191,7 +207,10 @@ export const CreateDinner = () => {
       setMode("draft");
     },
     onError: (error) => {
-      setImportError(error.data?.importErrorCode ?? "EXTRACTION_FAILED");
+      setImportError({
+        code: error.data?.importErrorCode ?? "EXTRACTION_FAILED",
+        isYouTube: false,
+      });
     },
   });
 
@@ -305,7 +324,7 @@ export const CreateDinner = () => {
     event.preventDefault();
     const sourceUrl = validUrlOrNull(url);
     if (!sourceUrl) {
-      setImportError("FETCH_FAILED");
+      setImportError({ code: "FETCH_FAILED", isYouTube: false });
       setShowPasteFallback(true);
       return;
     }
@@ -566,14 +585,20 @@ export const CreateDinner = () => {
 
           {isImporting && (
             <div className="text-muted-foreground rounded-md border bg-white px-3 py-2 text-sm">
-              {loadingCopy[loadingStep]}
+              {
+                (submittedSourceIsYouTube ? youtubeLoadingCopy : loadingCopy)[
+                  loadingStep
+                ]
+              }
             </div>
           )}
 
           {importError && (
             <div className="space-y-4 rounded-md border border-[hsl(18_60%_80%)] bg-[hsl(40_33%_95%)] p-3">
               <p className="text-foreground text-sm">
-                {importErrorMessages[importError]}
+                {importError.code === "NO_RECIPE_FOUND" && importError.isYouTube
+                  ? YOUTUBE_NO_RECIPE_FOUND_MESSAGE
+                  : importErrorMessages[importError.code]}
               </p>
               {showPasteFallback && (
                 <form className="space-y-3" onSubmit={submitTextImport}>
