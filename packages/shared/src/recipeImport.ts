@@ -38,6 +38,43 @@ export const importErrorMessages: Record<ImportRecipeErrorCode, string> = {
     "We couldn't turn that source into a recipe. Try pasting the recipe text below.",
 };
 
+export const YOUTUBE_NO_RECIPE_FOUND_MESSAGE =
+  "This video has no captions or written recipe — paste the recipe text instead?";
+
+const YOUTUBE_VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
+
+export const youtubeVideoIdFromUrl = (value: string | URL) => {
+  let url: URL;
+  try {
+    url = typeof value === "string" ? new URL(value) : value;
+  } catch {
+    return null;
+  }
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+
+  const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
+  let candidate: string | null = null;
+
+  if (hostname === "youtu.be") {
+    candidate = url.pathname.split("/").find(Boolean) ?? null;
+  } else if (hostname === "youtube.com" || hostname === "m.youtube.com") {
+    if (url.pathname === "/watch") {
+      candidate = url.searchParams.get("v");
+    } else {
+      const [kind, id] = url.pathname.split("/").filter(Boolean);
+      candidate = kind === "shorts" ? (id ?? null) : null;
+    }
+  }
+
+  return candidate && YOUTUBE_VIDEO_ID_PATTERN.test(candidate)
+    ? candidate
+    : null;
+};
+
+export const isYouTubeVideoUrl = (value: string | URL) =>
+  youtubeVideoIdFromUrl(value) !== null;
+
 export const validUrlOrNull = (value: string) => {
   try {
     return new URL(value.trim()).toString();

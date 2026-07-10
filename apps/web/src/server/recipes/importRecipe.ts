@@ -1,12 +1,16 @@
 import { Readability } from "@mozilla/readability";
 import { parseHTML } from "linkedom";
-import { ImportRecipeError } from "@planeatrepeat/shared";
+import {
+  ImportRecipeError,
+  youtubeVideoIdFromUrl,
+} from "@planeatrepeat/shared";
 
 import {
   extractRecipe,
   type ExtractInput,
   type ExtractResult,
 } from "~/server/ai/extractRecipe";
+import { acquireYouTubeRecipeText } from "~/server/recipes/youtube";
 
 const FETCH_TIMEOUT_MS = 12_000;
 const WAYBACK_TIMEOUT_MS = 12_000;
@@ -22,8 +26,14 @@ export const importRecipeFromUrl = async (
   url: string,
   instructions?: string | null,
 ): Promise<ExtractResult> => {
-  const source = await acquireRecipeTextFromUrl(url);
-  return extractOrThrow([{ type: "text", text: source }], instructions);
+  const videoId = youtubeVideoIdFromUrl(url);
+  const source = videoId
+    ? await acquireYouTubeRecipeText(videoId)
+    : await acquireRecipeTextFromUrl(url);
+  return extractOrThrow(
+    [{ type: "text", text: trimForModel(source) }],
+    instructions,
+  );
 };
 
 export const importRecipeFromText = async (

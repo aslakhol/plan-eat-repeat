@@ -38,7 +38,9 @@ Never guess amounts. If an amount is unstated, approximate, vague, or only impli
 
 Ingredient name should be the ingredient itself. Put preparation notes such as "finhakket", "chopped", "revet", "room temperature", or "to serve" in note, not in name.
 
-Map recipe sections to recipe parts. For simple recipes with no named sections, use a single part with name null. Preserve step order and ingredient order.`;
+Map recipe sections to recipe parts. For simple recipes with no named sections, use a single part with name null. Preserve step order and ingredient order.
+
+When a source contains labeled YouTube title, description, and caption transcript sections, prefer exact written ingredients and amounts in the description over approximate spoken wording in the transcript when they conflict.`;
 
 const householdPreferencesPrompt = (instructions?: string | null) => {
   if (!instructions) return "";
