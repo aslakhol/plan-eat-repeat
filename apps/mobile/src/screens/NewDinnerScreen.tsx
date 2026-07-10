@@ -49,6 +49,10 @@ type Props = NativeStackScreenProps<RootStackParamList, "NewDinner">;
 type CreateMode = "choose" | "manual" | "import" | "photos" | "draft";
 type PreparedImage = { uri: string; data: string; mimeType: "image/jpeg" };
 type PhotoCaptureOptions = { replaceIndex?: number; reset?: boolean };
+type ImportFailure = {
+  code: ImportRecipeErrorCode;
+  isYouTube: boolean;
+};
 
 const loadingCopy = [
   "Fetching the page",
@@ -71,13 +75,9 @@ export function NewDinnerScreen({ navigation }: Props) {
   const [mode, setMode] = useState<CreateMode>("choose");
   const [url, setUrl] = useState("");
   const [pasteText, setPasteText] = useState("");
-  const [importError, setImportError] = useState<ImportRecipeErrorCode | null>(
-    null,
-  );
+  const [importError, setImportError] = useState<ImportFailure | null>(null);
   const [showPasteFallback, setShowPasteFallback] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
-  const [submittedSourceIsYouTube, setSubmittedSourceIsYouTube] =
-    useState(false);
   const [draft, setDraft] = useState<RecipeEditorValues | null>(null);
   const [images, setImages] = useState<PreparedImage[]>([]);
   const [preparingImages, setPreparingImages] = useState(false);
@@ -105,7 +105,6 @@ export function NewDinnerScreen({ navigation }: Props) {
       const steps = isYouTube ? youtubeLoadingCopy : loadingCopy;
       setImportError(null);
       setLoadingStep(0);
-      setSubmittedSourceIsYouTube(isYouTube);
       const interval = setInterval(() => {
         setLoadingStep((current) => Math.min(current + 1, steps.length - 1));
       }, 3_000);
@@ -122,8 +121,11 @@ export function NewDinnerScreen({ navigation }: Props) {
       );
       setMode("draft");
     },
-    onError: (error) => {
-      setImportError(error.data?.importErrorCode ?? "EXTRACTION_FAILED");
+    onError: (error, variables) => {
+      setImportError({
+        code: error.data?.importErrorCode ?? "EXTRACTION_FAILED",
+        isYouTube: isYouTubeVideoUrl(variables.url),
+      });
       setShowPasteFallback(true);
     },
     onSettled: (_data, _error, _variables, context) => {
@@ -132,6 +134,10 @@ export function NewDinnerScreen({ navigation }: Props) {
       }
     },
   });
+
+  const submittedSourceIsYouTube = isYouTubeVideoUrl(
+    importFromUrlMutation.variables?.url ?? "",
+  );
 
   const importFromTextMutation = api.dinner.importFromText.useMutation({
     onMutate: () => {
@@ -149,7 +155,10 @@ export function NewDinnerScreen({ navigation }: Props) {
       setMode("draft");
     },
     onError: (error) => {
-      setImportError(error.data?.importErrorCode ?? "EXTRACTION_FAILED");
+      setImportError({
+        code: error.data?.importErrorCode ?? "EXTRACTION_FAILED",
+        isYouTube: false,
+      });
     },
   });
 
@@ -269,7 +278,7 @@ export function NewDinnerScreen({ navigation }: Props) {
   const submitUrlImport = () => {
     const sourceUrl = validUrlOrNull(url);
     if (!sourceUrl) {
-      setImportError("FETCH_FAILED");
+      setImportError({ code: "FETCH_FAILED", isYouTube: false });
       setShowPasteFallback(true);
       return;
     }
@@ -525,9 +534,9 @@ export function NewDinnerScreen({ navigation }: Props) {
           {importError && (
             <View className="gap-4 rounded-md border border-[hsl(18,60%,80%)] bg-[hsl(40,33%,95%)] p-3">
               <Text className="text-foreground text-sm">
-                {importError === "NO_RECIPE_FOUND" && submittedSourceIsYouTube
+                {importError.code === "NO_RECIPE_FOUND" && importError.isYouTube
                   ? YOUTUBE_NO_RECIPE_FOUND_MESSAGE
-                  : importErrorMessages[importError]}
+                  : importErrorMessages[importError.code]}
               </Text>
               {showPasteFallback && (
                 <View className="gap-3">

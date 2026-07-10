@@ -39,6 +39,10 @@ type PreparedImage = {
   data: string;
   mimeType: "image/jpeg";
 };
+type ImportFailure = {
+  code: ImportRecipeErrorCode;
+  isYouTube: boolean;
+};
 
 const loadingCopy = [
   "Fetching the page",
@@ -117,13 +121,9 @@ export const CreateDinner = () => {
   const [mode, setMode] = useState<CreateMode>("choose");
   const [url, setUrl] = useState("");
   const [pasteText, setPasteText] = useState("");
-  const [importError, setImportError] = useState<ImportRecipeErrorCode | null>(
-    null,
-  );
+  const [importError, setImportError] = useState<ImportFailure | null>(null);
   const [showPasteFallback, setShowPasteFallback] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
-  const [submittedSourceIsYouTube, setSubmittedSourceIsYouTube] =
-    useState(false);
   const [draft, setDraft] = useState<RecipeEditorValues | null>(null);
   const [images, setImages] = useState<PreparedImage[]>([]);
   const [preparingImages, setPreparingImages] = useState(false);
@@ -157,7 +157,6 @@ export const CreateDinner = () => {
       const steps = isYouTube ? youtubeLoadingCopy : loadingCopy;
       setImportError(null);
       setLoadingStep(0);
-      setSubmittedSourceIsYouTube(isYouTube);
       const interval = window.setInterval(() => {
         setLoadingStep((current) => Math.min(current + 1, steps.length - 1));
       }, 3_000);
@@ -174,8 +173,11 @@ export const CreateDinner = () => {
       );
       setMode("draft");
     },
-    onError: (error) => {
-      setImportError(error.data?.importErrorCode ?? "EXTRACTION_FAILED");
+    onError: (error, variables) => {
+      setImportError({
+        code: error.data?.importErrorCode ?? "EXTRACTION_FAILED",
+        isYouTube: isYouTubeVideoUrl(variables.url),
+      });
       setShowPasteFallback(true);
     },
     onSettled: (_data, _error, _variables, context) => {
@@ -184,6 +186,10 @@ export const CreateDinner = () => {
       }
     },
   });
+
+  const submittedSourceIsYouTube = isYouTubeVideoUrl(
+    importFromUrlMutation.variables?.url ?? "",
+  );
 
   const importFromTextMutation = api.dinner.importFromText.useMutation({
     onMutate: () => {
@@ -201,7 +207,10 @@ export const CreateDinner = () => {
       setMode("draft");
     },
     onError: (error) => {
-      setImportError(error.data?.importErrorCode ?? "EXTRACTION_FAILED");
+      setImportError({
+        code: error.data?.importErrorCode ?? "EXTRACTION_FAILED",
+        isYouTube: false,
+      });
     },
   });
 
@@ -315,7 +324,7 @@ export const CreateDinner = () => {
     event.preventDefault();
     const sourceUrl = validUrlOrNull(url);
     if (!sourceUrl) {
-      setImportError("FETCH_FAILED");
+      setImportError({ code: "FETCH_FAILED", isYouTube: false });
       setShowPasteFallback(true);
       return;
     }
@@ -587,9 +596,9 @@ export const CreateDinner = () => {
           {importError && (
             <div className="space-y-4 rounded-md border border-[hsl(18_60%_80%)] bg-[hsl(40_33%_95%)] p-3">
               <p className="text-foreground text-sm">
-                {importError === "NO_RECIPE_FOUND" && submittedSourceIsYouTube
+                {importError.code === "NO_RECIPE_FOUND" && importError.isYouTube
                   ? YOUTUBE_NO_RECIPE_FOUND_MESSAGE
-                  : importErrorMessages[importError]}
+                  : importErrorMessages[importError.code]}
               </p>
               {showPasteFallback && (
                 <form className="space-y-3" onSubmit={submitTextImport}>

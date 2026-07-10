@@ -33,7 +33,7 @@ export const importErrorMessages: Record<ImportRecipeErrorCode, string> = {
   PAGE_UNREADABLE:
     "We couldn't read this page automatically — some sites build their recipe with JavaScript, so there's nothing on the page for us to grab. Paste the recipe text below and we'll structure it for you.",
   NO_RECIPE_FOUND:
-    "We opened the page but couldn't find a recipe on it. If there is one, paste the text below.",
+    "We couldn't find a recipe in that source. If there is one, paste the text below.",
   EXTRACTION_FAILED:
     "We couldn't turn that source into a recipe. Try pasting the recipe text below.",
 };

@@ -89,7 +89,7 @@ const recipeTextFromHtml = (html: string, url: string): string => {
 
   const jsonLdRecipe = findJsonLdRecipe(document);
   if (jsonLdRecipe) {
-    return trimForModel(JSON.stringify(jsonLdRecipe));
+    return JSON.stringify(jsonLdRecipe);
   }
 
   // Readability mutates the document, so it must run after the JSON-LD pass.
@@ -98,7 +98,7 @@ const recipeTextFromHtml = (html: string, url: string): string => {
     throw new ImportRecipeError("NO_RECIPE_FOUND");
   }
 
-  return trimForModel(readableText);
+  return readableText;
 };
 
 // Best-effort archive lookup: returns recipe text if the Wayback Machine has
