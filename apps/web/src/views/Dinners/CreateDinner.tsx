@@ -14,7 +14,9 @@ import {
 import {
   MAX_RECIPE_IMPORT_IMAGE_DATA_LENGTH,
   MAX_RECIPE_IMPORT_IMAGES,
+  YOUTUBE_NO_RECIPE_FOUND_MESSAGE,
   type ImportRecipeErrorCode,
+  isYouTubeVideoUrl,
   importErrorMessages,
   validUrlOrNull,
 } from "@planeatrepeat/shared";
@@ -41,6 +43,11 @@ type PreparedImage = {
 const loadingCopy = [
   "Fetching the page",
   "Looking for structured recipe data",
+  "Normalizing ingredients and steps",
+];
+const youtubeLoadingCopy = [
+  "Fetching video details",
+  "Reading the video's description and captions…",
   "Normalizing ingredients and steps",
 ];
 const photoLoadingCopy = ["Reading your photos…", "Writing up the recipe…"];
@@ -115,6 +122,8 @@ export const CreateDinner = () => {
   );
   const [showPasteFallback, setShowPasteFallback] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [submittedSourceIsYouTube, setSubmittedSourceIsYouTube] =
+    useState(false);
   const [draft, setDraft] = useState<RecipeEditorValues | null>(null);
   const [images, setImages] = useState<PreparedImage[]>([]);
   const [preparingImages, setPreparingImages] = useState(false);
@@ -143,13 +152,14 @@ export const CreateDinner = () => {
   });
 
   const importFromUrlMutation = api.dinner.importFromUrl.useMutation({
-    onMutate: () => {
+    onMutate: ({ url: sourceUrl }) => {
+      const isYouTube = isYouTubeVideoUrl(sourceUrl);
+      const steps = isYouTube ? youtubeLoadingCopy : loadingCopy;
       setImportError(null);
       setLoadingStep(0);
+      setSubmittedSourceIsYouTube(isYouTube);
       const interval = window.setInterval(() => {
-        setLoadingStep((current) =>
-          Math.min(current + 1, loadingCopy.length - 1),
-        );
+        setLoadingStep((current) => Math.min(current + 1, steps.length - 1));
       }, 3_000);
 
       return { interval };
@@ -566,14 +576,20 @@ export const CreateDinner = () => {
 
           {isImporting && (
             <div className="text-muted-foreground rounded-md border bg-white px-3 py-2 text-sm">
-              {loadingCopy[loadingStep]}
+              {
+                (submittedSourceIsYouTube ? youtubeLoadingCopy : loadingCopy)[
+                  loadingStep
+                ]
+              }
             </div>
           )}
 
           {importError && (
             <div className="space-y-4 rounded-md border border-[hsl(18_60%_80%)] bg-[hsl(40_33%_95%)] p-3">
               <p className="text-foreground text-sm">
-                {importErrorMessages[importError]}
+                {importError === "NO_RECIPE_FOUND" && submittedSourceIsYouTube
+                  ? YOUTUBE_NO_RECIPE_FOUND_MESSAGE
+                  : importErrorMessages[importError]}
               </p>
               {showPasteFallback && (
                 <form className="space-y-3" onSubmit={submitTextImport}>

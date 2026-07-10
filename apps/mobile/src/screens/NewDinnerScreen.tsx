@@ -24,7 +24,9 @@ import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import {
   MAX_RECIPE_IMPORT_IMAGE_DATA_LENGTH,
   MAX_RECIPE_IMPORT_IMAGES,
+  YOUTUBE_NO_RECIPE_FOUND_MESSAGE,
   type ImportRecipeErrorCode,
+  isYouTubeVideoUrl,
   importErrorMessages,
   validUrlOrNull,
 } from "@planeatrepeat/shared";
@@ -53,6 +55,11 @@ const loadingCopy = [
   "Looking for structured recipe data",
   "Normalizing ingredients and steps",
 ];
+const youtubeLoadingCopy = [
+  "Fetching video details",
+  "Reading the video's description and captions…",
+  "Normalizing ingredients and steps",
+];
 const photoLoadingCopy = ["Reading your photos…", "Writing up the recipe…"];
 const PHOTO_LONGEST_EDGE = 1_800;
 const PHOTO_COMPRESSION = 0.7;
@@ -69,6 +76,8 @@ export function NewDinnerScreen({ navigation }: Props) {
   );
   const [showPasteFallback, setShowPasteFallback] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [submittedSourceIsYouTube, setSubmittedSourceIsYouTube] =
+    useState(false);
   const [draft, setDraft] = useState<RecipeEditorValues | null>(null);
   const [images, setImages] = useState<PreparedImage[]>([]);
   const [preparingImages, setPreparingImages] = useState(false);
@@ -91,13 +100,14 @@ export function NewDinnerScreen({ navigation }: Props) {
   });
 
   const importFromUrlMutation = api.dinner.importFromUrl.useMutation({
-    onMutate: () => {
+    onMutate: ({ url: sourceUrl }) => {
+      const isYouTube = isYouTubeVideoUrl(sourceUrl);
+      const steps = isYouTube ? youtubeLoadingCopy : loadingCopy;
       setImportError(null);
       setLoadingStep(0);
+      setSubmittedSourceIsYouTube(isYouTube);
       const interval = setInterval(() => {
-        setLoadingStep((current) =>
-          Math.min(current + 1, loadingCopy.length - 1),
-        );
+        setLoadingStep((current) => Math.min(current + 1, steps.length - 1));
       }, 3_000);
 
       return { interval };
@@ -503,7 +513,11 @@ export function NewDinnerScreen({ navigation }: Props) {
           {isImporting && (
             <View className="border-border rounded-md border bg-white px-3 py-2">
               <Text className="text-muted-foreground text-sm">
-                {loadingCopy[loadingStep]}
+                {
+                  (submittedSourceIsYouTube ? youtubeLoadingCopy : loadingCopy)[
+                    loadingStep
+                  ]
+                }
               </Text>
             </View>
           )}
@@ -511,7 +525,9 @@ export function NewDinnerScreen({ navigation }: Props) {
           {importError && (
             <View className="gap-4 rounded-md border border-[hsl(18,60%,80%)] bg-[hsl(40,33%,95%)] p-3">
               <Text className="text-foreground text-sm">
-                {importErrorMessages[importError]}
+                {importError === "NO_RECIPE_FOUND" && submittedSourceIsYouTube
+                  ? YOUTUBE_NO_RECIPE_FOUND_MESSAGE
+                  : importErrorMessages[importError]}
               </Text>
               {showPasteFallback && (
                 <View className="gap-3">
