@@ -1,6 +1,10 @@
 import { Fragment } from "react";
 import { ExternalLink } from "lucide-react";
-import { formatAmount, type DinnerWithRecipe } from "@planeatrepeat/shared";
+import {
+  formatAmount,
+  sourceLabel,
+  type DinnerWithRecipe,
+} from "@planeatrepeat/shared";
 import { cn } from "../../lib/utils";
 import { Button } from "../../components/ui/button";
 
@@ -8,14 +12,6 @@ type Props = {
   dinner: DinnerWithRecipe;
   onEdit?: () => void;
   showEditButton?: boolean;
-};
-
-const sourceLabel = (link: string) => {
-  try {
-    return new URL(link).hostname.replace(/^www\./, "");
-  } catch {
-    return link;
-  }
 };
 
 const hasAmounts = (part: DinnerWithRecipe["parts"][number]) =>

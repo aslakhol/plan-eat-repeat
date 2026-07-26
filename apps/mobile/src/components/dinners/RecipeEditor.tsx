@@ -43,6 +43,7 @@ import {
   parseAmount,
   recipeSchema,
   recipeIngredientSchema,
+  sourceLabel,
 } from "@planeatrepeat/shared";
 import { api } from "../../utils/api";
 import { colors } from "../../theme/colors";
@@ -88,6 +89,8 @@ export type RecipeEditorHandle = {
 
 type Props = {
   dinner?: DinnerWithRecipe;
+  initialValues?: RecipeEditorValues;
+  showImportReview?: boolean;
   isPending: boolean;
   onCancel: () => void;
   onSave: (values: RecipeEditorValues) => void;
@@ -100,35 +103,88 @@ const emptyPart = (): RecipeEditorValues["recipe"]["parts"][number] => ({
   steps: [],
 });
 
+const emptyEditorValues = (): RecipeEditorValues => ({
+  name: "",
+  tags: [],
+  newTag: "",
+  link: "",
+  notes: "",
+  recipe: {
+    servings: null,
+    parts: [],
+  },
+});
+
+const editorIngredient = (ingredient: {
+  name: string;
+  amount: number | null;
+  unit: string | null;
+  note: string | null;
+}) => ({
+  name: ingredient.name,
+  amount: ingredient.amount === null ? "" : String(ingredient.amount),
+  unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
+  note: ingredient.note ?? "",
+});
+
+export const editorValuesFromRecipeInput = (input: {
+  name: string;
+  recipe: z.infer<typeof recipeSchema>;
+  link?: string | null;
+}): RecipeEditorValues => ({
+  name: input.name,
+  tags: [],
+  newTag: "",
+  link: input.link ?? "",
+  notes: "",
+  recipe: {
+    servings: input.recipe.servings,
+    parts: input.recipe.parts.map((part) => ({
+      name: part.name ?? "",
+      ingredients: part.ingredients.map(editorIngredient),
+      steps: part.steps.map((text) => ({ text })),
+    })),
+  },
+});
+
+const editorValuesFromDinner = (
+  dinner: DinnerWithRecipe,
+): RecipeEditorValues => ({
+  name: dinner.name,
+  tags: dinner.tags.map((tag) => tag.value),
+  newTag: "",
+  link: dinner.link ?? "",
+  notes: dinner.notes ?? "",
+  recipe: {
+    servings: dinner.servings ?? null,
+    parts: dinner.parts.map((part) => ({
+      name: part.name ?? "",
+      ingredients: part.ingredients.map(editorIngredient),
+      steps: part.steps.map((step) => ({ text: step.text })),
+    })),
+  },
+});
+
 export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
   function RecipeEditor(
-    { dinner, isPending, onCancel, onSave, onDelete },
+    {
+      dinner,
+      initialValues,
+      showImportReview = false,
+      isPending,
+      onCancel,
+      onSave,
+      onDelete,
+    },
     ref,
   ) {
     const form = useForm<RecipeEditorValues>({
       resolver: zodResolver(recipeEditorSchema),
-      defaultValues: {
-        name: dinner?.name ?? "",
-        tags: dinner?.tags.map((tag) => tag.value) ?? [],
-        newTag: "",
-        link: dinner?.link ?? "",
-        notes: dinner?.notes ?? "",
-        recipe: {
-          servings: dinner?.servings ?? null,
-          parts:
-            dinner?.parts.map((part) => ({
-              name: part.name ?? "",
-              ingredients: part.ingredients.map((ingredient) => ({
-                name: ingredient.name,
-                amount:
-                  ingredient.amount === null ? "" : String(ingredient.amount),
-                unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
-                note: ingredient.note ?? "",
-              })),
-              steps: part.steps.map((step) => ({ text: step.text })),
-            })) ?? [],
-        },
-      },
+      defaultValues:
+        initialValues ??
+        (dinner === undefined
+          ? emptyEditorValues()
+          : editorValuesFromDinner(dinner)),
     });
     const parts = useFieldArray({
       control: form.control,
@@ -200,6 +256,19 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
           }}
         >
           <View className="gap-5">
+            {showImportReview && (
+              <View className="border-[hsl(18,60%,80%)] bg-[hsl(40,33%,95%)] rounded-md border px-3 py-2">
+                <Text className="text-foreground text-sm font-semibold">
+                  {initialValues?.link
+                    ? `Imported from ${sourceLabel(initialValues.link)}`
+                    : "Imported recipe draft"}
+                </Text>
+                <Text className="text-muted-foreground text-sm">
+                  Check the details, then save.
+                </Text>
+              </View>
+            )}
+
             <View className="gap-4">
               <View className="gap-1.5">
                 <FieldLabel>Name</FieldLabel>
@@ -931,7 +1000,7 @@ function DeleteDinnerButton({
   );
 }
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
+export function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
     <Text className="text-muted-foreground text-xs font-semibold">
       {children}

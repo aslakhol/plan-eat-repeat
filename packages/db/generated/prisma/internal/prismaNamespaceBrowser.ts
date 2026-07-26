@@ -158,6 +158,7 @@ export const HouseholdScalarFieldEnum = {
   id: 'id',
   name: 'name',
   slug: 'slug',
+  importInstructions: 'importInstructions',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
