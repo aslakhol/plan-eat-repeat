@@ -14,6 +14,24 @@ We are not trying to solve the issues of figuring out what can be created with o
 
 The web app is hosted on [Vercel](https://vercel.com/) at [PlanEatRepeat.com](https://planeatrepeat.com/)
 
+### Deployments and database migrations
+
+- Vercel Preview deployments build the web app but never run database
+  migrations. Their `DATABASE_URL` must not point at production.
+- Vercel Production builds the app first, then runs `prisma migrate deploy`
+  through `MIGRATION_DATABASE_URL`. A failed build or migration prevents the
+  new deployment from being published.
+- `MIGRATION_DATABASE_URL` is configured only for Vercel Production and should
+  use a Supabase direct connection, or the session-mode pooler when a direct
+  connection is unavailable. Do not use the transaction-mode pooler for
+  migrations.
+- Production migrations must be backward-compatible with the currently
+  deployed application. Prefer additive changes; backfill and deploy compatible
+  application code before later removing or constraining old fields.
+- Never edit, rename, or delete a migration after it has reached a shared or
+  production database. Verify a current Supabase backup before any destructive
+  migration.
+
 ## Technology
 
 The project was Bootstrapped with [create-t3-app](https://create.t3.gg/).
