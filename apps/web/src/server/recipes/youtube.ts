@@ -5,17 +5,13 @@ import {
   type TranscriptSegment,
 } from "youtube-transcript-plus";
 
-import { env } from "~/env";
-
 const ACQUISITION_TIMEOUT_MS = 20_000;
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36 PlanEatRepeatRecipeImport/1.0";
 
-type YouTubeVideoResponse = {
-  items?: Array<{
-    snippet?: { title?: string; description?: string };
-    contentDetails?: { contentRating?: { ytRating?: string } };
-  }>;
+type YouTubeVideoDetails = {
+  title?: string;
+  shortDescription?: string;
 };
 
 type CaptionTrack = {
@@ -25,6 +21,8 @@ type CaptionTrack = {
 };
 
 type YouTubePlayerResponse = {
+  playabilityStatus?: { status?: string };
+  videoDetails?: YouTubeVideoDetails;
   captions?: {
     playerCaptionsTracklistRenderer?: { captionTracks?: CaptionTrack[] };
   };
@@ -32,61 +30,29 @@ type YouTubePlayerResponse = {
 };
 
 export const acquireYouTubeRecipeText = async (videoId: string) => {
-  const apiKey = env.YOUTUBE_API_KEY;
-  if (!apiKey) throw new ImportRecipeError("FETCH_FAILED");
-
   const signal = AbortSignal.timeout(ACQUISITION_TIMEOUT_MS);
-  const [video, transcript] = await Promise.all([
-    fetchVideo(videoId, apiKey, signal),
-    fetchPreferredTranscript(videoId, signal),
-  ]);
-  const description = video.snippet?.description?.trim() ?? "";
+  const { videoDetails, transcript } = await fetchYouTubeData(videoId, signal);
+  const description = videoDetails.shortDescription?.trim() ?? "";
   const transcriptText = transcript.map((segment) => segment.text).join(" ");
 
-  return `YouTube title:\n${video.snippet?.title ?? ""}\n\nYouTube description:\n${description}\n\nCaption transcript:\n${transcriptText}`;
+  return `YouTube title:\n${videoDetails.title ?? ""}\n\nYouTube description:\n${description}\n\nCaption transcript:\n${transcriptText}`;
 };
 
-const fetchVideo = async (
-  videoId: string,
-  apiKey: string,
-  signal: AbortSignal,
-) => {
-  try {
-    const apiUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
-    apiUrl.searchParams.set("part", "snippet,contentDetails");
-    apiUrl.searchParams.set("id", videoId);
-    apiUrl.searchParams.set("key", apiKey);
-
-    const response = await fetch(apiUrl, { signal });
-    if (!response.ok) throw new ImportRecipeError("FETCH_FAILED");
-
-    const data = (await response.json()) as YouTubeVideoResponse;
-    const video = data.items?.[0];
-    if (
-      !video?.snippet ||
-      video.contentDetails?.contentRating?.ytRating === "ytAgeRestricted"
-    ) {
-      throw new ImportRecipeError("FETCH_FAILED");
-    }
-
-    return video;
-  } catch (error) {
-    if (error instanceof ImportRecipeError) throw error;
-    throw new ImportRecipeError("FETCH_FAILED");
-  }
-};
-
-const fetchPreferredTranscript = async (
-  videoId: string,
-  signal: AbortSignal,
-): Promise<TranscriptSegment[]> => {
+const fetchYouTubeData = async (videoId: string, signal: AbortSignal) => {
   let automaticFallbackUrl: string | null = null;
+  const acquired: { videoDetails: YouTubeVideoDetails | null } = {
+    videoDetails: null,
+  };
 
   const playerFetch = async (params: FetchParams) => {
     const response = await fetchFromParams(params);
     if (!response.ok) return response;
 
     const player = (await response.json()) as YouTubePlayerResponse;
+    if (player.playabilityStatus?.status === "OK" && player.videoDetails) {
+      acquired.videoDetails = player.videoDetails;
+    }
+
     const tracks = captionTracks(player);
     if (tracks) {
       tracks.sort(
@@ -128,8 +94,9 @@ const fetchPreferredTranscript = async (
     return fetchFromParams(params, automaticFallbackUrl);
   };
 
+  let transcript: TranscriptSegment[] = [];
   try {
-    return await fetchTranscript(videoId, {
+    transcript = await fetchTranscript(videoId, {
       userAgent: USER_AGENT,
       signal,
       playerFetch,
@@ -137,8 +104,11 @@ const fetchPreferredTranscript = async (
     });
   } catch {
     // Written descriptions are sufficient; caption retrieval is best effort.
-    return [];
   }
+
+  if (!acquired.videoDetails) throw new ImportRecipeError("FETCH_FAILED");
+
+  return { videoDetails: acquired.videoDetails, transcript };
 };
 
 const captionTracks = (player: YouTubePlayerResponse) =>

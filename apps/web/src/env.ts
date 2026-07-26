@@ -20,7 +20,6 @@ export const env = createEnv({
     WEBHOOK_SECRET: z.string().min(1),
     ANTHROPIC_API_KEY: z.string().min(1).optional(),
     AI_EXTRACT_MODEL: z.string().min(1).default("claude-opus-4-8"),
-    YOUTUBE_API_KEY: z.string().min(1).optional(),
   },
 
   /**
