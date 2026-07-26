@@ -8,6 +8,16 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow PlanEatRepeat to choose photos of recipes.",
+          "cameraPermission": "Allow PlanEatRepeat to photograph recipes.",
+          "microphonePermission": false
+        }
+      ]
+    ],
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",

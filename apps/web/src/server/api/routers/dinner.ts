@@ -4,6 +4,8 @@ import {
   ImportRecipeError,
   dinnerNameSchema,
   importErrorMessages,
+  MAX_RECIPE_IMPORT_IMAGE_DATA_LENGTH,
+  MAX_RECIPE_IMPORT_IMAGES,
   recipeSchema,
   type DinnerWithRecipe,
   type RecipeInput,
@@ -15,10 +17,23 @@ import {
   protectedProcedureWithHousehold,
 } from "~/server/api/trpc";
 import {
+  importRecipeFromImages,
   importRecipeFromText,
   importRecipeFromUrl,
 } from "~/server/recipes/importRecipe";
 import { type DinnerWithTags } from "~/utils/types";
+import { type PrismaClient } from "@planeatrepeat/db";
+
+const householdImportInstructions = async (
+  db: PrismaClient,
+  householdId: string,
+) => {
+  const household = await db.household.findUniqueOrThrow({
+    where: { id: householdId },
+    select: { importInstructions: true },
+  });
+  return household.importInstructions;
+};
 
 const createRecipeParts = (parts: RecipeInput["parts"]) =>
   parts.map((part, partIndex) => ({
@@ -40,6 +55,29 @@ const createRecipeParts = (parts: RecipeInput["parts"]) =>
 
 const recipeServings = (recipe: RecipeInput) =>
   recipe.parts.length === 0 ? null : recipe.servings;
+
+const imageImportSchema = z
+  .array(
+    z.object({
+      data: z
+        .string()
+        .min(4)
+        .max(MAX_RECIPE_IMPORT_IMAGE_DATA_LENGTH)
+        .regex(
+          /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/,
+          "Invalid image data",
+        ),
+      mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+    }),
+  )
+  .min(1)
+  .max(MAX_RECIPE_IMPORT_IMAGES)
+  .refine(
+    (images) =>
+      images.reduce((total, image) => total + image.data.length, 0) <=
+      MAX_RECIPE_IMPORT_IMAGE_DATA_LENGTH,
+    "Images are too large. Remove a photo or retake them at a lower resolution.",
+  );
 
 // The machine code rides error.data.importErrorCode (lifted from `cause` by
 // the errorFormatter in trpc.ts); message stays human-readable.
@@ -143,9 +181,13 @@ export const dinnerRouter = createTRPCRouter({
 
   importFromUrl: protectedProcedureWithHousehold
     .input(z.object({ url: z.string().url() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
-        const draft = await importRecipeFromUrl(input.url);
+        const instructions = await householdImportInstructions(
+          ctx.db,
+          ctx.householdId,
+        );
+        const draft = await importRecipeFromUrl(input.url, instructions);
         return {
           ...draft,
           sourceUrl: input.url,
@@ -157,9 +199,27 @@ export const dinnerRouter = createTRPCRouter({
 
   importFromText: protectedProcedureWithHousehold
     .input(z.object({ text: z.string().trim().min(1) }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
-        return await importRecipeFromText(input.text);
+        const instructions = await householdImportInstructions(
+          ctx.db,
+          ctx.householdId,
+        );
+        return await importRecipeFromText(input.text, instructions);
+      } catch (error) {
+        throw toImportTRPCError(error);
+      }
+    }),
+
+  importFromImages: protectedProcedureWithHousehold
+    .input(z.object({ images: imageImportSchema }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const instructions = await householdImportInstructions(
+          ctx.db,
+          ctx.householdId,
+        );
+        return await importRecipeFromImages(input.images, instructions);
       } catch (error) {
         throw toImportTRPCError(error);
       }

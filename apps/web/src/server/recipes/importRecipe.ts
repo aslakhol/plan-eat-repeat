@@ -1,8 +1,16 @@
 import { Readability } from "@mozilla/readability";
 import { parseHTML } from "linkedom";
-import { ImportRecipeError } from "@planeatrepeat/shared";
+import {
+  ImportRecipeError,
+  youtubeVideoIdFromUrl,
+} from "@planeatrepeat/shared";
 
-import { extractRecipe, type ExtractResult } from "~/server/ai/extractRecipe";
+import {
+  extractRecipe,
+  type ExtractInput,
+  type ExtractResult,
+} from "~/server/ai/extractRecipe";
+import { acquireYouTubeRecipeText } from "~/server/recipes/youtube";
 
 const FETCH_TIMEOUT_MS = 12_000;
 const WAYBACK_TIMEOUT_MS = 12_000;
@@ -16,19 +24,45 @@ type ParsedDocument = ReturnType<typeof parseHTML>["document"];
 
 export const importRecipeFromUrl = async (
   url: string,
+  instructions?: string | null,
 ): Promise<ExtractResult> => {
-  const source = await acquireRecipeTextFromUrl(url);
-  return extractOrThrow(source);
+  const videoId = youtubeVideoIdFromUrl(url);
+  const source = videoId
+    ? await acquireYouTubeRecipeText(videoId)
+    : await acquireRecipeTextFromUrl(url);
+  return extractOrThrow(
+    [{ type: "text", text: trimForModel(source) }],
+    instructions,
+  );
 };
 
 export const importRecipeFromText = async (
   text: string,
-): Promise<ExtractResult> => extractOrThrow(trimForModel(text));
+  instructions?: string | null,
+): Promise<ExtractResult> =>
+  extractOrThrow([{ type: "text", text: trimForModel(text) }], instructions);
 
-const extractOrThrow = async (source: string): Promise<ExtractResult> => {
+export const importRecipeFromImages = async (
+  images: Array<{ data: string; mimeType: string }>,
+  instructions?: string | null,
+): Promise<ExtractResult> =>
+  extractOrThrow(
+    images.map((image) => ({
+      type: "image" as const,
+      image: Buffer.from(image.data, "base64"),
+      mimeType: image.mimeType,
+    })),
+    instructions,
+  );
+
+const extractOrThrow = async (
+  parts: ExtractInput["parts"],
+  instructions?: string | null,
+): Promise<ExtractResult> => {
   try {
-    return await extractRecipe(source);
+    return await extractRecipe({ parts, instructions });
   } catch (error) {
+    if (error instanceof ImportRecipeError) throw error;
     throw new ImportRecipeError("EXTRACTION_FAILED", errorMessage(error));
   }
 };
@@ -55,7 +89,7 @@ const recipeTextFromHtml = (html: string, url: string): string => {
 
   const jsonLdRecipe = findJsonLdRecipe(document);
   if (jsonLdRecipe) {
-    return trimForModel(JSON.stringify(jsonLdRecipe));
+    return JSON.stringify(jsonLdRecipe);
   }
 
   // Readability mutates the document, so it must run after the JSON-LD pass.
@@ -64,7 +98,7 @@ const recipeTextFromHtml = (html: string, url: string): string => {
     throw new ImportRecipeError("NO_RECIPE_FOUND");
   }
 
-  return trimForModel(readableText);
+  return readableText;
 };
 
 // Best-effort archive lookup: returns recipe text if the Wayback Machine has
