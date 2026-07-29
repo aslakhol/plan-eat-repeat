@@ -50,3 +50,12 @@ generated
 
 # claude code local config
 .claude/
+
+# design-sync (claude.ai/design) — staged scripts, build output, machine state
+/.ds-sync/
+/ds-bundle/
+/.design-sync/.cache/
+/.design-sync/learnings/
+/.design-sync/node_modules
+/apps/web/design-sync-styles/candidates.txt
+/apps/web/design-sync-styles/ds.css

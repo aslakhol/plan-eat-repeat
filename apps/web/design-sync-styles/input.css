@@ -1,0 +1,104 @@
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&family=Young+Serif&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand typefaces. In the Next.js app these are injected by next/font;
+       here they are bound to the same families loaded above. */
+    --font-quicksand: "Quicksand";
+    --font-young-serif: "Young Serif";
+
+    /* Warm Stone Theme */
+    --background: 40 20% 97%;
+    --foreground: 24 10% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 24 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 10% 10%;
+
+    /* Terracotta/Orange Primary */
+    --primary: 18 75% 55%;
+    --primary-foreground: 60 9% 98%;
+
+    --secondary: 40 20% 94%;
+    --secondary-foreground: 24 10% 10%;
+
+    --muted: 40 20% 94%;
+    --muted-foreground: 25 5% 45%;
+
+    --accent: 40 20% 90%;
+    --accent-foreground: 24 10% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 60 9% 98%;
+
+    --border: 40 15% 88%;
+    --input: 40 15% 88%;
+    --ring: 18 75% 55%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar colors matching the warm theme */
+    --sidebar-background: 40 20% 95%;
+    --sidebar-foreground: 24 10% 26%;
+    --sidebar-primary: 18 75% 55%;
+    --sidebar-primary-foreground: 60 9% 98%;
+    --sidebar-accent: 40 20% 90%;
+    --sidebar-accent-foreground: 24 10% 10%;
+    --sidebar-border: 40 15% 88%;
+    --sidebar-ring: 18 75% 55%;
+  }
+
+  .dark {
+    --background: 24 10% 10%;
+    --foreground: 40 20% 97%;
+
+    --card: 24 10% 12%;
+    --card-foreground: 40 20% 97%;
+
+    --popover: 24 10% 12%;
+    --popover-foreground: 40 20% 97%;
+
+    --primary: 18 75% 55%;
+    --primary-foreground: 60 9% 98%;
+
+    --secondary: 24 10% 16%;
+    --secondary-foreground: 40 20% 97%;
+
+    --muted: 24 10% 16%;
+    --muted-foreground: 40 10% 65%;
+
+    --accent: 24 10% 16%;
+    --accent-foreground: 40 20% 97%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 40 20% 97%;
+
+    --border: 24 10% 16%;
+    --input: 24 10% 16%;
+    --ring: 18 75% 55%;
+
+    --sidebar-background: 24 10% 12%;
+    --sidebar-foreground: 40 10% 70%;
+    --sidebar-primary: 18 75% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 24 10% 16%;
+    --sidebar-accent-foreground: 40 20% 97%;
+    --sidebar-border: 24 10% 16%;
+    --sidebar-ring: 18 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
