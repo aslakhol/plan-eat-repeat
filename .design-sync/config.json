@@ -1,0 +1,65 @@
+{
+  "projectId": "d901d8ce-3c98-4c10-a14d-11f441b80480",
+  "shape": "package",
+  "pkg": "@planeatrepeat/web",
+  "globalName": "PlanEatRepeat",
+  "srcDir": "src/components/ui",
+  "tsconfig": "tsconfig.json",
+  "cssEntry": "design-sync-styles/ds.css",
+  "docsDir": "design-sync-docs",
+  "buildCmd": "sh apps/web/design-sync-styles/build.sh",
+  "overrides": {
+    "Dialog": {
+      "cardMode": "single",
+      "viewport": "720x520"
+    },
+    "Sheet": {
+      "cardMode": "single",
+      "viewport": "760x520"
+    },
+    "Drawer": {
+      "cardMode": "single",
+      "viewport": "640x620"
+    },
+    "Tooltip": {
+      "cardMode": "single",
+      "viewport": "520x300"
+    },
+    "CommandDialog": {
+      "cardMode": "single",
+      "viewport": "720x520"
+    },
+    "Select": {
+      "cardMode": "single",
+      "viewport": "520x420"
+    },
+    "FancyCombobox": {
+      "cardMode": "single",
+      "viewport": "560x420"
+    },
+    "Toast": {
+      "cardMode": "single",
+      "primaryStory": "Saved"
+    },
+    "Toaster": {
+      "cardMode": "single",
+      "primaryStory": "StackedToasts"
+    },
+    "Command": {
+      "cardMode": "column"
+    },
+    "CardContent": {
+      "cardMode": "column"
+    },
+    "CardFooter": {
+      "cardMode": "column"
+    },
+    "CardHeader": {
+      "cardMode": "column"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md",
+  "extraEntries": [
+    "./src/components/ui/use-toast.ts"
+  ]
+}
