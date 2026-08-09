@@ -5,7 +5,7 @@ Guidance for agents working in this repository.
 ## Core Rules
 
 - Do not create commits unless asked by the user.
-- Always run `pnpm lint` and `pnpm typecheck` making edits to code.
+- Always run `pnpm lint` and `pnpm typecheck` making pull requests.
 - Use `pnpm` and root `turbo` scripts.
 
 ## Repo Layout
@@ -44,3 +44,17 @@ Guidance for agents working in this repository.
 - Avoid changing build outputs (for example `.next`).
 - For DB changes: update `schema.prisma`, run `pnpm db:migrate`, then `pnpm db:generate` if needed.
 - For web UI, prefer existing shadcn/ui components in `apps/web/src/components/ui`.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live in GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Uses the default five triage labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Uses a single-context layout with root `CONTEXT.md` and `docs/adr/`. See `docs/agents/domain.md`.
