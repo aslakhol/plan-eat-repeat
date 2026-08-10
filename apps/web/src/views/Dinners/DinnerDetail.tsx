@@ -65,7 +65,7 @@ export const DinnerDetail = () => {
         utils.dinner.summaries.invalidate(),
         utils.plan.plannedDinners.invalidate(),
       ]);
-      void router.push("/dinners");
+      void router.replace("/dinners");
     },
     onError: (error) => {
       toast({
@@ -211,7 +211,12 @@ export const DinnerDetail = () => {
       }
       footerActions={
         <>
-          <Button type="button" variant="outline" className="bg-white">
+          <Button
+            type="button"
+            variant="outline"
+            className="bg-white"
+            disabled
+          >
             Plan this dinner
           </Button>
           <Button
