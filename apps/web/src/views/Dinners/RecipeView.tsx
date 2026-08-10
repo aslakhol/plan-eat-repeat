@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import {
   formatAmount,
@@ -6,14 +6,12 @@ import {
   type DinnerWithRecipe,
 } from "@planeatrepeat/shared";
 import { cn } from "../../lib/utils";
-import { Button } from "../../components/ui/button";
 
 type Props = {
   dinner: DinnerWithRecipe;
-  onEdit?: () => void;
-  showEditButton?: boolean;
   historyLabel?: string;
   headerAction?: ReactNode;
+  footerActions?: ReactNode;
 };
 
 const hasAmounts = (part: DinnerWithRecipe["parts"][number]) =>
@@ -23,15 +21,46 @@ const hasAmounts = (part: DinnerWithRecipe["parts"][number]) =>
 
 export const RecipeView = ({
   dinner,
-  onEdit,
-  showEditButton = true,
   historyLabel,
   headerAction,
+  footerActions,
 }: Props) => {
   const hasRecipe = dinner.parts.length > 0;
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const ingredientsRef = useRef<HTMLDivElement>(null);
+  const stepsRef = useRef<HTMLOListElement>(null);
+  const [titleVisible, setTitleVisible] = useState(true);
+  const hasIngredients = dinner.parts.some(
+    (part) => part.ingredients.length > 0,
+  );
+  const hasSteps = dinner.parts.some((part) => part.steps.length > 0);
+  const firstIngredientsPartIndex = dinner.parts.findIndex(
+    (part) => part.ingredients.length > 0,
+  );
+  const firstStepsPartIndex = dinner.parts.findIndex(
+    (part) => part.steps.length > 0,
+  );
+
+  useEffect(() => {
+    const title = titleRef.current;
+    if (!title || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setTitleVisible(entry?.isIntersecting ?? true),
+      { threshold: 0.1 },
+    );
+    observer.observe(title);
+    return () => observer.disconnect();
+  }, [dinner.id]);
+
+  const jumpTo = (target: "ingredients" | "steps") => {
+    const element =
+      target === "ingredients" ? ingredientsRef.current : stepsRef.current;
+    element?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
-    <article className="mx-auto w-full max-w-[640px] px-1 pb-6">
+    <article className="mx-auto w-full max-w-[640px] px-1 pb-2">
       <header className="space-y-3">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
@@ -40,24 +69,14 @@ export const RecipeView = ({
                 {historyLabel}
               </p>
             )}
-            <h1 className="font-serif text-[26px] font-normal leading-[1.2]">
+            <h1
+              ref={titleRef}
+              className="font-serif text-[26px] font-normal leading-[1.2]"
+            >
               {dinner.name}
             </h1>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {headerAction}
-            {showEditButton && onEdit && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="text-muted-foreground h-auto bg-white px-3 py-1.5 text-[13px] font-semibold"
-                onClick={onEdit}
-              >
-                Edit
-              </Button>
-            )}
-          </div>
+          <div className="flex shrink-0 items-center gap-2">{headerAction}</div>
         </div>
 
         {dinner.tags.length > 0 && (
@@ -98,6 +117,45 @@ export const RecipeView = ({
         )}
       </header>
 
+      {(hasIngredients || hasSteps) && (
+        <div className="sticky top-0 z-10 h-0">
+          <nav
+            aria-label="Recipe sections"
+            aria-hidden={titleVisible}
+            className={cn(
+              "border-border -mx-1 flex items-center gap-2 rounded-b-lg border bg-white/95 px-3 py-2 shadow-sm backdrop-blur transition duration-150",
+              titleVisible
+                ? "pointer-events-none -translate-y-full opacity-0"
+                : "translate-y-0 opacity-100",
+            )}
+          >
+            <span className="min-w-0 flex-1 truncate font-serif text-base">
+              {dinner.name}
+            </span>
+            {hasIngredients && (
+              <button
+                type="button"
+                tabIndex={titleVisible ? -1 : undefined}
+                className="text-primary shrink-0 text-xs font-bold"
+                onClick={() => jumpTo("ingredients")}
+              >
+                Ingredients
+              </button>
+            )}
+            {hasSteps && (
+              <button
+                type="button"
+                tabIndex={titleVisible ? -1 : undefined}
+                className="text-primary shrink-0 text-xs font-bold"
+                onClick={() => jumpTo("steps")}
+              >
+                Steps
+              </button>
+            )}
+          </nav>
+        </div>
+      )}
+
       {hasRecipe ? (
         <div className="mt-6">
           {dinner.parts.map((part, partIndex) => (
@@ -118,8 +176,13 @@ export const RecipeView = ({
                 // amount; the column (and its gap) is dropped entirely when
                 // no ingredient in the part has one.
                 <div
+                  ref={
+                    partIndex === firstIngredientsPartIndex
+                      ? ingredientsRef
+                      : undefined
+                  }
                   className={cn(
-                    "grid gap-y-1 text-base leading-[1.3]",
+                    "grid scroll-mt-14 gap-y-1.5 text-[14px] leading-[1.45]",
                     hasAmounts(part)
                       ? "grid-cols-[max-content_1fr] gap-x-2.5"
                       : "grid-cols-1",
@@ -144,7 +207,7 @@ export const RecipeView = ({
                         <span className="font-medium">
                           {ingredient.name}
                           {ingredient.note && (
-                            <span className="text-muted-foreground font-normal">
+                            <span className="text-muted-foreground font-normal italic">
                               {" "}
                               — {ingredient.note}
                             </span>
@@ -157,11 +220,14 @@ export const RecipeView = ({
               )}
 
               {part.steps.length > 0 && (
-                <ol className="mt-3 space-y-[5px]">
+                <ol
+                  ref={partIndex === firstStepsPartIndex ? stepsRef : undefined}
+                  className="mt-4 scroll-mt-14 space-y-2"
+                >
                   {part.steps.map((step, stepIndex) => (
                     <li
                       key={step.id}
-                      className="grid grid-cols-[22px_1fr] gap-2 text-base leading-[1.35]"
+                      className="grid grid-cols-[22px_1fr] gap-2 text-[14px] leading-[1.55]"
                     >
                       <span className="font-serif text-[hsl(18_75%_50%)]">
                         {stepIndex + 1}
@@ -174,23 +240,26 @@ export const RecipeView = ({
             </section>
           ))}
         </div>
-      ) : showEditButton && onEdit ? (
-        <div className="mt-8">
-          <Button type="button" onClick={onEdit}>
-            Add recipe
-          </Button>
-        </div>
-      ) : (
-        <p className="text-muted-foreground mt-8 text-sm">No recipe yet.</p>
-      )}
+      ) : null}
 
-      {dinner.notes && (
-        <section className="mt-[26px] border-t border-[hsl(40_15%_86%)] pt-5">
-          <h2 className="mb-1.5 font-serif text-base font-normal">Notes</h2>
-          <p className="whitespace-pre-wrap text-[15px] font-medium leading-[1.5] text-[hsl(24_10%_25%)]">
+      {dinner.notes &&
+        (hasRecipe ? (
+          <section className="mt-[26px] border-t border-[hsl(40_15%_86%)] pt-5">
+            <h2 className="mb-1.5 font-serif text-base font-normal">Notes</h2>
+            <p className="whitespace-pre-wrap text-[13.5px] font-medium leading-[1.6] text-[hsl(24_10%_25%)]">
+              {dinner.notes}
+            </p>
+          </section>
+        ) : (
+          <p className="mt-7 whitespace-pre-wrap text-[13.5px] font-medium leading-[1.6] text-[hsl(24_10%_25%)]">
             {dinner.notes}
           </p>
-        </section>
+        ))}
+
+      {footerActions && (
+        <footer className="sticky bottom-0 z-10 -mx-1 mt-8 grid grid-cols-2 gap-2 bg-white py-2">
+          {footerActions}
+        </footer>
       )}
     </article>
   );
