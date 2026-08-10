@@ -136,7 +136,7 @@ export const CreateDinner = () => {
     onSuccess: async (result) => {
       toast({ title: `${result.dinner.name} created` });
       await Promise.all([
-        utils.dinner.dinners.invalidate(),
+        utils.dinner.summaries.invalidate(),
         utils.dinner.tags.invalidate(),
         utils.dinner.ingredientNames.invalidate(),
       ]);

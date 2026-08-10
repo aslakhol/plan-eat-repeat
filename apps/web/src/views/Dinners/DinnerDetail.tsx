@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { ArrowLeft, UtensilsCrossed } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, UtensilsCrossed } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import { api } from "../../utils/api";
 import { toast } from "../../components/ui/use-toast";
@@ -12,11 +12,14 @@ import {
   type RecipeEditorValues,
 } from "./RecipeEditor";
 import { RecipeView } from "./RecipeView";
+import { useDinnerSummaries } from "~/hooks/use-dinner-summaries";
+import { formatDinnerSummaryLabel } from "~/lib/cookbook";
 
 export const DinnerDetail = () => {
   const router = useRouter();
   const posthog = usePostHog();
   const utils = api.useUtils();
+  const { today, query: summariesQuery } = useDinnerSummaries();
   const [editing, setEditing] = useState(false);
   const rawDinnerId = router.query.dinnerId;
   const dinnerId =
@@ -39,7 +42,7 @@ export const DinnerDetail = () => {
       toast({ title: `${result.dinner.name} updated` });
       await Promise.all([
         utils.dinner.get.invalidate({ dinnerId }),
-        utils.dinner.dinners.invalidate(),
+        utils.dinner.summaries.invalidate(),
         utils.dinner.ingredientNames.invalidate(),
         utils.plan.plannedDinners.invalidate(),
       ]);
@@ -58,7 +61,7 @@ export const DinnerDetail = () => {
     onSuccess: async (result) => {
       toast({ title: `${result.dinner.name} deleted` });
       await Promise.all([
-        utils.dinner.dinners.invalidate(),
+        utils.dinner.summaries.invalidate(),
         utils.plan.plannedDinners.invalidate(),
       ]);
       void router.push("/dinners");
@@ -67,6 +70,27 @@ export const DinnerDetail = () => {
       toast({
         variant: "destructive",
         title: "Could not delete dinner",
+        description: error.message,
+      });
+    },
+  });
+
+  const favouriteMutation = api.dinner.setFavourite.useMutation({
+    onSuccess: async ({ dinner }) => {
+      await Promise.all([
+        utils.dinner.summaries.invalidate(),
+        utils.dinner.get.invalidate({ dinnerId }),
+      ]);
+      toast({
+        title: dinner.favourite
+          ? "Added to favourites"
+          : "Removed from favourites",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Could not update favourite",
         description: error.message,
       });
     },
@@ -95,6 +119,10 @@ export const DinnerDetail = () => {
   }
 
   const dinner = dinnerQuery.data.dinner;
+  const summary = summariesQuery.data?.dinners.find(
+    (candidate) => candidate.id === dinner.id,
+  );
+  const favourite = summary?.favourite ?? dinner.favourite;
 
   const save = (values: RecipeEditorValues) => {
     posthog.capture("update dinner", { dinnerName: values.name });
@@ -119,5 +147,45 @@ export const DinnerDetail = () => {
     );
   }
 
-  return <RecipeView dinner={dinner} onEdit={() => setEditing(true)} />;
+  const historyLabel = summary
+    ? summary.lastCookedDate
+      ? `Last cooked ${formatDinnerSummaryLabel({
+          today,
+          lastCookedDate: summary.lastCookedDate,
+          currentWeekPlanDates: [],
+        })} · ${summary.cookingFrequency} ${summary.cookingFrequency === 1 ? "time" : "times"}`
+      : "Never made · 0 times"
+    : undefined;
+
+  return (
+    <RecipeView
+      dinner={dinner}
+      historyLabel={historyLabel}
+      headerAction={
+        <details className="relative">
+          <summary className="text-muted-foreground flex h-[30px] w-[30px] cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
+            <MoreHorizontal className="size-4" />
+            <span className="sr-only">Dinner actions</span>
+          </summary>
+          <div className="border-border absolute right-0 top-9 z-20 w-[210px] overflow-hidden rounded-[14px] border bg-white shadow-[0_8px_28px_rgba(60,50,40,.22)]">
+            <button
+              type="button"
+              disabled={favouriteMutation.isPending}
+              className="hover:bg-muted w-full px-3.5 py-3 text-left text-[13.5px] font-semibold disabled:opacity-50"
+              onClick={(event) => {
+                event.currentTarget.closest("details")?.removeAttribute("open");
+                favouriteMutation.mutate({
+                  dinnerId: dinner.id,
+                  favourite: !favourite,
+                });
+              }}
+            >
+              {favourite ? "Remove from favourites" : "Add to favourites"}
+            </button>
+          </div>
+        </details>
+      }
+      onEdit={() => setEditing(true)}
+    />
+  );
 };

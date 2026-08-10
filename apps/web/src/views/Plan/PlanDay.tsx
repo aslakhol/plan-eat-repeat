@@ -13,8 +13,9 @@ import { Button } from "../../components/ui/button";
 import { Filter } from "../Filter";
 import { useState } from "react";
 import { usePostHog } from "posthog-js/react";
-import type { Dinner } from "@planeatrepeat/db";
 import Link from "next/link";
+import { useDinnerSummaries } from "~/hooks/use-dinner-summaries";
+import { orderDinnerSummaries } from "~/lib/cookbook";
 
 type Props = {
   date: Date;
@@ -29,11 +30,15 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   const [showTags, setShowTags] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  const dinnersQuery = api.dinner.dinners.useQuery();
-  const dinners = dinnersQuery.data?.dinners
+  const { query: dinnersQuery } = useDinnerSummaries();
+  const matchingDinners = dinnersQuery.data?.dinners
     .filter(
       (dinner) =>
-        !search || dinner.name.toLowerCase().includes(search.toLowerCase()),
+        !search ||
+        dinner.name.toLowerCase().includes(search.toLowerCase()) ||
+        dinner.tags.some((tag) =>
+          tag.value.toLowerCase().includes(search.toLowerCase()),
+        ),
     )
     .filter(
       (dinner) =>
@@ -42,6 +47,9 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
           dinner.tags.map((t) => t.value).includes(tag),
         ),
     );
+  const dinners = matchingDinners
+    ? orderDinnerSummaries(matchingDinners, "not-lately")
+    : undefined;
 
   const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
     onSuccess: (result) => {

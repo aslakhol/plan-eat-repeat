@@ -73,7 +73,7 @@ export function AddDinnerSheet({ open, onOpenChange }: Props) {
   const createMutation = api.dinner.create.useMutation({
     onSuccess: async ({ dinner }) => {
       await Promise.all([
-        utils.dinner.dinners.invalidate(),
+        utils.dinner.summaries.invalidate(),
         utils.dinner.tags.invalidate(),
       ]);
 
