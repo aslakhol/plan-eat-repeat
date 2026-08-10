@@ -21,6 +21,7 @@ import {
   dinnerNameSchema,
   isYouTubeVideoUrl,
   MAX_RECIPE_IMPORT_IMAGES,
+  type RecipeInput,
   sourceLabel,
   validUrlOrNull,
 } from "@planeatrepeat/shared";
@@ -50,20 +51,33 @@ import {
   ResponsiveModalHeader,
   ResponsiveModalTitle,
 } from "~/components/ResponsiveModal";
-import {
-  editorValuesFromRecipeInput,
-  type RecipeEditorValues,
-} from "~/views/Dinners/RecipeEditor";
+import { type RecipeEditorValues } from "~/views/Dinners/RecipeEditor";
+import { editorValuesFromRecipeInput } from "~/lib/existing-dinner-import";
 import {
   type DinnerCreationNavigation,
   useDinnerCreation,
 } from "~/views/Dinners/DinnerCreationContext";
 
-type Props = {
+type SharedProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+};
+
+type CreateDinnerSheetProps = SharedProps & {
+  mode?: "create";
   navigation: DinnerCreationNavigation;
 };
+
+type ExistingDinnerImportSheetProps = SharedProps & {
+  mode: "existing";
+  onImported: (imported: {
+    name: string;
+    recipe: RecipeInput;
+    sourceLink: string | null;
+  }) => void;
+};
+
+type Props = CreateDinnerSheetProps | ExistingDinnerImportSheetProps;
 
 type Screen = "choose" | "url" | "photos" | "text" | "loading" | "error";
 type SourceScreen = Extract<Screen, "url" | "photos" | "text">;
@@ -154,7 +168,12 @@ function RecipeActionRow({
   );
 }
 
-export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
+export function AddDinnerSheet(props: Props) {
+  const { open, onOpenChange } = props;
+  const existingDinnerImport = props.mode === "existing";
+  const navigation: DinnerCreationNavigation = existingDinnerImport
+    ? { origin: "cookbook" }
+    : props.navigation;
   const router = useRouter();
   const utils = api.useUtils();
   const { setImportedDraft } = useDinnerCreation();
@@ -275,6 +294,10 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
     values: RecipeEditorValues;
     importedNameAlternative: string | null;
   }) => {
+    if (existingDinnerImport) {
+      onOpenChange(false);
+      return;
+    }
     if (draft) setImportedDraft(draft);
     onOpenChange(false);
     void router.push(
@@ -354,6 +377,16 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
 
       const typedName = name.trim() || undefined;
       setLoadingStep(phases.length);
+      if (existingDinnerImport) {
+        props.onImported({
+          name: result.name,
+          recipe: result.recipe,
+          sourceLink:
+            definition.createsSourceLink && sourceUrl ? sourceUrl : null,
+        });
+        onOpenChange(false);
+        return;
+      }
       continueInEditor({
         values: editorValuesFromRecipeInput({
           name: typedName ?? result.name,
@@ -435,56 +468,62 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
           <>
             <ResponsiveModalHeader className="mb-5 text-center">
               <ResponsiveModalTitle className="font-serif text-xl font-normal">
-                Add a dinner
+                {existingDinnerImport ? "Import a recipe" : "Add a dinner"}
               </ResponsiveModalTitle>
               <ResponsiveModalDescription className="sr-only">
-                Quick-add a Name-only Dinner or continue to Recipe creation.
+                {existingDinnerImport
+                  ? "Choose a source to replace this Dinner's Recipe draft."
+                  : "Quick-add a Name-only Dinner or continue to Recipe creation."}
               </ResponsiveModalDescription>
             </ResponsiveModalHeader>
 
-            <form onSubmit={submitNameOnly} className="space-y-2">
-              <div className="grid grid-cols-[minmax(0,1fr)_3.25rem] gap-2">
-                <Input
-                  ref={inputRef}
-                  value={name}
-                  onChange={(event) => {
-                    setName(event.target.value);
-                    setValidationError(null);
-                  }}
-                  autoFocus
-                  disabled={createMutation.isPending}
-                  placeholder="What's for dinner?"
-                  aria-label="Dinner name"
-                  aria-invalid={validationError !== null}
-                  className="h-[52px] min-w-0 rounded-lg bg-white px-4 text-base font-semibold"
-                />
-                <Button
-                  type="submit"
-                  size="icon"
-                  aria-label="Add Name-only Dinner"
-                  disabled={
-                    name.trim().length === 0 || createMutation.isPending
-                  }
-                  className="h-[52px] w-[52px] rounded-lg"
-                >
-                  {createMutation.isPending ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <Plus className="size-6" />
-                  )}
-                </Button>
-              </div>
-              {validationError && (
-                <p role="alert" className="text-destructive text-sm">
-                  {validationError}
+            {!existingDinnerImport && (
+              <form onSubmit={submitNameOnly} className="space-y-2">
+                <div className="grid grid-cols-[minmax(0,1fr)_3.25rem] gap-2">
+                  <Input
+                    ref={inputRef}
+                    value={name}
+                    onChange={(event) => {
+                      setName(event.target.value);
+                      setValidationError(null);
+                    }}
+                    autoFocus
+                    disabled={createMutation.isPending}
+                    placeholder="What's for dinner?"
+                    aria-label="Dinner name"
+                    aria-invalid={validationError !== null}
+                    className="h-[52px] min-w-0 rounded-lg bg-white px-4 text-base font-semibold"
+                  />
+                  <Button
+                    type="submit"
+                    size="icon"
+                    aria-label="Add Name-only Dinner"
+                    disabled={
+                      name.trim().length === 0 || createMutation.isPending
+                    }
+                    className="h-[52px] w-[52px] rounded-lg"
+                  >
+                    {createMutation.isPending ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <Plus className="size-6" />
+                    )}
+                  </Button>
+                </div>
+                {validationError && (
+                  <p role="alert" className="text-destructive text-sm">
+                    {validationError}
+                  </p>
+                )}
+              </form>
+            )}
+
+            <div className={existingDinnerImport ? undefined : "mt-6"}>
+              {!existingDinnerImport && (
+                <p className="text-muted-foreground mb-2 text-xs font-bold uppercase tracking-[0.12em]">
+                  Import a recipe
                 </p>
               )}
-            </form>
-
-            <div className="mt-6">
-              <p className="text-muted-foreground mb-2 text-xs font-bold uppercase tracking-[0.12em]">
-                Import a recipe
-              </p>
               <div className="space-y-2">
                 {importSourceOrder.map((importSource) => (
                   <RecipeActionRow
@@ -514,7 +553,7 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
               className="text-muted-foreground -ml-2 w-fit px-2"
               onClick={() => setScreen("choose")}
             >
-              ‹ Add a dinner
+              ‹ {existingDinnerImport ? "Import a recipe" : "Add a dinner"}
             </Button>
             <h2 className="mb-7 mt-6 font-serif text-4xl">{sourceTitle}</h2>
             <form
@@ -561,7 +600,7 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
               className="text-muted-foreground -ml-2 w-fit px-2"
               onClick={() => setScreen("choose")}
             >
-              ‹ Add a dinner
+              ‹ {existingDinnerImport ? "Import a recipe" : "Add a dinner"}
             </Button>
             <h2 className="mb-5 mt-6 font-serif text-4xl">Photos</h2>
             <p
@@ -716,7 +755,7 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
               className="text-muted-foreground -ml-2 w-fit px-2"
               onClick={() => setScreen("choose")}
             >
-              ‹ Add a dinner
+              ‹ {existingDinnerImport ? "Import a recipe" : "Add a dinner"}
             </Button>
             <h2 className="mb-7 mt-6 font-serif text-4xl">Text</h2>
             <form

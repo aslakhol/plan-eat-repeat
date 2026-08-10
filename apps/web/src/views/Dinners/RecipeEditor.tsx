@@ -35,6 +35,12 @@ import { Textarea } from "../../components/ui/textarea";
 import { Form } from "../../components/ui/form";
 import { FancyCombobox } from "../../components/ui/FancyCombobox";
 import { DeleteDinnerButton } from "./DeleteDinnerButton";
+import { AddDinnerSheet } from "./AddDinnerSheet";
+import {
+  applyExistingDinnerImport,
+  clearExistingDinnerRecipe,
+  type ExistingDinnerRecipeImport,
+} from "~/lib/existing-dinner-import";
 
 // Amounts are edited as text so comma decimals like "1,5" can be typed;
 // parseAmount converts back to a number on save.
@@ -116,26 +122,6 @@ const editorIngredient = (ingredient: {
   note: ingredient.note ?? "",
 });
 
-export const editorValuesFromRecipeInput = (input: {
-  name: string;
-  recipe: z.infer<typeof recipeSchema>;
-  link?: string | null;
-}): RecipeEditorValues => ({
-  name: input.name,
-  tags: [],
-  newTag: "",
-  link: input.link ?? "",
-  notes: "",
-  recipe: {
-    servings: input.recipe.servings,
-    parts: input.recipe.parts.map((part) => ({
-      name: part.name ?? "",
-      ingredients: part.ingredients.map(editorIngredient),
-      steps: part.steps.map((text) => ({ text })),
-    })),
-  },
-});
-
 const editorValuesFromDinner = (
   dinner: DinnerWithRecipe,
 ): RecipeEditorValues => ({
@@ -182,8 +168,35 @@ export const RecipeEditor = ({
     watchedParts.length > 1 ||
     watchedParts.some((part) => part.name.trim().length > 0);
   const ingredientNamesQuery = api.dinner.ingredientNames.useQuery();
-  const [showImportedNameAlternative, setShowImportedNameAlternative] =
-    useState(Boolean(importedNameAlternative));
+  const [importOpen, setImportOpen] = useState(false);
+  const [nameAlternative, setNameAlternative] = useState(
+    importedNameAlternative ?? null,
+  );
+  const [sourceLinkAlternative, setSourceLinkAlternative] = useState<
+    string | null
+  >(null);
+  const hasRecipeContent =
+    watchedParts.length > 0 ||
+    (typeof servings === "number" && Number.isFinite(servings) && servings > 0);
+
+  const applyImport = (imported: ExistingDinnerRecipeImport) => {
+    const result = applyExistingDinnerImport(form.getValues(), imported);
+    form.reset(result.values, { keepDefaultValues: true });
+    setNameAlternative(result.importedNameAlternative);
+    setSourceLinkAlternative(result.importedSourceLinkAlternative);
+  };
+
+  const closeEditorMenu = (target: HTMLElement) => {
+    target.closest("details")?.removeAttribute("open");
+  };
+
+  const clearRecipe = () => {
+    form.reset(clearExistingDinnerRecipe(form.getValues()), {
+      keepDefaultValues: true,
+    });
+    setNameAlternative(null);
+    setSourceLinkAlternative(null);
+  };
 
   const cancel = () => {
     if (
@@ -219,6 +232,28 @@ export const RecipeEditor = ({
                 <span className="sr-only">Editor actions</span>
               </summary>
               <div className="border-border absolute right-0 top-10 z-30 w-[210px] overflow-hidden rounded-[14px] border bg-white shadow-[0_8px_28px_rgba(60,50,40,.22)]">
+                <button
+                  type="button"
+                  className="hover:bg-muted w-full px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                  onClick={(event) => {
+                    closeEditorMenu(event.currentTarget);
+                    setImportOpen(true);
+                  }}
+                >
+                  Import a recipe…
+                </button>
+                {hasRecipeContent && (
+                  <button
+                    type="button"
+                    className="hover:bg-muted w-full border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                    onClick={(event) => {
+                      closeEditorMenu(event.currentTarget);
+                      clearRecipe();
+                    }}
+                  >
+                    Clear the recipe
+                  </button>
+                )}
                 <DeleteDinnerButton
                   dinnerId={dinner.id}
                   isPending={isPending}
@@ -226,7 +261,7 @@ export const RecipeEditor = ({
                   trigger={
                     <button
                       type="button"
-                      className="text-destructive hover:bg-destructive/5 w-full px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                      className="text-destructive hover:bg-destructive/5 w-full border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
                     >
                       Delete dinner
                     </button>
@@ -259,21 +294,18 @@ export const RecipeEditor = ({
                 className="h-12 bg-white text-lg font-semibold"
               />
               <FieldError message={form.formState.errors.name?.message} />
-              {showImportedNameAlternative && importedNameAlternative && (
+              {nameAlternative && (
                 <div className="mt-3 space-y-3 rounded-lg bg-[hsl(40_33%_95%)] p-3">
                   <p className="text-sm">
                     The source calls it “
-                    <span className="font-semibold">
-                      {importedNameAlternative}
-                    </span>
-                    ”
+                    <span className="font-semibold">{nameAlternative}</span>”
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       className="border-primary text-primary rounded-full bg-transparent"
-                      onClick={() => setShowImportedNameAlternative(false)}
+                      onClick={() => setNameAlternative(null)}
                     >
                       Keep our name ✓
                     </Button>
@@ -282,11 +314,11 @@ export const RecipeEditor = ({
                       variant="outline"
                       className="rounded-full bg-transparent"
                       onClick={() => {
-                        form.setValue("name", importedNameAlternative, {
+                        form.setValue("name", nameAlternative, {
                           shouldDirty: true,
                           shouldValidate: true,
                         });
-                        setShowImportedNameAlternative(false);
+                        setNameAlternative(null);
                       }}
                     >
                       Use theirs
@@ -357,6 +389,41 @@ export const RecipeEditor = ({
                   form.formState.errors.recipe?.servings?.message
                 }
               />
+              {sourceLinkAlternative && (
+                <div className="mt-3 space-y-3 rounded-lg bg-[hsl(40_33%_95%)] p-3">
+                  <p className="break-all text-sm">
+                    The source link is “
+                    <span className="font-semibold">
+                      {sourceLinkAlternative}
+                    </span>
+                    ”
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-primary text-primary rounded-full bg-transparent"
+                      onClick={() => setSourceLinkAlternative(null)}
+                    >
+                      Keep our link ✓
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full bg-transparent"
+                      onClick={() => {
+                        form.setValue("link", sourceLinkAlternative, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        });
+                        setSourceLinkAlternative(null);
+                      }}
+                    >
+                      Use theirs
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -429,6 +496,14 @@ export const RecipeEditor = ({
           </div>
         </div>
       </form>
+      {dinner && (
+        <AddDinnerSheet
+          mode="existing"
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          onImported={applyImport}
+        />
+      )}
     </Form>
   );
 };

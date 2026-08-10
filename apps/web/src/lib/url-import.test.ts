@@ -5,6 +5,8 @@ import {
   importErrorCopy,
   importNameConflict,
   importPhases,
+  importSourceLinkConflict,
+  normalizeSourceUrl,
   urlImportErrorCopy,
   urlImportPhases,
 } from "./url-import";
@@ -85,4 +87,45 @@ void test("photo and text errors promise to retain their submitted input", () =>
     title: "Couldn't finish the recipe",
     body: "Something went wrong while structuring it. Your text is still here.",
   });
+});
+
+void test("source URLs ignore presentation and common tracking differences", () => {
+  assert.equal(
+    normalizeSourceUrl(
+      "https://WWW.Example.com/recipes/tacos/?utm_source=newsletter#steps",
+    ),
+    normalizeSourceUrl("http://example.com/recipes/tacos?gclid=campaign"),
+  );
+  assert.equal(
+    importSourceLinkConflict(
+      "https://example.com/recipes/tacos/",
+      "https://www.example.com/recipes/tacos#ingredients",
+    ),
+    null,
+  );
+});
+
+void test("source URLs retain differences that identify another source", () => {
+  assert.notEqual(
+    normalizeSourceUrl("https://example.com/recipes/tacos?version=1"),
+    normalizeSourceUrl("https://example.com/recipes/tacos?version=2"),
+  );
+  assert.equal(
+    importSourceLinkConflict(
+      "https://example.com/recipes/tacos",
+      "https://example.com/recipes/burritos",
+    ),
+    "https://example.com/recipes/burritos",
+  );
+});
+
+void test("a blank Source Link accepts an imported URL without a conflict", () => {
+  assert.equal(
+    importSourceLinkConflict("", "https://example.com/recipes/tacos"),
+    null,
+  );
+  assert.equal(
+    importSourceLinkConflict("https://example.com/tacos", null),
+    null,
+  );
 });

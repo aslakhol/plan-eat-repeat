@@ -48,6 +48,61 @@ export const importNameConflict = (
   return importedName;
 };
 
+const trackingParameterNames = new Set([
+  "_ga",
+  "_gl",
+  "dclid",
+  "fbclid",
+  "gclid",
+  "igshid",
+  "mc_cid",
+  "mc_eid",
+  "msclkid",
+  "srsltid",
+]);
+
+export const normalizeSourceUrl = (value: string) => {
+  try {
+    const url = new URL(value.trim());
+    const hostname = url.hostname.toLocaleLowerCase().replace(/^www\./, "");
+    const port = url.port ? `:${url.port}` : "";
+    const pathname = url.pathname.replace(/\/+$/, "");
+    const parameters = new URLSearchParams(url.search);
+
+    for (const name of [...parameters.keys()]) {
+      const normalizedName = name.toLocaleLowerCase();
+      if (
+        normalizedName.startsWith("utm_") ||
+        trackingParameterNames.has(normalizedName)
+      ) {
+        parameters.delete(name);
+      }
+    }
+    parameters.sort();
+
+    const query = parameters.toString();
+    return `${hostname}${port}${pathname}${query ? `?${query}` : ""}`;
+  } catch {
+    return value.trim();
+  }
+};
+
+export const importSourceLinkConflict = (
+  existingSourceLink: string,
+  importedSourceLink: string | null,
+) => {
+  const existing = existingSourceLink.trim();
+  const imported = importedSourceLink?.trim();
+  if (
+    !existing ||
+    !imported ||
+    normalizeSourceUrl(existing) === normalizeSourceUrl(imported)
+  ) {
+    return null;
+  }
+  return imported;
+};
+
 export const urlImportPhases = (url: string) => [
   isYouTubeVideoUrl(url) ? "Fetching the video" : "Fetching the page",
   "Reading the recipe",
