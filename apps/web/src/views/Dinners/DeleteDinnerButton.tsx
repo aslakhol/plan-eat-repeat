@@ -51,7 +51,8 @@ export const DeleteDinnerButton = ({
         <DialogHeader>
           <DialogTitle>Delete dinner</DialogTitle>
           <DialogDescription>
-            Are you sure? This cannot be undone.
+            This permanently deletes the Dinner and its Cooking History. This
+            cannot be undone.
           </DialogDescription>
         </DialogHeader>
 
@@ -66,6 +67,23 @@ export const DeleteDinnerButton = ({
           </div>
         )}
 
+        {plansQuery.isError && (
+          <div className="border-destructive/30 bg-destructive/5 space-y-3 rounded-md border p-3 text-sm">
+            <p>
+              Couldn&apos;t load the affected dates. Try again before deleting
+              this Dinner.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void plansQuery.refetch()}
+            >
+              Try again
+            </Button>
+          </div>
+        )}
+
         <DialogFooter>
           <Button
             type="button"
@@ -77,7 +95,9 @@ export const DeleteDinnerButton = ({
           <Button
             type="button"
             variant="destructive"
-            disabled={isPending || plansQuery.isPending}
+            disabled={
+              isPending || plansQuery.isPending || plansQuery.isError
+            }
             onClick={onDelete}
           >
             Delete

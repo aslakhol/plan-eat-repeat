@@ -8,7 +8,6 @@ import {
   MAX_RECIPE_IMPORT_IMAGES,
   recipeSchema,
   type DinnerWithRecipe,
-  type DinnerWithTags,
   type RecipeInput,
 } from "@planeatrepeat/shared";
 
@@ -34,6 +33,13 @@ const householdImportInstructions = async (
   });
   return household.importInstructions;
 };
+
+const householdDinnersWithTags = (db: PrismaClient, householdId: string) =>
+  db.dinner.findMany({
+    where: { householdId },
+    include: { tags: true },
+    orderBy: [{ name: "asc" as const }, { id: "asc" as const }],
+  });
 
 const createRecipeParts = (parts: RecipeInput["parts"]) =>
   parts.map((part, partIndex) => ({
@@ -121,11 +127,7 @@ export const dinnerRouter = createTRPCRouter({
       return { dinners: [] };
     }
 
-    const dinners: DinnerWithTags[] = await ctx.db.dinner.findMany({
-      where: { householdId },
-      include: { tags: true },
-      orderBy: { name: "asc" },
-    });
+    const dinners = await householdDinnersWithTags(ctx.db, householdId);
 
     return { dinners };
   }),
@@ -151,11 +153,7 @@ export const dinnerRouter = createTRPCRouter({
         return { dinners: [] };
       }
 
-      const dinners = await ctx.db.dinner.findMany({
-        where: { householdId },
-        include: { tags: true },
-        orderBy: [{ name: "asc" }, { id: "asc" }],
-      });
+      const dinners = await householdDinnersWithTags(ctx.db, householdId);
       const dinnerIds = dinners.map((dinner) => dinner.id);
 
       if (dinnerIds.length === 0) {
