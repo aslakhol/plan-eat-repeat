@@ -7,6 +7,7 @@ import {
   MAX_RECIPE_IMPORT_IMAGE_DATA_LENGTH,
   MAX_RECIPE_IMPORT_IMAGES,
   recipeSchema,
+  youtubeVideoIdFromUrl,
   type DinnerWithRecipe,
   type RecipeInput,
 } from "@planeatrepeat/shared";
@@ -21,6 +22,7 @@ import {
   importRecipeFromText,
   importRecipeFromUrl,
 } from "~/server/recipes/importRecipe";
+import { acquireYouTubeVideoTitle } from "~/server/recipes/youtube";
 import { type PrismaClient } from "@planeatrepeat/db";
 
 const householdImportInstructions = async (
@@ -276,6 +278,14 @@ export const dinnerRouter = createTRPCRouter({
       } catch (error) {
         throw toImportTRPCError(error);
       }
+    }),
+
+  youtubeVideoTitle: protectedProcedureWithHousehold
+    .input(z.object({ url: z.string().url() }))
+    .query(async ({ input, signal }) => {
+      const videoId = youtubeVideoIdFromUrl(input.url);
+      if (!videoId) return { title: null };
+      return { title: await acquireYouTubeVideoTitle(videoId, signal) };
     }),
 
   importFromText: protectedProcedureWithHousehold

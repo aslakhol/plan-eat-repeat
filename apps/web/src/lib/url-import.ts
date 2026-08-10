@@ -1,5 +1,6 @@
 import {
   type ImportRecipeErrorCode,
+  isImportRecipeErrorCode,
   isYouTubeVideoUrl,
   sourceLabel,
 } from "@planeatrepeat/shared";
@@ -9,6 +10,25 @@ export type UrlImportErrorCopy = {
   body: string;
 };
 
+export const importErrorCodeFromUnknown = (
+  error: unknown,
+): ImportRecipeErrorCode => {
+  if (typeof error !== "object" || error === null || !("data" in error)) {
+    return "EXTRACTION_FAILED";
+  }
+  const data = error.data;
+  if (
+    typeof data !== "object" ||
+    data === null ||
+    !("importErrorCode" in data)
+  ) {
+    return "EXTRACTION_FAILED";
+  }
+  return isImportRecipeErrorCode(data.importErrorCode)
+    ? data.importErrorCode
+    : "EXTRACTION_FAILED";
+};
+
 const normalizedName = (name: string) =>
   name.trim().replace(/\s+/g, " ").toLocaleLowerCase();
 
@@ -16,8 +36,11 @@ export const importNameConflict = (
   typedName: string | undefined,
   importedName: string,
 ) => {
-  const ours = typedName?.trim();
-  if (!ours || normalizedName(ours) === normalizedName(importedName)) {
+  const trimmedTypedName = typedName?.trim();
+  if (
+    !trimmedTypedName ||
+    normalizedName(trimmedTypedName) === normalizedName(importedName)
+  ) {
     return null;
   }
   return importedName;

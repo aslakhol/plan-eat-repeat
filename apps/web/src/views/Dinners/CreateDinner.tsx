@@ -1,36 +1,24 @@
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { usePostHog } from "posthog-js/react";
 import {
-  Check,
-  Circle,
   Camera,
   Image as ImagesIcon,
   Loader2,
-  LinkIcon,
   Pencil,
   Plus,
-  UtensilsCrossed,
   Wand2,
   X,
 } from "lucide-react";
 import {
   MAX_RECIPE_IMPORT_IMAGE_DATA_LENGTH,
   MAX_RECIPE_IMPORT_IMAGES,
-  YOUTUBE_NO_RECIPE_FOUND_MESSAGE,
   type ImportRecipeErrorCode,
-  isYouTubeVideoUrl,
-  importErrorMessages,
-  validUrlOrNull,
-  sourceLabel,
 } from "@planeatrepeat/shared";
 import { toast } from "../../components/ui/use-toast";
 import { api } from "../../utils/api";
 import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Textarea } from "../../components/ui/textarea";
 import {
-  FieldLabel,
   RecipeEditor,
   dinnerFromEditorValues,
   editorValuesFromManualName,
@@ -43,71 +31,19 @@ import {
   parseEditorNavigation,
   planSlotDateFromString,
 } from "~/lib/editor-navigation";
-import {
-  importNameConflict,
-  urlImportErrorCopy,
-  urlImportPhases,
-} from "~/lib/url-import";
+import { useDinnerCreation } from "~/views/Dinners/DinnerCreationContext";
 
-type CreateMode =
-  | "choose"
-  | "manual"
-  | "import"
-  | "url"
-  | "url-loading"
-  | "url-error"
-  | "photos"
-  | "draft";
+type CreateMode = "choose" | "manual" | "photos" | "draft";
 type PreparedImage = {
   previewUrl: string;
   data: string;
   mimeType: "image/jpeg";
 };
-type ImportFailure = {
-  code: ImportRecipeErrorCode;
-  isYouTube: boolean;
-};
-
-const loadingCopy = [
-  "Fetching the page",
-  "Looking for structured recipe data",
-  "Normalizing ingredients and steps",
-];
-const youtubeLoadingCopy = [
-  "Fetching video details",
-  "Reading the video's description and captions…",
-  "Normalizing ingredients and steps",
-];
 const photoLoadingCopy = ["Reading your photos…", "Writing up the recipe…"];
 const PHOTO_LONGEST_EDGE = 1_800;
 const PHOTO_COMPRESSION = 0.7;
 const photoImportErrorCopy =
   "We couldn't read that page — try retaking it with less glare.";
-
-const importErrorCodeFromUnknown = (error: unknown): ImportRecipeErrorCode => {
-  if (typeof error !== "object" || error === null || !("data" in error)) {
-    return "EXTRACTION_FAILED";
-  }
-  const data = error.data;
-  if (
-    typeof data !== "object" ||
-    data === null ||
-    !("importErrorCode" in data)
-  ) {
-    return "EXTRACTION_FAILED";
-  }
-  const code = data.importErrorCode;
-  return typeof code === "string" &&
-    [
-      "FETCH_FAILED",
-      "SITE_BLOCKED",
-      "PAGE_UNREADABLE",
-      "NO_RECIPE_FOUND",
-      "EXTRACTION_FAILED",
-    ].includes(code)
-    ? (code as ImportRecipeErrorCode)
-    : "EXTRACTION_FAILED";
-};
 
 const base64FromBlob = (blob: Blob) =>
   new Promise<string>((resolve, reject) => {
@@ -167,28 +103,21 @@ export const CreateDinner = () => {
   const router = useRouter();
   const posthog = usePostHog();
   const utils = api.useUtils();
+  const { importedDraft, setImportedDraft } = useDinnerCreation();
   const navigation = parseEditorNavigation(router.query);
   const [mode, setMode] = useState<CreateMode>(() =>
-    navigation.mode === "manual"
-      ? "manual"
-      : navigation.source
-        ? "url"
+    importedDraft
+      ? "draft"
+      : navigation.mode === "manual"
+        ? "manual"
         : "choose",
   );
-  const [url, setUrl] = useState("");
-  const [pasteText, setPasteText] = useState("");
-  const [importError, setImportError] = useState<ImportFailure | null>(null);
-  const [showPasteFallback, setShowPasteFallback] = useState(false);
-  const [loadingStep, setLoadingStep] = useState(0);
-  const [draft, setDraft] = useState<RecipeEditorValues | null>(null);
-  const [importedNameAlternative, setImportedNameAlternative] = useState<
-    string | null
-  >(null);
-  const [urlImportPending, setUrlImportPending] = useState(false);
-  const [submittedUrl, setSubmittedUrl] = useState("");
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const importAttemptRef = useRef(0);
-  const clipboardSourceRef = useRef<string | null>(null);
+  const [draft, setDraft] = useState<RecipeEditorValues | null>(
+    importedDraft?.values ?? null,
+  );
+  const [importedNameAlternative] = useState<string | null>(
+    importedDraft?.importedNameAlternative ?? null,
+  );
   const [images, setImages] = useState<PreparedImage[]>([]);
   const [preparingImages, setPreparingImages] = useState(false);
   const [photoLoadingStep, setPhotoLoadingStep] = useState(0);
@@ -200,33 +129,12 @@ export const CreateDinner = () => {
   useEffect(() => {
     if (router.isReady && navigation.mode === "manual") {
       setMode("manual");
-    } else if (router.isReady && navigation.source) {
-      setMode("url");
     }
-  }, [navigation.mode, navigation.source, router.isReady]);
-
-  useEffect(
-    () => () => {
-      importAttemptRef.current += 1;
-      abortControllerRef.current?.abort();
-    },
-    [],
-  );
+  }, [navigation.mode, router.isReady]);
 
   useEffect(() => {
-    if (mode !== "url" || !navigation.source) return;
-    if (clipboardSourceRef.current === navigation.source) return;
-    clipboardSourceRef.current = navigation.source;
-    if (!navigator.clipboard?.readText) return;
-
-    void navigator.clipboard
-      .readText()
-      .then((clipboardText) => {
-        const clipboardUrl = validUrlOrNull(clipboardText);
-        if (clipboardUrl) setUrl((current) => current || clipboardUrl);
-      })
-      .catch(() => undefined);
-  }, [mode, navigation.source]);
+    if (importedDraft) setImportedDraft(null);
+  }, [importedDraft, setImportedDraft]);
 
   const createMutation = api.dinner.create.useMutation({
     onSuccess: async (result) => {
@@ -253,93 +161,6 @@ export const CreateDinner = () => {
         variant: "destructive",
         title: "Could not create dinner",
         description: error.message,
-      });
-    },
-  });
-
-  const beginUrlImport = async () => {
-    const sourceUrl = validUrlOrNull(url);
-    if (!sourceUrl || urlImportPending) return;
-
-    const attempt = importAttemptRef.current + 1;
-    importAttemptRef.current = attempt;
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-    const phases = urlImportPhases(sourceUrl);
-    setSubmittedUrl(sourceUrl);
-    setImportError(null);
-    setLoadingStep(0);
-    setUrlImportPending(true);
-    setMode("url-loading");
-    const interval = window.setInterval(() => {
-      setLoadingStep((current) => Math.min(current + 1, phases.length - 1));
-    }, 3_000);
-
-    try {
-      const result = await utils.client.dinner.importFromUrl.mutate(
-        { url: sourceUrl },
-        { signal: controller.signal },
-      );
-      if (controller.signal.aborted || importAttemptRef.current !== attempt) {
-        return;
-      }
-
-      const typedName = navigation.name?.trim();
-      setImportedNameAlternative(importNameConflict(typedName, result.name));
-      setDraft(
-        editorValuesFromRecipeInput({
-          name: typedName ?? result.name,
-          recipe: result.recipe,
-          link: result.sourceUrl,
-        }),
-      );
-      setLoadingStep(phases.length);
-      setMode("draft");
-    } catch (error) {
-      if (controller.signal.aborted || importAttemptRef.current !== attempt) {
-        return;
-      }
-      setImportError({
-        code: importErrorCodeFromUnknown(error),
-        isYouTube: isYouTubeVideoUrl(sourceUrl),
-      });
-      setMode("url-error");
-    } finally {
-      window.clearInterval(interval);
-      if (importAttemptRef.current === attempt) {
-        abortControllerRef.current = null;
-        setUrlImportPending(false);
-      }
-    }
-  };
-
-  const cancelUrlImport = () => {
-    importAttemptRef.current += 1;
-    abortControllerRef.current?.abort();
-    abortControllerRef.current = null;
-    setUrlImportPending(false);
-    setMode("url");
-  };
-
-  const importFromTextMutation = api.dinner.importFromText.useMutation({
-    onMutate: () => {
-      setImportError(null);
-      setLoadingStep(loadingCopy.length - 1);
-    },
-    onSuccess: (result) => {
-      setDraft(
-        editorValuesFromRecipeInput({
-          name: result.name,
-          recipe: result.recipe,
-          link: validUrlOrNull(url),
-        }),
-      );
-      setMode("draft");
-    },
-    onError: (error) => {
-      setImportError({
-        code: error.data?.importErrorCode ?? "EXTRACTION_FAILED",
-        isYouTube: false,
       });
     },
   });
@@ -390,8 +211,6 @@ export const CreateDinner = () => {
   };
 
   const backToChoose = () => {
-    setImportError(null);
-    setShowPasteFallback(false);
     setPhotoImportError(null);
     setMode("choose");
   };
@@ -451,22 +270,6 @@ export const CreateDinner = () => {
     });
   };
 
-  const submitUrlImport = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const sourceUrl = validUrlOrNull(url);
-    if (!sourceUrl) {
-      return;
-    }
-    void beginUrlImport();
-  };
-
-  const submitTextImport = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    importFromTextMutation.mutate({ text: pasteText });
-  };
-
-  const isImporting = urlImportPending || importFromTextMutation.isPending;
-
   if (!router.isReady) {
     return (
       <div className="flex h-[50dvh] items-center justify-center">
@@ -474,159 +277,6 @@ export const CreateDinner = () => {
           className="text-primary animate-spin"
           aria-label="Loading editor"
         />
-      </div>
-    );
-  }
-
-  if (mode === "url-loading") {
-    const phases = urlImportPhases(submittedUrl);
-    return (
-      <div className="bg-background fixed inset-0 z-[100] flex min-h-dvh flex-col px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-12">
-        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col items-center">
-          <div className="border-primary text-primary flex size-20 items-center justify-center rounded-full border bg-[hsl(18_70%_91%)]">
-            <UtensilsCrossed className="size-9 animate-spin [animation-duration:3s]" />
-          </div>
-          <h1 className="mt-8 text-center font-serif text-4xl leading-tight">
-            Reading the recipe
-          </h1>
-          <p className="text-muted-foreground mt-5 text-center text-lg font-semibold">
-            {sourceLabel(submittedUrl)}
-          </p>
-
-          <ol className="mt-10 w-full max-w-[270px] space-y-5">
-            {phases.map((phase, index) => {
-              const done = index < loadingStep;
-              const current = index === loadingStep;
-              return (
-                <li
-                  key={phase}
-                  className={
-                    current
-                      ? "text-primary flex items-center gap-4 font-semibold"
-                      : done
-                        ? "text-foreground flex items-center gap-4 font-semibold"
-                        : "text-muted-foreground/60 flex items-center gap-4 font-semibold"
-                  }
-                >
-                  {done ? (
-                    <span className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-full">
-                      <Check className="size-5" />
-                    </span>
-                  ) : (
-                    <Circle
-                      className={
-                        current
-                          ? "fill-primary/10 size-8 shrink-0"
-                          : "size-8 shrink-0"
-                      }
-                    />
-                  )}
-                  {phase}
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          className="mx-auto h-12 w-full max-w-sm bg-white text-base"
-          onClick={cancelUrlImport}
-        >
-          Cancel
-        </Button>
-      </div>
-    );
-  }
-
-  if (mode === "url-error" && importError) {
-    const copy = urlImportErrorCopy(importError.code, submittedUrl);
-    return (
-      <div className="bg-background fixed inset-0 z-[100] flex min-h-dvh flex-col px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-12">
-        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col items-center text-center">
-          <div className="border-border flex size-20 items-center justify-center rounded-full border bg-white font-serif text-4xl">
-            !
-          </div>
-          <h1 className="mt-8 font-serif text-4xl leading-tight">
-            {copy.title}
-          </h1>
-          <p className="text-muted-foreground mt-3 text-lg leading-relaxed">
-            {copy.body}
-          </p>
-        </div>
-        <div className="mx-auto w-full max-w-sm space-y-3">
-          <Button
-            type="button"
-            className="h-12 w-full text-base"
-            onClick={() => void beginUrlImport()}
-          >
-            Try again
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-12 w-full bg-white text-base"
-            onClick={() => setMode("manual")}
-          >
-            Write it myself
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-12 w-full text-base"
-            onClick={() => setMode("url")}
-          >
-            Back
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (mode === "url" && navigation.source) {
-    const validUrl = validUrlOrNull(url);
-    const sourceTitle =
-      navigation.source === "youtube" ? "YouTube video" : "Link";
-    return (
-      <div className="mx-auto w-full max-w-[640px] pb-6">
-        <Button
-          type="button"
-          variant="ghost"
-          className="text-muted-foreground -ml-2 px-2"
-          onClick={() => void router.back()}
-        >
-          ‹ Add a dinner
-        </Button>
-        <h1 className="mb-7 mt-6 font-serif text-4xl">{sourceTitle}</h1>
-        <form className="space-y-3" onSubmit={submitUrlImport}>
-          <label htmlFor="recipe-import-url" className="sr-only">
-            Recipe URL
-          </label>
-          <Input
-            id="recipe-import-url"
-            type="url"
-            inputMode="url"
-            value={url}
-            autoFocus
-            onChange={(event) => setUrl(event.target.value)}
-            className="h-16 rounded-lg bg-white px-4 text-base"
-            placeholder="https://"
-            aria-invalid={url.length > 0 && !validUrl}
-            aria-describedby="recipe-url-help"
-          />
-          <p id="recipe-url-help" className="text-muted-foreground text-xs">
-            {url.length > 0 && !validUrl
-              ? "Enter a full http or https URL."
-              : "Recipe pages and YouTube links both work here."}
-          </p>
-          <Button
-            type="submit"
-            className="h-12 w-full text-base"
-            disabled={!validUrl}
-          >
-            Import recipe
-          </Button>
-        </form>
       </div>
     );
   }
@@ -677,14 +327,6 @@ export const CreateDinner = () => {
 
       {mode === "choose" ? (
         <div className="space-y-3">
-          <Button
-            type="button"
-            className="h-12 w-full justify-start"
-            onClick={() => setMode("import")}
-          >
-            <LinkIcon />
-            Import from link
-          </Button>
           <Button
             type="button"
             variant="secondary"
@@ -844,87 +486,7 @@ export const CreateDinner = () => {
             </div>
           )}
         </div>
-      ) : (
-        <div className="space-y-5">
-          <form className="space-y-3" onSubmit={submitUrlImport}>
-            <div className="space-y-1.5">
-              <FieldLabel htmlFor="recipe-import-url">Recipe link</FieldLabel>
-              <Input
-                id="recipe-import-url"
-                type="url"
-                value={url}
-                disabled={isImporting}
-                onChange={(event) => setUrl(event.target.value)}
-                className="h-12 bg-white"
-                placeholder="https://"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button type="submit" disabled={isImporting}>
-                {urlImportPending ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <Wand2 />
-                )}
-                Import
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={isImporting}
-                onClick={backToChoose}
-              >
-                Back
-              </Button>
-            </div>
-          </form>
-
-          {isImporting && (
-            <div className="text-muted-foreground rounded-md border bg-white px-3 py-2 text-sm">
-              {
-                (isYouTubeVideoUrl(submittedUrl)
-                  ? youtubeLoadingCopy
-                  : loadingCopy)[loadingStep]
-              }
-            </div>
-          )}
-
-          {importError && (
-            <div className="space-y-4 rounded-md border border-[hsl(18_60%_80%)] bg-[hsl(40_33%_95%)] p-3">
-              <p className="text-foreground text-sm">
-                {importError.code === "NO_RECIPE_FOUND" && importError.isYouTube
-                  ? YOUTUBE_NO_RECIPE_FOUND_MESSAGE
-                  : importErrorMessages[importError.code]}
-              </p>
-              {showPasteFallback && (
-                <form className="space-y-3" onSubmit={submitTextImport}>
-                  <div className="space-y-1.5">
-                    <FieldLabel htmlFor="recipe-import-text">
-                      Paste recipe text
-                    </FieldLabel>
-                    <Textarea
-                      id="recipe-import-text"
-                      value={pasteText}
-                      disabled={isImporting}
-                      onChange={(event) => setPasteText(event.target.value)}
-                      className="min-h-40 bg-white text-[15px]"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={isImporting || pasteText.trim().length === 0}
-                  >
-                    {importFromTextMutation.isPending && (
-                      <Loader2 className="animate-spin" />
-                    )}
-                    Import pasted recipe
-                  </Button>
-                </form>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+      ) : null}
     </div>
   );
 };

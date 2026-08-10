@@ -28,29 +28,21 @@ void test("manual creation preserves a typed name and Cookbook origin", () => {
   );
 });
 
-void test("Link and YouTube creation keep their distinct source screen", () => {
+void test("an import draft preserves its typed name and Plan Slot destination", () => {
   assert.deepEqual(
     buildCreateDinnerEditorHref({
-      origin: "cookbook",
+      origin: "week",
+      date: planSlotDateFromDate(new Date(2026, 7, 12)),
       name: "Taco night",
-      source: "youtube",
     }),
     {
       pathname: "/dinners/new",
       query: {
-        origin: "cookbook",
+        origin: "week",
+        date: "2026-08-12",
         name: "Taco night",
-        source: "youtube",
       },
     },
-  );
-
-  assert.deepEqual(
-    parseEditorNavigation({
-      origin: "week",
-      source: "link",
-    }),
-    { origin: "week", source: "link" },
   );
 });
 

@@ -29,6 +29,35 @@ type YouTubePlayerResponse = {
   playerCaptionsTracklistRenderer?: { captionTracks?: CaptionTrack[] };
 };
 
+type YouTubeOEmbedResponse = {
+  title?: string;
+};
+
+export const acquireYouTubeVideoTitle = async (
+  videoId: string,
+  requestSignal?: AbortSignal,
+) => {
+  const timeoutSignal = AbortSignal.timeout(5_000);
+  const signal = requestSignal
+    ? AbortSignal.any([requestSignal, timeoutSignal])
+    : timeoutSignal;
+  const url = new URL("https://www.youtube.com/oembed");
+  url.searchParams.set(
+    "url",
+    `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`,
+  );
+  url.searchParams.set("format", "json");
+
+  try {
+    const response = await fetch(url, { signal });
+    if (!response.ok) return null;
+    const body = (await response.json()) as YouTubeOEmbedResponse;
+    return body.title?.trim() ?? null;
+  } catch {
+    return null;
+  }
+};
+
 export const acquireYouTubeRecipeText = async (
   videoId: string,
   requestSignal?: AbortSignal,

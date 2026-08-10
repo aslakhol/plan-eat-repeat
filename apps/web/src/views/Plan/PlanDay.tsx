@@ -1,6 +1,5 @@
 import { format } from "date-fns";
 import { AlertCircle, Loader2 } from "lucide-react";
-import Link from "next/link";
 import { type ReactNode, useState } from "react";
 import { usePostHog } from "posthog-js/react";
 
@@ -17,14 +16,12 @@ import {
   type CookbookSort,
 } from "~/lib/cookbook";
 import { pickSurpriseDinner } from "~/lib/dinner-planning";
-import {
-  buildCreateDinnerEditorHref,
-  planSlotDateFromDate,
-} from "~/lib/editor-navigation";
+import { planSlotDateFromDate } from "~/lib/editor-navigation";
 import { cn } from "~/lib/utils";
 import { api, type RouterOutputs } from "~/utils/api";
 import { type DinnerWithTags } from "~/utils/types";
 import { DinnerCollectionControls } from "~/views/DinnerCollectionControls";
+import { useDinnerCreation } from "~/views/Dinners/DinnerCreationContext";
 
 type Props = {
   date: Date;
@@ -32,8 +29,7 @@ type Props = {
   plannedDinner?: DinnerWithTags;
 };
 
-type DinnerSummary =
-  RouterOutputs["dinner"]["summaries"]["dinners"][number];
+type DinnerSummary = RouterOutputs["dinner"]["summaries"]["dinners"][number];
 
 const pickerSortOptions = [
   { value: "not-lately" as const, label: "Haven't had lately" },
@@ -43,6 +39,7 @@ const pickerSortOptions = [
 
 export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   const posthog = usePostHog();
+  const { openAddDinner } = useDinnerCreation();
   const utils = api.useUtils();
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -183,16 +180,19 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
       )}
 
       <div className="grid shrink-0 grid-cols-2 gap-2 border-t pt-3">
-        <Button asChild variant="outline" className="h-12 rounded-xl">
-          <Link
-            href={buildCreateDinnerEditorHref({
+        <Button
+          type="button"
+          variant="outline"
+          className="h-12 rounded-xl"
+          onClick={() => {
+            closeDialog();
+            openAddDinner({
               origin: "week",
               date: planSlotDateFromDate(date),
-              mode: "manual",
-            })}
-          >
-            New dinner
-          </Link>
+            });
+          }}
+        >
+          New dinner
         </Button>
         <Button
           type="button"
