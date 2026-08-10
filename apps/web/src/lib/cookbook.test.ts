@@ -255,6 +255,12 @@ void test("the Week picker excludes the assigned Dinner before filtering and cou
     picker.availableDinners.map((dinner) => dinner.id),
     [2],
   );
+
+  const fullCookbookTags = buildDinnerTagGroups(dinners, []);
+  assert.deepEqual(fullCookbookTags.mostUsed, [
+    { value: "Quick", count: 2 },
+    { value: "Vegan", count: 1 },
+  ]);
 });
 
 void test("summary label prioritises tonight, then nearest upcoming, then most recent past weekday", () => {

@@ -49,6 +49,24 @@ void test("a Week origin carries a valid local Plan Slot date", () => {
   assert.equal(editorCancelHref(navigation), "/");
 });
 
+void test("the Week picker opens date-attached manual creation directly", () => {
+  assert.deepEqual(
+    buildCreateDinnerEditorHref({
+      origin: "week",
+      date: planSlotDateFromDate(new Date(2026, 7, 12)),
+      mode: "manual",
+    }),
+    {
+      pathname: "/dinners/new",
+      query: {
+        origin: "week",
+        date: "2026-08-12",
+        mode: "manual",
+      },
+    },
+  );
+});
+
 void test("invalid or array query values cannot become a Plan Slot date", () => {
   assert.deepEqual(
     parseEditorNavigation({

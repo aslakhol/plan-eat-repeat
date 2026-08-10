@@ -36,6 +36,7 @@ const cookbookSortOptions: readonly SortOption[] = [
 
 type Props = {
   dinners: readonly CollectionDinner[];
+  tagVocabularyDinners?: readonly CollectionDinner[];
   search: string;
   onSearchChange: (search: string) => void;
   selectedTags: string[];
@@ -49,6 +50,7 @@ type Props = {
 
 export const DinnerCollectionControls = ({
   dinners,
+  tagVocabularyDinners = dinners,
   search,
   onSearchChange,
   selectedTags,
@@ -161,6 +163,7 @@ export const DinnerCollectionControls = ({
           if (!open) closeTagFilter();
         }}
         dinners={dinners}
+        tagVocabularyDinners={tagVocabularyDinners}
         draftTags={draftTags}
         onDraftTagsChange={setDraftTags}
         tagSearch={tagSearch}
@@ -196,6 +199,7 @@ type TagFilterSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   dinners: readonly CollectionDinner[];
+  tagVocabularyDinners: readonly CollectionDinner[];
   draftTags: string[];
   onDraftTagsChange: (tags: string[]) => void;
   tagSearch: string;
@@ -207,13 +211,14 @@ const TagFilterSheet = ({
   open,
   onOpenChange,
   dinners,
+  tagVocabularyDinners,
   draftTags,
   onDraftTagsChange,
   tagSearch,
   onTagSearchChange,
   onApply,
 }: TagFilterSheetProps) => {
-  const groups = buildDinnerTagGroups(dinners, draftTags);
+  const groups = buildDinnerTagGroups(tagVocabularyDinners, draftTags);
   const mostUsed = groups.mostUsed.filter((tag) =>
     matchesDinnerCollectionText(tag.value, tagSearch),
   );

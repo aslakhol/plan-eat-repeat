@@ -105,6 +105,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
       {dinnersQuery.isSuccess && (
         <DinnerCollectionControls
           dinners={collection.availableDinners}
+          tagVocabularyDinners={dinnersQuery.data.dinners}
           search={search}
           onSearchChange={setSearch}
           selectedTags={selectedTags}
@@ -130,8 +131,10 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
             icon={<AlertCircle className="text-destructive size-6" />}
             title="Couldn't load Cookbook"
             body="Check your connection and try again."
-            actionLabel="Try again"
-            onAction={() => void dinnersQuery.refetch()}
+            action={{
+              label: "Try again",
+              onClick: () => void dinnersQuery.refetch(),
+            }}
           />
         ) : collection.dinners.length > 0 ? (
           <div className="flex flex-col gap-2">
@@ -159,10 +162,12 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
           <PickerMessage
             title="No dinners match"
             body="Try another search or clear the selected tags."
-            actionLabel="Clear filters"
-            onAction={() => {
-              setSearch("");
-              setSelectedTags([]);
+            action={{
+              label: "Clear filters",
+              onClick: () => {
+                setSearch("");
+                setSelectedTags([]);
+              },
             }}
           />
         )}
@@ -183,6 +188,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
             href={buildCreateDinnerEditorHref({
               origin: "week",
               date: planSlotDateFromDate(date),
+              mode: "manual",
             })}
           >
             New dinner
@@ -221,11 +227,12 @@ const DinnerChoice = ({
   onChoose: () => void;
   disabled: boolean;
 }) => (
-  <button
+  <Button
     type="button"
+    variant="secondary"
     disabled={disabled}
     onClick={onChoose}
-    className="bg-secondary/70 hover:bg-secondary flex w-full items-baseline gap-3 rounded-xl px-3.5 py-3 text-left transition-colors disabled:opacity-60"
+    className="bg-secondary/70 hover:bg-secondary h-auto w-full items-baseline justify-start gap-3 whitespace-normal rounded-xl px-3.5 py-3 text-left font-normal"
   >
     <span className="min-w-0 flex-1 truncate font-serif text-[15px] leading-tight">
       {dinner.name}
@@ -242,29 +249,30 @@ const DinnerChoice = ({
         currentWeekPlanDates: dinner.currentWeekPlanDates,
       })}
     </span>
-  </button>
+  </Button>
 );
 
 const PickerMessage = ({
   icon,
   title,
   body,
-  actionLabel,
-  onAction,
+  action,
 }: {
   icon?: ReactNode;
   title: string;
   body: string;
-  actionLabel?: string;
-  onAction?: () => void;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }) => (
   <div className="mx-auto flex h-full max-w-sm flex-col items-center justify-center gap-3 px-4 text-center">
     {icon}
     <h2 className="font-serif text-xl">{title}</h2>
     <p className="text-muted-foreground text-sm">{body}</p>
-    {actionLabel && onAction && (
-      <Button type="button" variant="outline" onClick={onAction}>
-        {actionLabel}
+    {action && (
+      <Button type="button" variant="outline" onClick={action.onClick}>
+        {action.label}
       </Button>
     )}
   </div>
