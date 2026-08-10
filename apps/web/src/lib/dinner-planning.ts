@@ -47,3 +47,8 @@ export const formatDinnerPlanningConfirmation = (
   dinnerName: string,
   date: Date,
 ) => `${dinnerName} → ${formatFullDate(date)}`;
+
+export const pickSurpriseDinner = <Dinner>(
+  dinners: readonly Dinner[],
+  random: () => number = Math.random,
+) => dinners[Math.floor(random() * dinners.length)];

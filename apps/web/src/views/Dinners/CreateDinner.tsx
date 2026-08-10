@@ -149,7 +149,9 @@ export const CreateDinner = () => {
 
   const createMutation = api.dinner.create.useMutation({
     onSuccess: async (result) => {
-      toast({ title: `${result.dinner.name} created` });
+      if (!navigation.date) {
+        toast({ title: `${result.dinner.name} created` });
+      }
       await Promise.all([
         utils.dinner.summaries.invalidate(),
         utils.dinner.tags.invalidate(),
