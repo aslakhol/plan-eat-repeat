@@ -54,17 +54,6 @@ export const urlImportPhases = (url: string) => [
   "Structuring it",
 ];
 
-export const importPhases = (
-  source: RecipeImportSource,
-  url = "",
-): string[] => {
-  if (source === "photos") {
-    return ["Reading the photos", "Reading the recipe", "Structuring it"];
-  }
-  if (source === "text") return ["Reading the recipe", "Structuring it"];
-  return urlImportPhases(url);
-};
-
 export const urlImportErrorCopy = (
   code: ImportRecipeErrorCode,
   url: string,
@@ -114,36 +103,61 @@ export const importErrorCopy = (
   code: ImportRecipeErrorCode,
   source: RecipeImportSource,
   url = "",
-): UrlImportErrorCopy => {
-  if (source === "link" || source === "youtube") {
-    return urlImportErrorCopy(code, url);
-  }
+): UrlImportErrorCopy => importSourceCopy[source].error(code, url);
 
+const retainedInputErrorCopy = (
+  code: ImportRecipeErrorCode,
+  inputName: "photos" | "text",
+): UrlImportErrorCopy => {
   const retainedInput =
-    source === "photos"
+    inputName === "photos"
       ? "Your selected photos are still here."
       : "Your text is still here.";
-
   if (code === "NO_RECIPE_FOUND") {
     return {
       title: "Couldn't find a recipe",
-      body:
-        source === "photos"
-          ? `These photos don't seem to contain a readable recipe. ${retainedInput}`
-          : `This text doesn't seem to contain a readable recipe. ${retainedInput}`,
+      body: `${inputName === "photos" ? "These photos don't" : "This text doesn't"} seem to contain a readable recipe. ${retainedInput}`,
     };
   }
-
   return {
     title:
       code === "EXTRACTION_FAILED"
         ? "Couldn't finish the recipe"
-        : source === "photos"
-          ? "Couldn't read the photos"
-          : "Couldn't read the text",
+        : `Couldn't read the ${inputName}`,
     body:
       code === "EXTRACTION_FAILED"
         ? `Something went wrong while structuring it. ${retainedInput}`
         : `We couldn't read enough of this source to make a recipe. ${retainedInput}`,
   };
 };
+
+const urlSourceCopy = {
+  phases: urlImportPhases,
+  error: urlImportErrorCopy,
+};
+
+const importSourceCopy: Record<
+  RecipeImportSource,
+  {
+    phases: (url: string) => string[];
+    error: (code: ImportRecipeErrorCode, url: string) => UrlImportErrorCopy;
+  }
+> = {
+  link: urlSourceCopy,
+  youtube: urlSourceCopy,
+  photos: {
+    phases: () => [
+      "Reading the photos",
+      "Reading the recipe",
+      "Structuring it",
+    ],
+    error: (code) => retainedInputErrorCopy(code, "photos"),
+  },
+  text: {
+    phases: () => ["Reading the recipe", "Structuring it"],
+    error: (code) => retainedInputErrorCopy(code, "text"),
+  },
+};
+
+export const importPhases = (source: RecipeImportSource, url = ""): string[] =>
+  importSourceCopy[source].phases(url);

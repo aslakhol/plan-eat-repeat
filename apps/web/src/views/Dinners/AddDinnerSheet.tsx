@@ -66,11 +66,68 @@ type Props = {
 };
 
 type Screen = "choose" | "url" | "photos" | "text" | "loading" | "error";
+type SourceScreen = Extract<Screen, "url" | "photos" | "text">;
 type ImportFailure = {
   code: ReturnType<typeof importErrorCodeFromUnknown>;
 };
 
-const importSources = ["Link", "YouTube video", "Photos", "Text"] as const;
+type ImportInput = {
+  photoCount: number;
+  text: string;
+  url: string | null;
+};
+
+const urlInputReady = ({ url }: ImportInput) => url !== null;
+const urlLoadingLabel = ({ url }: ImportInput) =>
+  url && isYouTubeVideoUrl(url) ? "YouTube video" : url ? sourceLabel(url) : "";
+
+const sourceDefinitions: Record<
+  RecipeImportSource,
+  {
+    label: string;
+    screen: SourceScreen;
+    createsSourceLink: boolean;
+    inputReady: (input: ImportInput) => boolean;
+    loadingLabel: (input: ImportInput) => string;
+  }
+> = {
+  link: {
+    label: "Link",
+    screen: "url",
+    createsSourceLink: true,
+    inputReady: urlInputReady,
+    loadingLabel: urlLoadingLabel,
+  },
+  youtube: {
+    label: "YouTube video",
+    screen: "url",
+    createsSourceLink: true,
+    inputReady: urlInputReady,
+    loadingLabel: urlLoadingLabel,
+  },
+  photos: {
+    label: "Photos",
+    screen: "photos",
+    createsSourceLink: false,
+    inputReady: ({ photoCount }) => photoCount > 0,
+    loadingLabel: ({ photoCount }) =>
+      `${photoCount} ${photoCount === 1 ? "photo" : "photos"}`,
+  },
+  text: {
+    label: "Text",
+    screen: "text",
+    createsSourceLink: false,
+    inputReady: ({ text }) => text.trim().length > 0,
+    loadingLabel: () => "Pasted or typed text",
+  },
+};
+
+const importSourceOrder: RecipeImportSource[] = [
+  "link",
+  "youtube",
+  "photos",
+  "text",
+];
 
 function RecipeActionRow({
   children,
@@ -231,12 +288,9 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
 
   const beginImport = async () => {
     const sourceUrl = validUrlOrNull(url);
-    if (
-      screen === "loading" ||
-      ((source === "link" || source === "youtube") && !sourceUrl) ||
-      (source === "photos" && photos.length === 0) ||
-      (source === "text" && text.trim().length === 0)
-    ) {
+    const importInput = { photoCount: photos.length, text, url: sourceUrl };
+    const definition = sourceDefinitions[source];
+    if (screen === "loading" || !definition.inputReady(importInput)) {
       return;
     }
 
@@ -246,17 +300,7 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
     abortControllerRef.current = controller;
     const phases = importPhases(source, sourceUrl ?? "");
     setSubmittedUrl(sourceUrl ?? "");
-    setLoadingSource(
-      source === "photos"
-        ? `${photos.length} ${photos.length === 1 ? "photo" : "photos"}`
-        : source === "text"
-          ? "Pasted or typed text"
-          : sourceUrl && isYouTubeVideoUrl(sourceUrl)
-            ? "YouTube video"
-            : sourceUrl
-              ? sourceLabel(sourceUrl)
-              : "",
-    );
+    setLoadingSource(definition.loadingLabel(importInput));
     setImportError(null);
     setLoadingStep(0);
     setScreen("loading");
@@ -276,26 +320,34 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
     }
 
     try {
-      const result =
-        source === "photos"
-          ? await utils.client.dinner.importFromImages.mutate(
-              {
-                images: photos.map(({ data, mimeType }) => ({
-                  data,
-                  mimeType,
-                })),
-              },
-              { signal: controller.signal },
-            )
-          : source === "text"
-            ? await utils.client.dinner.importFromText.mutate(
-                { text: text.trim() },
-                { signal: controller.signal },
-              )
-            : await utils.client.dinner.importFromUrl.mutate(
-                { url: sourceUrl! },
-                { signal: controller.signal },
-              );
+      const importUrl = () =>
+        utils.client.dinner.importFromUrl.mutate(
+          { url: sourceUrl! },
+          { signal: controller.signal },
+        );
+      const importers: Record<
+        RecipeImportSource,
+        () => Promise<{
+          name: string;
+          recipe: Parameters<typeof editorValuesFromRecipeInput>[0]["recipe"];
+        }>
+      > = {
+        link: importUrl,
+        youtube: importUrl,
+        photos: () =>
+          utils.client.dinner.importFromImages.mutate(
+            {
+              images: photos.map(({ data, mimeType }) => ({ data, mimeType })),
+            },
+            { signal: controller.signal },
+          ),
+        text: () =>
+          utils.client.dinner.importFromText.mutate(
+            { text: text.trim() },
+            { signal: controller.signal },
+          ),
+      };
+      const result = await importers[source]();
       if (controller.signal.aborted || importAttemptRef.current !== attempt) {
         return;
       }
@@ -306,7 +358,7 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
         values: editorValuesFromRecipeInput({
           name: typedName ?? result.name,
           recipe: result.recipe,
-          ...((source === "link" || source === "youtube") && sourceUrl
+          ...(definition.createsSourceLink && sourceUrl
             ? { link: sourceUrl }
             : {}),
         }),
@@ -326,8 +378,7 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
     }
   };
 
-  const sourceScreen = (): Screen =>
-    source === "photos" ? "photos" : source === "text" ? "text" : "url";
+  const sourceScreen = () => sourceDefinitions[source].screen;
 
   const cancelImport = () => {
     importAttemptRef.current += 1;
@@ -361,7 +412,7 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
     onOpenChange(nextOpen);
   };
 
-  const sourceTitle = source === "youtube" ? "YouTube video" : "Link";
+  const sourceTitle = sourceDefinitions[source].label;
   const validUrl = validUrlOrNull(url);
   const errorCopy = importError
     ? importErrorCopy(importError.code, source, submittedUrl)
@@ -435,29 +486,15 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
                 Import a recipe
               </p>
               <div className="space-y-2">
-                {importSources.map((importSource) => (
+                {importSourceOrder.map((importSource) => (
                   <RecipeActionRow
                     key={importSource}
                     onClick={() => {
-                      const selectedSource: RecipeImportSource =
-                        importSource === "Link"
-                          ? "link"
-                          : importSource === "YouTube video"
-                            ? "youtube"
-                            : importSource === "Photos"
-                              ? "photos"
-                              : "text";
-                      setSource(selectedSource);
-                      setScreen(
-                        selectedSource === "photos"
-                          ? "photos"
-                          : selectedSource === "text"
-                            ? "text"
-                            : "url",
-                      );
+                      setSource(importSource);
+                      setScreen(sourceDefinitions[importSource].screen);
                     }}
                   >
-                    {importSource}
+                    {sourceDefinitions[importSource].label}
                   </RecipeActionRow>
                 ))}
               </div>
