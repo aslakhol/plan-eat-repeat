@@ -51,10 +51,8 @@ import {
   ResponsiveModalTitle,
 } from "~/components/ResponsiveModal";
 import { type RecipeEditorValues } from "~/views/Dinners/RecipeEditor";
-import {
-  editorValuesFromRecipeInput,
-  type ExistingDinnerRecipeImport,
-} from "~/lib/existing-dinner-import";
+import { type ExistingDinnerRecipeImport } from "~/lib/existing-dinner-import";
+import { editorValuesFromRecipeInput } from "~/lib/recipe-editor-values";
 import {
   type DinnerCreationNavigation,
   useDinnerCreation,

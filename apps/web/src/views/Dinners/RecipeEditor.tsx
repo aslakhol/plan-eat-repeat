@@ -39,9 +39,9 @@ import { AddDinnerSheet } from "./AddDinnerSheet";
 import {
   applyExistingDinnerImport,
   clearExistingDinnerRecipe,
-  editorIngredientValues,
   type ExistingDinnerRecipeImport,
 } from "~/lib/existing-dinner-import";
+import { editorIngredientValues } from "~/lib/recipe-editor-values";
 
 // Amounts are edited as text so comma decimals like "1,5" can be typed;
 // parseAmount converts back to a number on save.

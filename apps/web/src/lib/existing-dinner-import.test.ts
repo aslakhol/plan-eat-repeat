@@ -5,10 +5,10 @@ import type { RecipeInput } from "@planeatrepeat/shared";
 import {
   applyExistingDinnerImport,
   clearExistingDinnerRecipe,
-  type ExistingDinnerEditorValues,
 } from "./existing-dinner-import";
+import type { RecipeEditorDraftValues } from "./recipe-editor-values";
 
-const existing: ExistingDinnerEditorValues = {
+const existing: RecipeEditorDraftValues = {
   name: "Taco night",
   tags: ["Quick", "Family"],
   newTag: "",
