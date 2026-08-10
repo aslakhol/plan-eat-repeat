@@ -187,7 +187,9 @@ export const DinnerDetail = () => {
               dinnerId={dinner.id}
               isPending={deleteMutation.isPending}
               onDelete={() => {
-                posthog.capture("delete dinner", { dinnerName: dinner.name });
+                posthog.capture("delete dinner", {
+                  dinnerName: dinner.name,
+                });
                 deleteMutation.mutate({ dinnerId: dinner.id });
               }}
               trigger={
@@ -207,7 +209,21 @@ export const DinnerDetail = () => {
           </div>
         </details>
       }
-      onEdit={() => setEditing(true)}
+      footerActions={
+        <>
+          <Button type="button" variant="outline" className="bg-white">
+            Plan this dinner
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="bg-white"
+            onClick={() => setEditing(true)}
+          >
+            Edit
+          </Button>
+        </>
+      }
     />
   );
 };
