@@ -41,12 +41,18 @@ export const importRecipeFromUrl = async (
 export const importRecipeFromText = async (
   text: string,
   instructions?: string | null,
+  signal?: AbortSignal,
 ): Promise<ExtractResult> =>
-  extractOrThrow([{ type: "text", text: trimForModel(text) }], instructions);
+  extractOrThrow(
+    [{ type: "text", text: trimForModel(text) }],
+    instructions,
+    signal,
+  );
 
 export const importRecipeFromImages = async (
   images: Array<{ data: string; mimeType: string }>,
   instructions?: string | null,
+  signal?: AbortSignal,
 ): Promise<ExtractResult> =>
   extractOrThrow(
     images.map((image) => ({
@@ -55,6 +61,7 @@ export const importRecipeFromImages = async (
       mimeType: image.mimeType,
     })),
     instructions,
+    signal,
   );
 
 const extractOrThrow = async (

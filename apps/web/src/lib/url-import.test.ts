@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { validUrlOrNull } from "@planeatrepeat/shared";
 import {
+  importErrorCopy,
   importNameConflict,
+  importPhases,
   urlImportErrorCopy,
   urlImportPhases,
 } from "./url-import";
@@ -60,4 +62,27 @@ void test("typed import errors use plain source-specific copy", () => {
       body: "This video doesn't seem to include a readable recipe.",
     },
   );
+});
+
+void test("photo and text imports expose source-specific progress", () => {
+  assert.deepEqual(importPhases("photos"), [
+    "Reading the photos",
+    "Reading the recipe",
+    "Structuring it",
+  ]);
+  assert.deepEqual(importPhases("text"), [
+    "Reading the recipe",
+    "Structuring it",
+  ]);
+});
+
+void test("photo and text errors promise to retain their submitted input", () => {
+  assert.deepEqual(importErrorCopy("NO_RECIPE_FOUND", "photos"), {
+    title: "Couldn't find a recipe",
+    body: "These photos don't seem to contain a readable recipe. Your selected photos are still here.",
+  });
+  assert.deepEqual(importErrorCopy("EXTRACTION_FAILED", "text"), {
+    title: "Couldn't finish the recipe",
+    body: "Something went wrong while structuring it. Your text is still here.",
+  });
 });

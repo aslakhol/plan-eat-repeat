@@ -7,16 +7,20 @@ import {
 } from "react";
 import { useRouter } from "next/router";
 import {
+  Camera,
   Check,
   ChevronRight,
   Circle,
+  Image as ImageIcon,
   Loader2,
   Plus,
   UtensilsCrossed,
+  X,
 } from "lucide-react";
 import {
   dinnerNameSchema,
   isYouTubeVideoUrl,
+  MAX_RECIPE_IMPORT_IMAGES,
   sourceLabel,
   validUrlOrNull,
 } from "@planeatrepeat/shared";
@@ -24,19 +28,21 @@ import {
 import { api } from "~/utils/api";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
 import { cn } from "~/lib/utils";
 import {
   buildCreateDinnerEditorHref,
   editorSaveNavigation,
   planSlotDateFromString,
-  type EditorImportSource,
 } from "~/lib/editor-navigation";
 import {
+  importErrorCopy,
   importErrorCodeFromUnknown,
   importNameConflict,
-  urlImportErrorCopy,
-  urlImportPhases,
+  importPhases,
+  type RecipeImportSource,
 } from "~/lib/url-import";
+import { appendPreparedPhotos, type PreparedPhoto } from "~/lib/photo-import";
 import {
   ResponsiveModal,
   ResponsiveModalContent,
@@ -59,7 +65,7 @@ type Props = {
   navigation: DinnerCreationNavigation;
 };
 
-type Screen = "choose" | "url" | "loading" | "error";
+type Screen = "choose" | "url" | "photos" | "text" | "loading" | "error";
 type ImportFailure = {
   code: ReturnType<typeof importErrorCodeFromUnknown>;
 };
@@ -96,13 +102,19 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
   const utils = api.useUtils();
   const { setImportedDraft } = useDinnerCreation();
   const inputRef = useRef<HTMLInputElement>(null);
+  const libraryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const importAttemptRef = useRef(0);
-  const clipboardSourceRef = useRef<EditorImportSource | null>(null);
+  const clipboardSourceRef = useRef<RecipeImportSource | null>(null);
   const [screen, setScreen] = useState<Screen>("choose");
-  const [source, setSource] = useState<EditorImportSource>("link");
+  const [source, setSource] = useState<RecipeImportSource>("link");
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
+  const [text, setText] = useState("");
+  const [photos, setPhotos] = useState<PreparedPhoto[]>([]);
+  const [preparingPhotos, setPreparingPhotos] = useState(false);
+  const [photoInputError, setPhotoInputError] = useState<string | null>(null);
   const [submittedUrl, setSubmittedUrl] = useState("");
   const [loadingSource, setLoadingSource] = useState("");
   const [loadingStep, setLoadingStep] = useState(0);
@@ -125,6 +137,10 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
       setScreen("choose");
       setName("");
       setUrl("");
+      setText("");
+      setPhotos([]);
+      setPreparingPhotos(false);
+      setPhotoInputError(null);
       setSubmittedUrl("");
       setImportError(null);
       setValidationError(null);
@@ -213,28 +229,33 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
     );
   };
 
-  const continueInExistingCreateFlow = () => {
-    onOpenChange(false);
-    void router.push(
-      buildCreateDinnerEditorHref({
-        ...navigation,
-        ...(name.trim() ? { name } : {}),
-      }),
-    );
-  };
-
-  const beginUrlImport = async () => {
+  const beginImport = async () => {
     const sourceUrl = validUrlOrNull(url);
-    if (!sourceUrl || screen === "loading") return;
+    if (
+      screen === "loading" ||
+      ((source === "link" || source === "youtube") && !sourceUrl) ||
+      (source === "photos" && photos.length === 0) ||
+      (source === "text" && text.trim().length === 0)
+    ) {
+      return;
+    }
 
     const attempt = importAttemptRef.current + 1;
     importAttemptRef.current = attempt;
     const controller = new AbortController();
     abortControllerRef.current = controller;
-    const phases = urlImportPhases(sourceUrl);
-    setSubmittedUrl(sourceUrl);
+    const phases = importPhases(source, sourceUrl ?? "");
+    setSubmittedUrl(sourceUrl ?? "");
     setLoadingSource(
-      isYouTubeVideoUrl(sourceUrl) ? "YouTube video" : sourceLabel(sourceUrl),
+      source === "photos"
+        ? `${photos.length} ${photos.length === 1 ? "photo" : "photos"}`
+        : source === "text"
+          ? "Pasted or typed text"
+          : sourceUrl && isYouTubeVideoUrl(sourceUrl)
+            ? "YouTube video"
+            : sourceUrl
+              ? sourceLabel(sourceUrl)
+              : "",
     );
     setImportError(null);
     setLoadingStep(0);
@@ -243,7 +264,7 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
       setLoadingStep((current) => Math.min(current + 1, phases.length - 1));
     }, 3_000);
 
-    if (isYouTubeVideoUrl(sourceUrl)) {
+    if (sourceUrl && isYouTubeVideoUrl(sourceUrl)) {
       void utils.client.dinner.youtubeVideoTitle
         .query({ url: sourceUrl }, { signal: controller.signal })
         .then(({ title }) => {
@@ -255,10 +276,26 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
     }
 
     try {
-      const result = await utils.client.dinner.importFromUrl.mutate(
-        { url: sourceUrl },
-        { signal: controller.signal },
-      );
+      const result =
+        source === "photos"
+          ? await utils.client.dinner.importFromImages.mutate(
+              {
+                images: photos.map(({ data, mimeType }) => ({
+                  data,
+                  mimeType,
+                })),
+              },
+              { signal: controller.signal },
+            )
+          : source === "text"
+            ? await utils.client.dinner.importFromText.mutate(
+                { text: text.trim() },
+                { signal: controller.signal },
+              )
+            : await utils.client.dinner.importFromUrl.mutate(
+                { url: sourceUrl! },
+                { signal: controller.signal },
+              );
       if (controller.signal.aborted || importAttemptRef.current !== attempt) {
         return;
       }
@@ -269,7 +306,9 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
         values: editorValuesFromRecipeInput({
           name: typedName ?? result.name,
           recipe: result.recipe,
-          link: result.sourceUrl,
+          ...((source === "link" || source === "youtube") && sourceUrl
+            ? { link: sourceUrl }
+            : {}),
         }),
         importedNameAlternative: importNameConflict(typedName, result.name),
       });
@@ -287,22 +326,45 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
     }
   };
 
-  const cancelUrlImport = () => {
+  const sourceScreen = (): Screen =>
+    source === "photos" ? "photos" : source === "text" ? "text" : "url";
+
+  const cancelImport = () => {
     importAttemptRef.current += 1;
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
-    setScreen("url");
+    setScreen(sourceScreen());
+  };
+
+  const onPhotoFilesSelected = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    setPreparingPhotos(true);
+    setPhotoInputError(null);
+    try {
+      const result = await appendPreparedPhotos(photos, Array.from(files));
+      setPhotos(result.photos);
+      setPhotoInputError(result.notice);
+    } catch (error) {
+      setPhotoInputError(
+        error instanceof Error
+          ? error.message
+          : "Could not prepare that photo.",
+      );
+    } finally {
+      setPreparingPhotos(false);
+    }
   };
 
   const requestOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen && screen === "loading") return;
+    if (!nextOpen && (screen === "loading" || screen === "error")) return;
     onOpenChange(nextOpen);
   };
 
   const sourceTitle = source === "youtube" ? "YouTube video" : "Link";
   const validUrl = validUrlOrNull(url);
   const errorCopy = importError
-    ? urlImportErrorCopy(importError.code, submittedUrl)
+    ? importErrorCopy(importError.code, source, submittedUrl)
     : null;
 
   return (
@@ -310,7 +372,10 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
       <ResponsiveModalContent
         className={cn(
           "gap-0 bg-white",
-          screen === "choose" || screen === "url"
+          screen === "choose" ||
+            screen === "url" ||
+            screen === "photos" ||
+            screen === "text"
             ? "h-auto max-h-[calc(100dvh-1rem)] overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 md:max-w-lg md:p-6"
             : "bg-background inset-0 h-dvh max-h-none w-full max-w-none rounded-none border-0 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-12 md:max-w-none",
         )}
@@ -374,15 +439,22 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
                   <RecipeActionRow
                     key={importSource}
                     onClick={() => {
-                      if (
-                        importSource === "Link" ||
-                        importSource === "YouTube video"
-                      ) {
-                        setSource(importSource === "Link" ? "link" : "youtube");
-                        setScreen("url");
-                      } else {
-                        continueInExistingCreateFlow();
-                      }
+                      const selectedSource: RecipeImportSource =
+                        importSource === "Link"
+                          ? "link"
+                          : importSource === "YouTube video"
+                            ? "youtube"
+                            : importSource === "Photos"
+                              ? "photos"
+                              : "text";
+                      setSource(selectedSource);
+                      setScreen(
+                        selectedSource === "photos"
+                          ? "photos"
+                          : selectedSource === "text"
+                            ? "text"
+                            : "url",
+                      );
                     }}
                   >
                     {importSource}
@@ -412,7 +484,7 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
               className="space-y-3"
               onSubmit={(event) => {
                 event.preventDefault();
-                void beginUrlImport();
+                void beginImport();
               }}
             >
               <label htmlFor="recipe-import-url" className="sr-only">
@@ -444,6 +516,200 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
               </Button>
             </form>
           </>
+        ) : screen === "photos" ? (
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-muted-foreground -ml-2 w-fit px-2"
+              onClick={() => setScreen("choose")}
+            >
+              ‹ Add a dinner
+            </Button>
+            <h2 className="mb-5 mt-6 font-serif text-4xl">Photos</h2>
+            <p
+              id="photo-import-limit"
+              className="text-muted-foreground mb-4 text-sm"
+            >
+              Choose up to {MAX_RECIPE_IMPORT_IMAGES} photos. They’ll be read in
+              the order shown.
+            </p>
+
+            <input
+              ref={libraryInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              aria-label="Choose recipe photos"
+              onChange={(event) => {
+                void onPhotoFilesSelected(event.currentTarget.files);
+                event.currentTarget.value = "";
+              }}
+            />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              aria-label="Take a recipe photo"
+              onChange={(event) => {
+                void onPhotoFilesSelected(event.currentTarget.files);
+                event.currentTarget.value = "";
+              }}
+            />
+
+            {photos.length === 0 ? (
+              <button
+                type="button"
+                disabled={preparingPhotos}
+                aria-describedby="photo-import-limit"
+                className="border-border text-muted-foreground hover:bg-accent flex h-44 w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed bg-white font-semibold disabled:opacity-60"
+                onClick={() => libraryInputRef.current?.click()}
+              >
+                <Plus className="size-8" />
+                No photos yet
+              </button>
+            ) : (
+              <div
+                className="grid grid-cols-3 gap-3"
+                aria-label="Selected photos"
+              >
+                {photos.map((photo, index) => (
+                  <div
+                    key={`${photo.previewUrl.slice(-24)}-${index}`}
+                    className="relative aspect-[3/4] min-w-0"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photo.previewUrl}
+                      alt={`Recipe photo ${index + 1} of ${photos.length}`}
+                      className="border-border size-full rounded-lg border object-cover"
+                    />
+                    <button
+                      type="button"
+                      aria-label={`Remove recipe photo ${index + 1}`}
+                      disabled={preparingPhotos}
+                      className="bg-foreground/70 text-background absolute right-2 top-2 flex size-8 items-center justify-center rounded-full disabled:opacity-60"
+                      onClick={() => {
+                        setPhotos((current) =>
+                          current.filter(
+                            (_, photoIndex) => photoIndex !== index,
+                          ),
+                        );
+                        setPhotoInputError(null);
+                      }}
+                    >
+                      <X className="size-5" />
+                    </button>
+                  </div>
+                ))}
+                {photos.length < MAX_RECIPE_IMPORT_IMAGES && (
+                  <button
+                    type="button"
+                    aria-label="Add more recipe photos"
+                    aria-describedby="photo-import-limit"
+                    disabled={preparingPhotos}
+                    className="border-border text-muted-foreground hover:bg-accent flex aspect-[3/4] items-center justify-center rounded-lg border border-dashed bg-white disabled:opacity-60"
+                    onClick={() => libraryInputRef.current?.click()}
+                  >
+                    <Plus className="size-8" />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {preparingPhotos && (
+              <p className="text-muted-foreground mt-3 flex items-center gap-2 text-sm">
+                <Loader2 className="size-4 animate-spin" />
+                Preparing photos…
+              </p>
+            )}
+            {photos.length === MAX_RECIPE_IMPORT_IMAGES && !photoInputError && (
+              <p role="status" className="text-muted-foreground mt-3 text-sm">
+                Maximum {MAX_RECIPE_IMPORT_IMAGES} photos selected.
+              </p>
+            )}
+            {photoInputError && (
+              <p role="alert" className="text-destructive mt-3 text-sm">
+                {photoInputError}
+              </p>
+            )}
+
+            {photos.length === 0 && (
+              <div className="mt-4 space-y-3">
+                <Button
+                  type="button"
+                  className="h-12 w-full text-base"
+                  disabled={preparingPhotos}
+                  onClick={() => libraryInputRef.current?.click()}
+                >
+                  <ImageIcon className="size-5" />
+                  Choose photos
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-12 w-full bg-white text-base"
+                  disabled={preparingPhotos}
+                  onClick={() => cameraInputRef.current?.click()}
+                >
+                  <Camera className="size-5" />
+                  Take a photo
+                </Button>
+              </div>
+            )}
+            {photos.length > 0 && (
+              <Button
+                type="button"
+                className="mt-5 h-12 w-full text-base"
+                disabled={preparingPhotos}
+                onClick={() => void beginImport()}
+              >
+                Import recipe
+              </Button>
+            )}
+          </>
+        ) : screen === "text" ? (
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-muted-foreground -ml-2 w-fit px-2"
+              onClick={() => setScreen("choose")}
+            >
+              ‹ Add a dinner
+            </Button>
+            <h2 className="mb-7 mt-6 font-serif text-4xl">Text</h2>
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void beginImport();
+              }}
+            >
+              <label htmlFor="recipe-import-text" className="sr-only">
+                Recipe text
+              </label>
+              <Textarea
+                id="recipe-import-text"
+                value={text}
+                autoFocus
+                rows={8}
+                onChange={(event) => setText(event.target.value)}
+                className="min-h-64 resize-none rounded-lg bg-white px-4 py-4 text-base"
+                placeholder="Paste or type the recipe"
+              />
+              <Button
+                type="submit"
+                className="h-12 w-full text-base"
+                disabled={text.trim().length === 0}
+              >
+                Import recipe
+              </Button>
+            </form>
+          </>
         ) : screen === "loading" ? (
           <>
             <div className="mx-auto flex w-full max-w-sm flex-1 flex-col items-center">
@@ -458,7 +724,7 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
               </ResponsiveModalDescription>
 
               <ol className="mt-10 w-full max-w-[270px] space-y-5">
-                {urlImportPhases(submittedUrl).map((phase, index) => {
+                {importPhases(source, submittedUrl).map((phase, index) => {
                   const done = index < loadingStep;
                   const current = index === loadingStep;
                   return (
@@ -495,7 +761,7 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
               type="button"
               variant="outline"
               className="mx-auto h-12 w-full max-w-sm bg-white text-base"
-              onClick={cancelUrlImport}
+              onClick={cancelImport}
             >
               Cancel
             </Button>
@@ -517,7 +783,7 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
               <Button
                 type="button"
                 className="h-12 w-full text-base"
-                onClick={() => void beginUrlImport()}
+                onClick={() => void beginImport()}
               >
                 Try again
               </Button>
@@ -533,7 +799,7 @@ export function AddDinnerSheet({ open, onOpenChange, navigation }: Props) {
                 type="button"
                 variant="ghost"
                 className="h-12 w-full text-base"
-                onClick={() => setScreen("url")}
+                onClick={() => setScreen(sourceScreen())}
               >
                 Back
               </Button>

@@ -290,13 +290,13 @@ export const dinnerRouter = createTRPCRouter({
 
   importFromText: protectedProcedureWithHousehold
     .input(z.object({ text: z.string().trim().min(1) }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input, signal }) => {
       try {
         const instructions = await householdImportInstructions(
           ctx.db,
           ctx.householdId,
         );
-        return await importRecipeFromText(input.text, instructions);
+        return await importRecipeFromText(input.text, instructions, signal);
       } catch (error) {
         throw toImportTRPCError(error);
       }
@@ -304,13 +304,13 @@ export const dinnerRouter = createTRPCRouter({
 
   importFromImages: protectedProcedureWithHousehold
     .input(z.object({ images: imageImportSchema }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input, signal }) => {
       try {
         const instructions = await householdImportInstructions(
           ctx.db,
           ctx.householdId,
         );
-        return await importRecipeFromImages(input.images, instructions);
+        return await importRecipeFromImages(input.images, instructions, signal);
       } catch (error) {
         throw toImportTRPCError(error);
       }

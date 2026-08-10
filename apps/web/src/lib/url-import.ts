@@ -10,6 +10,8 @@ export type UrlImportErrorCopy = {
   body: string;
 };
 
+export type RecipeImportSource = "link" | "youtube" | "photos" | "text";
+
 export const importErrorCodeFromUnknown = (
   error: unknown,
 ): ImportRecipeErrorCode => {
@@ -51,6 +53,17 @@ export const urlImportPhases = (url: string) => [
   "Reading the recipe",
   "Structuring it",
 ];
+
+export const importPhases = (
+  source: RecipeImportSource,
+  url = "",
+): string[] => {
+  if (source === "photos") {
+    return ["Reading the photos", "Reading the recipe", "Structuring it"];
+  }
+  if (source === "text") return ["Reading the recipe", "Structuring it"];
+  return urlImportPhases(url);
+};
 
 export const urlImportErrorCopy = (
   code: ImportRecipeErrorCode,
@@ -95,4 +108,42 @@ export const urlImportErrorCopy = (
         body: "Something went wrong while structuring it. Your link is still here.",
       };
   }
+};
+
+export const importErrorCopy = (
+  code: ImportRecipeErrorCode,
+  source: RecipeImportSource,
+  url = "",
+): UrlImportErrorCopy => {
+  if (source === "link" || source === "youtube") {
+    return urlImportErrorCopy(code, url);
+  }
+
+  const retainedInput =
+    source === "photos"
+      ? "Your selected photos are still here."
+      : "Your text is still here.";
+
+  if (code === "NO_RECIPE_FOUND") {
+    return {
+      title: "Couldn't find a recipe",
+      body:
+        source === "photos"
+          ? `These photos don't seem to contain a readable recipe. ${retainedInput}`
+          : `This text doesn't seem to contain a readable recipe. ${retainedInput}`,
+    };
+  }
+
+  return {
+    title:
+      code === "EXTRACTION_FAILED"
+        ? "Couldn't finish the recipe"
+        : source === "photos"
+          ? "Couldn't read the photos"
+          : "Couldn't read the text",
+    body:
+      code === "EXTRACTION_FAILED"
+        ? `Something went wrong while structuring it. ${retainedInput}`
+        : `We couldn't read enough of this source to make a recipe. ${retainedInput}`,
+  };
 };
