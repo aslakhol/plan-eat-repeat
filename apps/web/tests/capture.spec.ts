@@ -145,6 +145,39 @@ async function openFirstPlannedDinner(page: Page) {
   throw new Error("The capture Household has no planned Dinner this week.");
 }
 
+async function openFirstEmptyDay(page: Page) {
+  const dayTriggers = page.getByTestId("plan-day-trigger");
+
+  for (let index = 0; index < (await dayTriggers.count()); index += 1) {
+    await dayTriggers.nth(index).click();
+    const picker = page.getByRole("dialog", { name: "Choose a Dinner" });
+    if (await picker.isVisible().catch(() => false)) return;
+    await page.keyboard.press("Escape");
+  }
+
+  throw new Error("The capture Household has no empty Plan Slot this week.");
+}
+
+async function deleteDinnerIfPresent(page: Page, dinnerName: string) {
+  await page.goto("/dinners");
+  await expect(page.getByRole("heading", { name: "Cookbook" })).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  await page.reload();
+  await page.waitForLoadState("networkidle");
+  const dinnerLink = page
+    .locator('a[href^="/dinners/"]')
+    .filter({ hasText: dinnerName })
+    .first();
+  if ((await dinnerLink.count()) === 0) return;
+
+  await dinnerLink.click();
+  await page.getByRole("button", { name: "Edit" }).click();
+  await page.locator("summary").filter({ hasText: "Editor actions" }).click();
+  await page.getByRole("button", { name: "Delete dinner" }).click();
+  await page.getByRole("button", { name: "Delete", exact: true }).click();
+  await expect(page).toHaveURL(/\/dinners$/);
+}
+
 test("capture plan screenshot", async ({ page }) => {
   await ensureSignedIn(page);
   await captureScreen(page, "/", "Week", "plan.png");
@@ -346,11 +379,15 @@ test("global quick-add opens a URL-addressed Cookbook sheet", async ({
 
     await expect(page).toHaveURL(/\/dinners\/\d+$/);
     await expect(page.locator("h1", { hasText: "Cookbook" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: dinnerName })).toBeVisible();
+    await expect(
+      page.locator("h1").filter({ hasText: dinnerName }),
+    ).toBeVisible();
 
     await page.reload();
     await expect(page.locator("h1", { hasText: "Cookbook" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: dinnerName })).toBeVisible();
+    await expect(
+      page.locator("h1").filter({ hasText: dinnerName }),
+    ).toBeVisible();
 
     await page.goBack();
     await expect(page).toHaveURL(/\/dinners$/);
@@ -370,16 +407,50 @@ test("global quick-add opens a URL-addressed Cookbook sheet", async ({
   } finally {
     // Remove the test Dinner through the same public UI so repeated capture
     // runs do not leave fixtures in the Household Cookbook.
-    await page.goto("/dinners");
+    await deleteDinnerIfPresent(page, dinnerName);
+  }
+});
+
+test("empty Plan Slot manual creation saves and opens the planned-day sheet", async ({
+  page,
+}) => {
+  await ensureSignedIn(page);
+
+  const dinnerName = `Planned manual ${Date.now()}`;
+  let cleanedUp = false;
+
+  try {
+    await openFirstEmptyDay(page);
+    await page.getByRole("button", { name: "New dinner" }).click();
+
+    await page.getByPlaceholder("What's for dinner?").fill(dinnerName);
+    await page.getByRole("button", { name: "Write it myself" }).click();
+    await expect(
+      page.getByRole("heading", { name: "New dinner" }),
+    ).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Name" })).toHaveValue(
+      dinnerName,
+    );
+
+    await page.getByRole("button", { name: "Save dinner" }).click();
+
+    await expect(page).toHaveURL(/\/?date=\d{4}-\d{2}-\d{2}$/);
+    await expect(
+      page.locator("h1").filter({ hasText: dinnerName }),
+    ).toBeVisible();
+    await expect(page.getByText("Planned Dinner actions")).toBeVisible();
+
+    await page
+      .locator("summary")
+      .filter({ hasText: "Planned Dinner actions" })
+      .click();
+    await page.getByRole("link", { name: "Edit this Dinner" }).click();
+    await page.locator("summary").filter({ hasText: "Editor actions" }).click();
+    await page.getByRole("button", { name: "Delete dinner" }).click();
+    await page.getByRole("button", { name: "Delete", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Cookbook" })).toBeVisible();
-    await page.waitForLoadState("networkidle");
-    const createdDinner = page.getByRole("link", { name: dinnerName });
-    if (await createdDinner.isVisible().catch(() => false)) {
-      await createdDinner.click();
-      await page.getByRole("button", { name: "Edit" }).click();
-      await page.getByRole("button", { name: "Delete dinner" }).click();
-      await page.getByRole("button", { name: "Delete", exact: true }).click();
-      await expect(page).toHaveURL(/\/dinners$/);
-    }
+    cleanedUp = true;
+  } finally {
+    if (!cleanedUp) await deleteDinnerIfPresent(page, dinnerName);
   }
 });

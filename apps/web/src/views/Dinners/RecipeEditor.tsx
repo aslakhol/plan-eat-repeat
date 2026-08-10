@@ -339,7 +339,7 @@ export const RecipeEditor = ({
                     <input
                       {...form.register("recipe.servings", {
                         setValueAs: (value) =>
-                          value === "" ? null : Number(value),
+                          value == null || value === "" ? null : Number(value),
                       })}
                       className="min-w-0 bg-transparent text-center font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                       type="number"

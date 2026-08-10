@@ -587,13 +587,21 @@ export function AddDinnerSheet(props: Props) {
                 className="h-16 rounded-lg bg-white px-4 text-base"
                 placeholder="https://"
                 aria-invalid={url.length > 0 && !validUrl}
-                aria-describedby="recipe-url-help"
+                aria-describedby={
+                  url.length > 0 && !validUrl
+                    ? "recipe-url-validation"
+                    : undefined
+                }
               />
-              <p id="recipe-url-help" className="text-muted-foreground text-xs">
-                {url.length > 0 && !validUrl
-                  ? "Enter a full http or https URL."
-                  : "Recipe pages and YouTube links both work here."}
-              </p>
+              {url.length > 0 && !validUrl && (
+                <p
+                  id="recipe-url-validation"
+                  role="alert"
+                  className="text-destructive text-xs"
+                >
+                  Enter a full http or https URL.
+                </p>
+              )}
               <Button
                 type="submit"
                 className="h-12 w-full text-base"
