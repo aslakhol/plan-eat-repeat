@@ -715,8 +715,8 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
   const testRun = Date.now();
   const originalName = `Issue 131 import ${testRun}`;
   const importedName = `Imported Issue 131 ${testRun}`;
-  const originalLink = "https://ours.example/recipe";
-  const importedLink = "https://source.example/recipe";
+  const originalSourceLink = "https://ours.example/recipe";
+  const importedSourceLink = "https://source.example/recipe";
   const mockedImport = JSON.stringify([
     {
       result: {
@@ -740,7 +740,7 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
                 },
               ],
             },
-            sourceUrl: importedLink,
+            sourceUrl: importedSourceLink,
           },
         },
       },
@@ -750,7 +750,9 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
   try {
     await quickAddDinner(page, originalName);
     await page.getByRole("button", { name: "Edit" }).click();
-    await page.getByRole("textbox", { name: "Recipe link" }).fill(originalLink);
+    await page
+      .getByRole("textbox", { name: "Source Link" })
+      .fill(originalSourceLink);
     await page.getByRole("button", { name: "Save dinner" }).click();
     await expect(page).toHaveURL(/\/dinners\/\d+$/);
 
@@ -772,7 +774,7 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
       await page.getByRole("button", { name: "Link" }).click();
       await page
         .getByRole("textbox", { name: "Recipe URL" })
-        .fill(importedLink);
+        .fill(importedSourceLink);
       await page.getByRole("button", { name: "Import recipe" }).click();
       await expect(
         page.getByRole("heading", { name: "Edit dinner" }),
@@ -784,7 +786,7 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
       page.getByText(`The source calls it “${importedName}”`),
     ).toBeVisible();
     await expect(
-      page.getByText(`The source link is “${importedLink}”`),
+      page.getByText(`The source link is “${importedSourceLink}”`),
     ).toBeVisible();
     await page.getByRole("button", { name: "Use theirs" }).first().click();
     await page.getByRole("button", { name: "Keep our link ✓" }).click();
@@ -792,8 +794,8 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
       importedName,
     );
     await expect(
-      page.getByRole("textbox", { name: "Recipe link" }),
-    ).toHaveValue(originalLink);
+      page.getByRole("textbox", { name: "Source Link" }),
+    ).toHaveValue(originalSourceLink);
     await expect(
       page.getByRole("spinbutton", { name: "Number of servings" }),
     ).toHaveValue("4");
@@ -817,8 +819,8 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
       importedName,
     );
     await expect(
-      page.getByRole("textbox", { name: "Recipe link" }),
-    ).toHaveValue(originalLink);
+      page.getByRole("textbox", { name: "Source Link" }),
+    ).toHaveValue(originalSourceLink);
     await expect(
       page.getByRole("spinbutton", { name: "Number of servings" }),
     ).toHaveValue("4");

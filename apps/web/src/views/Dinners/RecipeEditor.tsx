@@ -363,7 +363,7 @@ export const RecipeEditor = ({
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <FieldLabel htmlFor="recipe-link">Recipe link</FieldLabel>
+                  <FieldLabel htmlFor="recipe-link">Source Link</FieldLabel>
                   <Input
                     {...form.register("link")}
                     id="recipe-link"
