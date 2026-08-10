@@ -377,7 +377,6 @@ test("global quick-add opens a URL-addressed Cookbook sheet", async ({
     if (await createdDinner.isVisible().catch(() => false)) {
       await createdDinner.click();
       await page.getByRole("button", { name: "Edit" }).click();
-      await page.locator("summary").filter({ hasText: "Editor actions" }).click();
       await page.getByRole("button", { name: "Delete dinner" }).click();
       await page.getByRole("button", { name: "Delete", exact: true }).click();
       await expect(page).toHaveURL(/\/dinners$/);
