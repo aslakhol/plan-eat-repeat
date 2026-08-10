@@ -21,7 +21,6 @@ import {
   dinnerNameSchema,
   isYouTubeVideoUrl,
   MAX_RECIPE_IMPORT_IMAGES,
-  type RecipeInput,
   sourceLabel,
   validUrlOrNull,
 } from "@planeatrepeat/shared";
@@ -52,7 +51,10 @@ import {
   ResponsiveModalTitle,
 } from "~/components/ResponsiveModal";
 import { type RecipeEditorValues } from "~/views/Dinners/RecipeEditor";
-import { editorValuesFromRecipeInput } from "~/lib/existing-dinner-import";
+import {
+  editorValuesFromRecipeInput,
+  type ExistingDinnerRecipeImport,
+} from "~/lib/existing-dinner-import";
 import {
   type DinnerCreationNavigation,
   useDinnerCreation,
@@ -70,11 +72,7 @@ type CreateDinnerSheetProps = SharedProps & {
 
 type ExistingDinnerImportSheetProps = SharedProps & {
   mode: "existing";
-  onImported: (imported: {
-    name: string;
-    recipe: RecipeInput;
-    sourceLink: string | null;
-  }) => void;
+  onImported: (imported: ExistingDinnerRecipeImport) => void;
 };
 
 type Props = CreateDinnerSheetProps | ExistingDinnerImportSheetProps;
@@ -170,10 +168,27 @@ function RecipeActionRow({
 
 export function AddDinnerSheet(props: Props) {
   const { open, onOpenChange } = props;
-  const existingDinnerImport = props.mode === "existing";
-  const navigation: DinnerCreationNavigation = existingDinnerImport
-    ? { origin: "cookbook" }
-    : props.navigation;
+  const flow =
+    props.mode === "existing"
+      ? {
+          chooserTitle: "Import a recipe",
+          chooserDescription:
+            "Choose a source to replace this Dinner's Recipe draft.",
+          sourceBackLabel: "Import a recipe",
+          showNameEntry: false,
+          navigation: { origin: "cookbook" } as DinnerCreationNavigation,
+          onImported: props.onImported,
+        }
+      : {
+          chooserTitle: "Add a dinner",
+          chooserDescription:
+            "Quick-add a Name-only Dinner or continue to Recipe creation.",
+          sourceBackLabel: "Add a dinner",
+          showNameEntry: true,
+          navigation: props.navigation,
+          onImported: null,
+        };
+  const { navigation } = flow;
   const router = useRouter();
   const utils = api.useUtils();
   const { setImportedDraft } = useDinnerCreation();
@@ -294,7 +309,7 @@ export function AddDinnerSheet(props: Props) {
     values: RecipeEditorValues;
     importedNameAlternative: string | null;
   }) => {
-    if (existingDinnerImport) {
+    if (flow.onImported) {
       onOpenChange(false);
       return;
     }
@@ -377,8 +392,8 @@ export function AddDinnerSheet(props: Props) {
 
       const typedName = name.trim() || undefined;
       setLoadingStep(phases.length);
-      if (existingDinnerImport) {
-        props.onImported({
+      if (flow.onImported) {
+        flow.onImported({
           name: result.name,
           recipe: result.recipe,
           sourceLink:
@@ -392,7 +407,7 @@ export function AddDinnerSheet(props: Props) {
           name: typedName ?? result.name,
           recipe: result.recipe,
           ...(definition.createsSourceLink && sourceUrl
-            ? { link: sourceUrl }
+            ? { sourceLink: sourceUrl }
             : {}),
         }),
         importedNameAlternative: importNameConflict(typedName, result.name),
@@ -468,16 +483,14 @@ export function AddDinnerSheet(props: Props) {
           <>
             <ResponsiveModalHeader className="mb-5 text-center">
               <ResponsiveModalTitle className="font-serif text-xl font-normal">
-                {existingDinnerImport ? "Import a recipe" : "Add a dinner"}
+                {flow.chooserTitle}
               </ResponsiveModalTitle>
               <ResponsiveModalDescription className="sr-only">
-                {existingDinnerImport
-                  ? "Choose a source to replace this Dinner's Recipe draft."
-                  : "Quick-add a Name-only Dinner or continue to Recipe creation."}
+                {flow.chooserDescription}
               </ResponsiveModalDescription>
             </ResponsiveModalHeader>
 
-            {!existingDinnerImport && (
+            {flow.showNameEntry && (
               <form onSubmit={submitNameOnly} className="space-y-2">
                 <div className="grid grid-cols-[minmax(0,1fr)_3.25rem] gap-2">
                   <Input
@@ -518,8 +531,8 @@ export function AddDinnerSheet(props: Props) {
               </form>
             )}
 
-            <div className={existingDinnerImport ? undefined : "mt-6"}>
-              {!existingDinnerImport && (
+            <div className={flow.showNameEntry ? "mt-6" : undefined}>
+              {flow.showNameEntry && (
                 <p className="text-muted-foreground mb-2 text-xs font-bold uppercase tracking-[0.12em]">
                   Import a recipe
                 </p>
@@ -553,7 +566,7 @@ export function AddDinnerSheet(props: Props) {
               className="text-muted-foreground -ml-2 w-fit px-2"
               onClick={() => setScreen("choose")}
             >
-              ‹ {existingDinnerImport ? "Import a recipe" : "Add a dinner"}
+              ‹ {flow.sourceBackLabel}
             </Button>
             <h2 className="mb-7 mt-6 font-serif text-4xl">{sourceTitle}</h2>
             <form
@@ -600,7 +613,7 @@ export function AddDinnerSheet(props: Props) {
               className="text-muted-foreground -ml-2 w-fit px-2"
               onClick={() => setScreen("choose")}
             >
-              ‹ {existingDinnerImport ? "Import a recipe" : "Add a dinner"}
+              ‹ {flow.sourceBackLabel}
             </Button>
             <h2 className="mb-5 mt-6 font-serif text-4xl">Photos</h2>
             <p
@@ -755,7 +768,7 @@ export function AddDinnerSheet(props: Props) {
               className="text-muted-foreground -ml-2 w-fit px-2"
               onClick={() => setScreen("choose")}
             >
-              ‹ {existingDinnerImport ? "Import a recipe" : "Add a dinner"}
+              ‹ {flow.sourceBackLabel}
             </Button>
             <h2 className="mb-7 mt-6 font-serif text-4xl">Text</h2>
             <form

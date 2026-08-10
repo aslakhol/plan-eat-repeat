@@ -1,4 +1,4 @@
-import type { RecipeInput, Unit } from "@planeatrepeat/shared";
+import { UNITS, type RecipeInput, type Unit } from "@planeatrepeat/shared";
 
 import { importNameConflict, importSourceLinkConflict } from "./url-import";
 
@@ -32,12 +32,12 @@ export type ExistingDinnerRecipeImport = {
 export const editorValuesFromRecipeInput = (input: {
   name: string;
   recipe: RecipeInput;
-  link?: string | null;
+  sourceLink?: string | null;
 }): ExistingDinnerEditorValues => ({
   name: input.name,
   tags: [],
   newTag: "",
-  link: input.link ?? "",
+  link: input.sourceLink ?? "",
   notes: "",
   recipe: recipeEditorValues(input.recipe),
 });
@@ -46,14 +46,21 @@ const recipeEditorValues = (recipe: RecipeInput) => ({
   servings: recipe.servings,
   parts: recipe.parts.map((part) => ({
     name: part.name ?? "",
-    ingredients: part.ingredients.map((ingredient) => ({
-      name: ingredient.name,
-      amount: ingredient.amount === null ? "" : String(ingredient.amount),
-      unit: ingredient.unit,
-      note: ingredient.note ?? "",
-    })),
+    ingredients: part.ingredients.map(editorIngredientValues),
     steps: part.steps.map((text) => ({ text })),
   })),
+});
+
+export const editorIngredientValues = (ingredient: {
+  name: string;
+  amount: number | null;
+  unit: string | null;
+  note: string | null;
+}) => ({
+  name: ingredient.name,
+  amount: ingredient.amount === null ? "" : String(ingredient.amount),
+  unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
+  note: ingredient.note ?? "",
 });
 
 export const clearExistingDinnerRecipe = (

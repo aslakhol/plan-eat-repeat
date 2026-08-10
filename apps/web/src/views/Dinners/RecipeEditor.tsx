@@ -39,6 +39,7 @@ import { AddDinnerSheet } from "./AddDinnerSheet";
 import {
   applyExistingDinnerImport,
   clearExistingDinnerRecipe,
+  editorIngredientValues,
   type ExistingDinnerRecipeImport,
 } from "~/lib/existing-dinner-import";
 
@@ -110,18 +111,6 @@ export const editorValuesFromManualName = (
   name,
 });
 
-const editorIngredient = (ingredient: {
-  name: string;
-  amount: number | null;
-  unit: string | null;
-  note: string | null;
-}) => ({
-  name: ingredient.name,
-  amount: ingredient.amount === null ? "" : String(ingredient.amount),
-  unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
-  note: ingredient.note ?? "",
-});
-
 const editorValuesFromDinner = (
   dinner: DinnerWithRecipe,
 ): RecipeEditorValues => ({
@@ -134,7 +123,7 @@ const editorValuesFromDinner = (
     servings: dinner.servings ?? null,
     parts: dinner.parts.map((part) => ({
       name: part.name ?? "",
-      ingredients: part.ingredients.map(editorIngredient),
+      ingredients: part.ingredients.map(editorIngredientValues),
       steps: part.steps.map((step) => ({ text: step.text })),
     })),
   },
