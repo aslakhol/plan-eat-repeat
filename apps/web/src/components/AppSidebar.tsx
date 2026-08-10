@@ -1,4 +1,4 @@
-import { Calendar, Settings, UtensilsCrossed } from "lucide-react";
+import { Calendar, Plus, Settings, UtensilsCrossed } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -32,7 +32,7 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ onAddDinner }: { onAddDinner: () => void }) {
   const router = useRouter();
 
   return (
@@ -42,6 +42,16 @@ export function AppSidebar() {
           <SidebarGroupLabel>Plan Eat Repeat</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Add Dinner"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                  onClick={onAddDinner}
+                >
+                  <Plus />
+                  <span>Add Dinner</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton

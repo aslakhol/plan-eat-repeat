@@ -49,7 +49,7 @@ export const PlanView = () => {
   if (plannedDinnersQuery.isPending) {
     return (
       <div className="flex h-[50vh] w-full items-center justify-center">
-        <UtensilsCrossed className="animate-spin text-primary" />
+        <UtensilsCrossed className="text-primary animate-spin" />
       </div>
     );
   }
@@ -57,8 +57,8 @@ export const PlanView = () => {
   return (
     <div className="flex flex-col gap-4 pb-20 sm:gap-6 md:pb-0">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="font-serif text-3xl font-bold text-foreground">
-          Weekly Plan
+        <h1 className="text-foreground font-serif text-3xl font-normal">
+          Week
         </h1>
         <div className="hidden sm:block">
           <WeekSelect
@@ -82,7 +82,7 @@ export const PlanView = () => {
         ))}
       </div>
       <div className="fixed bottom-20 left-0 right-0 z-40 flex justify-center p-4 md:hidden">
-        <div className="rounded-lg border bg-background/95 p-2 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 rounded-lg border p-2 shadow-lg backdrop-blur">
           <WeekSelect
             setWeekOfSet={setWeekOffSet}
             startOfDisplayedWeek={startOfDisplayedWeek}

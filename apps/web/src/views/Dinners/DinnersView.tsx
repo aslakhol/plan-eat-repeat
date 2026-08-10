@@ -1,8 +1,9 @@
 import { api } from "~/utils/api";
-import { UtensilsCrossed } from "lucide-react";
+import { AlertCircle, BookOpen, UtensilsCrossed } from "lucide-react";
 import { DinnerList } from "./DinnerList";
 import { useState } from "react";
 import { Filter } from "../Filter";
+import { Button } from "~/components/ui/button";
 export const DinnersView = () => {
   const dinnersQuery = api.dinner.dinners.useQuery();
   const utils = api.useUtils();
@@ -14,14 +15,29 @@ export const DinnersView = () => {
   if (dinnersQuery.isPending) {
     return (
       <div className="flex h-[50vh] w-full items-center justify-center">
-        <UtensilsCrossed className="animate-spin text-primary" />
+        <UtensilsCrossed className="text-primary animate-spin" />
       </div>
     );
   }
 
   if (!dinnersQuery.isSuccess) {
-    // TODO: Better error state
-    return null;
+    return (
+      <div className="mx-auto flex min-h-[50vh] max-w-md flex-col items-center justify-center gap-3 px-4 text-center">
+        <AlertCircle className="text-destructive size-6" />
+        <h1 className="font-serif text-2xl">Couldn&apos;t load Cookbook</h1>
+        <p className="text-muted-foreground text-sm">
+          Check your connection and try again.
+        </p>
+        <Button
+          type="button"
+          variant="ghost"
+          className="text-primary font-bold"
+          onClick={() => void dinnersQuery.refetch()}
+        >
+          Try again
+        </Button>
+      </div>
+    );
   }
 
   const dinners = dinnersQuery.data.dinners
@@ -40,8 +56,8 @@ export const DinnersView = () => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
-        <h1 className="font-serif text-3xl font-bold text-foreground">
-          Dinners
+        <h1 className="text-foreground font-serif text-3xl font-normal">
+          Cookbook
         </h1>
         <Filter
           search={search}
@@ -52,7 +68,17 @@ export const DinnersView = () => {
           setSelectedTags={setSelectedTags}
         />
       </div>
-      <DinnerList dinners={dinners} selectedTags={selectedTags} />
+      {dinnersQuery.data.dinners.length === 0 ? (
+        <div className="mx-auto flex min-h-[42vh] max-w-sm flex-col items-center justify-center gap-3 px-4 text-center">
+          <BookOpen className="text-primary size-7" />
+          <h2 className="font-serif text-2xl">Your Cookbook is empty</h2>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Use the raised ＋ below to add your first Dinner.
+          </p>
+        </div>
+      ) : (
+        <DinnerList dinners={dinners} selectedTags={selectedTags} />
+      )}
     </div>
   );
 };

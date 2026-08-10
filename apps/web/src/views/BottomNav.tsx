@@ -1,10 +1,9 @@
 import { useRouter } from "next/router";
 import { cn } from "../lib/utils";
 import Link from "next/link";
-import { SignedIn, SignInButton, SignedOut, useClerk } from "@clerk/nextjs";
-import { Calendar, Settings, UtensilsCrossed, LogIn } from "lucide-react";
+import { useClerk } from "@clerk/nextjs";
 
-export const BottomNav = () => {
+export const BottomNav = ({ onAddDinner }: { onAddDinner: () => void }) => {
   const router = useRouter();
   const { user } = useClerk();
 
@@ -16,20 +15,34 @@ export const BottomNav = () => {
     : undefined;
 
   const navClass =
-    "flex flex-col items-center justify-center h-full w-full gap-1 text-xs font-medium text-muted-foreground hover:text-primary transition-colors";
+    "flex h-full min-w-0 flex-1 items-center justify-center text-[15px] font-bold text-muted-foreground transition-colors hover:text-primary";
   const activeClass = "text-primary";
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-full w-full items-center justify-around">
+    <nav
+      aria-label="Primary navigation"
+      className="bg-background/95 supports-[backdrop-filter]:bg-background/80 fixed bottom-0 left-0 right-0 z-40 h-[72px] border-t pb-[env(safe-area-inset-bottom)] backdrop-blur"
+    >
+      <div className="mx-auto grid h-full w-full max-w-lg grid-cols-[1fr_76px_1fr] items-center px-3">
         <Link
           href="/"
           className={cn(navClass, router.asPath === "/" && activeClass)}
+          aria-current={router.asPath === "/" ? "page" : undefined}
           onClick={onClick}
         >
-          <Calendar className="h-5 w-5" />
-          <span>Plan</span>
+          Week
         </Link>
+
+        <button
+          type="button"
+          aria-label="Add Dinner"
+          className="bg-primary text-primary-foreground focus-visible:ring-ring relative -top-5 mx-auto flex size-[64px] items-center justify-center rounded-full text-[40px] font-light leading-none shadow-[0_6px_18px_rgba(194,85,47,0.3)] transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          onClick={onAddDinner}
+        >
+          <span aria-hidden="true" className="-translate-y-0.5">
+            +
+          </span>
+        </button>
 
         <Link
           href="/dinners"
@@ -37,34 +50,14 @@ export const BottomNav = () => {
             navClass,
             router.asPath.startsWith("/dinners") && activeClass,
           )}
+          aria-current={
+            router.asPath.startsWith("/dinners") ? "page" : undefined
+          }
           onClick={onClick}
         >
-          <UtensilsCrossed className="h-5 w-5" />
-          <span>Dinners</span>
+          Cookbook
         </Link>
-
-        <SignedOut>
-          <SignInButton mode="modal">
-            <button className={navClass}>
-              <LogIn className="h-5 w-5" />
-              <span>Sign in</span>
-            </button>
-          </SignInButton>
-        </SignedOut>
-
-        <SignedIn>
-          <Link
-            href="/settings"
-            className={cn(
-              navClass,
-              router.asPath.startsWith("/settings") && activeClass,
-            )}
-          >
-            <Settings className="h-5 w-5" />
-            <span>Settings</span>
-          </Link>
-        </SignedIn>
       </div>
-    </div>
+    </nav>
   );
 };
