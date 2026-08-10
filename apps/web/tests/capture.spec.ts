@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mkdir } from "node:fs/promises";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFilePath);
@@ -132,30 +132,86 @@ async function wakeLockCounts(page: Page) {
   });
 }
 
-async function openFirstPlannedDinner(page: Page) {
+async function openFirstPlanDay(page: Page, expectedSurface: () => Locator) {
   const dayTriggers = page.getByTestId("plan-day-trigger");
 
   for (let index = 0; index < (await dayTriggers.count()); index += 1) {
     await dayTriggers.nth(index).click();
-    const actions = page.getByText("Planned Dinner actions");
-    if (await actions.isVisible().catch(() => false)) return;
+    if (
+      await expectedSurface()
+        .isVisible()
+        .catch(() => false)
+    )
+      return true;
     await page.keyboard.press("Escape");
   }
 
-  throw new Error("The capture Household has no planned Dinner this week.");
+  return false;
 }
 
-async function openFirstEmptyDay(page: Page) {
-  const dayTriggers = page.getByTestId("plan-day-trigger");
-
-  for (let index = 0; index < (await dayTriggers.count()); index += 1) {
-    await dayTriggers.nth(index).click();
-    const picker = page.getByRole("dialog", { name: "Choose a Dinner" });
-    if (await picker.isVisible().catch(() => false)) return;
-    await page.keyboard.press("Escape");
+const openFirstPlannedDinner = async (page: Page) => {
+  const opened = await openFirstPlanDay(page, () =>
+    page.getByText("Planned Dinner actions"),
+  );
+  if (!opened) {
+    throw new Error("The capture Household has no planned Dinner this week.");
   }
+};
 
-  throw new Error("The capture Household has no empty Plan Slot this week.");
+const openFirstEmptyDay = async (page: Page) => {
+  for (let week = 0; week < 4; week += 1) {
+    const opened = await openFirstPlanDay(page, () =>
+      page.getByRole("dialog", { name: "Choose a Dinner" }),
+    );
+    if (opened) return;
+    await page.getByRole("button", { name: "Next week" }).click();
+    await page.waitForLoadState("networkidle");
+  }
+  throw new Error(
+    "The capture Household has no empty Plan Slot in four weeks.",
+  );
+};
+
+async function deleteDinnerFromEditor(page: Page) {
+  await page.locator("summary").filter({ hasText: "Editor actions" }).click();
+  await page.getByRole("button", { name: "Delete dinner" }).click();
+  await page.getByRole("button", { name: "Delete", exact: true }).click();
+}
+
+async function quickAddDinner(page: Page, dinnerName: string) {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Week" })).toBeVisible();
+  await page.getByRole("button", { name: "Add Dinner" }).click();
+  const nameInput = page.getByPlaceholder("What's for dinner?");
+  const quickAddButton = page.getByRole("button", {
+    name: "Add Name-only Dinner",
+  });
+  await expect(
+    page.getByRole("heading", { name: "Add a dinner" }),
+  ).toBeVisible();
+  await expect(nameInput).toBeFocused();
+  await expect(quickAddButton).toBeDisabled();
+  await nameInput.fill(dinnerName);
+  await expect(quickAddButton).toBeEnabled();
+  await quickAddButton.click();
+  await expect(page).toHaveURL(/\/dinners\/\d+$/);
+  await expect(
+    page.locator("h1").filter({ hasText: dinnerName }),
+  ).toBeVisible();
+}
+
+async function assertNoHorizontalOverflow(page: Page) {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          Math.max(
+            document.body.scrollWidth,
+            document.documentElement.scrollWidth,
+          ) <= window.innerWidth,
+      ),
+    )
+    .toBe(true);
 }
 
 async function deleteDinnerIfPresent(page: Page, dinnerName: string) {
@@ -172,9 +228,7 @@ async function deleteDinnerIfPresent(page: Page, dinnerName: string) {
 
   await dinnerLink.click();
   await page.getByRole("button", { name: "Edit" }).click();
-  await page.locator("summary").filter({ hasText: "Editor actions" }).click();
-  await page.getByRole("button", { name: "Delete dinner" }).click();
-  await page.getByRole("button", { name: "Delete", exact: true }).click();
+  await deleteDinnerFromEditor(page);
   await expect(page).toHaveURL(/\/dinners$/);
 }
 
@@ -361,21 +415,7 @@ test("global quick-add opens a URL-addressed Cookbook sheet", async ({
     await expect(page.getByRole("link", { name: "Week" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Cookbook" })).toBeVisible();
     await expect(addDinnerButton).toBeVisible();
-    await addDinnerButton.click();
-
-    const nameInput = page.getByPlaceholder("What's for dinner?");
-    const quickAddButton = page.getByRole("button", {
-      name: "Add Name-only Dinner",
-    });
-    await expect(
-      page.getByRole("heading", { name: "Add a dinner" }),
-    ).toBeVisible();
-    await expect(nameInput).toBeFocused();
-    await expect(quickAddButton).toBeDisabled();
-
-    await nameInput.fill(dinnerName);
-    await expect(quickAddButton).toBeEnabled();
-    await quickAddButton.click();
+    await quickAddDinner(page, dinnerName);
 
     await expect(page).toHaveURL(/\/dinners\/\d+$/);
     await expect(page.locator("h1", { hasText: "Cookbook" })).toBeVisible();
@@ -445,12 +485,345 @@ test("empty Plan Slot manual creation saves and opens the planned-day sheet", as
       .filter({ hasText: "Planned Dinner actions" })
       .click();
     await page.getByRole("link", { name: "Edit this Dinner" }).click();
-    await page.locator("summary").filter({ hasText: "Editor actions" }).click();
-    await page.getByRole("button", { name: "Delete dinner" }).click();
-    await page.getByRole("button", { name: "Delete", exact: true }).click();
+    await deleteDinnerFromEditor(page);
     await expect(page.getByRole("heading", { name: "Cookbook" })).toBeVisible();
     cleanedUp = true;
   } finally {
     if (!cleanedUp) await deleteDinnerIfPresent(page, dinnerName);
+  }
+});
+
+test("critical Week and Cookbook actions remain reachable across responsive widths", async ({
+  page,
+}) => {
+  await ensureSignedIn(page);
+
+  for (const viewport of [
+    { width: 320, height: 700 },
+    { width: 390, height: 844 },
+    { width: 480, height: 900 },
+    { width: 1280, height: 800 },
+  ]) {
+    await page.setViewportSize(viewport);
+
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "Week" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Add Dinner" }),
+    ).toBeVisible();
+    await assertNoHorizontalOverflow(page);
+
+    await page.goto("/dinners");
+    await expect(page.getByRole("heading", { name: "Cookbook" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Add Dinner" }),
+    ).toBeVisible();
+    await expect(page.locator('a[href^="/dinners/"]').first()).toBeVisible();
+    await assertNoHorizontalOverflow(page);
+  }
+
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto("/");
+  await openFirstEmptyDay(page);
+  await expect(page.getByRole("button", { name: "New dinner" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Surprise me!" }),
+  ).toBeVisible();
+  await assertNoHorizontalOverflow(page);
+});
+
+test("import empty, loading, error, no-match, and missing clipboard states stay recoverable", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: undefined,
+    });
+  });
+  await ensureSignedIn(page);
+
+  await page.goto("/dinners");
+  const search = page.getByRole("searchbox", { name: "Search dinners" });
+  await search.fill(`No match ${Date.now()}`);
+  await expect(
+    page.getByRole("heading", { name: "No dinners match" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Clear filters" }).click();
+  await expect(page.locator('a[href^="/dinners/"]').first()).toBeVisible();
+
+  await page.getByRole("button", { name: "Add Dinner" }).click();
+  await page.getByRole("button", { name: "Photos" }).click();
+  await expect(page.getByText("No photos yet")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Choose photos" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "‹ Add a dinner" }).click();
+  await page.getByRole("button", { name: "Link" }).click();
+
+  const urlInput = page.getByRole("textbox", { name: "Recipe URL" });
+  const importButton = page.getByRole("button", { name: "Import recipe" });
+  await expect(urlInput).toHaveValue("");
+  await expect(importButton).toBeDisabled();
+  await urlInput.fill("not-a-url");
+  await expect(
+    page.getByRole("alert").filter({
+      hasText: "Enter a full http or https URL.",
+    }),
+  ).toBeVisible();
+
+  let releaseImportRequest: () => void = () => undefined;
+  const importRequestGate = new Promise<void>((resolve) => {
+    releaseImportRequest = resolve;
+  });
+  await page.route("**/api/trpc/dinner.importFromUrl**", async (route) => {
+    await importRequestGate;
+    await route.abort();
+  });
+
+  const unreachableUrl = "https://127.0.0.1:1/recipe";
+  await urlInput.fill(unreachableUrl);
+  await importButton.click();
+  await expect(
+    page.getByRole("heading", { name: "Reading the recipe" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancel" }).click();
+  releaseImportRequest();
+  await expect(urlInput).toHaveValue(unreachableUrl);
+
+  await page.unroute("**/api/trpc/dinner.importFromUrl**");
+  await importButton.click();
+  await expect(
+    page.getByRole("heading", { name: "Couldn't reach the site" }),
+  ).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Write it myself" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Back" }).click();
+  await expect(urlInput).toHaveValue(unreachableUrl);
+});
+
+test("Cookbook planning, Favourite ordering, and deletion remain coherent", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await ensureSignedIn(page);
+
+  const testRun = Date.now();
+  const firstDinnerName = `Issue 131 A ${testRun}`;
+  const secondDinnerName = `Issue 131 B ${testRun}`;
+
+  try {
+    await quickAddDinner(page, firstDinnerName);
+    await page.getByRole("button", { name: "Plan this dinner" }).click();
+    const firstFreeDay = page
+      .getByRole("button", {
+        name: new RegExp(`^Plan ${firstDinnerName} for `),
+      })
+      .first();
+    await expect(firstFreeDay).toBeVisible();
+    const plannedDate = (
+      await firstFreeDay.getAttribute("aria-label")
+    )?.replace(`Plan ${firstDinnerName} for `, "");
+    expect(plannedDate).toBeTruthy();
+    await firstFreeDay.click();
+    await expect(page.getByRole("status")).toContainText(
+      `${firstDinnerName} → ${plannedDate}`,
+    );
+    await expect(page.getByRole("status")).not.toContainText("Undo");
+
+    await quickAddDinner(page, secondDinnerName);
+    const dinnerActions = page
+      .locator("summary")
+      .filter({ hasText: "Dinner actions" });
+    await dinnerActions.click();
+    await page.getByRole("button", { name: "Add to favourites" }).click();
+    await dinnerActions.click();
+    await expect(
+      page.getByRole("button", { name: "Remove from favourites" }),
+    ).toBeVisible();
+    await dinnerActions.click();
+
+    await page.getByRole("button", { name: "Plan this dinner" }).click();
+    const takenDay = page.getByRole("button", {
+      name: `${plannedDate} already has ${firstDinnerName}`,
+    });
+    await expect(takenDay).toBeVisible();
+    await takenDay.click();
+    await expect(
+      page.getByText(`already has ${firstDinnerName}`),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Keep it" })).toBeVisible();
+    await page.getByRole("button", { name: "Replace" }).click();
+    await expect(page.getByRole("status")).toContainText(
+      `${secondDinnerName} → ${plannedDate}`,
+    );
+    await expect(page.getByRole("status")).not.toContainText("Undo");
+
+    await page.getByRole("button", { name: "Favourites" }).click();
+    const orderedDinnerNames = await page
+      .locator('a[href^="/dinners/"]')
+      .allTextContents();
+    const firstDinnerIndex = orderedDinnerNames.findIndex((text) =>
+      text.includes(firstDinnerName),
+    );
+    const secondDinnerIndex = orderedDinnerNames.findIndex((text) =>
+      text.includes(secondDinnerName),
+    );
+    expect(firstDinnerIndex).toBeGreaterThanOrEqual(0);
+    expect(secondDinnerIndex).toBeGreaterThanOrEqual(0);
+    expect(secondDinnerIndex).toBeLessThan(firstDinnerIndex);
+
+    await page.getByRole("link", { name: secondDinnerName }).click();
+    await dinnerActions.click();
+    await page.getByRole("button", { name: "Delete dinner" }).click();
+    const deleteDialog = page.getByRole("dialog", { name: "Delete dinner" });
+    await expect(deleteDialog).toContainText("Cooking History");
+    await expect(
+      deleteDialog.getByText(plannedDate!.replace(/^[^,]+, /, "")),
+    ).toBeVisible();
+    const confirmDelete = deleteDialog.getByRole("button", {
+      name: "Delete",
+      exact: true,
+    });
+    await expect(confirmDelete).toBeEnabled();
+    await confirmDelete.click();
+    await expect(page).toHaveURL(/\/dinners$/);
+    await expect(
+      page.getByRole("link", { name: secondDinnerName }),
+    ).not.toBeVisible();
+
+    await page.goto("/");
+    await expect(page.getByText(secondDinnerName, { exact: true })).toHaveCount(
+      0,
+    );
+  } finally {
+    await deleteDinnerIfPresent(page, secondDinnerName);
+    await deleteDinnerIfPresent(page, firstDinnerName);
+  }
+});
+
+test("existing Dinner import keeps conflicts independent and Cancel preserves persisted data", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await ensureSignedIn(page);
+
+  const testRun = Date.now();
+  const originalName = `Issue 131 import ${testRun}`;
+  const importedName = `Imported Issue 131 ${testRun}`;
+  const originalLink = "https://ours.example/recipe";
+  const importedLink = "https://source.example/recipe";
+  const mockedImport = JSON.stringify([
+    {
+      result: {
+        data: {
+          json: {
+            name: importedName,
+            recipe: {
+              servings: 4,
+              parts: [
+                {
+                  name: null,
+                  ingredients: [
+                    {
+                      name: "Lentils",
+                      amount: 200,
+                      unit: "g",
+                      note: null,
+                    },
+                  ],
+                  steps: ["Cook the lentils."],
+                },
+              ],
+            },
+            sourceUrl: importedLink,
+          },
+        },
+      },
+    },
+  ]);
+
+  try {
+    await quickAddDinner(page, originalName);
+    await page.getByRole("button", { name: "Edit" }).click();
+    await page.getByRole("textbox", { name: "Recipe link" }).fill(originalLink);
+    await page.getByRole("button", { name: "Save dinner" }).click();
+    await expect(page).toHaveURL(/\/dinners\/\d+$/);
+
+    await page.route("**/api/trpc/dinner.importFromUrl**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: mockedImport,
+      });
+    });
+
+    const importExistingRecipe = async () => {
+      await page.getByRole("button", { name: "Edit" }).click();
+      await page
+        .locator("summary")
+        .filter({ hasText: "Editor actions" })
+        .click();
+      await page.getByRole("button", { name: "Import a recipe…" }).click();
+      await page.getByRole("button", { name: "Link" }).click();
+      await page
+        .getByRole("textbox", { name: "Recipe URL" })
+        .fill(importedLink);
+      await page.getByRole("button", { name: "Import recipe" }).click();
+      await expect(
+        page.getByRole("heading", { name: "Edit dinner" }),
+      ).toBeVisible();
+    };
+
+    await importExistingRecipe();
+    await expect(
+      page.getByText(`The source calls it “${importedName}”`),
+    ).toBeVisible();
+    await expect(
+      page.getByText(`The source link is “${importedLink}”`),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Use theirs" }).first().click();
+    await page.getByRole("button", { name: "Keep our link ✓" }).click();
+    await expect(page.getByRole("textbox", { name: "Name" })).toHaveValue(
+      importedName,
+    );
+    await expect(
+      page.getByRole("textbox", { name: "Recipe link" }),
+    ).toHaveValue(originalLink);
+    await expect(
+      page.getByRole("spinbutton", { name: "Number of servings" }),
+    ).toHaveValue("4");
+    await page.getByRole("button", { name: "Save dinner" }).click();
+    await expect(page).toHaveURL(/\/dinners\/\d+$/);
+    await expect(
+      page.locator("h1").filter({ hasText: importedName }),
+    ).toBeVisible();
+
+    await importExistingRecipe();
+    await expect(
+      page.getByRole("button", { name: "Keep our link ✓" }),
+    ).toBeVisible();
+    page.once("dialog", async (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page).toHaveURL(/\/dinners$/);
+
+    await page.getByRole("link", { name: importedName }).click();
+    await page.getByRole("button", { name: "Edit" }).click();
+    await expect(page.getByRole("textbox", { name: "Name" })).toHaveValue(
+      importedName,
+    );
+    await expect(
+      page.getByRole("textbox", { name: "Recipe link" }),
+    ).toHaveValue(originalLink);
+    await expect(
+      page.getByRole("spinbutton", { name: "Number of servings" }),
+    ).toHaveValue("4");
+  } finally {
+    await deleteDinnerIfPresent(page, importedName);
+    await deleteDinnerIfPresent(page, originalName);
   }
 });
