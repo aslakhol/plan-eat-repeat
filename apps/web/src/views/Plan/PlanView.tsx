@@ -16,6 +16,7 @@ import {
   isPlanSlotDate,
   planSlotDateFromString,
 } from "~/lib/editor-navigation";
+import { CookSettingsHeader } from "~/components/CookSettingsHeader";
 
 export const PlanView = () => {
   const router = useRouter();
@@ -72,10 +73,8 @@ export const PlanView = () => {
 
   return (
     <div className="flex flex-col gap-5 pb-24 sm:gap-6 md:pb-0">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-foreground font-serif text-3xl font-normal">
-          Week
-        </h1>
+      <div className="flex flex-col gap-4">
+        <CookSettingsHeader title="Week" />
         <div className="hidden sm:block">
           <WeekSelect setWeekOfSet={setWeekOffSet} weekLabel={week.label} />
         </div>

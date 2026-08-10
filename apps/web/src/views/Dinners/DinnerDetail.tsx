@@ -21,6 +21,7 @@ import {
   editorSaveHref,
   parseEditorNavigation,
 } from "~/lib/editor-navigation";
+import { useDinnerWakeLock } from "~/hooks/use-keep-screen-awake";
 
 export const DinnerDetail = () => {
   const router = useRouter();
@@ -46,6 +47,7 @@ export const DinnerDetail = () => {
     { dinnerId },
     { enabled: router.isReady && validDinnerId },
   );
+  useDinnerWakeLock(Boolean(dinnerQuery.data?.dinner) && !editing);
 
   const editMutation = api.dinner.edit.useMutation({
     onSuccess: async (result) => {

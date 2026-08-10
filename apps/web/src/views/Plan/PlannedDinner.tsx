@@ -7,8 +7,7 @@ import {
 } from "../../components/ResponsiveModal";
 import { ClearDay } from "./ClearDay";
 import Link from "next/link";
-import useWakeLock from "react-use-wake-lock";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { RecipeView } from "../Dinners/RecipeView";
 import { ArrowRightLeft, MoreHorizontal, Pencil, X } from "lucide-react";
 import { Button } from "~/components/ui/button";
@@ -16,6 +15,7 @@ import {
   buildDinnerEditorHref,
   planSlotDateFromDate,
 } from "~/lib/editor-navigation";
+import { useDinnerWakeLock } from "~/hooks/use-keep-screen-awake";
 
 type Props = {
   dinner: DinnerWithRecipe;
@@ -32,28 +32,10 @@ export const PlannedDinner = ({
   setChangePlan,
   isOpen,
 }: Props) => {
-  const { isSupported, isLocked, request, release } = useWakeLock();
   const menuRef = useRef<HTMLDetailsElement>(null);
-  const wakeLockRef = useRef({ isLocked, release });
+  useDinnerWakeLock(isOpen);
 
   const closeMenu = () => menuRef.current?.removeAttribute("open");
-
-  useEffect(() => {
-    wakeLockRef.current = { isLocked, release };
-  }, [isLocked, release]);
-
-  useEffect(() => {
-    if (!isSupported) return;
-
-    if (isOpen && !isLocked) request();
-    if (!isOpen && isLocked) release();
-  }, [isSupported, isOpen, isLocked, request, release]);
-
-  useEffect(() => {
-    return () => {
-      if (wakeLockRef.current.isLocked) wakeLockRef.current.release();
-    };
-  }, []);
 
   return (
     <ResponsiveModalContent className="flex h-[92dvh] max-h-[92dvh] max-w-[640px] flex-col overflow-hidden bg-white md:h-[min(90dvh,800px)]">
