@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  filterDinnerSummaries,
   formatDinnerSummaryLabel,
   orderDinnerSummaries,
 } from "./cookbook";
@@ -58,6 +59,31 @@ void test("Favourites ordering keeps every Dinner and ranks each group by freque
   assert.deepEqual(
     orderDinnerSummaries(dinners, "favourites").map((dinner) => dinner.id),
     [4, 3, 2, 1],
+  );
+});
+
+void test("Cookbook filtering normalises search text and requires every selected tag", () => {
+  const dinners = [
+    { id: 1, name: "Bean Chilli", tags: [{ value: "Quick" }, { value: "Vegan" }] },
+    { id: 2, name: "Sunday roast", tags: [{ value: "Weekend" }] },
+    { id: 3, name: "Miso soup", tags: [{ value: "QUICK" }] },
+  ];
+
+  assert.deepEqual(
+    filterDinnerSummaries(dinners, "  quick ", ["Quick"]).map(
+      (dinner) => dinner.id,
+    ),
+    [1],
+  );
+  assert.deepEqual(
+    filterDinnerSummaries(dinners, "ROAST", []).map((dinner) => dinner.id),
+    [2],
+  );
+  assert.deepEqual(
+    filterDinnerSummaries(dinners, "", ["Quick", "Vegan"]).map(
+      (dinner) => dinner.id,
+    ),
+    [1],
   );
 });
 

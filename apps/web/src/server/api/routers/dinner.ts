@@ -8,6 +8,7 @@ import {
   MAX_RECIPE_IMPORT_IMAGES,
   recipeSchema,
   type DinnerWithRecipe,
+  type DinnerWithTags,
   type RecipeInput,
 } from "@planeatrepeat/shared";
 
@@ -109,6 +110,24 @@ export const dinnerRouter = createTRPCRouter({
     return {
       tags: tags.filter((tag) => tag._count.Dinner > 0),
     };
+  }),
+
+  // Retained for the mobile client while the redesigned web Cookbook consumes
+  // the richer summaries endpoint.
+  dinners: publicProcedure.query(async ({ ctx }) => {
+    const householdId = ctx.householdId;
+
+    if (!householdId) {
+      return { dinners: [] };
+    }
+
+    const dinners: DinnerWithTags[] = await ctx.db.dinner.findMany({
+      where: { householdId },
+      include: { tags: true },
+      orderBy: { name: "asc" },
+    });
+
+    return { dinners };
   }),
 
   summaries: publicProcedure

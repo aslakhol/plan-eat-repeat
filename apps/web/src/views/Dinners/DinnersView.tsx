@@ -5,6 +5,7 @@ import { Filter } from "../Filter";
 import { Button } from "~/components/ui/button";
 import { useDinnerSummaries } from "~/hooks/use-dinner-summaries";
 import {
+  filterDinnerSummaries,
   orderDinnerSummaries,
   type CookbookSort,
 } from "~/lib/cookbook";
@@ -51,25 +52,13 @@ export const DinnersView = () => {
     );
   }
 
-  const normalisedSearch = search.trim().toLocaleLowerCase();
-  const matchingDinners = dinnersQuery.data.dinners
-    .filter(
-      (dinner) =>
-        !normalisedSearch ||
-        dinner.name.toLocaleLowerCase().includes(normalisedSearch) ||
-        dinner.tags.some((tag) =>
-          tag.value.toLocaleLowerCase().includes(normalisedSearch),
-        ),
-    )
-    .filter(
-      (dinner) =>
-        selectedTags.length === 0 ||
-        selectedTags.every((tag) =>
-          dinner.tags.map((t) => t.value).includes(tag),
-        ),
-    );
+  const matchingDinners = filterDinnerSummaries(
+    dinnersQuery.data.dinners,
+    search,
+    selectedTags,
+  );
   const dinners = orderDinnerSummaries(matchingDinners, sort);
-  const hasFilters = normalisedSearch.length > 0 || selectedTags.length > 0;
+  const hasFilters = search.trim().length > 0 || selectedTags.length > 0;
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">

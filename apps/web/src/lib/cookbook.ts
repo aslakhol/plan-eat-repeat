@@ -1,3 +1,5 @@
+import { differenceInCalendarISOWeeks } from "date-fns";
+
 export type CookbookSort = "az" | "not-lately" | "favourites";
 
 type DinnerSummaryLabelInput = {
@@ -12,6 +14,11 @@ type OrderableDinnerSummary = {
   favourite: boolean;
   cookingFrequency: number;
   lastCookedDate: Date | null;
+};
+
+type FilterableDinnerSummary = {
+  name: string;
+  tags: ReadonlyArray<{ value: string }>;
 };
 
 const dinnerNameCollator = new Intl.Collator("en", {
@@ -59,6 +66,28 @@ export const formatDinnerSummaryLabel = ({
   return "over a year ago";
 };
 
+export const filterDinnerSummaries = <Dinner extends FilterableDinnerSummary>(
+  dinners: readonly Dinner[],
+  search: string,
+  selectedTags: readonly string[],
+): Dinner[] => {
+  const normalisedSearch = search.trim().toLocaleLowerCase();
+
+  return dinners.filter((dinner) => {
+    const matchesSearch =
+      normalisedSearch.length === 0 ||
+      dinner.name.toLocaleLowerCase().includes(normalisedSearch) ||
+      dinner.tags.some((tag) =>
+        tag.value.toLocaleLowerCase().includes(normalisedSearch),
+      );
+    const matchesTags = selectedTags.every((selectedTag) =>
+      dinner.tags.some((tag) => tag.value === selectedTag),
+    );
+
+    return matchesSearch && matchesTags;
+  });
+};
+
 export const orderDinnerSummaries = <Dinner extends OrderableDinnerSummary>(
   dinners: readonly Dinner[],
   sort: CookbookSort,
@@ -92,4 +121,3 @@ export const orderDinnerSummaries = <Dinner extends OrderableDinnerSummary>(
       compareDinnerNames(left, right),
   );
 };
-import { differenceInCalendarISOWeeks } from "date-fns";

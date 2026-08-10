@@ -12,6 +12,7 @@ import {
   type RecipeEditorValues,
 } from "./RecipeEditor";
 import { RecipeView } from "./RecipeView";
+import { DeleteDinnerButton } from "./DeleteDinnerButton";
 import { useDinnerSummaries } from "~/hooks/use-dinner-summaries";
 import { formatDinnerSummaryLabel } from "~/lib/cookbook";
 
@@ -182,6 +183,27 @@ export const DinnerDetail = () => {
             >
               {favourite ? "Remove from favourites" : "Add to favourites"}
             </button>
+            <DeleteDinnerButton
+              dinnerId={dinner.id}
+              isPending={deleteMutation.isPending}
+              onDelete={() => {
+                posthog.capture("delete dinner", { dinnerName: dinner.name });
+                deleteMutation.mutate({ dinnerId: dinner.id });
+              }}
+              trigger={
+                <button
+                  type="button"
+                  className="text-destructive hover:bg-destructive/5 w-full border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                  onClick={(event) =>
+                    event.currentTarget
+                      .closest("details")
+                      ?.removeAttribute("open")
+                  }
+                >
+                  Delete dinner
+                </button>
+              }
+            />
           </div>
         </details>
       }

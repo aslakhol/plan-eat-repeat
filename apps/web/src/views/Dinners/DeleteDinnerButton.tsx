@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { type ReactElement } from "react";
 import { format } from "date-fns";
 import { Trash2 } from "lucide-react";
 import { api } from "../../utils/api";
@@ -17,12 +18,14 @@ type Props = {
   dinnerId: number;
   isPending: boolean;
   onDelete: () => void;
+  trigger?: ReactElement;
 };
 
 export const DeleteDinnerButton = ({
   dinnerId,
   isPending,
   onDelete,
+  trigger,
 }: Props) => {
   const [open, setOpen] = useState(false);
   const plansQuery = api.plan.plansForDinner.useQuery(
@@ -33,14 +36,16 @@ export const DeleteDinnerButton = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          className="hover:bg-destructive/5 w-full border-[hsl(0_50%_85%)] text-[hsl(0_60%_48%)] hover:text-[hsl(0_60%_42%)]"
-        >
-          <Trash2 />
-          Delete dinner
-        </Button>
+        {trigger ?? (
+          <Button
+            type="button"
+            variant="outline"
+            className="hover:bg-destructive/5 w-full border-[hsl(0_50%_85%)] text-[hsl(0_60%_48%)] hover:text-[hsl(0_60%_42%)]"
+          >
+            <Trash2 />
+            Delete dinner
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
