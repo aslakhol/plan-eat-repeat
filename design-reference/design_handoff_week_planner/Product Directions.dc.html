@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/plan-eat-repeat-d901d8ce-3c98-4c10-a14d-11f441b80480/styles.css">
+<script src="_ds/plan-eat-repeat-d901d8ce-3c98-4c10-a14d-11f441b80480/_ds_bundle.js"></script>
+<style>
+.ph2{width:252px;height:548px;background:#FAF8F5;border:1px solid #d9d2c4;border-radius:20px;box-shadow:0 2px 8px rgba(60,50,40,.1);display:flex;flex-direction:column;overflow:hidden;font-family:Quicksand,sans-serif}
+.ph2 .scr{flex:1;display:flex;flex-direction:column;gap:7px;padding:14px 12px 0;overflow:hidden}
+.t2h{font-family:"Young Serif",serif;font-size:19px;margin:0 0 2px;color:#221d1a}
+.dayc{background:#F1EDE6;border:1.5px solid transparent;border-radius:10px;padding:7px 11px}
+.dayc .dayl{font-size:8.5px;font-weight:600;color:#8a8276;margin-bottom:1px}
+.dayc .dayn{font-family:"Young Serif",serif;font-size:12.5px;color:#221d1a}
+.dayc.act{border-color:#dd6b42}.dayc.act .dayl{color:#c2552f}
+.dayn.mut{color:#a39a8e!important;font-family:Quicksand,sans-serif!important;font-size:11px!important;font-weight:600}
+.tab2{display:flex;align-items:center;border-top:1px solid #e6e0d4;padding:9px 0 12px;background:#FAF8F5}
+.tab2 span{flex:1;text-align:center;font-size:8.5px;font-weight:700;color:#a39a8e}
+.tab2 span.on{color:#c2552f}
+.tab2 span.cta{flex:0 0 44px;background:#dd6b42;color:#fff;border-radius:99px;padding:4px 0;font-size:12px;line-height:1;margin-top:-3px}
+.sh2{margin-top:auto;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -3px 14px rgba(60,50,40,.14);padding:8px 12px 12px;display:flex;flex-direction:column;gap:7px}
+.hdl{width:34px;height:4px;border-radius:99px;background:#d9d2c4;margin:0 auto 2px}
+.shd{text-align:center;font-size:9px;color:#8a8276}
+.dimm{opacity:.3;display:flex;flex-direction:column;gap:7px;padding:14px 12px 10px}
+.btn2{background:#fff;border:1px solid #ddd6c8;border-radius:10px;padding:6px 10px;font-size:9.5px;font-weight:600;color:#453e37;text-align:center}
+.btn2.pri{background:#dd6b42;border-color:#dd6b42;color:#fff;font-weight:700}
+.btn2.dash{border-style:dashed;color:#8a8276}
+.tag2{border:1px solid #e2dbcc;background:#F7F4EE;border-radius:99px;padding:2px 7px;font-size:7.5px;font-weight:600;color:#57504a}
+.tag2.sel{background:#F6DDD2;border-color:#dd6b42;color:#a34524}
+.srch{background:#fff;border:1px solid #e2dbcc;border-radius:10px;padding:6px 9px;font-size:9px;color:#a39a8e}
+.lrow{background:#F7F4EE;border:1px solid #eee8db;border-radius:9px;padding:6px 10px;font-size:9.5px;color:#332e29;display:flex;gap:5px;align-items:center}
+.lrow small{margin-left:auto;font-size:7.5px;color:#a39a8e;text-align:right}
+.card2{background:#fff;border-radius:10px;padding:9px 11px;box-shadow:0 1px 2px rgba(60,50,40,.07);display:flex;flex-direction:column;gap:5px}
+.card2 .nm{font-family:"Young Serif",serif;font-size:12px;color:#221d1a}
+.ing{display:flex;gap:7px;font-size:9px;color:#332e29}.ing b{flex:0 0 38px}
+.stp{display:flex;gap:7px;font-size:9px;color:#332e29;line-height:1.35}.stp b{color:#c2552f;font-family:"Young Serif",serif}
+.secH{font-family:"Young Serif",serif;font-size:12px;margin:4px 0 0;color:#221d1a}
+.bdg{font-size:7px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:2px 5px}
+.bdg.rec{background:#EAF0E4;color:#5d7a4c}.bdg.idea{background:#F1EDE6;color:#8a8276}.bdg.new{background:#F6DDD2;color:#a34524}
+.gr2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.pcell{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(60,50,40,.07)}
+.pimg{height:50px;background:linear-gradient(135deg,#EAD9C9,#DCC5AE)}
+.pcell .pn{font-family:"Young Serif",serif;font-size:10px;padding:6px 8px;color:#221d1a}
+.task2{width:252px;display:flex;flex-direction:column;gap:8px}
+.phrow{display:flex;gap:6px}
+.photo2{flex:1;border:1.5px dashed #cfc7b8;border-radius:9px;min-height:54px;display:flex;align-items:center;justify-content:center;font-size:8.5px;color:#8a8276;background:#F7F4EE}
+body{margin:0;background:#f2efe8;font-family:Quicksand,system-ui,sans-serif;color:#221d1a}
+a{color:#c2552f}a:hover{color:#a34524}
+.dv-turn{padding:40px 44px 60px;scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:12px;margin:0 0 8px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#221d1a;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font-family:"Young Serif",serif;font-size:20px;color:#221d1a}
+.dv-sub{max-width:760px;font-size:13px;line-height:1.5;color:#6d655c;margin:0 0 26px}
+.dv-opts{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px;max-width:1280px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(34,29,26,.08);color:#221d1a;border-radius:5px;text-decoration:none}
+.dv-opt:target .dv-oid{background:#dd6b42;color:#fff}
+.dv-next{margin:26px 0 0;font-size:12px;line-height:1.5;color:#8a8276}
+.dir{background:#fff;border:1px solid #e6e0d4;border-radius:14px;box-shadow:0 1px 3px rgba(60,50,40,.06);padding:26px 28px;display:flex;flex-direction:column;gap:20px}
+.dhead{display:flex;flex-direction:column;gap:6px}
+.dname{font-family:"Young Serif",serif;font-size:23px;margin:0}
+.promise{font-size:14px;color:#6d655c;margin:0;max-width:640px;line-height:1.45}
+.promise b{color:#c2552f}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 20px;background:#faf8f3;border:1px solid #eee8db;border-radius:10px;padding:16px 18px}
+.f{font-size:11.5px;line-height:1.45;color:#453e37}
+.f > b:first-child{display:block;font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;color:#a39a8e;margin-bottom:3px;font-weight:700}
+.tasks{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.task{width:198px;display:flex;flex-direction:column;gap:7px}
+.cap{font-size:10px;line-height:1.4;color:#57504a}
+.cap b{color:#c2552f}
+.phone{width:198px;min-height:330px;background:#fff;border:1.5px solid #b7ae9f;border-radius:16px;padding:11px 10px;display:flex;flex-direction:column;gap:7px;box-shadow:0 1px 2px rgba(60,50,40,.08)}
+.ph-h{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:10.5px}
+.ph-h i{font-style:normal;color:#a39a8e;font-weight:600;font-size:9px}
+.ln{height:7px;background:#e8e2d7;border-radius:3px}
+.bx{border:1.5px dashed #cfc7b8;border-radius:8px;padding:7px 8px;font-size:8.5px;line-height:1.4;color:#8a8276}
+.card9{border:1.5px solid #e6e0d4;border-radius:8px;padding:7px 8px;font-size:9px;line-height:1.4;color:#453e37}
+.card9 b{font-size:9.5px}
+.row{display:flex;gap:5px;align-items:center}
+.grow{flex:1}
+.pill{background:#dd6b42;color:#fff;border-radius:99px;font-size:8.5px;font-weight:700;padding:4px 9px;text-align:center}
+.ghost{border:1.5px solid #dd6b42;color:#c2552f;border-radius:99px;font-size:8.5px;font-weight:700;padding:3px 8px;text-align:center;background:#fff}
+.chip{border:1px solid #d8d1c2;border-radius:99px;font-size:8px;padding:2px 7px;color:#6d655c;background:#faf8f3}
+.chip.on{background:#f6ddd2;border-color:#dd6b42;color:#a34524;font-weight:700}
+.day{display:flex;gap:6px;align-items:center;font-size:9px;color:#453e37;border-bottom:1px solid #f0ebe0;padding:3px 0}
+.day em{font-style:normal;width:24px;color:#a39a8e;font-weight:700;font-size:8px}
+.day .add{margin-left:auto;color:#c2552f;font-weight:700}
+.hl{outline:2px solid #dd6b42;outline-offset:2px;border-radius:8px}
+.sheet{background:#faf8f3;border:1.5px solid #dd6b42;border-radius:10px 10px 4px 4px;padding:8px;display:flex;flex-direction:column;gap:5px;margin-top:auto}
+.sheet h5{margin:0;font-size:8.5px;color:#a34524;letter-spacing:.05em;text-transform:uppercase}
+.tabbar{margin-top:auto;display:flex;border-top:1.5px solid #e6e0d4;padding-top:6px;gap:4px}
+.tabbar span{flex:1;text-align:center;font-size:8px;font-weight:700;color:#a39a8e}
+.tabbar span.on{color:#c2552f}
+.tabbar span.plus{color:#fff;background:#dd6b42;border-radius:99px;padding:2px 0;flex:0 0 34px}
+.tri{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:18px}
+.tri .f{border-top:3px solid #e6e0d4;padding-top:8px}
+.tri .f.good{border-top-color:#7da06b}
+.tri .f.bad{border-top-color:#c98a4b}
+.tri .f.sig{border-top-color:#dd6b42}
+.stripbar{display:flex;gap:6px;align-items:center;font-size:8.5px;background:#f6ddd2;border-radius:6px;padding:5px 7px;color:#a34524;font-weight:700}
+table.mx{border-collapse:collapse;font-size:11.5px;width:100%}
+.mx th,.mx td{border:1px solid #eee8db;padding:7px 10px;text-align:left;vertical-align:top;line-height:1.4}
+.mx th{background:#faf8f3;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:#6d655c}
+.mx td.r{text-align:center;font-size:13px;white-space:nowrap}
+.mx td.r small{display:block;font-size:9px;color:#8a8276;white-space:normal}
+h4.sec{font-family:"Young Serif",serif;font-size:15px;margin:6px 0 0}
+.prose{font-size:12.5px;line-height:1.55;color:#453e37;max-width:860px;margin:0}
+.prose b{color:#221d1a}
+ul.tight{margin:4px 0 0;padding-left:18px;font-size:12px;line-height:1.55;color:#453e37;list-style:disc}
+.ph3{width:390px;height:800px;background:#FAF8F5;border:1px solid #ddd6c8;border-radius:28px;box-shadow:0 6px 20px rgba(60,50,40,.14);overflow:hidden;display:flex;flex-direction:column;font-family:Quicksand,sans-serif;color:#24201b}
+.ph3 .body{flex:1;display:flex;flex-direction:column;padding:22px 18px 0;gap:10px;overflow:hidden}
+.task3{width:390px;display:flex;flex-direction:column;gap:10px}
+.cap2{font-size:11.5px;line-height:1.55;color:#57504a;max-width:390px;margin:0}
+.cap2 b{color:#C2552F}
+.h1w{font-family:"Young Serif",serif;font-size:30px;margin:0;font-weight:400}
+.mdots{width:36px;height:36px;border-radius:99px;border:1px solid #ddd6c8;background:#fff;display:flex;align-items:center;justify-content:center;color:#57504a;font-size:13px;letter-spacing:1.5px;font-weight:700;padding-bottom:5px}
+.drow{background:#F1EDE6;border:1.5px solid transparent;border-radius:12px;padding:10px 16px 12px}
+.drow .dl{font-size:12px;font-weight:600;color:#8a8276;margin-bottom:2px}
+.drow .dn{font-family:"Young Serif",serif;font-size:18px}
+.drow.today{border-color:#DD6B42;background:#fff}
+.drow.today .dl{color:#C2552F}
+.drow.empty{background:#F7F4EE;display:flex;align-items:center;justify-content:space-between;padding:13px 16px}
+.drow.empty .dl{margin:0}
+.pluso{width:26px;height:26px;border-radius:99px;border:1.5px solid #cfc7b8;color:#a39a8e;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;line-height:1}
+.wkpill{margin:auto auto 10px;display:flex;align-items:center;gap:6px;background:#fff;border-radius:99px;box-shadow:0 2px 10px rgba(60,50,40,.14);padding:6px}
+.wkbtn{width:34px;height:34px;border-radius:99px;border:1px solid #e2dbcc;background:#fff;display:flex;align-items:center;justify-content:center;color:#57504a}
+.wkpill>span{font-size:13px;font-weight:600;color:#453e37;padding:0 14px 0 8px}
+.tb3{display:flex;align-items:flex-end;border-top:1px solid #e6e0d4;background:#FAF8F5;padding:8px 0 16px}
+.tb3 .ti{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;color:#a39a8e}
+.tb3 .ti.on{color:#C2552F}
+.plus3{width:52px;height:52px;border-radius:99px;background:#DD6B42;color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;margin:-26px auto 0;box-shadow:0 4px 10px rgba(221,107,66,.4)}
+.sheet3{margin-top:auto;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -6px 24px rgba(60,50,40,.18);display:flex;flex-direction:column;padding:10px 18px 16px;gap:10px;overflow:hidden}
+.dimw{opacity:.35;padding:22px 18px 8px;display:flex;flex-direction:column;gap:10px;flex:1;overflow:hidden}
+.chip3{border:1px solid #e2dbcc;background:#fff;border-radius:99px;padding:6px 12px;font-size:12px;font-weight:600;color:#57504a;white-space:nowrap}
+.chip3.sel{background:#F6DDD2;border-color:#DD6B42;color:#a34524}
+.chip3 i{font-style:normal;color:#a39a8e;font-weight:600;margin-left:4px;font-size:11px}
+.chiprow{display:flex;gap:6px;overflow:hidden;flex-wrap:nowrap}
+.prow{background:#F7F4EE;border:1px solid #eee8db;border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:8px}
+.prow .pn2{font-weight:600;font-size:14px}
+.prow small{margin-left:auto;font-size:11px;color:#a39a8e;font-weight:600;white-space:nowrap}
+.bdg2{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:5px;padding:2.5px 6px;background:#EAF0E4;color:#5d7a4c}
+.bdg2.new{background:#F6DDD2;color:#a34524}
+.inp3{flex:1;background:#fff;border:1px solid #e2dbcc;border-radius:12px;padding:10px 14px;font-size:13px;color:#a39a8e}
+.fbtn{width:42px;height:42px;flex:0 0 42px;border-radius:12px;border:1px solid #e2dbcc;background:#fff;display:flex;align-items:center;justify-content:center;color:#57504a}
+.obtn{border:1px solid #ddd6c8;background:#fff;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700;color:#453e37;text-align:center}
+.obtn.pri{background:#DD6B42;border-color:#DD6B42;color:#fff}
+.obtn.sm{padding:7px 12px;font-size:12px;border-radius:10px}
+.obtn.dash{border-style:dashed;color:#8a8276;font-weight:600}
+.secl{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#a39a8e;margin-top:2px}
+.rt{font-family:"Young Serif",serif;font-size:24px;margin:2px 0;font-weight:400}
+.ing2{display:flex;gap:12px;font-size:13.5px;padding:2.5px 0}
+.ing2 b{flex:0 0 60px;text-align:right;font-weight:700;white-space:nowrap}
+.ing2 i{font-style:normal;color:#8a8276}
+.stp2{display:flex;gap:12px;font-size:13.5px;line-height:1.5;padding:3px 0}
+.stp2 b{color:#C2552F;font-family:"Young Serif",serif;flex:0 0 12px;font-weight:400}
+.jmp{display:flex;gap:8px;background:#fff;padding:4px 0;border-bottom:1px solid #f0ebe0}
+.notesp{font-size:13px;line-height:1.6;color:#453e37;margin:0}
+.shd2{text-align:center;font-size:12px;color:#8a8276;font-weight:600}
+.tagwrap{display:flex;flex-wrap:wrap;gap:7px}
+.pluss{color:#a39a8e;font-size:19px;line-height:1;font-weight:300}
+.seg{display:flex;background:#F1EDE6;border-radius:10px;padding:3px;gap:2px}
+.seg span{flex:1;text-align:center;font-size:11px;font-weight:700;color:#8a8276;padding:6px 0;border-radius:8px;white-space:nowrap}
+.seg span.on{background:#fff;color:#C2552F;box-shadow:0 1px 2px rgba(60,50,40,.1)}
+.lane{display:flex;gap:8px;overflow:hidden}
+.lcard{flex:0 0 108px;background:#F7F4EE;border:1px solid #eee8db;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.lcard b{font-family:"Young Serif",serif;font-weight:400;font-size:13px;line-height:1.25;color:#221d1a}
+.lcard small{font-size:10px;color:#a39a8e;font-weight:600}
+.bigc{background:#fff;border:1px solid #e6e0d4;border-radius:14px;padding:13px 15px;box-shadow:0 1px 3px rgba(60,50,40,.08);display:flex;flex-direction:column;gap:5px}
+.mrow{background:#fff;padding:11px 14px;font-size:13.5px;font-weight:600;color:#332e29;border-bottom:1px solid #f0ebe0;display:flex;align-items:center;gap:8px}
+.mrow:last-child{border-bottom:none}
+.mrow.warn{color:#a34524}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t6">
+<div class="dv-thd"><a class="dv-tid" href="#t6">6</a><span class="dv-tname">Canonical screens — Week, picker, tag filter, planned day</span></div>
+<p class="dv-sub">Everything decided so far, folded into one set: dashed empty days, a text-only tab bar, the full scrollable cookbook sorted by Haven't had lately / A–Z / Favourites, no tags until the funnel is used, match-all filtering with the result count in the tag sheet button, and the view-only planned sheet with an unmuted ••• menu.</p>
+<div class="dv-opts">
+
+<div class="dv-opt" id="6a">
+<div class="dv-olabel"><a class="dv-oid" href="#6a">6a</a></div>
+<div class="dir">
+<div class="tasks">
+
+<div class="task3"><div class="ph3">
+<div class="body">
+<div class="row" style="align-items:center;margin-bottom:4px"><h2 class="h1w">Week</h2><div class="mdots" style="margin-left:auto">...</div></div>
+<div class="drow"><div class="dl">Mon 27th</div><div class="dn">Caesar Salad</div></div>
+<div class="drow empty" style="background:transparent;border:1.5px dashed #d4ccbc"><div class="dl">Tue 28th</div><span class="pluss">＋</span></div>
+<div class="drow empty" style="background:transparent;border:1.5px dashed #d4ccbc"><div class="dl">Wed 29th</div><span class="pluss">＋</span></div>
+<div class="drow"><div class="dl">Thu 30th</div><div class="dn">Eggplant Parmesan</div></div>
+<div class="drow"><div class="dl">Fri 31st</div><div class="dn">Takeaway</div></div>
+<div class="drow today"><div class="dl">Sat 1st · Tonight</div><div class="dn">Chicken Curry</div></div>
+<div class="drow empty" style="background:transparent;border:1.5px dashed #d4ccbc"><div class="dl">Sun 2nd</div><span class="pluss">＋</span></div>
+<div class="wkpill" style="margin-bottom:22px">
+<div class="wkbtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></div>
+<div class="wkbtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 11h18"></path></svg></div>
+<div class="wkbtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></div>
+<span>Week 31, July, 2026</span>
+</div>
+</div>
+<div class="tb3" style="align-items:center;padding:14px 0">
+<div class="ti on" style="font-size:15px">Week</div>
+<div style="flex:1;display:flex;justify-content:center"><div class="plus3" style="margin:-36px 0 -8px">＋</div></div>
+<div class="ti" style="font-size:15px">Cookbook</div>
+</div>
+</div><p class="cap2"><b>Week.</b> Dashed empties with a bare right-side ＋; tab bar drops the icons — just Week · ＋ · Cookbook.</p></div>
+
+<div class="task3"><div class="ph3" style="height:720px">
+<div class="dimw" style="flex:0 0 60px"><h2 class="h1w">Week</h2></div>
+<div class="sheet3" style="flex:1">
+<div class="hdl"></div>
+<div class="shd2">Tuesday, July 28th · nothing planned</div>
+<div class="row" style="gap:8px"><div class="inp3">Search the cookbook…</div><div class="fbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg></div></div>
+<div class="seg"><span class="on">Haven't had lately</span><span>A–Z</span><span>Favourites</span></div>
+<div class="prow"><span class="pn2">Mushroom Risotto</span><small>11 wks ago</small></div>
+<div class="prow"><span class="pn2">Pad Thai</span><small>9 wks ago</small></div>
+<div class="prow"><span class="pn2">Shrimp Scampi</span><small>8 wks ago</small></div>
+<div class="prow"><span class="pn2">Grilled Salmon</span><small>8 wks ago</small></div>
+<div class="prow"><span class="pn2">Taco Night</span><small>7 wks ago</small></div>
+<div class="prow"><span class="pn2">Butter Chicken</span><small>5 wks ago</small></div>
+<span style="font-size:11px;color:#a39a8e;text-align:center">⌄ the whole cookbook ⌄</span>
+<div class="row" style="gap:8px;margin-top:auto"><div class="obtn" style="flex:1">New dinner</div><div class="obtn" style="flex:1">Surprise me!</div></div>
+</div>
+</div><p class="cap2"><b>Empty day → picker.</b> The whole cookbook, immediately scrollable. No tag chips up front — search, the funnel, and the three sorts are the only chrome. No recipe badges; "x wks ago" stays.</p></div>
+
+<div class="task3"><div class="ph3" style="height:720px">
+<div class="dimw" style="flex:0 0 60px"><h2 class="h1w">Week</h2></div>
+<div class="sheet3" style="flex:0 0 620px">
+<div class="hdl"></div>
+<div class="inp3" style="flex:none">Search tags…</div>
+<span class="secl">Selected</span>
+<div class="tagwrap"><span class="chip3 sel">Quick ✕</span><span class="chip3 sel">Vegetarian ✕</span><span class="chip3" style="border-style:dashed;color:#8a8276">Clear all</span></div>
+<span class="secl">Most used</span>
+<div class="tagwrap"><span class="chip3">Asian <i>14</i></span><span class="chip3">Comfort <i>12</i></span><span class="chip3">Pasta <i>11</i></span><span class="chip3">Chicken <i>10</i></span><span class="chip3">Healthy <i>9</i></span><span class="chip3">Italian <i>8</i></span></div>
+<span class="secl">All tags</span>
+<div class="tagwrap"><span class="chip3">Beef <i>7</i></span><span class="chip3">Cheap <i>5</i></span><span class="chip3">Fancy <i>3</i></span><span class="chip3">Fish <i>6</i></span><span class="chip3">Freezer-friendly <i>4</i></span><span class="chip3">Grill <i>5</i></span><span class="chip3">Indian <i>6</i></span><span class="chip3">Kids' favourite <i>7</i></span><span class="chip3">Mexican <i>5</i></span><span class="chip3">Oven <i>8</i></span><span class="chip3">Pork <i>4</i></span><span class="chip3">Rice <i>6</i></span><span class="chip3">Salad <i>5</i></span><span class="chip3">Slow cooker <i>3</i></span><span class="chip3">Soup <i>4</i></span><span class="chip3">Spicy <i>6</i></span></div>
+<div class="obtn pri" style="margin-top:auto">Show 9 dinners</div>
+</div>
+</div><p class="cap2"><b>Funnel → tag sheet.</b> No heading — the handle, tag search, then straight into chips. Selected pinned on top with a tag-shaped <b>Clear all</b> at the end of the row. Matches all selected tags (silently). Count lives in the button.</p></div>
+
+<div class="task3"><div class="ph3" style="height:720px">
+<div class="dimw" style="flex:0 0 60px"><h2 class="h1w">Week</h2></div>
+<div class="sheet3" style="flex:1">
+<div class="hdl"></div>
+<div class="shd2">Tuesday, July 28th · nothing planned</div>
+<div class="row" style="gap:8px"><div class="inp3">Search the cookbook…</div><div class="fbtn" style="border-color:#DD6B42;background:#F6DDD2;color:#a34524"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg></div></div>
+<div class="chiprow"><span class="chip3 sel" style="padding:4px 10px;font-size:11px">Quick ✕</span><span class="chip3 sel" style="padding:4px 10px;font-size:11px">Vegetarian ✕</span></div>
+<div class="seg"><span class="on">Haven't had lately</span><span>A–Z</span><span>Favourites</span></div>
+<div class="prow"><span class="pn2">Veg Stir Fry</span><small>3 wks ago</small></div>
+<div class="prow"><span class="pn2">Caprese Pasta</span><small>4 wks ago</small></div>
+<div class="prow"><span class="pn2">Halloumi Tacos</span><small>6 wks ago</small></div>
+<div class="prow"><span class="pn2">Omelette Night</span><small>5 wks ago</small></div>
+<span style="font-size:11px;color:#a39a8e;text-align:center">9 dinners match</span>
+<div class="row" style="gap:8px;margin-top:auto"><div class="obtn" style="flex:1">New dinner</div><div class="obtn" style="flex:1">Surprise me!</div></div>
+</div>
+</div><p class="cap2"><b>Back in the picker, filtered.</b> The funnel tints while a filter is on; the active tags appear as a removable chip row. Everything else is unchanged.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:0 0 60px"><h2 class="h1w">Week</h2></div>
+<div class="sheet3" style="flex:1">
+<div class="hdl"></div>
+<div class="row" style="align-items:center"><span class="shd2" style="text-align:left">Wednesday, July 29th, 2026</span><div class="mdots" style="margin-left:auto;width:30px;height:30px;font-size:11px">...</div></div>
+<h2 class="rt">Spaghetti Carbonara</h2>
+<div class="chiprow"><span class="chip3" style="padding:4px 10px;font-size:11px">Quick</span><span class="chip3" style="padding:4px 10px;font-size:11px">Comfort</span><span class="chip3" style="padding:4px 10px;font-size:11px">Pasta</span></div>
+<span style="font-size:12px;color:#8a8276;font-weight:600">4 servings</span>
+<div>
+<div class="ing2"><b>400 g</b><span>spaghetti</span></div>
+<div class="ing2"><b>150 g</b><span>pancetta <i>— diced</i></span></div>
+<div class="ing2"><b>4 pcs</b><span>eggs</span></div>
+<div class="ing2"><b>100 g</b><span>pecorino <i>— finely grated</i></span></div>
+</div>
+<div>
+<div class="stp2"><b>1</b><span>Boil the spaghetti in well-salted water until al dente.</span></div>
+<div class="stp2"><b>2</b><span>Fry the pancetta until crisp while the pasta cooks.</span></div>
+</div>
+<span style="font-size:11px;color:#a39a8e;text-align:center">⌄ scrolls ⌄</span>
+</div>
+</div><p class="cap2"><b>Planned day.</b> Date, dinner, recipe — view-only. All actions behind the ••• circle.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:0 0 60px"><h2 class="h1w">Week</h2></div>
+<div class="sheet3" style="flex:1">
+<div class="hdl"></div>
+<div class="row" style="align-items:center"><span class="shd2" style="text-align:left">Wednesday, July 29th, 2026</span><div class="mdots" style="margin-left:auto;width:30px;height:30px;font-size:11px;border-color:#DD6B42;color:#C2552F">...</div></div>
+<div style="position:relative">
+<div style="position:absolute;top:0;right:0;width:230px;background:#fff;border:1px solid #e6e0d4;border-radius:14px;box-shadow:0 8px 28px rgba(60,50,40,.22);overflow:hidden;z-index:2">
+<div class="mrow">⇄&nbsp; Change dinner</div>
+<div class="mrow">✎&nbsp; Edit this dinner</div>
+<div class="mrow warn">✕&nbsp; Clear Wednesday</div>
+</div>
+<div>
+<h2 class="rt">Spaghetti Carbonara</h2>
+<div class="chiprow"><span class="chip3" style="padding:4px 10px;font-size:11px">Quick</span><span class="chip3" style="padding:4px 10px;font-size:11px">Comfort</span><span class="chip3" style="padding:4px 10px;font-size:11px">Pasta</span></div>
+<span style="font-size:12px;color:#8a8276;font-weight:600">4 servings</span>
+<div class="ing2"><b>400 g</b><span>spaghetti</span></div>
+<div class="ing2"><b>150 g</b><span>pancetta <i>— diced</i></span></div>
+<div class="ing2"><b>4 pcs</b><span>eggs</span></div>
+<div class="stp2"><b>1</b><span>Boil the spaghetti in well-salted water…</span></div>
+</div>
+</div>
+</div>
+</div><p class="cap2"><b>••• open.</b> The menu floats on its shadow alone — no dimming underneath. Change dinner → the picker with the day held; Edit → the Cookbook's edit view and back; Clear empties the day.</p></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Next: the Cookbook tab · the ＋ capture sheet · the ••• settings drawer.</p>
+</section>
+
+</x-dc>
+</body>
+</html>

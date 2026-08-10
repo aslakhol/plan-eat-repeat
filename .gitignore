@@ -59,6 +59,3 @@ generated
 /.design-sync/node_modules
 /apps/web/design-sync-styles/candidates.txt
 /apps/web/design-sync-styles/ds.css
-
-.design-reference/
-design-reference/
