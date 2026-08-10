@@ -35,7 +35,7 @@ import {
 } from "./RecipeEditor";
 import {
   editorCancelHref,
-  editorSaveHref,
+  editorSaveNavigation,
   parseEditorNavigation,
   planSlotDateFromString,
 } from "~/lib/editor-navigation";
@@ -156,7 +156,13 @@ export const CreateDinner = () => {
         utils.dinner.ingredientNames.invalidate(),
         utils.plan.plannedDinners.invalidate(),
       ]);
-      void router.replace(editorSaveHref(result.dinner.id, navigation));
+      const saveNavigation = editorSaveNavigation(result.dinner.id, navigation);
+      if (saveNavigation.base) {
+        await router.replace(saveNavigation.base);
+        void router.push(saveNavigation.destination);
+      } else {
+        void router.replace(saveNavigation.destination);
+      }
     },
     onError: (error) => {
       setSubmitError(error.message);

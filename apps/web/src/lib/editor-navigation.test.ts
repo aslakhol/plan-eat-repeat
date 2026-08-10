@@ -4,6 +4,7 @@ import {
   buildCreateDinnerEditorHref,
   buildDinnerEditorHref,
   editorCancelHref,
+  editorSaveNavigation,
   editorSaveHref,
   parseEditorNavigation,
   planSlotDateFromDate,
@@ -64,6 +65,10 @@ void test("global Week creation still saves to Cookbook when no date is attached
   const navigation = parseEditorNavigation({ origin: "week" });
 
   assert.equal(editorSaveHref(42, navigation), "/dinners/42");
+  assert.deepEqual(editorSaveNavigation(42, navigation), {
+    base: "/dinners",
+    destination: "/dinners/42",
+  });
   assert.equal(editorCancelHref(navigation), "/");
 });
 

@@ -107,3 +107,13 @@ export const editorSaveHref = (
   navigation.origin === "week" && navigation.date
     ? { pathname: "/", query: { date: navigation.date } }
     : `/dinners/${dinnerId}`;
+
+export const editorSaveNavigation = (
+  dinnerId: number,
+  navigation: EditorNavigation,
+): { base?: "/dinners"; destination: EditorHref | string } => ({
+  ...(navigation.origin === "week" && !navigation.date
+    ? { base: "/dinners" as const }
+    : {}),
+  destination: editorSaveHref(dinnerId, navigation),
+});
