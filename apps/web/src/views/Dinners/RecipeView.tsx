@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 import { ExternalLink } from "lucide-react";
 import {
   formatAmount,
@@ -12,6 +12,8 @@ type Props = {
   dinner: DinnerWithRecipe;
   onEdit?: () => void;
   showEditButton?: boolean;
+  historyLabel?: string;
+  headerAction?: ReactNode;
 };
 
 const hasAmounts = (part: DinnerWithRecipe["parts"][number]) =>
@@ -23,27 +25,39 @@ export const RecipeView = ({
   dinner,
   onEdit,
   showEditButton = true,
+  historyLabel,
+  headerAction,
 }: Props) => {
   const hasRecipe = dinner.parts.length > 0;
 
   return (
     <article className="mx-auto w-full max-w-[640px] px-1 pb-6">
       <header className="space-y-3">
-        <div className="flex items-start gap-3">
-          <h1 className="min-w-0 flex-1 font-serif text-[26px] font-normal leading-[1.2]">
-            {dinner.name}
-          </h1>
-          {showEditButton && onEdit && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="text-muted-foreground h-auto bg-white px-3 py-1.5 text-[13px] font-semibold"
-              onClick={onEdit}
-            >
-              Edit
-            </Button>
-          )}
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            {historyLabel && (
+              <p className="text-muted-foreground mb-0.5 text-[11.5px] font-semibold">
+                {historyLabel}
+              </p>
+            )}
+            <h1 className="font-serif text-[26px] font-normal leading-[1.2]">
+              {dinner.name}
+            </h1>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {headerAction}
+            {showEditButton && onEdit && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="text-muted-foreground h-auto bg-white px-3 py-1.5 text-[13px] font-semibold"
+                onClick={onEdit}
+              >
+                Edit
+              </Button>
+            )}
+          </div>
         </div>
 
         {dinner.tags.length > 0 && (

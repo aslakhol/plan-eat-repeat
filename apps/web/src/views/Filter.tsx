@@ -14,6 +14,7 @@ type Props = {
   selectedTags: string[];
   setSelectedTags: Dispatch<SetStateAction<string[]>>;
   className?: string;
+  placeholder?: string;
 };
 
 export const Filter = ({
@@ -24,21 +25,24 @@ export const Filter = ({
   selectedTags,
   setSelectedTags,
   className,
+  placeholder = "Search...",
 }: Props) => {
   return (
     <div className={cn(className)}>
       <div className="flex w-full items-center space-x-2">
         <Input
-          placeholder="Search..."
+          placeholder={placeholder}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          className="h-11 rounded-full bg-white px-4"
         />
         <Button
           type="button"
           variant={"outline"}
           className={cn(
-            "transition-all duration-300",
-            showTags && "rotate-180",
+            "h-11 w-11 shrink-0 rounded-lg p-0 transition-all duration-300",
+            (showTags || selectedTags.length > 0) &&
+              "border-primary bg-primary/10 text-primary",
           )}
           onClick={() => setShowTags(!showTags)}
         >

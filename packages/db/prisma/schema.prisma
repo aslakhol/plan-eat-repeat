@@ -21,6 +21,7 @@ model Dinner {
     notes       String?
     Household   Household    @relation(fields: [householdId], references: [id])
     householdId String
+    favourite   Boolean      @default(false)
     servings    Int?
     parts       RecipePart[]
 

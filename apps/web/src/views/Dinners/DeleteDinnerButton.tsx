@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { type ReactElement } from "react";
 import { format } from "date-fns";
 import { Trash2 } from "lucide-react";
 import { api } from "../../utils/api";
@@ -17,12 +18,14 @@ type Props = {
   dinnerId: number;
   isPending: boolean;
   onDelete: () => void;
+  trigger?: ReactElement;
 };
 
 export const DeleteDinnerButton = ({
   dinnerId,
   isPending,
   onDelete,
+  trigger,
 }: Props) => {
   const [open, setOpen] = useState(false);
   const plansQuery = api.plan.plansForDinner.useQuery(
@@ -33,20 +36,23 @@ export const DeleteDinnerButton = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          className="hover:bg-destructive/5 w-full border-[hsl(0_50%_85%)] text-[hsl(0_60%_48%)] hover:text-[hsl(0_60%_42%)]"
-        >
-          <Trash2 />
-          Delete dinner
-        </Button>
+        {trigger ?? (
+          <Button
+            type="button"
+            variant="outline"
+            className="hover:bg-destructive/5 w-full border-[hsl(0_50%_85%)] text-[hsl(0_60%_48%)] hover:text-[hsl(0_60%_42%)]"
+          >
+            <Trash2 />
+            Delete dinner
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete dinner</DialogTitle>
           <DialogDescription>
-            Are you sure? This cannot be undone.
+            This permanently deletes the Dinner and its Cooking History. This
+            cannot be undone.
           </DialogDescription>
         </DialogHeader>
 
@@ -61,6 +67,23 @@ export const DeleteDinnerButton = ({
           </div>
         )}
 
+        {plansQuery.isError && (
+          <div className="border-destructive/30 bg-destructive/5 space-y-3 rounded-md border p-3 text-sm">
+            <p>
+              Couldn&apos;t load the affected dates. Try again before deleting
+              this Dinner.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void plansQuery.refetch()}
+            >
+              Try again
+            </Button>
+          </div>
+        )}
+
         <DialogFooter>
           <Button
             type="button"
@@ -72,7 +95,9 @@ export const DeleteDinnerButton = ({
           <Button
             type="button"
             variant="destructive"
-            disabled={isPending || plansQuery.isPending}
+            disabled={
+              isPending || plansQuery.isPending || plansQuery.isError
+            }
             onClick={onDelete}
           >
             Delete

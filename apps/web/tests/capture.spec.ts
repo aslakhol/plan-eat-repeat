@@ -19,7 +19,7 @@ async function ensureSignedIn(page: Page) {
       );
     }
 
-    const weeklyPlanHeading = page.getByRole("heading", { name: "Weekly Plan" });
+    const weeklyPlanHeading = page.getByRole("heading", { name: "Week" });
     if (await weeklyPlanHeading.isVisible().catch(() => false)) {
       return;
     }
@@ -53,7 +53,7 @@ async function ensureSignedIn(page: Page) {
     }
   }
 
-  await expect(page.getByRole("heading", { name: "Weekly Plan" })).toBeVisible({
+  await expect(page.getByRole("heading", { name: "Week" })).toBeVisible({
     timeout: 30_000,
   });
 }
@@ -86,12 +86,12 @@ async function captureScreen(
 
 test("capture plan screenshot", async ({ page }) => {
   await ensureSignedIn(page);
-  await captureScreen(page, "/", "Weekly Plan", "plan.png");
+  await captureScreen(page, "/", "Week", "plan.png");
 });
 
 test("capture dinners screenshot", async ({ page }) => {
   await ensureSignedIn(page);
-  await captureScreen(page, "/dinners", "Dinners", "dinners.png");
+  await captureScreen(page, "/dinners", "Cookbook", "dinners.png");
 });
 
 test("capture plan first-day drawer screenshot", async ({ page }) => {
@@ -99,7 +99,7 @@ test("capture plan first-day drawer screenshot", async ({ page }) => {
   await captureScreen(
     page,
     "/",
-    "Weekly Plan",
+    "Week",
     "plan-first-day-drawer.png",
     async (currentPage) => {
       const firstDay = currentPage.getByTestId("plan-day-trigger").first();
@@ -112,4 +112,73 @@ test("capture plan first-day drawer screenshot", async ({ page }) => {
       await expect(planDayButtons.first()).toBeVisible({ timeout: 30_000 });
     },
   );
+});
+
+test("global quick-add opens a URL-addressed Cookbook sheet", async ({
+  page,
+}) => {
+  await ensureSignedIn(page);
+
+  const dinnerName = `Quick add ${Date.now()}`;
+
+  try {
+    const addDinnerButton = page.getByRole("button", { name: "Add Dinner" });
+
+    await expect(page.getByRole("link", { name: "Week" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Cookbook" })).toBeVisible();
+    await expect(addDinnerButton).toBeVisible();
+    await addDinnerButton.click();
+
+    const nameInput = page.getByPlaceholder("What's for dinner?");
+    const quickAddButton = page.getByRole("button", {
+      name: "Add Name-only Dinner",
+    });
+    await expect(
+      page.getByRole("heading", { name: "Add a dinner" }),
+    ).toBeVisible();
+    await expect(nameInput).toBeFocused();
+    await expect(quickAddButton).toBeDisabled();
+
+    await nameInput.fill(dinnerName);
+    await expect(quickAddButton).toBeEnabled();
+    await quickAddButton.click();
+
+    await expect(page).toHaveURL(/\/dinners\/\d+$/);
+    await expect(page.locator("h1", { hasText: "Cookbook" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: dinnerName })).toBeVisible();
+
+    await page.reload();
+    await expect(page.locator("h1", { hasText: "Cookbook" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: dinnerName })).toBeVisible();
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/dinners$/);
+    await expect(
+      page.getByRole("heading", { name: dinnerName }),
+    ).not.toBeVisible();
+
+    await page.getByRole("link", { name: dinnerName }).click();
+    await page.keyboard.press("Escape");
+    await expect(page).toHaveURL(/\/dinners$/);
+
+    await page.goBack();
+    await expect(page).not.toHaveURL(/\/dinners\/\d+$/);
+    await expect(
+      page.getByRole("heading", { name: dinnerName }),
+    ).not.toBeVisible();
+  } finally {
+    // Remove the test Dinner through the same public UI so repeated capture
+    // runs do not leave fixtures in the Household Cookbook.
+    await page.goto("/dinners");
+    await expect(page.getByRole("heading", { name: "Cookbook" })).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    const createdDinner = page.getByRole("link", { name: dinnerName });
+    if (await createdDinner.isVisible().catch(() => false)) {
+      await createdDinner.click();
+      await page.getByRole("button", { name: "Edit" }).click();
+      await page.getByRole("button", { name: "Delete dinner" }).click();
+      await page.getByRole("button", { name: "Delete", exact: true }).click();
+      await expect(page).toHaveURL(/\/dinners$/);
+    }
+  }
 });

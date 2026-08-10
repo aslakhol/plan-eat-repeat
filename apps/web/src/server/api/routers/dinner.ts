@@ -21,7 +21,6 @@ import {
   importRecipeFromText,
   importRecipeFromUrl,
 } from "~/server/recipes/importRecipe";
-import { type DinnerWithTags } from "~/utils/types";
 import { type PrismaClient } from "@planeatrepeat/db";
 
 const householdImportInstructions = async (
@@ -34,6 +33,13 @@ const householdImportInstructions = async (
   });
   return household.importInstructions;
 };
+
+const householdDinnersWithTags = (db: PrismaClient, householdId: string) =>
+  db.dinner.findMany({
+    where: { householdId },
+    include: { tags: true },
+    orderBy: [{ name: "asc" as const }, { id: "asc" as const }],
+  });
 
 const createRecipeParts = (parts: RecipeInput["parts"]) =>
   parts.map((part, partIndex) => ({
@@ -112,6 +118,8 @@ export const dinnerRouter = createTRPCRouter({
     };
   }),
 
+  // Retained for the mobile client while the redesigned web Cookbook consumes
+  // the richer summaries endpoint.
   dinners: publicProcedure.query(async ({ ctx }) => {
     const householdId = ctx.householdId;
 
@@ -119,15 +127,85 @@ export const dinnerRouter = createTRPCRouter({
       return { dinners: [] };
     }
 
-    const dinners: DinnerWithTags[] = await ctx.db.dinner.findMany({
-      where: { householdId },
-      include: { tags: true },
-      orderBy: { name: "asc" },
-    });
-    return {
-      dinners: dinners,
-    };
+    const dinners = await householdDinnersWithTags(ctx.db, householdId);
+
+    return { dinners };
   }),
+
+  summaries: publicProcedure
+    .input(
+      z
+        .object({
+          today: z.date(),
+          currentWeekStart: z.date(),
+          currentWeekEnd: z.date(),
+        })
+        .refine(
+          ({ currentWeekStart, currentWeekEnd }) =>
+            currentWeekStart < currentWeekEnd,
+          "Current week end must be after its start",
+        ),
+    )
+    .query(async ({ ctx, input }) => {
+      const householdId = ctx.householdId;
+
+      if (!householdId) {
+        return { dinners: [] };
+      }
+
+      const dinners = await householdDinnersWithTags(ctx.db, householdId);
+      const dinnerIds = dinners.map((dinner) => dinner.id);
+
+      if (dinnerIds.length === 0) {
+        return { dinners: [] };
+      }
+
+      const [pastPlanSummaries, currentWeekPlans] = await Promise.all([
+        ctx.db.plan.groupBy({
+          by: ["dinnerId"],
+          where: {
+            dinnerId: { in: dinnerIds },
+            date: { lt: input.today },
+          },
+          _count: { _all: true },
+          _max: { date: true },
+        }),
+        ctx.db.plan.findMany({
+          where: {
+            dinnerId: { in: dinnerIds },
+            date: {
+              gte: input.currentWeekStart,
+              lt: input.currentWeekEnd,
+            },
+          },
+          select: { dinnerId: true, date: true },
+          orderBy: [{ date: "asc" }, { id: "asc" }],
+        }),
+      ]);
+
+      const pastPlansByDinner = new Map(
+        pastPlanSummaries.map((summary) => [summary.dinnerId, summary]),
+      );
+      const currentWeekPlansByDinner = new Map<number, Date[]>();
+      for (const plan of currentWeekPlans) {
+        const dates = currentWeekPlansByDinner.get(plan.dinnerId) ?? [];
+        dates.push(plan.date);
+        currentWeekPlansByDinner.set(plan.dinnerId, dates);
+      }
+
+      return {
+        dinners: dinners.map((dinner) => {
+          const history = pastPlansByDinner.get(dinner.id);
+          return {
+            ...dinner,
+            lastCookedDate: history?._max.date ?? null,
+            cookingFrequency: history?._count._all ?? 0,
+            currentWeekPlanDates:
+              currentWeekPlansByDinner.get(dinner.id) ?? [],
+          };
+        }),
+      };
+    }),
 
   get: publicProcedure
     .input(z.object({ dinnerId: z.number() }))
@@ -339,5 +417,16 @@ export const dinnerRouter = createTRPCRouter({
       return {
         dinner,
       };
+    }),
+  setFavourite: protectedProcedureWithHousehold
+    .input(z.object({ dinnerId: z.number(), favourite: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      const dinner = await ctx.db.dinner.update({
+        where: { id: input.dinnerId, householdId: ctx.householdId },
+        data: { favourite: input.favourite },
+        select: { id: true, favourite: true },
+      });
+
+      return { dinner };
     }),
 });

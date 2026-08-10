@@ -87,6 +87,7 @@ export const DinnerScalarFieldEnum = {
   link: 'link',
   notes: 'notes',
   householdId: 'householdId',
+  favourite: 'favourite',
   servings: 'servings'
 } as const
 

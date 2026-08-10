@@ -12,6 +12,7 @@ export const ClearDay = ({ date, closeDialog }: ClearDayProps) => {
   const unplanDayMutation = api.plan.unplanDay.useMutation({
     onSuccess: () => {
       void utils.plan.plannedDinners.invalidate();
+      void utils.dinner.summaries.invalidate();
       posthog.capture("clear day", {
         day: format(date, "EEE do"),
       });

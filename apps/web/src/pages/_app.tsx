@@ -45,10 +45,20 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   const router = useRouter();
 
   useEffect(() => {
+    document.body.classList.add(
+      youngSerif.variable,
+      quicksand.variable,
+      "font-sans",
+    );
     const handleRouteChange = () => posthog?.capture("$pageview");
     router.events.on("routeChangeComplete", handleRouteChange);
 
     return () => {
+      document.body.classList.remove(
+        youngSerif.variable,
+        quicksand.variable,
+        "font-sans",
+      );
       router.events.off("routeChangeComplete", handleRouteChange);
     };
   }, [router.events]);

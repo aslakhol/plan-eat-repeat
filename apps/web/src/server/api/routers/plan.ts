@@ -2,10 +2,11 @@ import { z } from "zod";
 
 import {
   createTRPCRouter,
-  protectedProcedure,
+  protectedProcedureWithHousehold,
   publicProcedure,
 } from "~/server/api/trpc";
 import { addDays } from "date-fns";
+import { TRPCError } from "@trpc/server";
 
 export const planRouter = createTRPCRouter({
   plannedDinners: publicProcedure
@@ -42,7 +43,7 @@ export const planRouter = createTRPCRouter({
 
       return { plans };
     }),
-  planDinnerForDate: protectedProcedure
+  planDinnerForDate: protectedProcedureWithHousehold
     .input(
       z.object({
         dinnerId: z.number(),
@@ -50,6 +51,14 @@ export const planRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const selectedDinner = await ctx.db.dinner.findUnique({
+        where: { id: input.dinnerId, householdId: ctx.householdId },
+        select: { id: true },
+      });
+      if (!selectedDinner) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Dinner not found" });
+      }
+
       const existingPlan = await ctx.db.plan.findFirst({
         where: { date: input.date, dinner: { householdId: ctx.householdId } },
       });
@@ -71,7 +80,7 @@ export const planRouter = createTRPCRouter({
       return { newPlan };
     }),
 
-  unplanDay: protectedProcedure
+  unplanDay: protectedProcedureWithHousehold
     .input(z.object({ date: z.date() }))
     .mutation(async ({ ctx, input }) => {
       const { date } = input;
@@ -84,8 +93,15 @@ export const planRouter = createTRPCRouter({
   plansForDinner: publicProcedure
     .input(z.object({ dinnerId: z.number() }))
     .query(async ({ ctx, input }) => {
+      if (!ctx.householdId) {
+        return { plans: [] };
+      }
+
       const plans = await ctx.db.plan.findMany({
-        where: { dinnerId: input.dinnerId },
+        where: {
+          dinnerId: input.dinnerId,
+          dinner: { householdId: ctx.householdId },
+        },
         orderBy: { date: "desc" },
       });
       return { plans };
