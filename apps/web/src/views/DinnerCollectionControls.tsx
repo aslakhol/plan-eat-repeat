@@ -1,5 +1,5 @@
 import { FilterIcon, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   ResponsiveModal,
@@ -62,11 +62,35 @@ export const DinnerCollectionControls = ({
   const [tagFilterOpen, setTagFilterOpen] = useState(false);
   const [draftTags, setDraftTags] = useState<string[]>(selectedTags);
   const [tagSearch, setTagSearch] = useState("");
+  const hasTagFilterHistoryEntry = useRef(false);
+
+  useEffect(() => {
+    const closeTagFilterOnBack = () => {
+      if (!hasTagFilterHistoryEntry.current) return;
+
+      hasTagFilterHistoryEntry.current = false;
+      setTagFilterOpen(false);
+    };
+
+    window.addEventListener("popstate", closeTagFilterOnBack);
+    return () => window.removeEventListener("popstate", closeTagFilterOnBack);
+  }, []);
 
   const openTagFilter = () => {
     setDraftTags(selectedTags);
     setTagSearch("");
+    window.history.pushState(window.history.state, "", window.location.href);
+    hasTagFilterHistoryEntry.current = true;
     setTagFilterOpen(true);
+  };
+
+  const closeTagFilter = () => {
+    if (hasTagFilterHistoryEntry.current) {
+      window.history.back();
+      return;
+    }
+
+    setTagFilterOpen(false);
   };
 
   return (
@@ -133,7 +157,9 @@ export const DinnerCollectionControls = ({
 
       <TagFilterSheet
         open={tagFilterOpen}
-        onOpenChange={setTagFilterOpen}
+        onOpenChange={(open) => {
+          if (!open) closeTagFilter();
+        }}
         dinners={dinners}
         draftTags={draftTags}
         onDraftTagsChange={setDraftTags}
@@ -141,7 +167,7 @@ export const DinnerCollectionControls = ({
         onTagSearchChange={setTagSearch}
         onApply={() => {
           onSelectedTagsChange(draftTags);
-          setTagFilterOpen(false);
+          closeTagFilter();
         }}
       />
     </div>

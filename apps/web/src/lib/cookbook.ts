@@ -131,12 +131,11 @@ export const buildDinnerTagGroups = (
   const selectedTagSet = new Set(selectedTags);
   const compareTagNames = (left: DinnerTagCount, right: DinnerTagCount) =>
     dinnerNameCollator.compare(left.value, right.value);
+  const compareTagsByUsage = (left: DinnerTagCount, right: DinnerTagCount) =>
+    right.count - left.count || compareTagNames(left, right);
   const mostUsedValues = new Set(
     [...allTags]
-      .sort(
-        (left, right) =>
-          right.count - left.count || compareTagNames(left, right),
-      )
+      .sort(compareTagsByUsage)
       .slice(0, 8)
       .map((tag) => tag.value),
   );
@@ -151,10 +150,7 @@ export const buildDinnerTagGroups = (
         (tag) =>
           mostUsedValues.has(tag.value) && !selectedTagSet.has(tag.value),
       )
-      .sort(
-        (left, right) =>
-          right.count - left.count || compareTagNames(left, right),
-      ),
+      .sort(compareTagsByUsage),
     all: allTags
       .filter(
         (tag) =>

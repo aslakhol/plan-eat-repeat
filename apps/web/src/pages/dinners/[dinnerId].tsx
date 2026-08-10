@@ -23,7 +23,7 @@ export default function DinnerDetailPage() {
       <ResponsiveModal
         open
         onOpenChange={(open) => {
-          if (!open) void router.push("/dinners");
+          if (!open) void router.replace("/dinners");
         }}
       >
         <ResponsiveModalContent className="h-[min(92dvh,760px)] max-h-[92dvh] overflow-y-auto bg-white md:max-w-[680px]">

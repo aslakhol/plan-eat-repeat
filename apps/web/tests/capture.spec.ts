@@ -160,6 +160,12 @@ test("global quick-add opens a URL-addressed Cookbook sheet", async ({
     await page.getByRole("link", { name: dinnerName }).click();
     await page.keyboard.press("Escape");
     await expect(page).toHaveURL(/\/dinners$/);
+
+    await page.goBack();
+    await expect(page).not.toHaveURL(/\/dinners\/\d+$/);
+    await expect(
+      page.getByRole("heading", { name: dinnerName }),
+    ).not.toBeVisible();
   } finally {
     // Remove the test Dinner through the same public UI so repeated capture
     // runs do not leave fixtures in the Household Cookbook.
