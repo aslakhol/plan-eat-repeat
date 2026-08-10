@@ -15,6 +15,7 @@ import { RecipeView } from "./RecipeView";
 import { DeleteDinnerButton } from "./DeleteDinnerButton";
 import { useDinnerSummaries } from "~/hooks/use-dinner-summaries";
 import { formatDinnerSummaryLabel } from "~/lib/cookbook";
+import { DinnerPlanningSheet } from "./DinnerPlanningSheet";
 
 export const DinnerDetail = () => {
   const router = useRouter();
@@ -22,6 +23,7 @@ export const DinnerDetail = () => {
   const utils = api.useUtils();
   const { today, query: summariesQuery } = useDinnerSummaries();
   const [editing, setEditing] = useState(false);
+  const [planning, setPlanning] = useState(false);
   const rawDinnerId = router.query.dinnerId;
   const dinnerId =
     typeof rawDinnerId === "string" ? Number(rawDinnerId) : Number.NaN;
@@ -159,76 +161,93 @@ export const DinnerDetail = () => {
     : undefined;
 
   return (
-    <RecipeView
-      dinner={dinner}
-      historyLabel={historyLabel}
-      headerAction={
-        <details className="relative">
-          <summary className="text-muted-foreground flex h-[30px] w-[30px] cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
-            <MoreHorizontal className="size-4" />
-            <span className="sr-only">Dinner actions</span>
-          </summary>
-          <div className="border-border absolute right-0 top-9 z-20 w-[210px] overflow-hidden rounded-[14px] border bg-white shadow-[0_8px_28px_rgba(60,50,40,.22)]">
-            <button
+    <>
+      <RecipeView
+        dinner={dinner}
+        historyLabel={historyLabel}
+        headerAction={
+          <details className="relative">
+            <summary className="text-muted-foreground flex h-[30px] w-[30px] cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
+              <MoreHorizontal className="size-4" />
+              <span className="sr-only">Dinner actions</span>
+            </summary>
+            <div className="border-border absolute right-0 top-9 z-20 w-[210px] overflow-hidden rounded-[14px] border bg-white shadow-[0_8px_28px_rgba(60,50,40,.22)]">
+              <button
+                type="button"
+                disabled={favouriteMutation.isPending}
+                className="hover:bg-muted w-full px-3.5 py-3 text-left text-[13.5px] font-semibold disabled:opacity-50"
+                onClick={(event) => {
+                  event.currentTarget
+                    .closest("details")
+                    ?.removeAttribute("open");
+                  favouriteMutation.mutate({
+                    dinnerId: dinner.id,
+                    favourite: !favourite,
+                  });
+                }}
+              >
+                {favourite ? "Remove from favourites" : "Add to favourites"}
+              </button>
+              <DeleteDinnerButton
+                dinnerId={dinner.id}
+                isPending={deleteMutation.isPending}
+                onDelete={() => {
+                  posthog.capture("delete dinner", {
+                    dinnerName: dinner.name,
+                  });
+                  deleteMutation.mutate({ dinnerId: dinner.id });
+                }}
+                trigger={
+                  <button
+                    type="button"
+                    className="text-destructive hover:bg-destructive/5 w-full border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                    onClick={(event) =>
+                      event.currentTarget
+                        .closest("details")
+                        ?.removeAttribute("open")
+                    }
+                  >
+                    Delete dinner
+                  </button>
+                }
+              />
+            </div>
+          </details>
+        }
+        footerActions={
+          <>
+            <Button
               type="button"
-              disabled={favouriteMutation.isPending}
-              className="hover:bg-muted w-full px-3.5 py-3 text-left text-[13.5px] font-semibold disabled:opacity-50"
+              variant="outline"
+              className="bg-white"
               onClick={(event) => {
-                event.currentTarget.closest("details")?.removeAttribute("open");
-                favouriteMutation.mutate({
-                  dinnerId: dinner.id,
-                  favourite: !favourite,
-                });
+                event.currentTarget.blur();
+                setPlanning(true);
               }}
             >
-              {favourite ? "Remove from favourites" : "Add to favourites"}
-            </button>
-            <DeleteDinnerButton
-              dinnerId={dinner.id}
-              isPending={deleteMutation.isPending}
-              onDelete={() => {
-                posthog.capture("delete dinner", {
-                  dinnerName: dinner.name,
-                });
-                deleteMutation.mutate({ dinnerId: dinner.id });
-              }}
-              trigger={
-                <button
-                  type="button"
-                  className="text-destructive hover:bg-destructive/5 w-full border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
-                  onClick={(event) =>
-                    event.currentTarget
-                      .closest("details")
-                      ?.removeAttribute("open")
-                  }
-                >
-                  Delete dinner
-                </button>
-              }
-            />
-          </div>
-        </details>
-      }
-      footerActions={
-        <>
-          <Button
-            type="button"
-            variant="outline"
-            className="bg-white"
-            disabled
-          >
-            Plan this dinner
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="bg-white"
-            onClick={() => setEditing(true)}
-          >
-            Edit
-          </Button>
-        </>
-      }
-    />
+              Plan this dinner
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="bg-white"
+              onClick={() => setEditing(true)}
+            >
+              Edit
+            </Button>
+          </>
+        }
+      />
+      <DinnerPlanningSheet
+        dinner={dinner}
+        open={planning}
+        today={today}
+        onOpenChange={setPlanning}
+        onPlanned={() => {
+          setPlanning(false);
+          void router.replace("/dinners");
+        }}
+      />
+    </>
   );
 };
