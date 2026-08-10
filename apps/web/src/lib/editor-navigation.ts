@@ -1,5 +1,6 @@
 export type EditorOrigin = "cookbook" | "week";
 export type EditorMode = "manual";
+export type EditorImportSource = "link" | "youtube";
 declare const planSlotDateBrand: unique symbol;
 export type PlanSlotDate = string & {
   readonly [planSlotDateBrand]: true;
@@ -10,6 +11,7 @@ export type EditorNavigation = {
   date?: PlanSlotDate;
   name?: string;
   mode?: EditorMode;
+  source?: EditorImportSource;
 };
 
 type QueryValue = string | string[] | undefined;
@@ -62,6 +64,7 @@ export const parseEditorNavigation = (query: EditorQuery): EditorNavigation => {
   const dateValue = singleValue(query.date);
   const nameValue = singleValue(query.name)?.trim();
   const modeValue = singleValue(query.mode);
+  const sourceValue = singleValue(query.source);
 
   return {
     origin,
@@ -70,6 +73,9 @@ export const parseEditorNavigation = (query: EditorQuery): EditorNavigation => {
       : {}),
     ...(nameValue ? { name: nameValue } : {}),
     ...(modeValue === "manual" ? { mode: modeValue } : {}),
+    ...(sourceValue === "link" || sourceValue === "youtube"
+      ? { source: sourceValue }
+      : {}),
   };
 };
 
@@ -81,6 +87,7 @@ export const buildCreateDinnerEditorHref = (
     origin: navigation.origin,
     ...(navigation.date ? { date: navigation.date } : {}),
     ...(navigation.mode ? { mode: navigation.mode } : {}),
+    ...(navigation.source ? { source: navigation.source } : {}),
     ...(navigation.name?.trim() ? { name: navigation.name.trim() } : {}),
   },
 });

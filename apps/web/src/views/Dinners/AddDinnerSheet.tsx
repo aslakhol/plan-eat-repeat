@@ -12,7 +12,10 @@ import { api } from "~/utils/api";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
-import { buildCreateDinnerEditorHref } from "~/lib/editor-navigation";
+import {
+  buildCreateDinnerEditorHref,
+  type EditorImportSource,
+} from "~/lib/editor-navigation";
 import {
   ResponsiveModal,
   ResponsiveModalContent,
@@ -106,12 +109,16 @@ export function AddDinnerSheet({ open, onOpenChange }: Props) {
     createMutation.mutate({ dinnerName: result.data, tagList: [] });
   };
 
-  const continueInExistingCreateFlow = (mode?: "manual") => {
+  const continueInExistingCreateFlow = (options?: {
+    mode?: "manual";
+    source?: EditorImportSource;
+  }) => {
     onOpenChange(false);
     void router.push(
       buildCreateDinnerEditorHref({
         origin: router.pathname === "/" ? "week" : "cookbook",
-        ...(mode ? { mode } : {}),
+        ...(options?.mode ? { mode: options.mode } : {}),
+        ...(options?.source ? { source: options.source } : {}),
         ...(name.trim() ? { name } : {}),
       }),
     );
@@ -174,7 +181,15 @@ export function AddDinnerSheet({ open, onOpenChange }: Props) {
             {importSources.map((source) => (
               <RecipeActionRow
                 key={source}
-                onClick={() => continueInExistingCreateFlow()}
+                onClick={() =>
+                  continueInExistingCreateFlow(
+                    source === "Link"
+                      ? { source: "link" }
+                      : source === "YouTube video"
+                        ? { source: "youtube" }
+                        : undefined,
+                  )
+                }
               >
                 {source}
               </RecipeActionRow>
@@ -185,7 +200,7 @@ export function AddDinnerSheet({ open, onOpenChange }: Props) {
         <div className="border-border mt-5 border-t pt-4">
           <RecipeActionRow
             dashed
-            onClick={() => continueInExistingCreateFlow("manual")}
+            onClick={() => continueInExistingCreateFlow({ mode: "manual" })}
           >
             Write it myself
           </RecipeActionRow>

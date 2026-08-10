@@ -25,14 +25,16 @@ type ParsedDocument = ReturnType<typeof parseHTML>["document"];
 export const importRecipeFromUrl = async (
   url: string,
   instructions?: string | null,
+  signal?: AbortSignal,
 ): Promise<ExtractResult> => {
   const videoId = youtubeVideoIdFromUrl(url);
   const source = videoId
-    ? await acquireYouTubeRecipeText(videoId)
-    : await acquireRecipeTextFromUrl(url);
+    ? await acquireYouTubeRecipeText(videoId, signal)
+    : await acquireRecipeTextFromUrl(url, signal);
   return extractOrThrow(
     [{ type: "text", text: trimForModel(source) }],
     instructions,
+    signal,
   );
 };
 
@@ -58,18 +60,23 @@ export const importRecipeFromImages = async (
 const extractOrThrow = async (
   parts: ExtractInput["parts"],
   instructions?: string | null,
+  signal?: AbortSignal,
 ): Promise<ExtractResult> => {
   try {
-    return await extractRecipe({ parts, instructions });
+    return await extractRecipe({ parts, instructions, abortSignal: signal });
   } catch (error) {
+    if (signal?.aborted) throw error;
     if (error instanceof ImportRecipeError) throw error;
     throw new ImportRecipeError("EXTRACTION_FAILED", errorMessage(error));
   }
 };
 
-const acquireRecipeTextFromUrl = async (url: string): Promise<string> => {
+const acquireRecipeTextFromUrl = async (
+  url: string,
+  signal?: AbortSignal,
+): Promise<string> => {
   try {
-    const html = await fetchHtml(url);
+    const html = await fetchHtml(url, signal);
     return recipeTextFromHtml(html, url);
   } catch (error) {
     // Bot-protected sites (Cloudflare et al.) refuse our fetch. Try the
@@ -77,7 +84,7 @@ const acquireRecipeTextFromUrl = async (url: string): Promise<string> => {
     // re-throw the original SITE_BLOCKED — the user just sees the same error,
     // with no mention that we attempted an archive lookup.
     if (error instanceof ImportRecipeError && error.code === "SITE_BLOCKED") {
-      const archived = await recipeTextFromWayback(url);
+      const archived = await recipeTextFromWayback(url, signal);
       if (archived) return archived;
     }
     throw error;
@@ -104,8 +111,11 @@ const recipeTextFromHtml = (html: string, url: string): string => {
 // Best-effort archive lookup: returns recipe text if the Wayback Machine has
 // a usable snapshot, otherwise null. Never throws — any miss falls back to the
 // original live-fetch error.
-const recipeTextFromWayback = async (url: string): Promise<string | null> => {
-  const html = await fetchArchivedHtml(url);
+const recipeTextFromWayback = async (
+  url: string,
+  signal?: AbortSignal,
+): Promise<string | null> => {
+  const html = await fetchArchivedHtml(url, signal);
   if (!html) return null;
 
   try {
@@ -115,7 +125,10 @@ const recipeTextFromWayback = async (url: string): Promise<string | null> => {
   }
 };
 
-const fetchArchivedHtml = async (url: string): Promise<string | null> => {
+const fetchArchivedHtml = async (
+  url: string,
+  signal?: AbortSignal,
+): Promise<string | null> => {
   try {
     // "2" is a partial timestamp Wayback resolves to the closest snapshot
     // (302 redirect, 404 when none exists); the `id_` modifier returns the
@@ -125,6 +138,7 @@ const fetchArchivedHtml = async (url: string): Promise<string | null> => {
       `https://web.archive.org/web/2id_/${url}`,
       WAYBACK_TIMEOUT_MS,
       { "User-Agent": USER_AGENT },
+      signal,
     );
     if (!res.ok) return null;
     return await res.text();
@@ -133,13 +147,19 @@ const fetchArchivedHtml = async (url: string): Promise<string | null> => {
   }
 };
 
-const fetchHtml = async (url: string) => {
+const fetchHtml = async (url: string, signal?: AbortSignal) => {
   try {
-    const response = await timedFetch(url, FETCH_TIMEOUT_MS, {
-      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      "Accept-Language": "en-US,en;q=0.9,nb;q=0.8,nn;q=0.7",
-      "User-Agent": USER_AGENT,
-    });
+    const response = await timedFetch(
+      url,
+      FETCH_TIMEOUT_MS,
+      {
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,nb;q=0.8,nn;q=0.7",
+        "User-Agent": USER_AGENT,
+      },
+      signal,
+    );
 
     if (!response.ok) {
       throw new ImportRecipeError(
@@ -154,6 +174,7 @@ const fetchHtml = async (url: string) => {
 
     return await response.text();
   } catch (error) {
+    if (signal?.aborted) throw error;
     if (error instanceof ImportRecipeError) throw error;
     throw new ImportRecipeError("FETCH_FAILED", errorMessage(error));
   }
@@ -163,15 +184,13 @@ const timedFetch = async (
   url: string,
   timeoutMs: number,
   headers?: Record<string, string>,
+  signal?: AbortSignal,
 ) => {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    return await fetch(url, { headers, signal: controller.signal });
-  } finally {
-    clearTimeout(timeout);
-  }
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return fetch(url, {
+    headers,
+    signal: signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal,
+  });
 };
 
 const findJsonLdRecipe = (document: ParsedDocument): JsonLdObject | null => {

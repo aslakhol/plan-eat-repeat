@@ -73,6 +73,7 @@ type Props = {
   initialValues?: RecipeEditorValues;
   isPending: boolean;
   submitError?: string | null;
+  importedNameAlternative?: string | null;
   onCancel: () => void;
   onSave: (values: RecipeEditorValues) => void;
   onDelete?: () => void;
@@ -158,6 +159,7 @@ export const RecipeEditor = ({
   initialValues,
   isPending,
   submitError,
+  importedNameAlternative,
   onCancel,
   onSave,
   onDelete,
@@ -180,6 +182,8 @@ export const RecipeEditor = ({
     watchedParts.length > 1 ||
     watchedParts.some((part) => part.name.trim().length > 0);
   const ingredientNamesQuery = api.dinner.ingredientNames.useQuery();
+  const [showImportedNameAlternative, setShowImportedNameAlternative] =
+    useState(Boolean(importedNameAlternative));
 
   const cancel = () => {
     if (
@@ -255,6 +259,41 @@ export const RecipeEditor = ({
                 className="h-12 bg-white text-lg font-semibold"
               />
               <FieldError message={form.formState.errors.name?.message} />
+              {showImportedNameAlternative && importedNameAlternative && (
+                <div className="mt-3 space-y-3 rounded-lg bg-[hsl(40_33%_95%)] p-3">
+                  <p className="text-sm">
+                    The source calls it “
+                    <span className="font-semibold">
+                      {importedNameAlternative}
+                    </span>
+                    ”
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-primary text-primary rounded-full bg-transparent"
+                      onClick={() => setShowImportedNameAlternative(false)}
+                    >
+                      Keep our name ✓
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full bg-transparent"
+                      onClick={() => {
+                        form.setValue("name", importedNameAlternative, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        });
+                        setShowImportedNameAlternative(false);
+                      }}
+                    >
+                      Use theirs
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>

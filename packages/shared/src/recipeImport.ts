@@ -77,7 +77,9 @@ export const isYouTubeVideoUrl = (value: string | URL) =>
 
 export const validUrlOrNull = (value: string) => {
   try {
-    return new URL(value.trim()).toString();
+    const url = new URL(value.trim());
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.toString();
   } catch {
     return null;
   }

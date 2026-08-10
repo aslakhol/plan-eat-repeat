@@ -258,13 +258,17 @@ export const dinnerRouter = createTRPCRouter({
 
   importFromUrl: protectedProcedureWithHousehold
     .input(z.object({ url: z.string().url() }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input, signal }) => {
       try {
         const instructions = await householdImportInstructions(
           ctx.db,
           ctx.householdId,
         );
-        const draft = await importRecipeFromUrl(input.url, instructions);
+        const draft = await importRecipeFromUrl(
+          input.url,
+          instructions,
+          signal,
+        );
         return {
           ...draft,
           sourceUrl: input.url,

@@ -28,6 +28,32 @@ void test("manual creation preserves a typed name and Cookbook origin", () => {
   );
 });
 
+void test("Link and YouTube creation keep their distinct source screen", () => {
+  assert.deepEqual(
+    buildCreateDinnerEditorHref({
+      origin: "cookbook",
+      name: "Taco night",
+      source: "youtube",
+    }),
+    {
+      pathname: "/dinners/new",
+      query: {
+        origin: "cookbook",
+        name: "Taco night",
+        source: "youtube",
+      },
+    },
+  );
+
+  assert.deepEqual(
+    parseEditorNavigation({
+      origin: "week",
+      source: "link",
+    }),
+    { origin: "week", source: "link" },
+  );
+});
+
 void test("a Week origin carries a valid local Plan Slot date", () => {
   const navigation = parseEditorNavigation({
     origin: "week",

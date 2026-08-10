@@ -18,6 +18,7 @@ export type ExtractInput = {
     | { type: "image"; image: Uint8Array; mimeType: string }
   >;
   instructions?: string | null;
+  abortSignal?: AbortSignal;
 };
 
 const extractRecipeSchema = z.object({
@@ -71,6 +72,7 @@ export const extractRecipe = async (
 
   const result = await generateText({
     model: anthropic(env.AI_EXTRACT_MODEL),
+    abortSignal: input.abortSignal,
     output: Output.object({
       schema: extractRecipeSchema,
       name: "ExtractedRecipe",

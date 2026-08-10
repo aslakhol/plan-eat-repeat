@@ -29,8 +29,14 @@ type YouTubePlayerResponse = {
   playerCaptionsTracklistRenderer?: { captionTracks?: CaptionTrack[] };
 };
 
-export const acquireYouTubeRecipeText = async (videoId: string) => {
-  const signal = AbortSignal.timeout(ACQUISITION_TIMEOUT_MS);
+export const acquireYouTubeRecipeText = async (
+  videoId: string,
+  requestSignal?: AbortSignal,
+) => {
+  const timeoutSignal = AbortSignal.timeout(ACQUISITION_TIMEOUT_MS);
+  const signal = requestSignal
+    ? AbortSignal.any([requestSignal, timeoutSignal])
+    : timeoutSignal;
   const { videoDetails, transcript } = await fetchYouTubeData(videoId, signal);
   const description = videoDetails.shortDescription?.trim() ?? "";
   const transcriptText = transcript.map((segment) => segment.text).join(" ");
