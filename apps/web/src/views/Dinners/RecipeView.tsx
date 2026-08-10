@@ -10,6 +10,7 @@ import { cn } from "../../lib/utils";
 type Props = {
   dinner: DinnerWithRecipe;
   historyLabel?: string;
+  headerLabel?: string;
   headerAction?: ReactNode;
   footerActions?: ReactNode;
 };
@@ -22,6 +23,7 @@ const hasAmounts = (part: DinnerWithRecipe["parts"][number]) =>
 export const RecipeView = ({
   dinner,
   historyLabel,
+  headerLabel,
   headerAction,
   footerActions,
 }: Props) => {
@@ -62,6 +64,16 @@ export const RecipeView = ({
   return (
     <article className="mx-auto w-full max-w-[640px] px-1 pb-2">
       <header className="space-y-3">
+        {headerLabel && (
+          <div className="flex items-center gap-3">
+            <p className="text-muted-foreground min-w-0 flex-1 text-[13px] font-semibold">
+              {headerLabel}
+            </p>
+            <div className="flex shrink-0 items-center gap-2">
+              {headerAction}
+            </div>
+          </div>
+        )}
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             {historyLabel && (
@@ -76,7 +88,11 @@ export const RecipeView = ({
               {dinner.name}
             </h1>
           </div>
-          <div className="flex shrink-0 items-center gap-2">{headerAction}</div>
+          {!headerLabel && (
+            <div className="flex shrink-0 items-center gap-2">
+              {headerAction}
+            </div>
+          )}
         </div>
 
         {dinner.tags.length > 0 && (

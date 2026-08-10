@@ -1,12 +1,28 @@
 import { format } from "date-fns";
 import { usePostHog } from "posthog-js/react";
-import { Button } from "../../components/ui/button";
+import { Button, type ButtonProps } from "../../components/ui/button";
 import { api } from "../../utils/api";
 import { UtensilsCrossed } from "lucide-react";
+import { type ReactNode } from "react";
+import { cn } from "~/lib/utils";
 
-type ClearDayProps = { date: Date; closeDialog: () => void };
+type ClearDayProps = {
+  date: Date;
+  closeDialog: () => void;
+  children?: ReactNode;
+  className?: string;
+  variant?: ButtonProps["variant"];
+  onBeforeClear?: () => void;
+};
 
-export const ClearDay = ({ date, closeDialog }: ClearDayProps) => {
+export const ClearDay = ({
+  date,
+  closeDialog,
+  children = "Clear day",
+  className,
+  variant = "outline",
+  onBeforeClear,
+}: ClearDayProps) => {
   const posthog = usePostHog();
   const utils = api.useUtils();
   const unplanDayMutation = api.plan.unplanDay.useMutation({
@@ -21,17 +37,18 @@ export const ClearDay = ({ date, closeDialog }: ClearDayProps) => {
   });
   return (
     <Button
-      variant={"outline"}
-      className="w-24"
-      onClick={() =>
+      variant={variant}
+      className={cn(!className && "w-24", className)}
+      onClick={() => {
+        onBeforeClear?.();
         unplanDayMutation.mutate({
           date,
-        })
-      }
+        });
+      }}
       disabled={unplanDayMutation.isPending}
     >
       {!unplanDayMutation.isPending ? (
-        "Clear day"
+        children
       ) : (
         <UtensilsCrossed className="animate-spin" size={14} />
       )}

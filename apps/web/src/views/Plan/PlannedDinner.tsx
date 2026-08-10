@@ -1,17 +1,17 @@
-import { Button } from "../../components/ui/button";
 import { type DinnerWithRecipe } from "../../utils/types";
 import { format } from "date-fns";
 import {
   ResponsiveModalContent,
-  ResponsiveModalHeader,
   ResponsiveModalTitle,
   ResponsiveModalDescription,
 } from "../../components/ResponsiveModal";
 import { ClearDay } from "./ClearDay";
 import Link from "next/link";
 import useWakeLock from "react-use-wake-lock";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { RecipeView } from "../Dinners/RecipeView";
+import { ArrowRightLeft, MoreHorizontal, Pencil, X } from "lucide-react";
+import { Button } from "~/components/ui/button";
 
 type Props = {
   dinner: DinnerWithRecipe;
@@ -28,47 +28,83 @@ export const PlannedDinner = ({
   setChangePlan,
   isOpen,
 }: Props) => {
-  const { isSupported, request, release } = useWakeLock();
+  const { isSupported, isLocked, request, release } = useWakeLock();
+  const menuRef = useRef<HTMLDetailsElement>(null);
+  const wakeLockRef = useRef({ isLocked, release });
+
+  const closeMenu = () => menuRef.current?.removeAttribute("open");
 
   useEffect(() => {
-    if (!isSupported) {
-      return;
-    }
-    if (!isOpen) {
-      release();
-      return;
-    }
+    wakeLockRef.current = { isLocked, release };
+  }, [isLocked, release]);
 
-    request();
+  useEffect(() => {
+    if (!isSupported) return;
 
+    if (isOpen && !isLocked) request();
+    if (!isOpen && isLocked) release();
+  }, [isSupported, isOpen, isLocked, request, release]);
+
+  useEffect(() => {
     return () => {
-      release();
+      if (wakeLockRef.current.isLocked) wakeLockRef.current.release();
     };
-  }, [isSupported, isOpen, request, release]);
+  }, []);
 
   return (
-    <ResponsiveModalContent className="flex h-[85dvh] max-h-[85dvh] max-w-[640px] flex-col overflow-hidden">
-      <ResponsiveModalHeader className="shrink-0 pr-6">
-        <ResponsiveModalDescription>
-          {format(date, "EEEE, LLLL do, y")}
-        </ResponsiveModalDescription>
-        <ResponsiveModalTitle className="sr-only">
-          {dinner.name}
-        </ResponsiveModalTitle>
-      </ResponsiveModalHeader>
-
-      <div className="flex shrink-0 flex-wrap gap-2">
-        <Button variant="outline" onClick={() => setChangePlan(true)}>
-          Change dinner
-        </Button>
-        <ClearDay date={date} closeDialog={closeDialog} />
-        <Button variant="outline" asChild>
-          <Link href={`/dinners/${dinner.id}?edit=1`}>Edit</Link>
-        </Button>
-      </div>
+    <ResponsiveModalContent className="flex h-[92dvh] max-h-[92dvh] max-w-[640px] flex-col overflow-hidden bg-white md:h-[min(90dvh,800px)]">
+      <ResponsiveModalTitle className="sr-only">
+        {dinner.name}
+      </ResponsiveModalTitle>
+      <ResponsiveModalDescription className="sr-only">
+        Planned Dinner for {format(date, "EEEE, LLLL do, y")}
+      </ResponsiveModalDescription>
 
       <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 pt-2">
-        <RecipeView dinner={dinner} />
+        <RecipeView
+          dinner={dinner}
+          headerLabel={format(date, "EEEE, LLLL do, y")}
+          headerAction={
+            <details ref={menuRef} className="relative">
+              <summary className="text-muted-foreground flex h-[30px] w-[30px] cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
+                <MoreHorizontal className="size-4" />
+                <span className="sr-only">Planned Dinner actions</span>
+              </summary>
+              <div className="border-border absolute right-0 top-9 z-20 w-[230px] overflow-hidden rounded-[14px] border bg-white shadow-[0_8px_28px_rgba(60,50,40,.22)]">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-auto w-full justify-start rounded-none px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                  onClick={() => {
+                    closeMenu();
+                    setChangePlan(true);
+                  }}
+                >
+                  <ArrowRightLeft className="size-4" />
+                  Change Dinner
+                </Button>
+                <Link
+                  href={`/dinners/${dinner.id}?edit=1`}
+                  className="hover:bg-muted flex w-full items-center gap-3 border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                  onClick={closeMenu}
+                >
+                  <Pencil className="size-4" />
+                  Edit this Dinner
+                </Link>
+                <ClearDay
+                  date={date}
+                  closeDialog={closeDialog}
+                  variant="ghost"
+                  className="text-destructive hover:bg-destructive/5 hover:text-destructive h-auto w-full justify-start rounded-none border-t px-3.5 py-3 text-[13.5px] font-semibold"
+                  onBeforeClear={closeMenu}
+                >
+                  <X className="size-4" />
+                  Clear {format(date, "EEEE")}
+                </ClearDay>
+              </div>
+            </details>
+          }
+        />
       </div>
     </ResponsiveModalContent>
   );

@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   buildDinnerPlanningWeek,
   formatDinnerPlanningConfirmation,
+  formatWeekOverviewDayLabel,
 } from "./dinner-planning";
 
 void test("planning weeks always contain complete Monday–Sunday local dates", () => {
@@ -62,6 +63,16 @@ void test("planning week labels use the ISO week and the Monday's month and year
   assert.equal(week.label, "Week 53, December 2026");
   assert.equal(week.days[0]?.dateTime, "2026-12-28");
   assert.equal(week.days[6]?.dateTime, "2027-01-03");
+});
+
+void test("Week overview labels call out tonight without changing other day labels", () => {
+  const today = new Date(2026, 7, 15);
+
+  assert.equal(formatWeekOverviewDayLabel(today, today), "Sat 15th · Tonight");
+  assert.equal(
+    formatWeekOverviewDayLabel(new Date(2026, 7, 16), today),
+    "Sun 16th",
+  );
 });
 
 void test("planning confirmation includes the Dinner name and full date", () => {

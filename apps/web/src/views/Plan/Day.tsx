@@ -1,27 +1,23 @@
-import { format, isToday } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { cn } from "../../lib/utils";
 import { PlannedDinner } from "./PlannedDinner";
 import { type DinnerWithRecipe } from "../../utils/types";
 import { useState } from "react";
 import { PlanDay } from "./PlanDay";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import {
   ResponsiveModal,
   ResponsiveModalTrigger,
 } from "../../components/ResponsiveModal";
-import { Plus } from "lucide-react";
+import { formatWeekOverviewDayLabel } from "~/lib/dinner-planning";
+import { Button } from "~/components/ui/button";
 
 type Props = {
   date: Date;
+  today: Date;
   plannedDinner?: DinnerWithRecipe;
 };
 
-export const Day = ({ date, plannedDinner }: Props) => {
+export const Day = ({ date, today, plannedDinner }: Props) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [changePlan, setChangePlan] = useState(!plannedDinner);
 
@@ -32,45 +28,47 @@ export const Day = ({ date, plannedDinner }: Props) => {
     }
   };
 
-  const isDateToday = isToday(date);
+  const isDateToday = isSameDay(date, today);
 
   return (
     <ResponsiveModal open={dialogOpen} onOpenChange={onOpenChange}>
       <ResponsiveModalTrigger asChild>
-        <Card
+        <Button
+          type="button"
+          variant="outline"
           data-testid="plan-day-trigger"
           data-date={format(date, "yyyy-MM-dd")}
           className={cn(
-            "hover:bg-accent/50 group relative flex h-full min-h-[80px] cursor-pointer flex-col overflow-hidden transition-colors sm:min-h-[140px]",
+            "group relative flex h-auto min-h-[80px] w-full flex-col items-stretch justify-center gap-0 overflow-hidden whitespace-normal rounded-[14px] border-[1.5px] px-4 py-3 text-left sm:min-h-[140px]",
             !plannedDinner &&
-              "hover:border-primary/50 border-dashed bg-transparent",
+              "border-border hover:border-primary/50 border-dashed bg-transparent",
             plannedDinner &&
-              "border-secondary bg-secondary/30 hover:bg-secondary/50",
-            isDateToday && "ring-primary ring-2 ring-offset-2",
+              "bg-muted hover:bg-accent border-transparent shadow-none",
+            isDateToday &&
+              "border-primary focus-visible:ring-primary border-solid bg-white hover:bg-white",
           )}
         >
-          <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
-            <CardTitle
-              className={cn(
-                "text-muted-foreground flex items-center justify-between font-sans text-sm font-medium",
-                isDateToday && "text-primary font-bold",
-              )}
-            >
-              {format(date, "EEE do")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-1 flex-col justify-center p-3 pt-0 sm:p-4 sm:pt-0">
-            {plannedDinner ? (
-              <p className="line-clamp-3 font-serif text-base font-medium leading-tight sm:line-clamp-2 sm:text-lg">
-                {plannedDinner.name}
-              </p>
-            ) : (
-              <div className="text-muted-foreground/50 group-hover:text-primary/50 flex h-full items-center justify-center transition-colors">
-                <Plus className="h-6 w-6 sm:h-8 sm:w-8" />
-              </div>
+          <span
+            className={cn(
+              "text-muted-foreground text-[11px] font-bold",
+              isDateToday && "text-primary",
             )}
-          </CardContent>
-        </Card>
+          >
+            {formatWeekOverviewDayLabel(date, today)}
+          </span>
+          {plannedDinner ? (
+            <span className="mt-1 line-clamp-2 font-serif text-xl font-normal leading-tight">
+              {plannedDinner.name}
+            </span>
+          ) : (
+            <span
+              aria-hidden="true"
+              className="text-muted-foreground group-hover:text-primary absolute right-4 text-[24px] font-light leading-none transition-colors"
+            >
+              +
+            </span>
+          )}
+        </Button>
       </ResponsiveModalTrigger>
       <>
         {changePlan || !plannedDinner ? (
