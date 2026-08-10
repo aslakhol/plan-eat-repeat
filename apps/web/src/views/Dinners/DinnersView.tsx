@@ -1,27 +1,15 @@
 import { AlertCircle, BookOpen, UtensilsCrossed } from "lucide-react";
 import { DinnerList } from "./DinnerList";
 import { useState } from "react";
-import { Filter } from "../Filter";
 import { Button } from "~/components/ui/button";
 import { useDinnerSummaries } from "~/hooks/use-dinner-summaries";
-import {
-  filterDinnerSummaries,
-  orderDinnerSummaries,
-  type CookbookSort,
-} from "~/lib/cookbook";
-import { cn } from "~/lib/utils";
-
-const sortOptions: Array<{ value: CookbookSort; label: string }> = [
-  { value: "az", label: "A–Z" },
-  { value: "not-lately", label: "Haven't had lately" },
-  { value: "favourites", label: "Favourites" },
-];
+import { deriveDinnerCollection, type CookbookSort } from "~/lib/cookbook";
+import { DinnerCollectionControls } from "../DinnerCollectionControls";
 
 export const DinnersView = () => {
   const { query: dinnersQuery, today } = useDinnerSummaries();
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [showTags, setShowTags] = useState(false);
   const [sort, setSort] = useState<CookbookSort>("az");
 
   if (dinnersQuery.isPending) {
@@ -52,13 +40,11 @@ export const DinnersView = () => {
     );
   }
 
-  const matchingDinners = filterDinnerSummaries(
-    dinnersQuery.data.dinners,
+  const collection = deriveDinnerCollection(dinnersQuery.data.dinners, {
     search,
     selectedTags,
-  );
-  const dinners = orderDinnerSummaries(matchingDinners, sort);
-  const hasFilters = search.trim().length > 0 || selectedTags.length > 0;
+    sort,
+  });
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
@@ -66,34 +52,18 @@ export const DinnersView = () => {
         <h1 className="text-foreground font-serif text-3xl font-normal">
           Cookbook
         </h1>
-        <Filter
+        <DinnerCollectionControls
+          dinners={dinnersQuery.data.dinners}
           search={search}
-          setSearch={setSearch}
-          showTags={showTags}
-          setShowTags={setShowTags}
+          onSearchChange={setSearch}
           selectedTags={selectedTags}
-          setSelectedTags={setSelectedTags}
+          onSelectedTagsChange={setSelectedTags}
+          sort={sort}
+          onSortChange={setSort}
           placeholder="Search dinners…"
         />
-        <div className="bg-muted grid grid-cols-3 gap-1 rounded-lg p-1">
-          {sortOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={sort === option.value}
-              onClick={() => setSort(option.value)}
-              className={cn(
-                "text-muted-foreground min-w-0 rounded-md px-1 py-2 text-[10px] font-bold transition-colors sm:text-[11px]",
-                sort === option.value &&
-                  "text-primary bg-white shadow-sm",
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
       </div>
-      {dinnersQuery.data.dinners.length === 0 ? (
+      {collection.emptyState === "empty-cookbook" ? (
         <div className="mx-auto flex min-h-[42vh] max-w-sm flex-col items-center justify-center gap-3 px-4 text-center">
           <BookOpen className="text-primary size-7" />
           <h2 className="font-serif text-2xl">Your Cookbook is empty</h2>
@@ -103,9 +73,9 @@ export const DinnersView = () => {
         </div>
       ) : (
         <>
-          {dinners.length > 0 ? (
+          {collection.dinners.length > 0 ? (
             <DinnerList
-              dinners={dinners}
+              dinners={collection.dinners}
               selectedTags={selectedTags}
               today={today}
             />
@@ -128,9 +98,9 @@ export const DinnersView = () => {
             </div>
           )}
           <p className="text-muted-foreground text-center text-[11px] font-semibold">
-            {hasFilters
-              ? `${dinners.length} ${dinners.length === 1 ? "dinner" : "dinners"} match`
-              : `⌄ ${dinners.length} ${dinners.length === 1 ? "dinner" : "dinners"} ⌄`}
+            {collection.hasActiveFilters
+              ? `${collection.matchingCount} ${collection.matchingCount === 1 ? "dinner" : "dinners"} match`
+              : `⌄ ${collection.totalCount} ${collection.totalCount === 1 ? "dinner" : "dinners"} ⌄`}
           </p>
         </>
       )}

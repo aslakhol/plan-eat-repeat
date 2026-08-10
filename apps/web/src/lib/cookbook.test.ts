@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  buildDinnerTagGroups,
+  deriveDinnerCollection,
   filterDinnerSummaries,
   formatDinnerSummaryLabel,
   orderDinnerSummaries,
@@ -25,7 +27,11 @@ const summary = (
 });
 
 void test("A–Z ordering uses Dinner ID as a deterministic tie-breaker", () => {
-  const dinners = [summary(3, "Tacos"), summary(2, "Curry"), summary(1, "Curry")];
+  const dinners = [
+    summary(3, "Tacos"),
+    summary(2, "Curry"),
+    summary(1, "Curry"),
+  ];
 
   assert.deepEqual(
     orderDinnerSummaries(dinners, "az").map((dinner) => dinner.id),
@@ -64,7 +70,11 @@ void test("Favourites ordering keeps every Dinner and ranks each group by freque
 
 void test("Cookbook filtering normalises search text and requires every selected tag", () => {
   const dinners = [
-    { id: 1, name: "Bean Chilli", tags: [{ value: "Quick" }, { value: "Vegan" }] },
+    {
+      id: 1,
+      name: "Bean Chilli",
+      tags: [{ value: "Quick" }, { value: "Vegan" }],
+    },
     { id: 2, name: "Sunday roast", tags: [{ value: "Weekend" }] },
     { id: 3, name: "Miso soup", tags: [{ value: "QUICK" }] },
   ];
@@ -85,6 +95,134 @@ void test("Cookbook filtering normalises search text and requires every selected
     ),
     [1],
   );
+});
+
+void test("Cookbook search normalises accents and whitespace in Dinner names and tags", () => {
+  const dinners = [
+    { id: 1, name: "Crème   brûlée", tags: [{ value: "Dinner party" }] },
+    { id: 2, name: "Tomato soup", tags: [{ value: "Quick   lunch" }] },
+  ];
+
+  assert.deepEqual(
+    filterDinnerSummaries(dinners, "creme brulee", []).map(
+      (dinner) => dinner.id,
+    ),
+    [1],
+  );
+  assert.deepEqual(
+    filterDinnerSummaries(dinners, "quick lunch", []).map(
+      (dinner) => dinner.id,
+    ),
+    [2],
+  );
+});
+
+void test("tag groups count active Dinners, keep the overall top eight, and never duplicate Selected tags", () => {
+  const dinners = [
+    {
+      name: "A",
+      tags: [
+        { value: "Quick" },
+        { value: "Asian" },
+        { value: "Comfort" },
+        { value: "Pasta" },
+        { value: "Chicken" },
+        { value: "Healthy" },
+        { value: "Italian" },
+        { value: "Beef" },
+        { value: "Oven" },
+        { value: "Soup" },
+      ],
+    },
+    {
+      name: "B",
+      tags: [
+        { value: "Quick" },
+        { value: "Asian" },
+        { value: "Comfort" },
+        { value: "Pasta" },
+        { value: "Chicken" },
+        { value: "Healthy" },
+        { value: "Italian" },
+        { value: "Beef" },
+      ],
+    },
+    {
+      name: "C",
+      tags: [
+        { value: "Quick" },
+        { value: "Asian" },
+        { value: "Comfort" },
+        { value: "Pasta" },
+        { value: "Chicken" },
+        { value: "Healthy" },
+        { value: "Italian" },
+      ],
+    },
+  ];
+
+  const groups = buildDinnerTagGroups(dinners, ["Quick"]);
+
+  assert.deepEqual(groups.selected, [{ value: "Quick", count: 3 }]);
+  assert.deepEqual(
+    groups.mostUsed.map((tag) => tag.value),
+    ["Asian", "Chicken", "Comfort", "Healthy", "Italian", "Pasta", "Beef"],
+  );
+  assert.deepEqual(groups.all, [
+    { value: "Oven", count: 1 },
+    { value: "Soup", count: 1 },
+  ]);
+});
+
+void test("the shared collection seam derives ordering, counts, and contextual empty state", () => {
+  const dinners = [
+    {
+      ...summary(1, "Bean Chilli", { cookingFrequency: 2 }),
+      tags: [{ value: "Quick" }, { value: "Vegan" }],
+    },
+    {
+      ...summary(2, "Miso Soup", { cookingFrequency: 4 }),
+      tags: [{ value: "Quick" }],
+    },
+  ];
+
+  const filtered = deriveDinnerCollection(dinners, {
+    search: "bean",
+    selectedTags: ["Quick"],
+    sort: "favourites",
+  });
+  assert.deepEqual(
+    filtered.dinners.map((dinner) => dinner.id),
+    [1],
+  );
+  assert.deepEqual(
+    {
+      totalCount: filtered.totalCount,
+      matchingCount: filtered.matchingCount,
+      hasActiveFilters: filtered.hasActiveFilters,
+      emptyState: filtered.emptyState,
+    },
+    {
+      totalCount: 2,
+      matchingCount: 1,
+      hasActiveFilters: true,
+      emptyState: null,
+    },
+  );
+
+  const noMatches = deriveDinnerCollection(dinners, {
+    search: "",
+    selectedTags: ["Vegan", "Quick", "Weekend"],
+    sort: "az",
+  });
+  assert.equal(noMatches.emptyState, "no-matches");
+
+  const emptyCookbook = deriveDinnerCollection([], {
+    search: "anything",
+    selectedTags: [],
+    sort: "az",
+  });
+  assert.equal(emptyCookbook.emptyState, "empty-cookbook");
 });
 
 void test("summary label prioritises tonight, then nearest upcoming, then most recent past weekday", () => {
