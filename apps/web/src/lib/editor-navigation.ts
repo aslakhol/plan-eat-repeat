@@ -1,9 +1,13 @@
 export type EditorOrigin = "cookbook" | "week";
 export type EditorMode = "manual";
+declare const planSlotDateBrand: unique symbol;
+export type PlanSlotDate = string & {
+  readonly [planSlotDateBrand]: true;
+};
 
 export type EditorNavigation = {
   origin: EditorOrigin;
-  date?: string;
+  date?: PlanSlotDate;
   name?: string;
   mode?: EditorMode;
 };
@@ -19,7 +23,9 @@ export type EditorHref = {
 const singleValue = (value: QueryValue) =>
   typeof value === "string" ? value : undefined;
 
-export const isPlanSlotDate = (value: string | undefined): value is string => {
+export const isPlanSlotDate = (
+  value: string | undefined,
+): value is PlanSlotDate => {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
 
   const [year, month, day] = value.split("-").map(Number);
@@ -35,12 +41,19 @@ export const isPlanSlotDate = (value: string | undefined): value is string => {
   );
 };
 
-export const planSlotDateFromString = (value: string) => {
+export const planSlotDateFromString = (value: PlanSlotDate) => {
   const [year, month, day] = value.split("-");
   if (year === undefined || month === undefined || day === undefined) {
     throw new Error("Invalid Plan Slot date");
   }
   return new Date(Number(year), Number(month) - 1, Number(day));
+};
+
+export const planSlotDateFromDate = (value: Date): PlanSlotDate => {
+  const year = String(value.getFullYear()).padStart(4, "0");
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}` as PlanSlotDate;
 };
 
 export const parseEditorNavigation = (query: EditorQuery): EditorNavigation => {

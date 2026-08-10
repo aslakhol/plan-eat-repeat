@@ -156,7 +156,7 @@ export const CreateDinner = () => {
         utils.dinner.ingredientNames.invalidate(),
         utils.plan.plannedDinners.invalidate(),
       ]);
-      void router.push(editorSaveHref(result.dinner.id, navigation));
+      void router.replace(editorSaveHref(result.dinner.id, navigation));
     },
     onError: (error) => {
       setSubmitError(error.message);
@@ -375,7 +375,7 @@ export const CreateDinner = () => {
         initialValues={editorValuesFromManualName(navigation.name ?? "")}
         isPending={createMutation.isPending}
         submitError={submitError}
-        onCancel={() => void router.push(editorCancelHref(navigation))}
+        onCancel={() => void router.replace(editorCancelHref(navigation))}
         onSave={createDinner}
       />
     );
@@ -388,7 +388,7 @@ export const CreateDinner = () => {
         initialValues={draft}
         isPending={createMutation.isPending}
         submitError={submitError}
-        onCancel={() => void router.push(editorCancelHref(navigation))}
+        onCancel={() => void router.replace(editorCancelHref(navigation))}
         onSave={createDinner}
       />
     );
@@ -401,7 +401,7 @@ export const CreateDinner = () => {
           type="button"
           variant="ghost"
           className="justify-self-start px-2"
-          onClick={() => void router.push(editorCancelHref(navigation))}
+          onClick={() => void router.replace(editorCancelHref(navigation))}
         >
           Cancel
         </Button>

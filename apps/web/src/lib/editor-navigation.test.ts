@@ -6,6 +6,7 @@ import {
   editorCancelHref,
   editorSaveHref,
   parseEditorNavigation,
+  planSlotDateFromDate,
 } from "./editor-navigation";
 
 void test("manual creation preserves a typed name and Cookbook origin", () => {
@@ -67,13 +68,12 @@ void test("global Week creation still saves to Cookbook when no date is attached
 });
 
 void test("editing from a planned-day sheet retains the return contract", () => {
-  assert.deepEqual(
-    buildDinnerEditorHref(42, { origin: "week", date: "2026-08-12" }),
-    {
-      pathname: "/dinners/42",
-      query: { edit: "1", origin: "week", date: "2026-08-12" },
-    },
-  );
+  const date = planSlotDateFromDate(new Date(2026, 7, 12));
+
+  assert.deepEqual(buildDinnerEditorHref(42, { origin: "week", date }), {
+    pathname: "/dinners/42",
+    query: { edit: "1", origin: "week", date: "2026-08-12" },
+  });
 });
 
 void test("Cookbook Save reopens the URL-addressed Dinner and Cancel resets the tab", () => {

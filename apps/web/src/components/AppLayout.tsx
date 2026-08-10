@@ -5,10 +5,13 @@ import { useUser } from "@clerk/nextjs";
 import { cn } from "src/lib/utils";
 import { useState } from "react";
 import { AddDinnerSheet } from "~/views/Dinners/AddDinnerSheet";
+import { useRouter } from "next/router";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useUser();
+  const router = useRouter();
   const showNav = isLoaded && isSignedIn;
+  const showMobileNavigation = showNav && router.pathname !== "/dinners/new";
   const [addDinnerOpen, setAddDinnerOpen] = useState(false);
 
   return (
@@ -22,14 +25,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="bg-background min-h-screen w-full flex-1">
         <div
           className={cn(
-            "mx-auto w-full max-w-7xl p-4",
-            showNav ? "pb-24 md:p-8 md:pb-8" : "md:p-8",
+            "mx-auto w-full max-w-7xl p-4 md:p-8",
+            showMobileNavigation && "pb-24 md:pb-8",
           )}
         >
           {children}
         </div>
 
-        {showNav && (
+        {showMobileNavigation && (
           <div className="md:hidden">
             <BottomNav onAddDinner={() => setAddDinnerOpen(true)} />
           </div>
