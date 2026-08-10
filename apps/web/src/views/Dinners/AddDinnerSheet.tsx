@@ -12,6 +12,7 @@ import { api } from "~/utils/api";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
+import { buildCreateDinnerEditorHref } from "~/lib/editor-navigation";
 import {
   ResponsiveModal,
   ResponsiveModalContent,
@@ -105,9 +106,15 @@ export function AddDinnerSheet({ open, onOpenChange }: Props) {
     createMutation.mutate({ dinnerName: result.data, tagList: [] });
   };
 
-  const continueInExistingCreateFlow = () => {
+  const continueInExistingCreateFlow = (mode?: "manual") => {
     onOpenChange(false);
-    void router.push("/dinners/new");
+    void router.push(
+      buildCreateDinnerEditorHref({
+        origin: router.pathname === "/" ? "week" : "cookbook",
+        ...(mode ? { mode } : {}),
+        ...(name.trim() ? { name } : {}),
+      }),
+    );
   };
 
   return (
@@ -167,7 +174,7 @@ export function AddDinnerSheet({ open, onOpenChange }: Props) {
             {importSources.map((source) => (
               <RecipeActionRow
                 key={source}
-                onClick={continueInExistingCreateFlow}
+                onClick={() => continueInExistingCreateFlow()}
               >
                 {source}
               </RecipeActionRow>
@@ -176,7 +183,10 @@ export function AddDinnerSheet({ open, onOpenChange }: Props) {
         </div>
 
         <div className="border-border mt-5 border-t pt-4">
-          <RecipeActionRow dashed onClick={continueInExistingCreateFlow}>
+          <RecipeActionRow
+            dashed
+            onClick={() => continueInExistingCreateFlow("manual")}
+          >
             Write it myself
           </RecipeActionRow>
         </div>

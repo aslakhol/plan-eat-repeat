@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronRight,
   Loader2,
+  MoreHorizontal,
   Minus,
   Plus,
   X,
@@ -25,7 +26,6 @@ import {
   parseAmount,
   recipeSchema,
   recipeIngredientSchema,
-  sourceLabel,
 } from "@planeatrepeat/shared";
 import { api } from "../../utils/api";
 import { cn } from "../../lib/utils";
@@ -71,8 +71,8 @@ export type RecipeEditorValues = z.infer<typeof recipeEditorSchema>;
 type Props = {
   dinner?: DinnerWithRecipe;
   initialValues?: RecipeEditorValues;
-  showImportReview?: boolean;
   isPending: boolean;
+  submitError?: string | null;
   onCancel: () => void;
   onSave: (values: RecipeEditorValues) => void;
   onDelete?: () => void;
@@ -94,6 +94,13 @@ const emptyEditorValues = (): RecipeEditorValues => ({
     servings: null,
     parts: [],
   },
+});
+
+export const editorValuesFromManualName = (
+  name: string,
+): RecipeEditorValues => ({
+  ...emptyEditorValues(),
+  name,
 });
 
 const editorIngredient = (ingredient: {
@@ -149,8 +156,8 @@ const editorValuesFromDinner = (
 export const RecipeEditor = ({
   dinner,
   initialValues,
-  showImportReview = false,
   isPending,
+  submitError,
   onCancel,
   onSave,
   onDelete,
@@ -187,7 +194,7 @@ export const RecipeEditor = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSave)}
-        className="mx-auto w-full max-w-[640px] pb-6"
+        className="mx-auto w-full max-w-[640px] pb-[calc(7rem+env(safe-area-inset-bottom))]"
       >
         <div className="bg-background/95 sticky top-0 z-20 -mx-4 mb-5 grid grid-cols-[1fr_auto_1fr] items-center border-b px-4 py-2 backdrop-blur">
           <Button
@@ -199,33 +206,46 @@ export const RecipeEditor = ({
             Cancel
           </Button>
           <h1 className="font-serif text-base font-normal">
-            {dinner ? "Edit recipe" : "New dinner"}
+            {dinner ? "Edit dinner" : "New dinner"}
           </h1>
-          <Button
-            type="submit"
-            size="sm"
-            className="justify-self-end"
-            disabled={isPending}
-          >
-            {isPending && <Loader2 className="animate-spin" />}
-            {dinner ? "Save" : "Create"}
-          </Button>
+          {dinner && onDelete ? (
+            <details className="relative justify-self-end">
+              <summary className="border-border text-muted-foreground hover:bg-accent flex size-9 cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
+                <MoreHorizontal className="size-5" />
+                <span className="sr-only">Editor actions</span>
+              </summary>
+              <div className="border-border absolute right-0 top-10 z-30 w-[210px] overflow-hidden rounded-[14px] border bg-white shadow-[0_8px_28px_rgba(60,50,40,.22)]">
+                <DeleteDinnerButton
+                  dinnerId={dinner.id}
+                  isPending={isPending}
+                  onDelete={onDelete}
+                  trigger={
+                    <button
+                      type="button"
+                      className="text-destructive hover:bg-destructive/5 w-full px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                    >
+                      Delete dinner
+                    </button>
+                  }
+                />
+              </div>
+            </details>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label="Editor actions"
+              title="No editor actions available"
+              className="size-9 justify-self-end rounded-full bg-white"
+              disabled
+            >
+              <MoreHorizontal className="size-5" />
+            </Button>
+          )}
         </div>
 
         <div className="space-y-5">
-          {showImportReview && (
-            <div className="rounded-md border border-[hsl(18_60%_80%)] bg-[hsl(40_33%_95%)] px-3 py-2 text-sm">
-              <p className="font-medium">
-                {initialValues?.link
-                  ? `Imported from ${sourceLabel(initialValues.link)}`
-                  : "Imported recipe draft"}
-              </p>
-              <p className="text-muted-foreground">
-                Check the details, then save.
-              </p>
-            </div>
-          )}
-
           <div className="space-y-4">
             <div className="space-y-1.5">
               <FieldLabel htmlFor="dinner-name">Name</FieldLabel>
@@ -354,14 +374,20 @@ export const RecipeEditor = ({
               placeholder="Anything useful to remember next time"
             />
           </div>
+        </div>
 
-          {dinner && onDelete && (
-            <DeleteDinnerButton
-              dinnerId={dinner.id}
-              isPending={isPending}
-              onDelete={onDelete}
-            />
-          )}
+        <div className="bg-background/95 fixed bottom-0 left-0 right-0 z-50 border-t px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+          <div className="mx-auto w-full max-w-[640px] space-y-2">
+            {submitError && (
+              <p role="alert" className="text-destructive text-sm font-medium">
+                {submitError}
+              </p>
+            )}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending && <Loader2 className="animate-spin" />}
+              Save dinner
+            </Button>
+          </div>
         </div>
       </form>
     </Form>

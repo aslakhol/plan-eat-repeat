@@ -2,7 +2,7 @@ import { format, isSameDay } from "date-fns";
 import { cn } from "../../lib/utils";
 import { PlannedDinner } from "./PlannedDinner";
 import { type DinnerWithRecipe } from "../../utils/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PlanDay } from "./PlanDay";
 import {
   ResponsiveModal,
@@ -15,16 +15,32 @@ type Props = {
   date: Date;
   today: Date;
   plannedDinner?: DinnerWithRecipe;
+  openOnLoad?: boolean;
+  onCloseRequestedDate?: () => void;
 };
 
-export const Day = ({ date, today, plannedDinner }: Props) => {
+export const Day = ({
+  date,
+  today,
+  plannedDinner,
+  openOnLoad = false,
+  onCloseRequestedDate,
+}: Props) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [changePlan, setChangePlan] = useState(!plannedDinner);
+
+  useEffect(() => {
+    if (openOnLoad) {
+      setDialogOpen(true);
+      setChangePlan(!plannedDinner);
+    }
+  }, [openOnLoad, plannedDinner]);
 
   const onOpenChange = (open: boolean) => {
     setDialogOpen(open);
     if (!open) {
       setChangePlan(false);
+      if (openOnLoad) onCloseRequestedDate?.();
     }
   };
 

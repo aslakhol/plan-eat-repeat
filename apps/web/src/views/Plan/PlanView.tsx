@@ -1,17 +1,44 @@
 import { UtensilsCrossed } from "lucide-react";
 import { api } from "../../utils/api";
-import { useState } from "react";
-import { addWeeks, isSameDay, startOfDay } from "date-fns";
+import { useEffect, useMemo, useState } from "react";
+import {
+  addWeeks,
+  differenceInCalendarWeeks,
+  isSameDay,
+  startOfDay,
+} from "date-fns";
+import { useRouter } from "next/router";
 import { Day } from "./Day";
 import { WeekSelect } from "../WeekSelect";
 import { keepPreviousData } from "@tanstack/react-query";
 import { buildDinnerPlanningWeek } from "~/lib/dinner-planning";
+import {
+  isPlanSlotDate,
+  planSlotDateFromString,
+} from "~/lib/editor-navigation";
 
 export const PlanView = () => {
+  const router = useRouter();
   const [weekOffSet, setWeekOffSet] = useState(0);
   const trpc = api.useUtils();
 
-  const today = startOfDay(new Date());
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const dateQuery =
+    typeof router.query.date === "string" && isPlanSlotDate(router.query.date)
+      ? router.query.date
+      : undefined;
+  const requestedDate = useMemo(
+    () => (dateQuery ? planSlotDateFromString(dateQuery) : undefined),
+    [dateQuery],
+  );
+
+  useEffect(() => {
+    if (!requestedDate) return;
+    setWeekOffSet(
+      differenceInCalendarWeeks(requestedDate, today, { weekStartsOn: 1 }),
+    );
+  }, [requestedDate, today]);
+
   const week = buildDinnerPlanningWeek(addWeeks(today, weekOffSet));
 
   const plannedDinnersQuery = api.plan.plannedDinners.useQuery(
@@ -65,6 +92,14 @@ export const PlanView = () => {
                 isSameDay(p.date, day.date),
               )?.dinner
             }
+            openOnLoad={
+              requestedDate ? isSameDay(requestedDate, day.date) : false
+            }
+            onCloseRequestedDate={() => {
+              if (dateQuery) {
+                void router.replace("/", undefined, { shallow: true });
+              }
+            }}
           />
         ))}
       </div>

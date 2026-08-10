@@ -12,6 +12,7 @@ import { useEffect, useRef } from "react";
 import { RecipeView } from "../Dinners/RecipeView";
 import { ArrowRightLeft, MoreHorizontal, Pencil, X } from "lucide-react";
 import { Button } from "~/components/ui/button";
+import { buildDinnerEditorHref } from "~/lib/editor-navigation";
 
 type Props = {
   dinner: DinnerWithRecipe;
@@ -84,7 +85,10 @@ export const PlannedDinner = ({
                   Change Dinner
                 </Button>
                 <Link
-                  href={`/dinners/${dinner.id}?edit=1`}
+                  href={buildDinnerEditorHref(dinner.id, {
+                    origin: "week",
+                    date: format(date, "yyyy-MM-dd"),
+                  })}
                   className="hover:bg-muted flex w-full items-center gap-3 border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
                   onClick={closeMenu}
                 >

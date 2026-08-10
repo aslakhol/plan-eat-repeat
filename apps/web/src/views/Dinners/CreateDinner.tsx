@@ -1,4 +1,4 @@
-import { type FormEvent, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { usePostHog } from "posthog-js/react";
 import {
@@ -29,9 +29,16 @@ import {
   FieldLabel,
   RecipeEditor,
   dinnerFromEditorValues,
+  editorValuesFromManualName,
   editorValuesFromRecipeInput,
   type RecipeEditorValues,
 } from "./RecipeEditor";
+import {
+  editorCancelHref,
+  editorSaveHref,
+  parseEditorNavigation,
+  planSlotDateFromString,
+} from "~/lib/editor-navigation";
 
 type CreateMode = "choose" | "manual" | "import" | "photos" | "draft";
 type PreparedImage = {
@@ -118,6 +125,7 @@ export const CreateDinner = () => {
   const router = useRouter();
   const posthog = usePostHog();
   const utils = api.useUtils();
+  const navigation = parseEditorNavigation(router.query);
   const [mode, setMode] = useState<CreateMode>("choose");
   const [url, setUrl] = useState("");
   const [pasteText, setPasteText] = useState("");
@@ -131,6 +139,13 @@ export const CreateDinner = () => {
   const [photoImportError, setPhotoImportError] =
     useState<ImportRecipeErrorCode | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (router.isReady && navigation.mode === "manual") {
+      setMode("manual");
+    }
+  }, [navigation.mode, router.isReady]);
 
   const createMutation = api.dinner.create.useMutation({
     onSuccess: async (result) => {
@@ -139,10 +154,12 @@ export const CreateDinner = () => {
         utils.dinner.summaries.invalidate(),
         utils.dinner.tags.invalidate(),
         utils.dinner.ingredientNames.invalidate(),
+        utils.plan.plannedDinners.invalidate(),
       ]);
-      void router.push(`/dinners/${result.dinner.id}`);
+      void router.push(editorSaveHref(result.dinner.id, navigation));
     },
     onError: (error) => {
+      setSubmitError(error.message);
       toast({
         variant: "destructive",
         title: "Could not create dinner",
@@ -250,12 +267,13 @@ export const CreateDinner = () => {
 
   const createDinner = (values: RecipeEditorValues) => {
     posthog.capture("create new dinner", { dinnerName: values.name });
-    createMutation.mutate(dinnerFromEditorValues(values));
-  };
-
-  const cancelDraft = () => {
-    setDraft(null);
-    setMode("choose");
+    setSubmitError(null);
+    createMutation.mutate({
+      ...dinnerFromEditorValues(values),
+      ...(navigation.date
+        ? { planDate: planSlotDateFromString(navigation.date) }
+        : {}),
+    });
   };
 
   const backToChoose = () => {
@@ -339,11 +357,25 @@ export const CreateDinner = () => {
   const isImporting =
     importFromUrlMutation.isPending || importFromTextMutation.isPending;
 
+  if (!router.isReady) {
+    return (
+      <div className="flex h-[50dvh] items-center justify-center">
+        <Loader2
+          className="text-primary animate-spin"
+          aria-label="Loading editor"
+        />
+      </div>
+    );
+  }
+
   if (mode === "manual") {
     return (
       <RecipeEditor
+        key={navigation.name ?? "manual-dinner"}
+        initialValues={editorValuesFromManualName(navigation.name ?? "")}
         isPending={createMutation.isPending}
-        onCancel={() => void router.push("/dinners")}
+        submitError={submitError}
+        onCancel={() => void router.push(editorCancelHref(navigation))}
         onSave={createDinner}
       />
     );
@@ -354,9 +386,9 @@ export const CreateDinner = () => {
       <RecipeEditor
         key={`${draft.name}-${draft.link}`}
         initialValues={draft}
-        showImportReview
         isPending={createMutation.isPending}
-        onCancel={cancelDraft}
+        submitError={submitError}
+        onCancel={() => void router.push(editorCancelHref(navigation))}
         onSave={createDinner}
       />
     );
@@ -369,7 +401,7 @@ export const CreateDinner = () => {
           type="button"
           variant="ghost"
           className="justify-self-start px-2"
-          onClick={() => void router.push("/dinners")}
+          onClick={() => void router.push(editorCancelHref(navigation))}
         >
           Cancel
         </Button>

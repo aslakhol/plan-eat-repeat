@@ -16,6 +16,11 @@ import { DeleteDinnerButton } from "./DeleteDinnerButton";
 import { useDinnerSummaries } from "~/hooks/use-dinner-summaries";
 import { formatDinnerSummaryLabel } from "~/lib/cookbook";
 import { DinnerPlanningSheet } from "./DinnerPlanningSheet";
+import {
+  editorCancelHref,
+  editorSaveHref,
+  parseEditorNavigation,
+} from "~/lib/editor-navigation";
 
 export const DinnerDetail = () => {
   const router = useRouter();
@@ -24,6 +29,8 @@ export const DinnerDetail = () => {
   const { today, query: summariesQuery } = useDinnerSummaries();
   const [editing, setEditing] = useState(false);
   const [planning, setPlanning] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const navigation = parseEditorNavigation(router.query);
   const rawDinnerId = router.query.dinnerId;
   const dinnerId =
     typeof rawDinnerId === "string" ? Number(rawDinnerId) : Number.NaN;
@@ -50,8 +57,10 @@ export const DinnerDetail = () => {
         utils.plan.plannedDinners.invalidate(),
       ]);
       setEditing(false);
+      void router.replace(editorSaveHref(result.dinner.id, navigation));
     },
     onError: (error) => {
+      setSubmitError(error.message);
       toast({
         variant: "destructive",
         title: "Could not save dinner",
@@ -129,6 +138,7 @@ export const DinnerDetail = () => {
 
   const save = (values: RecipeEditorValues) => {
     posthog.capture("update dinner", { dinnerName: values.name });
+    setSubmitError(null);
     editMutation.mutate({
       dinnerId: dinner.id,
       ...dinnerFromEditorValues(values),
@@ -140,7 +150,8 @@ export const DinnerDetail = () => {
       <RecipeEditor
         dinner={dinner}
         isPending={editMutation.isPending || deleteMutation.isPending}
-        onCancel={() => setEditing(false)}
+        submitError={submitError}
+        onCancel={() => void router.push(editorCancelHref(navigation))}
         onSave={save}
         onDelete={() => {
           posthog.capture("delete dinner", { dinnerName: dinner.name });
