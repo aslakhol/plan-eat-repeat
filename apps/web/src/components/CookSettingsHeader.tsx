@@ -37,7 +37,7 @@ export const CookSettingsHeader = ({ title }: { title: string }) => {
         <ResponsiveModalContent
           scrollViewport
           scrollViewportClassName="grid gap-5"
-          className="h-auto max-h-[70dvh] bg-white md:max-w-sm"
+          className="h-auto max-h-[70dvh] gap-5 bg-white md:max-w-sm"
         >
           <div>
             <ResponsiveModalTitle className="pb-1 text-left font-serif text-xl font-normal">

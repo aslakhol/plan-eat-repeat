@@ -75,7 +75,7 @@ export const ResponsiveModalContent = ({
 
   if (isMobile) {
     return (
-      <DrawerContent className={cn(className, "overflow-hidden")}>
+      <DrawerContent className={cn(className, "!overflow-visible")}>
         {scrollViewport ? (
           <ResponsiveModalScrollViewport className={scrollViewportClassName}>
             {children}

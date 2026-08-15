@@ -13,11 +13,29 @@ const openDrawer = async (page: Page, open: (page: Page) => Promise<void>) => {
   return drawer;
 };
 
-const openLongDinnerDetails = async (page: Page) => {
+const visitCookbook = async (page: Page) => {
   await page.goto("/dinners");
   await expect(page.getByRole("heading", { name: "Cookbook" })).toBeVisible();
+};
+
+const openFirstDinnerDetails = async (page: Page) => {
+  await visitCookbook(page);
+  await page.locator('a[href^="/dinners/"]').first().click();
+  await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
+};
+
+const openLongDinnerDetails = async (page: Page) => {
+  await visitCookbook(page);
   await page.getByRole("link", { name: /Chicken Curry/ }).click();
   await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
+};
+
+const planSlotPickerOpener = {
+  name: "Plan Slot picker",
+  open: async (page: Page) => {
+    await page.goto("/");
+    await openFirstEmptyDay(page);
+  },
 };
 
 const openers = [
@@ -34,23 +52,12 @@ const openers = [
   },
   {
     name: "Dinner details",
-    open: async (page: Page) => {
-      await page.goto("/dinners");
-      await expect(
-        page.getByRole("heading", { name: "Cookbook" }),
-      ).toBeVisible();
-      await page.locator('a[href^="/dinners/"]').first().click();
-      await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
-    },
+    open: openFirstDinnerDetails,
   },
   {
     name: "Dinner planning",
     open: async (page: Page) => {
-      await page.goto("/dinners");
-      await expect(
-        page.getByRole("heading", { name: "Cookbook" }),
-      ).toBeVisible();
-      await page.locator('a[href^="/dinners/"]').first().click();
+      await openFirstDinnerDetails(page);
       await page.getByRole("button", { name: "Plan this dinner" }).click();
       await expect(
         page
@@ -70,13 +77,7 @@ const openers = [
       ).toBeVisible();
     },
   },
-  {
-    name: "Plan Slot picker",
-    open: async (page: Page) => {
-      await page.goto("/");
-      await openFirstEmptyDay(page);
-    },
-  },
+  planSlotPickerOpener,
   {
     name: "Planned Dinner",
     open: async (page: Page) => {
@@ -93,10 +94,7 @@ const openers = [
   {
     name: "Cookbook tag filter",
     open: async (page: Page) => {
-      await page.goto("/dinners");
-      await expect(
-        page.getByRole("heading", { name: "Cookbook" }),
-      ).toBeVisible();
+      await visitCookbook(page);
       await page.getByRole("button", { name: "Filter by tags" }).click();
       await expect(
         page.getByRole("searchbox", { name: "Search tags" }),
@@ -106,7 +104,7 @@ const openers = [
 ];
 
 const assertBoundedDrawer = async (drawer: ReturnType<Page["locator"]>) => {
-  const result = await drawer.evaluate((element) => {
+  const drawerMetrics = await drawer.evaluate((element) => {
     const shell = element as HTMLElement;
     const viewport = shell.querySelector<HTMLElement>(
       "[data-responsive-modal-scroll-viewport]",
@@ -124,6 +122,7 @@ const assertBoundedDrawer = async (drawer: ReturnType<Page["locator"]>) => {
     );
 
     return {
+      shellClassName: shell.className,
       shellOverflowY: getComputedStyle(shell).overflowY,
       shellScrollTop: shell.scrollTop,
       viewportOverflowY: getComputedStyle(viewport).overflowY,
@@ -134,12 +133,15 @@ const assertBoundedDrawer = async (drawer: ReturnType<Page["locator"]>) => {
     };
   });
 
-  expect(result.shellOverflowY).toBe("hidden");
-  expect(result.shellScrollTop).toBe(0);
-  expect(result.viewportOverflowY).toBe("auto");
-  expect(result.viewportRemainingScroll).toBeLessThanOrEqual(1);
-  expect(result.handleMovement).toBeLessThanOrEqual(1);
-  expect(result.fillerHeight).toBeGreaterThan(0);
+  expect(
+    drawerMetrics.shellOverflowY,
+    drawerMetrics.shellClassName,
+  ).toBe("visible");
+  expect(drawerMetrics.shellScrollTop).toBe(0);
+  expect(drawerMetrics.viewportOverflowY).toBe("auto");
+  expect(drawerMetrics.viewportRemainingScroll).toBeLessThanOrEqual(1);
+  expect(drawerMetrics.handleMovement).toBeLessThanOrEqual(1);
+  expect(drawerMetrics.fillerHeight).toBeGreaterThan(0);
 };
 
 test("all mobile-web drawers keep scrolling inside their content viewport", async ({
@@ -170,7 +172,7 @@ test("whole-content drawers scroll without moving the Vaul shell or handle", asy
   const drawer = await openDrawer(page, openLongDinnerDetails);
   const viewport = drawer.locator("[data-responsive-modal-scroll-viewport]");
 
-  const result = await viewport.evaluate((element) => {
+  const viewportScrollMetrics = await viewport.evaluate((element) => {
     const shell = element.closest<HTMLElement>("[data-vaul-drawer]");
     const handle = shell?.firstElementChild as HTMLElement | undefined;
     if (!shell || !handle) throw new Error("Drawer structure is incomplete");
@@ -185,10 +187,12 @@ test("whole-content drawers scroll without moving the Vaul shell or handle", asy
     };
   });
 
-  expect(result.maxScrollTop).toBeGreaterThan(0);
-  expect(result.scrollTop).toBe(result.maxScrollTop);
-  expect(result.shellScrollTop).toBe(0);
-  expect(result.handleMovement).toBeLessThanOrEqual(1);
+  expect(viewportScrollMetrics.maxScrollTop).toBeGreaterThan(0);
+  expect(viewportScrollMetrics.scrollTop).toBe(
+    viewportScrollMetrics.maxScrollTop,
+  );
+  expect(viewportScrollMetrics.shellScrollTop).toBe(0);
+  expect(viewportScrollMetrics.handleMovement).toBeLessThanOrEqual(1);
 });
 
 test("fixed controls stay put while Plan Slot choices scroll", async ({
@@ -196,7 +200,7 @@ test("fixed controls stay put while Plan Slot choices scroll", async ({
 }) => {
   await page.setViewportSize({ width: 320, height: 700 });
   await ensureSignedIn(page);
-  const drawer = await openDrawer(page, openers[4]!.open);
+  const drawer = await openDrawer(page, planSlotPickerOpener.open);
   const viewport = drawer.locator("[data-responsive-modal-scroll-viewport]");
   const search = drawer.getByRole("searchbox", { name: "Search the cookbook" });
   const action = drawer.getByRole("button", { name: "Surprise me!" });
@@ -233,7 +237,7 @@ test("desktop dialogs keep DialogContent scrolling", async ({ page }) => {
     dialog.locator("[data-responsive-modal-scroll-viewport]"),
   ).toHaveCount(0);
 
-  const result = await dialog.evaluate((element) => {
+  const dialogScrollMetrics = await dialog.evaluate((element) => {
     element.scrollTop = element.scrollHeight;
     return {
       overflowY: getComputedStyle(element).overflowY,
@@ -242,7 +246,7 @@ test("desktop dialogs keep DialogContent scrolling", async ({ page }) => {
     };
   });
 
-  expect(result.overflowY).toBe("auto");
-  expect(result.maxScrollTop).toBeGreaterThan(0);
-  expect(result.scrollTop).toBe(result.maxScrollTop);
+  expect(dialogScrollMetrics.overflowY).toBe("auto");
+  expect(dialogScrollMetrics.maxScrollTop).toBeGreaterThan(0);
+  expect(dialogScrollMetrics.scrollTop).toBe(dialogScrollMetrics.maxScrollTop);
 });
