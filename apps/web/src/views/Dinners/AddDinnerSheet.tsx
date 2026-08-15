@@ -476,7 +476,7 @@ export function AddDinnerSheet(props: Props) {
             screen === "photos" ||
             screen === "text"
             ? "h-auto max-h-[calc(100dvh-1rem)] overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 md:max-w-lg md:p-6"
-            : "bg-background inset-0 h-dvh max-h-none w-full max-w-none rounded-none border-0 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-12 md:max-w-none",
+            : "bg-background inset-0 mt-0 h-dvh max-h-none w-full max-w-none rounded-none border-0 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-12 md:max-w-none",
         )}
       >
         {screen === "choose" ? (
