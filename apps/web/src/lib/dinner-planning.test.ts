@@ -4,6 +4,8 @@ import test from "node:test";
 import {
   buildDinnerPlanningWeek,
   formatDinnerPlanningConfirmation,
+  formatWeekOverviewDayLabel,
+  pickSurpriseDinner,
 } from "./dinner-planning";
 
 void test("planning weeks always contain complete Monday–Sunday local dates", () => {
@@ -64,6 +66,16 @@ void test("planning week labels use the ISO week and the Monday's month and year
   assert.equal(week.days[6]?.dateTime, "2027-01-03");
 });
 
+void test("Week overview labels call out tonight without changing other day labels", () => {
+  const today = new Date(2026, 7, 15);
+
+  assert.equal(formatWeekOverviewDayLabel(today, today), "Sat 15th · Tonight");
+  assert.equal(
+    formatWeekOverviewDayLabel(new Date(2026, 7, 16), today),
+    "Sun 16th",
+  );
+});
+
 void test("planning confirmation includes the Dinner name and full date", () => {
   assert.equal(
     formatDinnerPlanningConfirmation(
@@ -72,4 +84,11 @@ void test("planning confirmation includes the Dinner name and full date", () => 
     ),
     "Spaghetti Carbonara → Thursday, August 13th, 2026",
   );
+});
+
+void test("Surprise me chooses from the current matching Dinner set", () => {
+  const dinners = [{ id: 11 }, { id: 22 }, { id: 33 }];
+
+  assert.deepEqual(pickSurpriseDinner(dinners, () => 0.5), { id: 22 });
+  assert.equal(pickSurpriseDinner([], () => 0.5), undefined);
 });

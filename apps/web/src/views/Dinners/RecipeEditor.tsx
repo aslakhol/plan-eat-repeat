@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronRight,
   Loader2,
+  MoreHorizontal,
   Minus,
   Plus,
   X,
@@ -25,7 +26,6 @@ import {
   parseAmount,
   recipeSchema,
   recipeIngredientSchema,
-  sourceLabel,
 } from "@planeatrepeat/shared";
 import { api } from "../../utils/api";
 import { cn } from "../../lib/utils";
@@ -35,6 +35,14 @@ import { Textarea } from "../../components/ui/textarea";
 import { Form } from "../../components/ui/form";
 import { FancyCombobox } from "../../components/ui/FancyCombobox";
 import { DeleteDinnerButton } from "./DeleteDinnerButton";
+import { AddDinnerSheet } from "./AddDinnerSheet";
+import { StickyHeaderCard } from "./StickyHeaderCard";
+import {
+  applyExistingDinnerImport,
+  clearExistingDinnerRecipe,
+  type ExistingDinnerRecipeImport,
+} from "~/lib/existing-dinner-import";
+import { editorIngredientValues } from "~/lib/recipe-editor-values";
 
 // Amounts are edited as text so comma decimals like "1,5" can be typed;
 // parseAmount converts back to a number on save.
@@ -71,8 +79,9 @@ export type RecipeEditorValues = z.infer<typeof recipeEditorSchema>;
 type Props = {
   dinner?: DinnerWithRecipe;
   initialValues?: RecipeEditorValues;
-  showImportReview?: boolean;
   isPending: boolean;
+  submitError?: string | null;
+  importedNameAlternative?: string | null;
   onCancel: () => void;
   onSave: (values: RecipeEditorValues) => void;
   onDelete?: () => void;
@@ -96,36 +105,11 @@ const emptyEditorValues = (): RecipeEditorValues => ({
   },
 });
 
-const editorIngredient = (ingredient: {
-  name: string;
-  amount: number | null;
-  unit: string | null;
-  note: string | null;
-}) => ({
-  name: ingredient.name,
-  amount: ingredient.amount === null ? "" : String(ingredient.amount),
-  unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
-  note: ingredient.note ?? "",
-});
-
-export const editorValuesFromRecipeInput = (input: {
-  name: string;
-  recipe: z.infer<typeof recipeSchema>;
-  link?: string | null;
-}): RecipeEditorValues => ({
-  name: input.name,
-  tags: [],
-  newTag: "",
-  link: input.link ?? "",
-  notes: "",
-  recipe: {
-    servings: input.recipe.servings,
-    parts: input.recipe.parts.map((part) => ({
-      name: part.name ?? "",
-      ingredients: part.ingredients.map(editorIngredient),
-      steps: part.steps.map((text) => ({ text })),
-    })),
-  },
+export const editorValuesFromManualName = (
+  name: string,
+): RecipeEditorValues => ({
+  ...emptyEditorValues(),
+  name,
 });
 
 const editorValuesFromDinner = (
@@ -140,7 +124,7 @@ const editorValuesFromDinner = (
     servings: dinner.servings ?? null,
     parts: dinner.parts.map((part) => ({
       name: part.name ?? "",
-      ingredients: part.ingredients.map(editorIngredient),
+      ingredients: part.ingredients.map(editorIngredientValues),
       steps: part.steps.map((step) => ({ text: step.text })),
     })),
   },
@@ -149,8 +133,9 @@ const editorValuesFromDinner = (
 export const RecipeEditor = ({
   dinner,
   initialValues,
-  showImportReview = false,
   isPending,
+  submitError,
+  importedNameAlternative,
   onCancel,
   onSave,
   onDelete,
@@ -173,6 +158,35 @@ export const RecipeEditor = ({
     watchedParts.length > 1 ||
     watchedParts.some((part) => part.name.trim().length > 0);
   const ingredientNamesQuery = api.dinner.ingredientNames.useQuery();
+  const [importOpen, setImportOpen] = useState(false);
+  const [nameAlternative, setNameAlternative] = useState(
+    importedNameAlternative ?? null,
+  );
+  const [sourceLinkAlternative, setSourceLinkAlternative] = useState<
+    string | null
+  >(null);
+  const hasRecipeContent =
+    watchedParts.length > 0 ||
+    (typeof servings === "number" && Number.isFinite(servings) && servings > 0);
+
+  const applyImport = (imported: ExistingDinnerRecipeImport) => {
+    const result = applyExistingDinnerImport(form.getValues(), imported);
+    form.reset(result.values, { keepDefaultValues: true });
+    setNameAlternative(result.importedNameAlternative);
+    setSourceLinkAlternative(result.importedSourceLinkAlternative);
+  };
+
+  const closeEditorMenu = (target: HTMLElement) => {
+    target.closest("details")?.removeAttribute("open");
+  };
+
+  const clearRecipe = () => {
+    form.reset(clearExistingDinnerRecipe(form.getValues()), {
+      keepDefaultValues: true,
+    });
+    setNameAlternative(null);
+    setSourceLinkAlternative(null);
+  };
 
   const cancel = () => {
     if (
@@ -187,45 +201,68 @@ export const RecipeEditor = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSave)}
-        className="mx-auto w-full max-w-[640px] pb-6"
+        className="mx-auto w-full max-w-[640px] pb-[calc(7rem+env(safe-area-inset-bottom))]"
       >
-        <div className="bg-background/95 sticky top-0 z-20 -mx-4 mb-5 grid grid-cols-[1fr_auto_1fr] items-center border-b px-4 py-2 backdrop-blur">
+        <StickyHeaderCard className="sticky top-0 z-20 mb-5 flex min-h-12 items-center gap-2">
+          <h1 className="min-w-0 flex-1 truncate font-serif text-base font-normal">
+            {dinner ? "Edit dinner" : "New dinner"}
+          </h1>
           <Button
             type="button"
             variant="ghost"
-            className="justify-self-start px-2"
+            className="text-primary h-auto shrink-0 px-1 py-1 text-xs font-bold hover:bg-transparent hover:text-primary"
             onClick={cancel}
           >
             Cancel
           </Button>
-          <h1 className="font-serif text-base font-normal">
-            {dinner ? "Edit recipe" : "New dinner"}
-          </h1>
-          <Button
-            type="submit"
-            size="sm"
-            className="justify-self-end"
-            disabled={isPending}
-          >
-            {isPending && <Loader2 className="animate-spin" />}
-            {dinner ? "Save" : "Create"}
-          </Button>
-        </div>
+          {dinner && onDelete && (
+            <details className="relative shrink-0">
+              <summary className="border-border text-muted-foreground hover:bg-accent flex size-[30px] cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
+                <MoreHorizontal className="size-4" />
+                <span className="sr-only">Editor actions</span>
+              </summary>
+              <div className="border-border absolute right-0 top-9 z-30 w-[210px] overflow-hidden rounded-[14px] border bg-white shadow-[0_8px_28px_rgba(60,50,40,.22)]">
+                <button
+                  type="button"
+                  className="hover:bg-muted w-full px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                  onClick={(event) => {
+                    closeEditorMenu(event.currentTarget);
+                    setImportOpen(true);
+                  }}
+                >
+                  Import a recipe…
+                </button>
+                {hasRecipeContent && (
+                  <button
+                    type="button"
+                    className="hover:bg-muted w-full border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                    onClick={(event) => {
+                      closeEditorMenu(event.currentTarget);
+                      clearRecipe();
+                    }}
+                  >
+                    Clear the recipe
+                  </button>
+                )}
+                <DeleteDinnerButton
+                  dinnerId={dinner.id}
+                  isPending={isPending}
+                  onDelete={onDelete}
+                  trigger={
+                    <button
+                      type="button"
+                      className="text-destructive hover:bg-destructive/5 w-full border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                    >
+                      Delete dinner
+                    </button>
+                  }
+                />
+              </div>
+            </details>
+          )}
+        </StickyHeaderCard>
 
         <div className="space-y-5">
-          {showImportReview && (
-            <div className="rounded-md border border-[hsl(18_60%_80%)] bg-[hsl(40_33%_95%)] px-3 py-2 text-sm">
-              <p className="font-medium">
-                {initialValues?.link
-                  ? `Imported from ${sourceLabel(initialValues.link)}`
-                  : "Imported recipe draft"}
-              </p>
-              <p className="text-muted-foreground">
-                Check the details, then save.
-              </p>
-            </div>
-          )}
-
           <div className="space-y-4">
             <div className="space-y-1.5">
               <FieldLabel htmlFor="dinner-name">Name</FieldLabel>
@@ -235,6 +272,38 @@ export const RecipeEditor = ({
                 className="h-12 bg-white text-lg font-semibold"
               />
               <FieldError message={form.formState.errors.name?.message} />
+              {nameAlternative && (
+                <div className="mt-3 space-y-3 rounded-lg bg-[hsl(40_33%_95%)] p-3">
+                  <p className="text-sm">
+                    The source calls it “
+                    <span className="font-semibold">{nameAlternative}</span>”
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-primary text-primary rounded-full bg-transparent"
+                      onClick={() => setNameAlternative(null)}
+                    >
+                      Keep our name ✓
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full bg-transparent"
+                      onClick={() => {
+                        form.setValue("name", nameAlternative, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        });
+                        setNameAlternative(null);
+                      }}
+                    >
+                      Use theirs
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -259,7 +328,7 @@ export const RecipeEditor = ({
                     <input
                       {...form.register("recipe.servings", {
                         setValueAs: (value) =>
-                          value === "" ? null : Number(value),
+                          value == null || value === "" ? null : Number(value),
                       })}
                       className="min-w-0 bg-transparent text-center font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                       type="number"
@@ -283,7 +352,7 @@ export const RecipeEditor = ({
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <FieldLabel htmlFor="recipe-link">Recipe link</FieldLabel>
+                  <FieldLabel htmlFor="recipe-link">Source Link</FieldLabel>
                   <Input
                     {...form.register("link")}
                     id="recipe-link"
@@ -298,6 +367,41 @@ export const RecipeEditor = ({
                   form.formState.errors.recipe?.servings?.message
                 }
               />
+              {sourceLinkAlternative && (
+                <div className="mt-3 space-y-3 rounded-lg bg-[hsl(40_33%_95%)] p-3">
+                  <p className="break-all text-sm">
+                    The source link is “
+                    <span className="font-semibold">
+                      {sourceLinkAlternative}
+                    </span>
+                    ”
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-primary text-primary rounded-full bg-transparent"
+                      onClick={() => setSourceLinkAlternative(null)}
+                    >
+                      Keep our link ✓
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full bg-transparent"
+                      onClick={() => {
+                        form.setValue("link", sourceLinkAlternative, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        });
+                        setSourceLinkAlternative(null);
+                      }}
+                    >
+                      Use theirs
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -354,16 +458,30 @@ export const RecipeEditor = ({
               placeholder="Anything useful to remember next time"
             />
           </div>
+        </div>
 
-          {dinner && onDelete && (
-            <DeleteDinnerButton
-              dinnerId={dinner.id}
-              isPending={isPending}
-              onDelete={onDelete}
-            />
-          )}
+        <div className="bg-background/95 fixed bottom-0 left-0 right-0 z-50 border-t px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+          <div className="mx-auto w-full max-w-[640px] space-y-2">
+            {submitError && (
+              <p role="alert" className="text-destructive text-sm font-medium">
+                {submitError}
+              </p>
+            )}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending && <Loader2 className="animate-spin" />}
+              Save dinner
+            </Button>
+          </div>
         </div>
       </form>
+      {dinner && (
+        <AddDinnerSheet
+          mode="existing"
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          onImported={applyImport}
+        />
+      )}
     </Form>
   );
 };

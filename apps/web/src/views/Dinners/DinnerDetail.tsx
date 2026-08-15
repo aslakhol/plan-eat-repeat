@@ -16,6 +16,12 @@ import { DeleteDinnerButton } from "./DeleteDinnerButton";
 import { useDinnerSummaries } from "~/hooks/use-dinner-summaries";
 import { formatDinnerSummaryLabel } from "~/lib/cookbook";
 import { DinnerPlanningSheet } from "./DinnerPlanningSheet";
+import {
+  editorCancelHref,
+  editorSaveHref,
+  parseEditorNavigation,
+} from "~/lib/editor-navigation";
+import { useDinnerWakeLock } from "~/hooks/use-keep-screen-awake";
 
 export const DinnerDetail = () => {
   const router = useRouter();
@@ -24,6 +30,8 @@ export const DinnerDetail = () => {
   const { today, query: summariesQuery } = useDinnerSummaries();
   const [editing, setEditing] = useState(false);
   const [planning, setPlanning] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const navigation = parseEditorNavigation(router.query);
   const rawDinnerId = router.query.dinnerId;
   const dinnerId =
     typeof rawDinnerId === "string" ? Number(rawDinnerId) : Number.NaN;
@@ -39,6 +47,7 @@ export const DinnerDetail = () => {
     { dinnerId },
     { enabled: router.isReady && validDinnerId },
   );
+  useDinnerWakeLock(Boolean(dinnerQuery.data?.dinner) && !editing);
 
   const editMutation = api.dinner.edit.useMutation({
     onSuccess: async (result) => {
@@ -50,8 +59,10 @@ export const DinnerDetail = () => {
         utils.plan.plannedDinners.invalidate(),
       ]);
       setEditing(false);
+      void router.replace(editorSaveHref(result.dinner.id, navigation));
     },
     onError: (error) => {
+      setSubmitError(error.message);
       toast({
         variant: "destructive",
         title: "Could not save dinner",
@@ -99,7 +110,7 @@ export const DinnerDetail = () => {
     },
   });
 
-  if (!router.isReady || dinnerQuery.isPending) {
+  if (!router.isReady || (validDinnerId && dinnerQuery.isPending)) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <UtensilsCrossed className="text-primary animate-spin" />
@@ -107,7 +118,30 @@ export const DinnerDetail = () => {
     );
   }
 
-  if (!validDinnerId || dinnerQuery.isError || !dinnerQuery.data?.dinner) {
+  if (dinnerQuery.isError) {
+    return (
+      <div className="mx-auto max-w-[640px] space-y-4 py-12 text-center">
+        <h1 className="font-serif text-2xl">Couldn&apos;t load this Dinner</h1>
+        <p className="text-muted-foreground text-sm">
+          Check your connection and try again.
+        </p>
+        <div className="flex justify-center gap-2">
+          <Button
+            type="button"
+            disabled={dinnerQuery.isFetching}
+            onClick={() => void dinnerQuery.refetch()}
+          >
+            {dinnerQuery.isFetching ? "Trying again…" : "Try again"}
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/dinners">Back to Cookbook</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!validDinnerId || !dinnerQuery.data?.dinner) {
     return (
       <div className="mx-auto max-w-[640px] space-y-4 py-12 text-center">
         <h1 className="font-serif text-2xl">Dinner not found</h1>
@@ -129,6 +163,7 @@ export const DinnerDetail = () => {
 
   const save = (values: RecipeEditorValues) => {
     posthog.capture("update dinner", { dinnerName: values.name });
+    setSubmitError(null);
     editMutation.mutate({
       dinnerId: dinner.id,
       ...dinnerFromEditorValues(values),
@@ -140,7 +175,8 @@ export const DinnerDetail = () => {
       <RecipeEditor
         dinner={dinner}
         isPending={editMutation.isPending || deleteMutation.isPending}
-        onCancel={() => setEditing(false)}
+        submitError={submitError}
+        onCancel={() => void router.replace(editorCancelHref(navigation))}
         onSave={save}
         onDelete={() => {
           posthog.capture("delete dinner", { dinnerName: dinner.name });

@@ -5,6 +5,7 @@ import {
   ResponsiveModal,
   ResponsiveModalContent,
   ResponsiveModalDescription,
+  ResponsiveModalScrollViewport,
   ResponsiveModalTitle,
 } from "~/components/ResponsiveModal";
 import { Button } from "~/components/ui/button";
@@ -36,6 +37,7 @@ const cookbookSortOptions: readonly SortOption[] = [
 
 type Props = {
   dinners: readonly CollectionDinner[];
+  tagVocabularyDinners?: readonly CollectionDinner[];
   search: string;
   onSearchChange: (search: string) => void;
   selectedTags: string[];
@@ -49,6 +51,7 @@ type Props = {
 
 export const DinnerCollectionControls = ({
   dinners,
+  tagVocabularyDinners = dinners,
   search,
   onSearchChange,
   selectedTags,
@@ -161,6 +164,7 @@ export const DinnerCollectionControls = ({
           if (!open) closeTagFilter();
         }}
         dinners={dinners}
+        tagVocabularyDinners={tagVocabularyDinners}
         draftTags={draftTags}
         onDraftTagsChange={setDraftTags}
         tagSearch={tagSearch}
@@ -196,6 +200,7 @@ type TagFilterSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   dinners: readonly CollectionDinner[];
+  tagVocabularyDinners: readonly CollectionDinner[];
   draftTags: string[];
   onDraftTagsChange: (tags: string[]) => void;
   tagSearch: string;
@@ -207,13 +212,14 @@ const TagFilterSheet = ({
   open,
   onOpenChange,
   dinners,
+  tagVocabularyDinners,
   draftTags,
   onDraftTagsChange,
   tagSearch,
   onTagSearchChange,
   onApply,
 }: TagFilterSheetProps) => {
-  const groups = buildDinnerTagGroups(dinners, draftTags);
+  const groups = buildDinnerTagGroups(tagVocabularyDinners, draftTags);
   const mostUsed = groups.mostUsed.filter((tag) =>
     matchesDinnerCollectionText(tag.value, tagSearch),
   );
@@ -249,7 +255,7 @@ const TagFilterSheet = ({
           className="h-11 shrink-0 rounded-full bg-white px-4"
         />
 
-        <div className="min-h-0 flex-1 space-y-7 overflow-y-auto py-5">
+        <ResponsiveModalScrollViewport className="min-h-0 flex-1 space-y-7 py-5">
           {groups.selected.length > 0 && (
             <TagSection label="Selected">
               {groups.selected.map((tag) => (
@@ -299,7 +305,7 @@ const TagFilterSheet = ({
               No tags match.
             </p>
           )}
-        </div>
+        </ResponsiveModalScrollViewport>
 
         <Button
           type="button"

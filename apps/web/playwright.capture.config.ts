@@ -5,8 +5,9 @@ import { defineConfig } from "@playwright/test";
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFilePath);
 const webPort = 3000;
-const viewportWidth = 430;
-const viewportHeight = 932;
+const baseURL = process.env.CAPTURE_BASE_URL ?? `http://127.0.0.1:${webPort}`;
+const viewportWidth = Number(process.env.CAPTURE_VIEWPORT_WIDTH ?? 430);
+const viewportHeight = Number(process.env.CAPTURE_VIEWPORT_HEIGHT ?? 932);
 
 export default defineConfig({
   testDir: path.join(currentDir, "tests"),
@@ -15,7 +16,7 @@ export default defineConfig({
   timeout: 60_000,
   reporter: "line",
   use: {
-    baseURL: `http://127.0.0.1:${webPort}`,
+    baseURL,
     viewport: { width: viewportWidth, height: viewportHeight },
     deviceScaleFactor: 1,
   },

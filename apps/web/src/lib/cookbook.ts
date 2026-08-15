@@ -228,3 +228,24 @@ export const deriveDinnerCollection = <
           : null,
   };
 };
+
+export const deriveDinnerPickerCollection = <
+  Dinner extends FilterableDinnerSummary & OrderableDinnerSummary,
+>(
+  dinners: readonly Dinner[],
+  controls: {
+    excludedDinnerId?: number;
+    search: string;
+    selectedTags: readonly string[];
+    sort: CookbookSort;
+  },
+) => {
+  const availableDinners = dinners.filter(
+    (dinner) => dinner.id !== controls.excludedDinnerId,
+  );
+
+  return {
+    ...deriveDinnerCollection(availableDinners, controls),
+    availableDinners,
+  };
+};

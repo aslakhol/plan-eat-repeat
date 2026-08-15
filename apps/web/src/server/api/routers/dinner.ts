@@ -7,6 +7,7 @@ import {
   MAX_RECIPE_IMPORT_IMAGE_DATA_LENGTH,
   MAX_RECIPE_IMPORT_IMAGES,
   recipeSchema,
+  youtubeVideoIdFromUrl,
   type DinnerWithRecipe,
   type RecipeInput,
 } from "@planeatrepeat/shared";
@@ -21,6 +22,7 @@ import {
   importRecipeFromText,
   importRecipeFromUrl,
 } from "~/server/recipes/importRecipe";
+import { acquireYouTubeVideoTitle } from "~/server/recipes/youtube";
 import { type PrismaClient } from "@planeatrepeat/db";
 
 const householdImportInstructions = async (
@@ -200,8 +202,7 @@ export const dinnerRouter = createTRPCRouter({
             ...dinner,
             lastCookedDate: history?._max.date ?? null,
             cookingFrequency: history?._count._all ?? 0,
-            currentWeekPlanDates:
-              currentWeekPlansByDinner.get(dinner.id) ?? [],
+            currentWeekPlanDates: currentWeekPlansByDinner.get(dinner.id) ?? [],
           };
         }),
       };
@@ -259,13 +260,17 @@ export const dinnerRouter = createTRPCRouter({
 
   importFromUrl: protectedProcedureWithHousehold
     .input(z.object({ url: z.string().url() }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input, signal }) => {
       try {
         const instructions = await householdImportInstructions(
           ctx.db,
           ctx.householdId,
         );
-        const draft = await importRecipeFromUrl(input.url, instructions);
+        const draft = await importRecipeFromUrl(
+          input.url,
+          instructions,
+          signal,
+        );
         return {
           ...draft,
           sourceUrl: input.url,
@@ -275,15 +280,23 @@ export const dinnerRouter = createTRPCRouter({
       }
     }),
 
+  youtubeVideoTitle: protectedProcedureWithHousehold
+    .input(z.object({ url: z.string().url() }))
+    .query(async ({ input, signal }) => {
+      const videoId = youtubeVideoIdFromUrl(input.url);
+      if (!videoId) return { title: null };
+      return { title: await acquireYouTubeVideoTitle(videoId, signal) };
+    }),
+
   importFromText: protectedProcedureWithHousehold
     .input(z.object({ text: z.string().trim().min(1) }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input, signal }) => {
       try {
         const instructions = await householdImportInstructions(
           ctx.db,
           ctx.householdId,
         );
-        return await importRecipeFromText(input.text, instructions);
+        return await importRecipeFromText(input.text, instructions, signal);
       } catch (error) {
         throw toImportTRPCError(error);
       }
@@ -291,13 +304,13 @@ export const dinnerRouter = createTRPCRouter({
 
   importFromImages: protectedProcedureWithHousehold
     .input(z.object({ images: imageImportSchema }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input, signal }) => {
       try {
         const instructions = await householdImportInstructions(
           ctx.db,
           ctx.householdId,
         );
-        return await importRecipeFromImages(input.images, instructions);
+        return await importRecipeFromImages(input.images, instructions, signal);
       } catch (error) {
         throw toImportTRPCError(error);
       }
@@ -311,34 +324,59 @@ export const dinnerRouter = createTRPCRouter({
         link: z.string().nullable().optional(),
         notes: z.string().nullable().optional(),
         recipe: recipeSchema.optional(),
+        planDate: z.date().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const householdId = ctx.householdId;
 
-      const dinner = await ctx.db.dinner.create({
-        data: {
-          name: input.dinnerName,
-          link: input.link,
-          notes: input.notes,
-          householdId,
-          servings:
-            input.recipe === undefined
-              ? undefined
-              : recipeServings(input.recipe),
-          tags: {
-            connectOrCreate: input.tagList.map((tag) => {
-              return {
-                where: { value: tag },
-                create: { value: tag },
-              };
-            }),
+      const dinner = await ctx.db.$transaction(async (tx) => {
+        const createdDinner = await tx.dinner.create({
+          data: {
+            name: input.dinnerName,
+            link: input.link,
+            notes: input.notes,
+            householdId,
+            servings:
+              input.recipe === undefined
+                ? undefined
+                : recipeServings(input.recipe),
+            tags: {
+              connectOrCreate: input.tagList.map((tag) => {
+                return {
+                  where: { value: tag },
+                  create: { value: tag },
+                };
+              }),
+            },
+            parts:
+              input.recipe === undefined
+                ? undefined
+                : { create: createRecipeParts(input.recipe.parts) },
           },
-          parts:
-            input.recipe === undefined
-              ? undefined
-              : { create: createRecipeParts(input.recipe.parts) },
-        },
+        });
+
+        if (input.planDate) {
+          const existingPlan = await tx.plan.findFirst({
+            where: {
+              date: input.planDate,
+              dinner: { householdId },
+            },
+          });
+
+          if (existingPlan) {
+            await tx.plan.update({
+              where: { id: existingPlan.id },
+              data: { dinnerId: createdDinner.id },
+            });
+          } else {
+            await tx.plan.create({
+              data: { date: input.planDate, dinnerId: createdDinner.id },
+            });
+          }
+        }
+
+        return createdDinner;
       });
 
       return {

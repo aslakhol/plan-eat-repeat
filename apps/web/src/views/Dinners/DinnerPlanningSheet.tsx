@@ -93,7 +93,11 @@ export const DinnerPlanningSheet = ({
         onOpenChange(nextOpen);
       }}
     >
-      <ResponsiveModalContent className="h-auto max-h-[92dvh] gap-4 overflow-y-auto bg-white px-4 pb-5 md:max-w-[520px]">
+      <ResponsiveModalContent
+        scrollViewport
+        scrollViewportClassName="grid gap-4"
+        className="h-auto max-h-[92dvh] gap-4 bg-white px-4 pb-5 md:max-w-[520px]"
+      >
         <ResponsiveModalTitle className="text-muted-foreground text-center text-[13px] font-semibold">
           Plan <span className="text-foreground font-serif">{dinner.name}</span>{" "}
           for…

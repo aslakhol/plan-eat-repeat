@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   buildDinnerTagGroups,
+  deriveDinnerPickerCollection,
   deriveDinnerCollection,
   filterDinnerSummaries,
   formatDinnerSummaryLabel,
@@ -223,6 +224,43 @@ void test("the shared collection seam derives ordering, counts, and contextual e
     sort: "az",
   });
   assert.equal(emptyCookbook.emptyState, "empty-cookbook");
+});
+
+void test("the Week picker excludes the assigned Dinner before filtering and counting", () => {
+  const dinners = [
+    {
+      ...summary(1, "Bean Chilli"),
+      tags: [{ value: "Quick" }, { value: "Vegan" }],
+    },
+    {
+      ...summary(2, "Miso Soup"),
+      tags: [{ value: "Quick" }],
+    },
+  ];
+
+  const picker = deriveDinnerPickerCollection(dinners, {
+    excludedDinnerId: 1,
+    search: "quick",
+    selectedTags: [],
+    sort: "not-lately",
+  });
+
+  assert.deepEqual(
+    picker.dinners.map((dinner) => dinner.id),
+    [2],
+  );
+  assert.equal(picker.totalCount, 1);
+  assert.equal(picker.matchingCount, 1);
+  assert.deepEqual(
+    picker.availableDinners.map((dinner) => dinner.id),
+    [2],
+  );
+
+  const fullCookbookTags = buildDinnerTagGroups(dinners, []);
+  assert.deepEqual(fullCookbookTags.mostUsed, [
+    { value: "Quick", count: 2 },
+    { value: "Vegan", count: 1 },
+  ]);
 });
 
 void test("summary label prioritises tonight, then nearest upcoming, then most recent past weekday", () => {

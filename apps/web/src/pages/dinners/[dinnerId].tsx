@@ -26,7 +26,10 @@ export default function DinnerDetailPage() {
           if (!open) void router.replace("/dinners");
         }}
       >
-        <ResponsiveModalContent className="h-auto max-h-[92dvh] overflow-y-auto bg-white md:max-w-[680px]">
+        <ResponsiveModalContent
+          scrollViewport
+          className="h-auto max-h-[92dvh] bg-white md:max-w-[680px]"
+        >
           <ResponsiveModalTitle className="sr-only">
             Dinner details
           </ResponsiveModalTitle>

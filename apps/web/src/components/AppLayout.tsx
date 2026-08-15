@@ -5,40 +5,80 @@ import { useUser } from "@clerk/nextjs";
 import { cn } from "src/lib/utils";
 import { useState } from "react";
 import { AddDinnerSheet } from "~/views/Dinners/AddDinnerSheet";
+import {
+  DinnerCreationContext,
+  type DinnerCreationNavigation,
+  type ImportedDinnerDraft,
+} from "~/views/Dinners/DinnerCreationContext";
+import { useRouter } from "next/router";
+import { KeepScreenAwakeProvider } from "~/hooks/use-keep-screen-awake";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useUser();
+  const router = useRouter();
   const showNav = isLoaded && isSignedIn;
+  const showMobileNavigation = showNav && router.pathname !== "/dinners/new";
   const [addDinnerOpen, setAddDinnerOpen] = useState(false);
+  const [addDinnerNavigation, setAddDinnerNavigation] =
+    useState<DinnerCreationNavigation>({ origin: "cookbook" });
+  const [importedDraft, setImportedDraft] =
+    useState<ImportedDinnerDraft | null>(null);
+
+  const openAddDinner = (navigation: DinnerCreationNavigation) => {
+    setAddDinnerNavigation(navigation);
+    setAddDinnerOpen(true);
+  };
 
   return (
-    <SidebarProvider>
-      {showNav && (
-        <div className="hidden md:block">
-          <AppSidebar onAddDinner={() => setAddDinnerOpen(true)} />
-        </div>
-      )}
-
-      <main className="bg-background min-h-screen w-full flex-1">
-        <div
-          className={cn(
-            "mx-auto w-full max-w-7xl p-4",
-            showNav ? "pb-24 md:p-8 md:pb-8" : "md:p-8",
+    <KeepScreenAwakeProvider>
+      <DinnerCreationContext.Provider
+        value={{ importedDraft, openAddDinner, setImportedDraft }}
+      >
+        <SidebarProvider>
+          {showNav && (
+            <div className="hidden md:block">
+              <AppSidebar
+                onAddDinner={() =>
+                  openAddDinner({
+                    origin: router.pathname === "/" ? "week" : "cookbook",
+                  })
+                }
+              />
+            </div>
           )}
-        >
-          {children}
-        </div>
 
-        {showNav && (
-          <div className="md:hidden">
-            <BottomNav onAddDinner={() => setAddDinnerOpen(true)} />
-          </div>
-        )}
-      </main>
+          <main className="bg-background min-h-screen w-full flex-1">
+            <div
+              className={cn(
+                "mx-auto w-full max-w-7xl p-4 md:p-8",
+                showMobileNavigation && "pb-24 md:pb-8",
+              )}
+            >
+              {children}
+            </div>
 
-      {showNav && (
-        <AddDinnerSheet open={addDinnerOpen} onOpenChange={setAddDinnerOpen} />
-      )}
-    </SidebarProvider>
+            {showMobileNavigation && (
+              <div className="md:hidden">
+                <BottomNav
+                  onAddDinner={() =>
+                    openAddDinner({
+                      origin: router.pathname === "/" ? "week" : "cookbook",
+                    })
+                  }
+                />
+              </div>
+            )}
+          </main>
+
+          {showNav && (
+            <AddDinnerSheet
+              open={addDinnerOpen}
+              onOpenChange={setAddDinnerOpen}
+              navigation={addDinnerNavigation}
+            />
+          )}
+        </SidebarProvider>
+      </DinnerCreationContext.Provider>
+    </KeepScreenAwakeProvider>
   );
 }

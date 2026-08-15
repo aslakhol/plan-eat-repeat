@@ -1,21 +1,32 @@
 import { format } from "date-fns";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { type ReactNode, useRef, useState } from "react";
+import { usePostHog } from "posthog-js/react";
+
 import {
   ResponsiveModalContent,
-  ResponsiveModalHeader,
-  ResponsiveModalTitle,
   ResponsiveModalDescription,
-} from "../../components/ResponsiveModal";
-import { type DinnerWithTags } from "../../utils/types";
-import { api } from "../../utils/api";
-import { cn } from "../../lib/utils";
-import { ClearDay } from "./ClearDay";
-import { Button } from "../../components/ui/button";
-import { Filter } from "../Filter";
-import { useState } from "react";
-import { usePostHog } from "posthog-js/react";
-import Link from "next/link";
+  ResponsiveModalScrollViewport,
+  ResponsiveModalTitle,
+} from "~/components/ResponsiveModal";
+import { Button } from "~/components/ui/button";
+import { toast } from "~/components/ui/use-toast";
 import { useDinnerSummaries } from "~/hooks/use-dinner-summaries";
-import { filterDinnerSummaries, orderDinnerSummaries } from "~/lib/cookbook";
+import {
+  deriveDinnerPickerCollection,
+  formatDinnerSummaryLabel,
+  type CookbookSort,
+} from "~/lib/cookbook";
+import {
+  formatDinnerPlanningConfirmation,
+  pickSurpriseDinner,
+} from "~/lib/dinner-planning";
+import { planSlotDateFromDate } from "~/lib/editor-navigation";
+import { cn } from "~/lib/utils";
+import { api, type RouterOutputs } from "~/utils/api";
+import { type DinnerWithTags } from "~/utils/types";
+import { DinnerCollectionControls } from "~/views/DinnerCollectionControls";
+import { useDinnerCreation } from "~/views/Dinners/DinnerCreationContext";
 
 type Props = {
   date: Date;
@@ -23,123 +34,268 @@ type Props = {
   plannedDinner?: DinnerWithTags;
 };
 
+type DinnerSummary = RouterOutputs["dinner"]["summaries"]["dinners"][number];
+
+const pickerSortOptions = [
+  { value: "not-lately" as const, label: "Haven't had lately" },
+  { value: "az" as const, label: "A–Z" },
+  { value: "favourites" as const, label: "Favourites" },
+];
+
 export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   const posthog = usePostHog();
+  const { openAddDinner } = useDinnerCreation();
   const utils = api.useUtils();
   const [search, setSearch] = useState("");
-  const [showTags, setShowTags] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sort, setSort] = useState<CookbookSort>("not-lately");
+  const [planningError, setPlanningError] = useState<string | null>(null);
+  const surpriseDinnerNameRef = useRef<string | null>(null);
 
-  const { query: dinnersQuery } = useDinnerSummaries();
-  const matchingDinners = dinnersQuery.data?.dinners
-    ? filterDinnerSummaries(dinnersQuery.data.dinners, search, selectedTags)
-    : undefined;
-  const dinners = matchingDinners
-    ? orderDinnerSummaries(matchingDinners, "not-lately")
-    : undefined;
+  const { query: dinnersQuery, today } = useDinnerSummaries();
+  const collection = deriveDinnerPickerCollection(
+    dinnersQuery.data?.dinners ?? [],
+    {
+      excludedDinnerId: plannedDinner?.id,
+      search,
+      selectedTags,
+      sort,
+    },
+  );
 
   const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
-    onSuccess: (result) => {
+    onMutate: () => setPlanningError(null),
+    onSuccess: (result, variables) => {
       void utils.plan.plannedDinners.invalidate();
       void utils.dinner.summaries.invalidate();
+      if (surpriseDinnerNameRef.current) {
+        toast({
+          title: formatDinnerPlanningConfirmation(
+            surpriseDinnerNameRef.current,
+            variables.date,
+          ),
+        });
+        surpriseDinnerNameRef.current = null;
+      }
       posthog.capture("plan dinner from week page", {
         dinner:
           dinnersQuery.data?.dinners.find(
-            (d) => d.id === result.newPlan.dinnerId,
+            (dinner) => dinner.id === result.newPlan.dinnerId,
           )?.name ?? "unknown",
         day: format(date, "EEE do"),
       });
       closeDialog();
     },
+    onError: () => {
+      surpriseDinnerNameRef.current = null;
+      setPlanningError(
+        "We couldn't update this Plan Slot. Check your connection and try again.",
+      );
+    },
   });
-  const planDinner = (dinnerId: number) => {
-    planDinnerForDateMutation.mutate({
-      date,
-      dinnerId,
-    });
+
+  const planDinner = (
+    dinnerId: number,
+    surpriseDinnerName: string | null = null,
+  ) => {
+    surpriseDinnerNameRef.current = surpriseDinnerName;
+    planDinnerForDateMutation.mutate({ date, dinnerId });
   };
 
   const surpriseMe = () => {
-    if (!dinners?.length) {
-      return;
-    }
-
-    const randomDinner = dinners[Math.floor(Math.random() * dinners.length)];
+    const randomDinner = pickSurpriseDinner(collection.dinners);
     if (randomDinner) {
-      planDinner(randomDinner.id);
+      planDinner(randomDinner.id, randomDinner.name);
     }
   };
 
   return (
-    <ResponsiveModalContent className="flex flex-col">
-      <ResponsiveModalHeader>
-        <ResponsiveModalDescription>
-          {format(date, "EEEE, LLLL do, y")}
-        </ResponsiveModalDescription>
-        <ResponsiveModalTitle>
-          {plannedDinner ? plannedDinner.name : "Nothing planned yet"}
-        </ResponsiveModalTitle>
-      </ResponsiveModalHeader>
+    <ResponsiveModalContent className="flex h-[90dvh] max-h-[90dvh] flex-col overflow-hidden bg-white md:max-w-xl">
+      <ResponsiveModalTitle className="sr-only">
+        Choose a Dinner
+      </ResponsiveModalTitle>
+      <ResponsiveModalDescription className="shrink-0 pb-4 text-center text-[13px] font-semibold">
+        {format(date, "EEEE, LLLL do")}
+        {plannedDinner
+          ? ` · replacing ${plannedDinner.name}`
+          : " · nothing planned"}
+      </ResponsiveModalDescription>
 
-      <Filter
-        search={search}
-        setSearch={setSearch}
-        showTags={showTags}
-        setShowTags={setShowTags}
-        selectedTags={selectedTags}
-        setSelectedTags={setSelectedTags}
-        className="p-1"
-      />
+      {dinnersQuery.isSuccess && (
+        <DinnerCollectionControls
+          dinners={collection.availableDinners}
+          tagVocabularyDinners={dinnersQuery.data.dinners}
+          search={search}
+          onSearchChange={setSearch}
+          selectedTags={selectedTags}
+          onSelectedTagsChange={setSelectedTags}
+          sort={sort}
+          onSortChange={setSort}
+          placeholder="Search the cookbook…"
+          sortOptions={pickerSortOptions}
+          className="shrink-0"
+        />
+      )}
 
-      <div className="flex flex-1 flex-col overflow-y-hidden">
-        <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-1">
-          {dinners?.map((dinner) => (
-            <Dinner
-              key={dinner.id}
-              dinner={dinner}
-              isPlanned={plannedDinner?.id === dinner.id}
-              planDinner={planDinner}
-              isPending={planDinnerForDateMutation.isPending}
+      <ResponsiveModalScrollViewport className="min-h-0 flex-1 py-4">
+        {dinnersQuery.isPending ? (
+          <div className="flex h-full items-center justify-center">
+            <Loader2
+              className="text-primary animate-spin"
+              aria-label="Loading Cookbook"
             />
-          ))}
-        </div>
-      </div>
-      <div className="flex w-full justify-between gap-2 p-1">
-        <Button asChild variant={"outline"}>
-          <Link href="/dinners/new">New dinner</Link>
+          </div>
+        ) : !dinnersQuery.isSuccess ? (
+          <PickerMessage
+            icon={<AlertCircle className="text-destructive size-6" />}
+            title="Couldn't load Cookbook"
+            body="Check your connection and try again."
+            action={{
+              label: "Try again",
+              onClick: () => void dinnersQuery.refetch(),
+            }}
+          />
+        ) : collection.dinners.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {collection.dinners.map((dinner) => (
+              <DinnerChoice
+                key={dinner.id}
+                dinner={dinner}
+                today={today}
+                onChoose={() => planDinner(dinner.id)}
+                disabled={planDinnerForDateMutation.isPending}
+              />
+            ))}
+            <p className="text-muted-foreground pt-2 text-center text-[11px] font-semibold">
+              {collection.hasActiveFilters
+                ? `${collection.matchingCount} ${collection.matchingCount === 1 ? "dinner" : "dinners"} match`
+                : "⌄ the whole cookbook ⌄"}
+            </p>
+          </div>
+        ) : collection.emptyState === "empty-cookbook" ? (
+          <PickerMessage
+            title={plannedDinner ? "No other Dinners yet" : "Cookbook is empty"}
+            body="Create a Dinner for this Plan Slot."
+          />
+        ) : (
+          <PickerMessage
+            title="No dinners match"
+            body="Try another search or clear the selected tags."
+            action={{
+              label: "Clear filters",
+              onClick: () => {
+                setSearch("");
+                setSelectedTags([]);
+              },
+            }}
+          />
+        )}
+      </ResponsiveModalScrollViewport>
+
+      {planningError && (
+        <p
+          role="alert"
+          className="text-destructive shrink-0 pb-3 text-center text-sm"
+        >
+          {planningError}
+        </p>
+      )}
+
+      <div className="grid shrink-0 grid-cols-2 gap-2 border-t pt-3">
+        <Button
+          type="button"
+          variant="outline"
+          className="h-12 rounded-xl"
+          onClick={() => {
+            closeDialog();
+            openAddDinner({
+              origin: "week",
+              date: planSlotDateFromDate(date),
+            });
+          }}
+        >
+          New dinner
         </Button>
         <Button
-          variant={"outline"}
+          type="button"
+          variant="outline"
+          className="h-12 rounded-xl"
           onClick={surpriseMe}
-          disabled={!dinners?.length || planDinnerForDateMutation.isPending}
+          disabled={
+            collection.dinners.length === 0 ||
+            planDinnerForDateMutation.isPending ||
+            !dinnersQuery.isSuccess
+          }
         >
-          Surprise me!
+          {planDinnerForDateMutation.isPending ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            "Surprise me!"
+          )}
         </Button>
-        {plannedDinner && <ClearDay date={date} closeDialog={closeDialog} />}
       </div>
     </ResponsiveModalContent>
   );
 };
 
-type DinnerProps = {
-  dinner: DinnerWithTags;
-  isPlanned: boolean;
-  planDinner: (dinnerId: number) => void;
-  isPending: boolean;
-};
-
-const Dinner = ({ dinner, isPlanned, planDinner, isPending }: DinnerProps) => {
-  return (
-    <Button
-      className={cn(
-        "justify-start",
-        isPlanned && "bg-accent/50 text-accent-foreground hover:bg-accent",
-      )}
-      variant={"outline"}
-      disabled={isPending}
-      onClick={() => planDinner(dinner.id)}
-    >
+const DinnerChoice = ({
+  dinner,
+  today,
+  onChoose,
+  disabled,
+}: {
+  dinner: DinnerSummary;
+  today: Date;
+  onChoose: () => void;
+  disabled: boolean;
+}) => (
+  <Button
+    type="button"
+    variant="secondary"
+    disabled={disabled}
+    onClick={onChoose}
+    className="bg-secondary/70 hover:bg-secondary h-auto w-full items-baseline justify-start gap-3 whitespace-normal rounded-xl px-3.5 py-3 text-left font-normal"
+  >
+    <span className="min-w-0 flex-1 truncate font-serif text-[15px] leading-tight">
       {dinner.name}
-    </Button>
-  );
-};
+    </span>
+    <span
+      className={cn(
+        "text-muted-foreground shrink-0 text-[11px] font-semibold",
+        dinner.currentWeekPlanDates.length > 0 && "text-primary",
+      )}
+    >
+      {formatDinnerSummaryLabel({
+        today,
+        lastCookedDate: dinner.lastCookedDate,
+        currentWeekPlanDates: dinner.currentWeekPlanDates,
+      })}
+    </span>
+  </Button>
+);
+
+const PickerMessage = ({
+  icon,
+  title,
+  body,
+  action,
+}: {
+  icon?: ReactNode;
+  title: string;
+  body: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+}) => (
+  <div className="mx-auto flex h-full max-w-sm flex-col items-center justify-center gap-3 px-4 text-center">
+    {icon}
+    <h2 className="font-serif text-xl">{title}</h2>
+    <p className="text-muted-foreground text-sm">{body}</p>
+    {action && (
+      <Button type="button" variant="outline" onClick={action.onClick}>
+        {action.label}
+      </Button>
+    )}
+  </div>
+);

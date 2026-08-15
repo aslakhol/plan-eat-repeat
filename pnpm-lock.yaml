@@ -258,9 +258,6 @@ importers:
       react-hook-form:
         specifier: ^7.67.0
         version: 7.71.1(react@19.1.0)
-      react-use-wake-lock:
-        specifier: ^1.0.1
-        version: 1.0.1(react@19.1.0)
       superjson:
         specifier: ^1.13.1
         version: 1.13.3
@@ -10960,14 +10957,6 @@ packages:
       get-nonce: 1.0.1
       react: 19.1.0
       tslib: 2.8.1
-    dev: false
-
-  /react-use-wake-lock@1.0.1(react@19.1.0):
-    resolution: {integrity: sha512-xy/UFG7QVZc+5PGwuNQQsD6RVn29HRmAf433Ios1na3nC/vDkTl3HQCdOriIkC8PndJ5WLe3qSAe98grCngdVQ==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
-    dependencies:
-      react: 19.1.0
     dev: false
 
   /react@19.1.0:

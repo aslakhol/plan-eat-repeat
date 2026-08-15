@@ -6,10 +6,12 @@ import {
   type DinnerWithRecipe,
 } from "@planeatrepeat/shared";
 import { cn } from "../../lib/utils";
+import { StickyHeaderCard } from "./StickyHeaderCard";
 
 type Props = {
   dinner: DinnerWithRecipe;
   historyLabel?: string;
+  headerLabel?: string;
   headerAction?: ReactNode;
   footerActions?: ReactNode;
 };
@@ -22,6 +24,7 @@ const hasAmounts = (part: DinnerWithRecipe["parts"][number]) =>
 export const RecipeView = ({
   dinner,
   historyLabel,
+  headerLabel,
   headerAction,
   footerActions,
 }: Props) => {
@@ -62,6 +65,16 @@ export const RecipeView = ({
   return (
     <article className="mx-auto w-full max-w-[640px] px-1 pb-2">
       <header className="space-y-3">
+        {headerLabel && (
+          <div className="flex items-center gap-3">
+            <p className="text-muted-foreground min-w-0 flex-1 text-[13px] font-semibold">
+              {headerLabel}
+            </p>
+            <div className="flex shrink-0 items-center gap-2">
+              {headerAction}
+            </div>
+          </div>
+        )}
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             {historyLabel && (
@@ -76,7 +89,11 @@ export const RecipeView = ({
               {dinner.name}
             </h1>
           </div>
-          <div className="flex shrink-0 items-center gap-2">{headerAction}</div>
+          {!headerLabel && (
+            <div className="flex shrink-0 items-center gap-2">
+              {headerAction}
+            </div>
+          )}
         </div>
 
         {dinner.tags.length > 0 && (
@@ -119,11 +136,12 @@ export const RecipeView = ({
 
       {(hasIngredients || hasSteps) && (
         <div className="sticky top-0 z-10 h-0">
-          <nav
+          <StickyHeaderCard
+            as="nav"
             aria-label="Recipe sections"
             aria-hidden={titleVisible}
             className={cn(
-              "border-border -mx-1 flex items-center gap-2 rounded-b-lg border bg-white/95 px-3 py-2 shadow-sm backdrop-blur transition duration-150",
+              "flex items-center gap-2 transition duration-150",
               titleVisible
                 ? "pointer-events-none -translate-y-full opacity-0"
                 : "translate-y-0 opacity-100",
@@ -152,7 +170,7 @@ export const RecipeView = ({
                 Steps
               </button>
             )}
-          </nav>
+          </StickyHeaderCard>
         </div>
       )}
 

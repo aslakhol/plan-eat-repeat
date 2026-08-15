@@ -8,6 +8,12 @@ export const importRecipeErrorCodes = [
 
 export type ImportRecipeErrorCode = (typeof importRecipeErrorCodes)[number];
 
+export const isImportRecipeErrorCode = (
+  value: unknown,
+): value is ImportRecipeErrorCode =>
+  typeof value === "string" &&
+  importRecipeErrorCodes.some((code) => code === value);
+
 // Image uploads are base64 encoded, so this leaves room below Vercel's 4.5 MB
 // request limit for the surrounding tRPC payload.
 export const MAX_RECIPE_IMPORT_IMAGES = 4;
@@ -77,7 +83,9 @@ export const isYouTubeVideoUrl = (value: string | URL) =>
 
 export const validUrlOrNull = (value: string) => {
   try {
-    return new URL(value.trim()).toString();
+    const url = new URL(value.trim());
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.toString();
   } catch {
     return null;
   }
