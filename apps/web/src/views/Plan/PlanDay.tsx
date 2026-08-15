@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { usePostHog } from "posthog-js/react";
 
 import {
@@ -9,13 +9,17 @@ import {
   ResponsiveModalTitle,
 } from "~/components/ResponsiveModal";
 import { Button } from "~/components/ui/button";
+import { toast } from "~/components/ui/use-toast";
 import { useDinnerSummaries } from "~/hooks/use-dinner-summaries";
 import {
   deriveDinnerPickerCollection,
   formatDinnerSummaryLabel,
   type CookbookSort,
 } from "~/lib/cookbook";
-import { pickSurpriseDinner } from "~/lib/dinner-planning";
+import {
+  formatDinnerPlanningConfirmation,
+  pickSurpriseDinner,
+} from "~/lib/dinner-planning";
 import { planSlotDateFromDate } from "~/lib/editor-navigation";
 import { cn } from "~/lib/utils";
 import { api, type RouterOutputs } from "~/utils/api";
@@ -45,6 +49,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sort, setSort] = useState<CookbookSort>("not-lately");
   const [planningError, setPlanningError] = useState<string | null>(null);
+  const surpriseDinnerNameRef = useRef<string | null>(null);
 
   const { query: dinnersQuery, today } = useDinnerSummaries();
   const collection = deriveDinnerPickerCollection(
@@ -59,9 +64,18 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
 
   const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
     onMutate: () => setPlanningError(null),
-    onSuccess: (result) => {
+    onSuccess: (result, variables) => {
       void utils.plan.plannedDinners.invalidate();
       void utils.dinner.summaries.invalidate();
+      if (surpriseDinnerNameRef.current) {
+        toast({
+          title: formatDinnerPlanningConfirmation(
+            surpriseDinnerNameRef.current,
+            variables.date,
+          ),
+        });
+        surpriseDinnerNameRef.current = null;
+      }
       posthog.capture("plan dinner from week page", {
         dinner:
           dinnersQuery.data?.dinners.find(
@@ -72,19 +86,26 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
       closeDialog();
     },
     onError: () => {
+      surpriseDinnerNameRef.current = null;
       setPlanningError(
         "We couldn't update this Plan Slot. Check your connection and try again.",
       );
     },
   });
 
-  const planDinner = (dinnerId: number) => {
+  const planDinner = (
+    dinnerId: number,
+    surpriseDinnerName: string | null = null,
+  ) => {
+    surpriseDinnerNameRef.current = surpriseDinnerName;
     planDinnerForDateMutation.mutate({ date, dinnerId });
   };
 
   const surpriseMe = () => {
     const randomDinner = pickSurpriseDinner(collection.dinners);
-    if (randomDinner) planDinner(randomDinner.id);
+    if (randomDinner) {
+      planDinner(randomDinner.id, randomDinner.name);
+    }
   };
 
   return (
