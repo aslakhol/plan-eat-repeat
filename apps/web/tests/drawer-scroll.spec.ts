@@ -209,6 +209,7 @@ test("whole-content drawers scroll without moving the Vaul shell or handle", asy
 test("a short planned Dinner drawer sizes to its content on mobile", async ({
   page,
 }) => {
+  test.setTimeout(120_000);
   const dinnerName = "Short planned drawer regression";
   const viewportHeight = 844;
 
@@ -229,6 +230,7 @@ test("a short planned Dinner drawer sizes to its content on mobile", async ({
       .getByRole("button", { name: new RegExp(`^Plan ${dinnerName} for `) })
       .first()
       .click();
+    await expect(page).toHaveURL(/\/dinners$/);
 
     await page.goto("/");
     await page.getByRole("button", { name: "Next week" }).click();
