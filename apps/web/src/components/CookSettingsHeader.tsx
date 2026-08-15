@@ -34,7 +34,11 @@ export const CookSettingsHeader = ({ title }: { title: string }) => {
             <MoreHorizontal className="size-4" />
           </Button>
         </ResponsiveModalTrigger>
-        <ResponsiveModalContent className="h-auto max-h-[70dvh] gap-5 bg-white md:max-w-sm">
+        <ResponsiveModalContent
+          scrollViewport
+          scrollViewportClassName="grid gap-5"
+          className="h-auto max-h-[70dvh] bg-white md:max-w-sm"
+        >
           <div>
             <ResponsiveModalTitle className="pb-1 text-left font-serif text-xl font-normal">
               Cook settings

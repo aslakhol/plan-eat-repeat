@@ -5,6 +5,7 @@ import {
   ResponsiveModal,
   ResponsiveModalContent,
   ResponsiveModalDescription,
+  ResponsiveModalScrollViewport,
   ResponsiveModalTitle,
 } from "~/components/ResponsiveModal";
 import { Button } from "~/components/ui/button";
@@ -254,7 +255,7 @@ const TagFilterSheet = ({
           className="h-11 shrink-0 rounded-full bg-white px-4"
         />
 
-        <div className="min-h-0 flex-1 space-y-7 overflow-y-auto py-5">
+        <ResponsiveModalScrollViewport className="min-h-0 flex-1 space-y-7 py-5">
           {groups.selected.length > 0 && (
             <TagSection label="Selected">
               {groups.selected.map((tag) => (
@@ -304,7 +305,7 @@ const TagFilterSheet = ({
               No tags match.
             </p>
           )}
-        </div>
+        </ResponsiveModalScrollViewport>
 
         <Button
           type="button"

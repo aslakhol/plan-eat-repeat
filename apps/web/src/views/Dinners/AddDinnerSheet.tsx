@@ -467,6 +467,8 @@ export function AddDinnerSheet(props: Props) {
   return (
     <ResponsiveModal open={open} onOpenChange={requestOpenChange}>
       <ResponsiveModalContent
+        scrollViewport
+        scrollViewportClassName="flex min-h-0 flex-1 flex-col"
         className={cn(
           "gap-0 bg-white",
           screen === "choose" ||

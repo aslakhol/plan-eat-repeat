@@ -2,6 +2,7 @@ import { type DinnerWithRecipe } from "../../utils/types";
 import { format } from "date-fns";
 import {
   ResponsiveModalContent,
+  ResponsiveModalScrollViewport,
   ResponsiveModalTitle,
   ResponsiveModalDescription,
 } from "../../components/ResponsiveModal";
@@ -46,7 +47,7 @@ export const PlannedDinner = ({
         Planned Dinner for {format(date, "EEEE, LLLL do, y")}
       </ResponsiveModalDescription>
 
-      <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 pt-2">
+      <ResponsiveModalScrollViewport className="-mx-1 min-h-0 flex-1 px-1 pt-2">
         <RecipeView
           dinner={dinner}
           headerLabel={format(date, "EEEE, LLLL do, y")}
@@ -94,7 +95,7 @@ export const PlannedDinner = ({
             </details>
           }
         />
-      </div>
+      </ResponsiveModalScrollViewport>
     </ResponsiveModalContent>
   );
 };

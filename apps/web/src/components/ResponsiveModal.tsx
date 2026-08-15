@@ -16,6 +16,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "src/components/ui/drawer";
+import { cn } from "src/lib/utils";
 
 export const ResponsiveModal = ({
   children,
@@ -62,18 +63,50 @@ export const ResponsiveModalTrigger = ({
 export const ResponsiveModalContent = ({
   children,
   className,
+  scrollViewport = false,
+  scrollViewportClassName,
 }: {
   children: React.ReactNode;
   className?: string;
+  scrollViewport?: boolean;
+  scrollViewportClassName?: string;
 }) => {
   const isMobile = useIsMobile();
 
   if (isMobile) {
-    return <DrawerContent className={className}>{children}</DrawerContent>;
+    return (
+      <DrawerContent className={cn(className, "overflow-hidden")}>
+        {scrollViewport ? (
+          <ResponsiveModalScrollViewport className={scrollViewportClassName}>
+            {children}
+          </ResponsiveModalScrollViewport>
+        ) : (
+          children
+        )}
+      </DrawerContent>
+    );
   }
 
   return <DialogContent className={className}>{children}</DialogContent>;
 };
+
+export function ResponsiveModalScrollViewport({
+  children,
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  const isMobile = useIsMobile();
+
+  return (
+    <div
+      data-responsive-modal-scroll-viewport={isMobile ? "" : undefined}
+      className={cn("min-h-0 overflow-y-auto", className)}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
 
 export const ResponsiveModalHeader = ({
   children,

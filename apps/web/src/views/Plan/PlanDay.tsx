@@ -6,6 +6,7 @@ import { usePostHog } from "posthog-js/react";
 import {
   ResponsiveModalContent,
   ResponsiveModalDescription,
+  ResponsiveModalScrollViewport,
   ResponsiveModalTitle,
 } from "~/components/ResponsiveModal";
 import { Button } from "~/components/ui/button";
@@ -136,7 +137,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
         />
       )}
 
-      <div className="min-h-0 flex-1 overflow-y-auto py-4">
+      <ResponsiveModalScrollViewport className="min-h-0 flex-1 py-4">
         {dinnersQuery.isPending ? (
           <div className="flex h-full items-center justify-center">
             <Loader2
@@ -189,7 +190,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
             }}
           />
         )}
-      </div>
+      </ResponsiveModalScrollViewport>
 
       {planningError && (
         <p
