@@ -214,7 +214,7 @@ export const RecipeEditor = ({
           <h1 className="font-serif text-base font-normal">
             {dinner ? "Edit dinner" : "New dinner"}
           </h1>
-          {dinner && onDelete ? (
+          {dinner && onDelete && (
             <details className="relative justify-self-end">
               <summary className="border-border text-muted-foreground hover:bg-accent flex size-9 cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
                 <MoreHorizontal className="size-5" />
@@ -258,18 +258,6 @@ export const RecipeEditor = ({
                 />
               </div>
             </details>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              aria-label="Editor actions"
-              title="No editor actions available"
-              className="size-9 justify-self-end rounded-full bg-white"
-              disabled
-            >
-              <MoreHorizontal className="size-5" />
-            </Button>
           )}
         </div>
 

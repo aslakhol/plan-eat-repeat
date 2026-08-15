@@ -65,6 +65,9 @@ test("empty Plan Slot manual creation saves and opens the planned-day sheet", as
     await expect(
       page.getByRole("heading", { name: "New dinner" }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Editor actions" }),
+    ).not.toBeVisible();
     await expect(page.getByRole("textbox", { name: "Name" })).toHaveValue(
       dinnerName,
     );
