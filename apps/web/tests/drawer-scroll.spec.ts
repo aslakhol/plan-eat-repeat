@@ -18,16 +18,23 @@ const visitCookbook = async (page: Page) => {
   await expect(page.getByRole("heading", { name: "Cookbook" })).toBeVisible();
 };
 
-const openFirstDinnerDetails = async (page: Page) => {
+const openDinnerDetails = async (
+  page: Page,
+  dinnerLink: ReturnType<Page["locator"]>,
+) => {
   await visitCookbook(page);
-  await page.locator('a[href^="/dinners/"]').first().click();
+  await dinnerLink.click();
   await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
 };
 
+const openFirstDinnerDetails = async (page: Page) =>
+  openDinnerDetails(page, page.locator('a[href^="/dinners/"]').first());
+
 const openLongDinnerDetails = async (page: Page) => {
-  await visitCookbook(page);
-  await page.getByRole("link", { name: /Chicken Curry/ }).click();
-  await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
+  await openDinnerDetails(
+    page,
+    page.getByRole("link", { name: /Chicken Curry/ }),
+  );
 };
 
 const planSlotPickerOpener = {
@@ -133,10 +140,9 @@ const assertBoundedDrawer = async (drawer: ReturnType<Page["locator"]>) => {
     };
   });
 
-  expect(
-    drawerMetrics.shellOverflowY,
-    drawerMetrics.shellClassName,
-  ).toBe("visible");
+  expect(drawerMetrics.shellOverflowY, drawerMetrics.shellClassName).toBe(
+    "visible",
+  );
   expect(drawerMetrics.shellScrollTop).toBe(0);
   expect(drawerMetrics.viewportOverflowY).toBe("auto");
   expect(drawerMetrics.viewportRemainingScroll).toBeLessThanOrEqual(1);
