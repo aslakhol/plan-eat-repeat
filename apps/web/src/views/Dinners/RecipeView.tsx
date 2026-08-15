@@ -6,6 +6,7 @@ import {
   type DinnerWithRecipe,
 } from "@planeatrepeat/shared";
 import { cn } from "../../lib/utils";
+import { StickyHeaderCard } from "./StickyHeaderCard";
 
 type Props = {
   dinner: DinnerWithRecipe;
@@ -135,11 +136,12 @@ export const RecipeView = ({
 
       {(hasIngredients || hasSteps) && (
         <div className="sticky top-0 z-10 h-0">
-          <nav
+          <StickyHeaderCard
+            as="nav"
             aria-label="Recipe sections"
             aria-hidden={titleVisible}
             className={cn(
-              "border-border -mx-1 flex items-center gap-2 rounded-b-lg border bg-white/95 px-3 py-2 shadow-sm backdrop-blur transition duration-150",
+              "flex items-center gap-2 transition duration-150",
               titleVisible
                 ? "pointer-events-none -translate-y-full opacity-0"
                 : "translate-y-0 opacity-100",
@@ -168,7 +170,7 @@ export const RecipeView = ({
                 Steps
               </button>
             )}
-          </nav>
+          </StickyHeaderCard>
         </div>
       )}
 

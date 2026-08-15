@@ -36,6 +36,7 @@ import { Form } from "../../components/ui/form";
 import { FancyCombobox } from "../../components/ui/FancyCombobox";
 import { DeleteDinnerButton } from "./DeleteDinnerButton";
 import { AddDinnerSheet } from "./AddDinnerSheet";
+import { StickyHeaderCard } from "./StickyHeaderCard";
 import {
   applyExistingDinnerImport,
   clearExistingDinnerRecipe,
@@ -202,25 +203,25 @@ export const RecipeEditor = ({
         onSubmit={form.handleSubmit(onSave)}
         className="mx-auto w-full max-w-[640px] pb-[calc(7rem+env(safe-area-inset-bottom))]"
       >
-        <div className="bg-background/95 sticky top-0 z-20 -mx-4 mb-5 grid grid-cols-[1fr_auto_1fr] items-center border-b px-4 py-2 backdrop-blur">
+        <StickyHeaderCard className="sticky top-0 z-20 mb-5 flex min-h-12 items-center gap-2">
+          <h1 className="min-w-0 flex-1 truncate font-serif text-base font-normal">
+            {dinner ? "Edit dinner" : "New dinner"}
+          </h1>
           <Button
             type="button"
             variant="ghost"
-            className="justify-self-start px-2"
+            className="text-primary h-auto shrink-0 px-1 py-1 text-xs font-bold hover:bg-transparent hover:text-primary"
             onClick={cancel}
           >
             Cancel
           </Button>
-          <h1 className="font-serif text-base font-normal">
-            {dinner ? "Edit dinner" : "New dinner"}
-          </h1>
           {dinner && onDelete && (
-            <details className="relative justify-self-end">
-              <summary className="border-border text-muted-foreground hover:bg-accent flex size-9 cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
-                <MoreHorizontal className="size-5" />
+            <details className="relative shrink-0">
+              <summary className="border-border text-muted-foreground hover:bg-accent flex size-[30px] cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
+                <MoreHorizontal className="size-4" />
                 <span className="sr-only">Editor actions</span>
               </summary>
-              <div className="border-border absolute right-0 top-10 z-30 w-[210px] overflow-hidden rounded-[14px] border bg-white shadow-[0_8px_28px_rgba(60,50,40,.22)]">
+              <div className="border-border absolute right-0 top-9 z-30 w-[210px] overflow-hidden rounded-[14px] border bg-white shadow-[0_8px_28px_rgba(60,50,40,.22)]">
                 <button
                   type="button"
                   className="hover:bg-muted w-full px-3.5 py-3 text-left text-[13.5px] font-semibold"
@@ -259,7 +260,7 @@ export const RecipeEditor = ({
               </div>
             </details>
           )}
-        </div>
+        </StickyHeaderCard>
 
         <div className="space-y-5">
           <div className="space-y-4">
