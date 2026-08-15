@@ -1,6 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { ensureSignedIn, openFirstEmptyDay } from "./capture-support";
+import {
+  deleteDinnerIfPresent,
+  ensureSignedIn,
+  openFirstEmptyDay,
+  quickAddDinner,
+} from "./capture-support";
 
 const openDrawer = async (page: Page, open: (page: Page) => Promise<void>) => {
   await open(page);
@@ -199,6 +204,60 @@ test("whole-content drawers scroll without moving the Vaul shell or handle", asy
   );
   expect(viewportScrollMetrics.shellScrollTop).toBe(0);
   expect(viewportScrollMetrics.handleMovement).toBeLessThanOrEqual(1);
+});
+
+test("a short planned Dinner drawer sizes to its content on mobile", async ({
+  page,
+}) => {
+  const dinnerName = "Short planned drawer regression";
+  const viewportHeight = 844;
+
+  await page.setViewportSize({ width: 390, height: viewportHeight });
+  await ensureSignedIn(page);
+  await deleteDinnerIfPresent(page, dinnerName);
+
+  try {
+    await quickAddDinner(page, dinnerName);
+    await page.getByRole("button", { name: "Plan this dinner" }).click();
+
+    const planningDrawer = page
+      .locator('[data-vaul-drawer][data-state="open"]')
+      .last();
+    await planningDrawer.getByRole("button", { name: "Next week" }).click();
+    await planningDrawer.getByRole("button", { name: "Next week" }).click();
+    await planningDrawer
+      .getByRole("button", { name: new RegExp(`^Plan ${dinnerName} for `) })
+      .first()
+      .click();
+
+    await page.goto("/");
+    await page.getByRole("button", { name: "Next week" }).click();
+    await page.getByRole("button", { name: "Next week" }).click();
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("button", { name: "Previous week" }).click();
+    await page.getByRole("button", { name: "Next week" }).click();
+    await page
+      .getByTestId("plan-day-trigger")
+      .filter({ hasText: dinnerName })
+      .click();
+    await expect(page.getByText("Planned Dinner actions")).toBeVisible();
+
+    const drawer = page.locator('[data-vaul-drawer][data-state="open"]').last();
+    await expect(drawer).toBeVisible();
+    await page.waitForTimeout(500);
+
+    const drawerMetrics = await drawer.evaluate((element) => ({
+      className: element.className,
+      height: element.getBoundingClientRect().height,
+      innerWidth: window.innerWidth,
+      mediumBreakpoint: window.matchMedia("(min-width: 768px)").matches,
+    }));
+    expect(drawerMetrics.height, JSON.stringify(drawerMetrics)).toBeLessThan(
+      viewportHeight * 0.75,
+    );
+  } finally {
+    await deleteDinnerIfPresent(page, dinnerName);
+  }
 });
 
 test("fixed controls stay put while Plan Slot choices scroll", async ({

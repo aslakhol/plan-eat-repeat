@@ -39,7 +39,7 @@ export const PlannedDinner = ({
   const closeMenu = () => menuRef.current?.removeAttribute("open");
 
   return (
-    <ResponsiveModalContent className="flex h-[92dvh] max-h-[92dvh] max-w-[640px] flex-col overflow-hidden bg-white md:h-[min(90dvh,800px)]">
+    <ResponsiveModalContent className="flex h-auto max-h-[92dvh] max-w-[640px] flex-col overflow-hidden bg-white md:h-[min(90dvh,800px)]">
       <ResponsiveModalTitle className="sr-only">
         {dinner.name}
       </ResponsiveModalTitle>
