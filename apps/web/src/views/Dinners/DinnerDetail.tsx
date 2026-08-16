@@ -94,6 +94,7 @@ export const DinnerDetail = () => {
       await Promise.all([
         utils.dinner.summaries.invalidate(),
         utils.dinner.get.invalidate({ dinnerId }),
+        utils.plan.plannedDinners.invalidate(),
       ]);
       toast({
         title: dinner.favourite

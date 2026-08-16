@@ -214,9 +214,20 @@ export const deriveDinnerCollection = <
     controls.search,
     controls.selectedTags,
   );
+  const orderedDinners = orderDinnerSummaries(matchingDinners, controls.sort);
+  const firstNonFavouriteIndex = orderedDinners.findIndex(
+    (dinner) => !dinner.favourite,
+  );
+  const mostPlannedStartIndex =
+    controls.sort === "favourites" &&
+    firstNonFavouriteIndex > 0 &&
+    firstNonFavouriteIndex < orderedDinners.length
+      ? firstNonFavouriteIndex
+      : null;
 
   return {
-    dinners: orderDinnerSummaries(matchingDinners, controls.sort),
+    dinners: orderedDinners,
+    mostPlannedStartIndex,
     totalCount: dinners.length,
     matchingCount: matchingDinners.length,
     hasActiveFilters,
