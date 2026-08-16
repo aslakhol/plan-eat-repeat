@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/plan-eat-repeat-d901d8ce-3c98-4c10-a14d-11f441b80480/styles.css">
+<script src="_ds/plan-eat-repeat-d901d8ce-3c98-4c10-a14d-11f441b80480/_ds_bundle.js"></script>
+<style>
+body{margin:0;background:#f2efe8;font-family:Quicksand,system-ui,sans-serif;color:#221d1a}
+a{color:#c2552f}a:hover{color:#a34524}
+.dv-turn{padding:40px 44px 60px;scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:12px;margin:0 0 8px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#221d1a;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font-family:"Young Serif",serif;font-size:20px;color:#221d1a}
+.dv-sub{max-width:760px;font-size:13px;line-height:1.5;color:#6d655c;margin:0 0 26px}
+.dv-opts{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px;max-width:1320px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(34,29,26,.08);color:#221d1a;border-radius:5px;text-decoration:none}
+.dv-opt:target .dv-oid{background:#dd6b42;color:#fff}
+.dir{background:#fff;border:1px solid #e6e0d4;border-radius:14px;box-shadow:0 1px 3px rgba(60,50,40,.06);padding:26px 28px;display:flex;flex-direction:column;gap:20px}
+.tasks{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.row{display:flex;gap:5px;align-items:center}
+.hdl{width:34px;height:4px;border-radius:99px;background:#d9d2c4;margin:0 auto 2px}
+.ph3{width:390px;height:720px;background:#FAF8F5;border:1px solid #ddd6c8;border-radius:28px;box-shadow:0 6px 20px rgba(60,50,40,.14);overflow:hidden;display:flex;flex-direction:column;font-family:Quicksand,sans-serif;color:#24201b}
+.task3{width:390px;display:flex;flex-direction:column;gap:10px}
+.cap2{font-size:11.5px;line-height:1.55;color:#57504a;max-width:390px;margin:0}
+.cap2 b{color:#C2552F}
+.h1w{font-family:"Young Serif",serif;font-size:30px;margin:0;font-weight:400}
+.mdots{width:36px;height:36px;border-radius:99px;border:1px solid #ddd6c8;background:#fff;display:flex;align-items:center;justify-content:center;color:#57504a;font-size:13px;letter-spacing:1.5px;font-weight:700;padding-bottom:5px}
+.sheet3{margin-top:auto;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -6px 24px rgba(60,50,40,.18);display:flex;flex-direction:column;padding:10px 18px 16px;gap:10px;overflow:hidden}
+.dimw{opacity:.35;padding:22px 18px 8px;display:flex;flex-direction:column;gap:10px;flex:1;overflow:hidden}
+.prow{background:#F7F4EE;border:1px solid #eee8db;border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:8px}
+.prow small{margin-left:auto;font-size:11px;color:#a39a8e;font-weight:600;white-space:nowrap}
+.inp3{flex:1;background:#fff;border:1px solid #e2dbcc;border-radius:12px;padding:10px 14px;font-size:13px;color:#a39a8e}
+.fbtn{width:42px;height:42px;flex:0 0 42px;border-radius:12px;border:1px solid #e2dbcc;background:#fff;display:flex;align-items:center;justify-content:center;color:#57504a}
+.obtn{border:1px solid #ddd6c8;background:#fff;border-radius:12px;padding:11px 14px;font-size:13px;font-weight:700;color:#453e37;text-align:center}
+.obtn.pri{background:#DD6B42;border-color:#DD6B42;color:#fff}
+.obtn.off{color:#bdb4a6;border-color:#e9e3d6}
+.rt{font-family:"Young Serif",serif;font-size:24px;margin:2px 0;font-weight:400}
+.ing2{display:flex;gap:12px;font-size:13.5px;padding:2.5px 0}
+.ing2 b{flex:0 0 60px;text-align:right;font-weight:700;white-space:nowrap}
+.ing2 i{font-style:normal;color:#8a8276}
+.stp2{display:flex;gap:12px;font-size:13.5px;line-height:1.5;padding:3px 0}
+.stp2 b{color:#C2552F;font-family:"Young Serif",serif;flex:0 0 12px;font-weight:400}
+.shd2{text-align:center;font-size:12px;color:#8a8276;font-weight:600}
+.seg{display:flex;background:#F1EDE6;border-radius:10px;padding:3px;gap:2px}
+.seg span{flex:1;text-align:center;font-size:11px;font-weight:700;color:#8a8276;padding:6px 0;border-radius:8px;white-space:nowrap}
+.seg span.on{background:#fff;color:#C2552F;box-shadow:0 1px 2px rgba(60,50,40,.1)}
+.mrow{background:#fff;padding:11px 14px;font-size:13.5px;font-weight:600;color:#332e29;border-bottom:1px solid #f0ebe0;display:flex;align-items:center;gap:8px}
+.mrow:last-child{border-bottom:none}
+.mrow.warn{color:#a34524}
+.mrow.hot{background:#F6DDD2;color:#a34524}
+.cbn{font-family:"Young Serif",serif;font-size:15px;font-weight:400}
+.metaline{font-size:11.5px;font-weight:600;color:#8a8276}
+.tchip{border:1px solid #e6e0d4;background:#fff;border-radius:99px;padding:3px 9px;font-size:10.5px;font-weight:600;color:#8a8276;white-space:nowrap}
+.trow{display:flex;gap:5px;overflow:hidden;flex-wrap:nowrap;margin-top:7px}
+.actbar{margin:auto 0 0;padding:14px 0 2px;display:flex;gap:8px}
+.tb3{display:flex;align-items:flex-end;border-top:1px solid #e6e0d4;background:#FAF8F5;padding:8px 0 16px}
+.tb3 .ti{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;color:#a39a8e}
+.tb3 .ti.on{color:#C2552F}
+.plus3{width:52px;height:52px;border-radius:99px;background:#DD6B42;color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;margin:-26px auto 0;box-shadow:0 4px 10px rgba(221,107,66,.4)}
+.kcard{flex:1;background:#F7F4EE;border:1.5px solid #eee8db;border-radius:14px;padding:12px 13px 13px;display:flex;flex-direction:column;gap:5px;min-height:150px}
+.kcard .kn{font-family:"Young Serif",serif;font-size:16.5px;line-height:1.2}
+.kcard .km{font-size:11px;font-weight:600;color:#8a8276;line-height:1.5}
+.kcard .kt{margin-top:auto;font-size:10.5px;font-weight:700;color:#a39a8e;letter-spacing:.04em}
+.kcard.on{background:#fff;border-color:#DD6B42;box-shadow:0 2px 10px rgba(221,107,66,.16)}
+.kcard.on .kt{color:#C2552F}
+.kcard.dim{opacity:.62}
+.tick{width:19px;height:19px;border-radius:99px;border:1.5px solid #ddd6c8;background:#fff;display:flex;align-items:center;justify-content:center;color:#fff;flex:none}
+.tick.on{background:#DD6B42;border-color:#DD6B42}
+.note{background:#F1EDE6;border-radius:12px;padding:11px 13px;font-size:12px;line-height:1.55;color:#57504a;font-weight:600}
+.note b{color:#a34524;font-weight:700}
+.toast{margin:auto 14px 18px;background:#332e29;color:#fff;border-radius:14px;padding:13px 15px;font-size:12.5px;font-weight:600;line-height:1.45;box-shadow:0 6px 20px rgba(40,30,25,.3)}
+.swap{font-size:12px;font-weight:700;color:#C2552F;text-align:center;padding:4px 0 2px}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t4">
+<div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">Canonical — Merge dinners</span></div>
+<p class="dv-sub">The resolved flow: <a href="#1a">1a</a>'s neutral pick, <a href="#2a">2a</a>'s trimmed copy, <a href="#3a">3a</a>'s recipe peek. Cards show ingredients and step count where a recipe exists, and the note or link where it doesn't — no line stating the absence. Same-date overlaps resolve silently; one toast, no undo.</p>
+<div class="dv-opts">
+
+<div class="dv-opt" id="4a">
+<div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a> <span style="font-size:12px;font-weight:700;color:#6d655c">Five screens, sheet ••• to toast</span></div>
+<div class="dir">
+<div class="tasks">
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:0 0 70px"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:1">
+<div class="hdl"></div>
+<div style="position:relative">
+<div style="position:absolute;top:62px;right:0;width:210px;background:#fff;border:1px solid #e6e0d4;border-radius:14px;box-shadow:0 8px 28px rgba(60,50,40,.22);overflow:hidden;z-index:2">
+<div class="mrow">Add to favourites</div>
+<div class="mrow hot">Merge</div>
+<div class="mrow warn">Delete dinner</div>
+</div>
+<div class="row" style="align-items:center"><div><span class="metaline" style="display:block">Last cooked 3 wks ago · 14 times</span><h2 class="rt" style="margin:1px 0 0">Spaghetti Carbonara</h2></div><div class="mdots" style="margin-left:auto;width:30px;height:30px;font-size:11px;flex:none;border-color:#DD6B42;color:#C2552F">...</div></div>
+<div class="trow" style="margin:8px 0 0"><span class="tchip">Quick</span><span class="tchip">Comfort</span><span class="tchip">Pasta</span></div>
+<span style="font-size:12px;color:#8a8276;font-weight:600;display:block;margin:8px 0">4 servings</span>
+<div class="ing2"><b>400 g</b><span>spaghetti</span></div>
+<div class="ing2"><b>150 g</b><span>pancetta <i>— diced</i></span></div>
+<div class="ing2"><b>4 pcs</b><span>eggs</span></div>
+<div class="stp2"><b>1</b><span>Boil the spaghetti in well-salted water until al dente.</span></div>
+</div>
+<div class="actbar"><div class="obtn" style="flex:1">Plan this dinner</div><div class="obtn" style="flex:1">Edit</div></div>
+</div>
+</div><p class="cap2"><b>1 · Merge</b> sits in the dinner sheet's ••• menu, between favourites and delete. It is the only entry point.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:0 0 70px"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:1">
+<div class="hdl"></div>
+<div class="shd2">Merge <b style="font-family:'Young Serif',serif;font-weight:400">Spaghetti Carbonara</b> with…</div>
+<div class="row" style="gap:8px;margin-top:2px"><div class="inp3">Search dinners…</div><div class="fbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg></div></div>
+<div class="seg"><span class="on">A–Z</span><span>Haven't had lately</span><span>Favourites</span></div>
+<div class="prow"><span class="cbn">Beef Burger</span><small>2 wks ago</small></div>
+<div class="prow"><span class="cbn">Butter Chicken</span><small>5 wks ago</small></div>
+<div class="prow"><span class="cbn">Caesar Salad</span><small>1 wk ago</small></div>
+<div class="prow"><span class="cbn">Chicken Curry</span><small style="color:#C2552F">tonight</small></div>
+<div class="prow"><span class="cbn">Eggplant Parmesan</span><small>4 wks ago</small></div>
+<div class="prow"><span class="cbn">Leftovers</span><small>3 wks ago</small></div>
+<div class="prow"><span class="cbn">Spaghetti Bolognese</span><small>6 wks ago</small></div>
+<div class="prow" style="border-color:#e2dbcc"><span class="cbn">Spaghetti Carbonara <span style="font-family:Quicksand,sans-serif;font-size:11px;font-weight:700;color:#a39a8e">— this one</span></span></div>
+<span style="font-size:11px;color:#a39a8e;text-align:center;margin-top:2px">⌄ 48 dinners ⌄</span>
+</div>
+</div><p class="cap2"><b>2 · Pick the other dinner.</b> The cookbook picker unchanged — search, funnel, its three sorts, household dinners only. The dinner you came from stays in place but inert.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="row" style="gap:9px;align-items:stretch;margin-top:4px">
+<div class="kcard" style="min-height:172px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara</span><div class="tick"></div></div><span class="km">14 times · 3 wks ago</span><div style="border-top:1px solid #e6e0d4;margin:6px 0 0;padding-top:7px;font-size:11px;line-height:1.6;color:#57504a;font-weight:600">spaghetti<br>pancetta<br>eggs<br><span style="color:#a39a8e">+ 4 more · 3 steps</span></div><span class="km" style="margin-top:auto;padding-top:7px">Quick · Comfort · Pasta</span></div>
+<div class="kcard" style="min-height:172px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara (2)</span><div class="tick"></div></div><span class="km">3 times · 8 wks ago</span><div style="border-top:1px solid #e6e0d4;margin:6px 0 0;padding-top:7px;font-size:11px;line-height:1.6;color:#57504a;font-weight:600">“Nonna's, with cream”<br><span style="color:#a39a8e">bbcgoodfood.com</span></div><span class="km" style="margin-top:auto;padding-top:7px">Pasta</span></div>
+</div>
+<div class="note">The one you keep stays exactly as it is. The other is deleted. Only the planned dates move across.</div>
+<div class="obtn off" style="margin-top:2px">Merge</div>
+</div>
+</div><p class="cap2"><b>3 · The decision.</b> No default; the button is inert until a card is tapped. Under the name and history, each card shows the start of what it holds — three ingredients and a step count, or the note and link. Tags close the card.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="row" style="gap:9px;align-items:stretch;margin-top:4px">
+<div class="kcard on" style="min-height:172px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara</span><div class="tick on"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div></div><span class="km">14 times · 3 wks ago</span><div style="border-top:1px solid #efc9ba;margin:6px 0 0;padding-top:7px;font-size:11px;line-height:1.6;color:#57504a;font-weight:600">spaghetti<br>pancetta<br>eggs<br><span style="color:#a39a8e">+ 4 more · 3 steps</span></div><span class="kt" style="padding-top:7px">KEEPING</span></div>
+<div class="kcard dim" style="min-height:172px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara (2)</span><div class="tick"></div></div><span class="km">3 times · 8 wks ago</span><div style="border-top:1px solid #e6e0d4;margin:6px 0 0;padding-top:7px;font-size:11px;line-height:1.6;color:#57504a;font-weight:600">“Nonna's, with cream”<br><span style="color:#a39a8e">bbcgoodfood.com</span></div><span class="kt" style="padding-top:7px">DELETING</span></div>
+</div>
+<div class="note">The one you keep stays exactly as it is. The other is deleted. Only the planned dates move across.</div>
+<div class="obtn pri" style="margin-top:2px">Merge</div>
+</div>
+</div><p class="cap2"><b>4 · Chosen.</b> Kept card lifts to white with a terracotta border and a tick; the other dims. Tags give way to KEEPING / DELETING, the peek stays, and the sentence above the button does not change.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="body" style="flex:1;display:flex;flex-direction:column;padding:22px 18px 0;gap:10px;overflow:hidden">
+<div class="row" style="align-items:center;margin-bottom:4px"><h2 class="h1w">Cookbook</h2><div class="mdots" style="margin-left:auto">...</div></div>
+<div class="row" style="gap:8px"><div class="inp3">Search dinners…</div><div class="fbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg></div></div>
+<div class="seg"><span class="on">A–Z</span><span>Haven't had lately</span><span>Favourites</span></div>
+<div class="prow"><span class="cbn">Leftovers</span><small>3 wks ago</small></div>
+<div class="prow"><span class="cbn">Spaghetti Bolognese</span><small>6 wks ago</small></div>
+<div class="prow" style="background:#fff;border-color:#DD6B42"><span class="cbn">Spaghetti Carbonara</span><small style="color:#C2552F">17 times · 3 wks ago</small></div>
+<div class="prow"><span class="cbn">Takeaway</span><small>2 wks ago</small></div>
+<div class="toast">Merged into Spaghetti Carbonara.</div>
+</div>
+<div class="tb3" style="align-items:center;padding:14px 0"><div class="ti" style="font-size:15px">Week</div><div style="flex:1;display:flex;justify-content:center"><div class="plus3" style="margin:-36px 0 -8px">＋</div></div><div class="ti on" style="font-size:15px">Cookbook</div></div>
+</div><p class="cap2"><b>5 · Done.</b> Both sheets close, the list is a row shorter, the kept dinner is briefly outlined with its new count. Toast names the survivor only — no count, since a silent same-date overlap can make an arriving-dates number wrong. <b>The toast styling here is not final: use the app's existing toast component as-is, only the wording is specified.</b></p></div>
+
+</div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t3">
+<div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Telling the two apart</span></div>
+<p class="dv-sub">Counts and tags aren't enough to identify which Carbonara is which. Three ways to fix it: <a href="#3a">3a</a> puts the start of each recipe on the card, <a href="#3b">3b</a> lays the two out as full-width rows with a way to open either dinner in full, <a href="#3c">3c</a> shows only the fields where the two differ. The trimmed copy from <a href="#2a">2a</a> carries over.</p>
+<div class="dv-opts">
+
+<div class="dv-opt" id="3a">
+<div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a> <span style="font-size:12px;font-weight:700;color:#6d655c">Recipe peek on the card</span></div>
+<div class="dir">
+<div class="tasks">
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="row" style="gap:9px;align-items:stretch;margin-top:4px">
+<div class="kcard" style="min-height:180px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara</span><div class="tick"></div></div><span class="km">14 times · 3 wks ago</span><div style="border-top:1px solid #e6e0d4;margin:6px 0 0;padding-top:7px;font-size:11px;line-height:1.6;color:#57504a;font-weight:600">spaghetti<br>pancetta<br>eggs<br><span style="color:#a39a8e">+ 4 more · 3 steps</span></div><span class="km" style="margin-top:auto;padding-top:7px">Quick · Comfort · Pasta</span></div>
+<div class="kcard" style="min-height:180px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara (2)</span><div class="tick"></div></div><span class="km">3 times · 8 wks ago</span><div style="border-top:1px solid #e6e0d4;margin:6px 0 0;padding-top:7px;font-size:11px;line-height:1.6;color:#57504a;font-weight:600"><span style="color:#a39a8e;font-style:italic">No ingredients</span><br>“Nonna's, with cream”<br><span style="color:#a39a8e">bbcgoodfood.com</span></div><span class="km" style="margin-top:auto;padding-top:7px">Pasta</span></div>
+</div>
+<div class="note">The one you keep stays exactly as it is. The other is deleted. Only the planned dates move across.</div>
+<div class="obtn off" style="margin-top:2px">Merge</div>
+</div>
+</div><p class="cap2"><b>The card answers it.</b> Three ingredients and a step count are usually enough to recognise your own recipe. Where there is no recipe, the card shows whatever the dinner does have — a note, a link — in the same slot, so the two cards stay comparable without a label explaining the difference.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="row" style="gap:9px;align-items:stretch;margin-top:4px">
+<div class="kcard on" style="min-height:180px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara</span><div class="tick on"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div></div><span class="km">14 times · 3 wks ago</span><div style="border-top:1px solid #efc9ba;margin:6px 0 0;padding-top:7px;font-size:11px;line-height:1.6;color:#57504a;font-weight:600">spaghetti<br>pancetta<br>eggs<br><span style="color:#a39a8e">+ 4 more · 3 steps</span></div><span class="kt" style="padding-top:7px">KEEPING</span></div>
+<div class="kcard dim" style="min-height:180px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara (2)</span><div class="tick"></div></div><span class="km">3 times · 8 wks ago</span><div style="border-top:1px solid #e6e0d4;margin:6px 0 0;padding-top:7px;font-size:11px;line-height:1.6;color:#57504a;font-weight:600"><span style="color:#a39a8e;font-style:italic">No ingredients</span><br>“Nonna's, with cream”<br><span style="color:#a39a8e">bbcgoodfood.com</span></div><span class="kt" style="padding-top:7px">DELETING</span></div>
+</div>
+<div class="note">The one you keep stays exactly as it is. The other is deleted. Only the planned dates move across.</div>
+<div class="obtn pri" style="margin-top:2px">Merge</div>
+</div>
+</div><p class="cap2"><b>Chosen.</b> Tags drop out of the selected card to make room for the label; the peek stays, so the thing you identified it by is still on screen when you commit.</p></div>
+
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="3b">
+<div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a> <span style="font-size:12px;font-weight:700;color:#6d655c">Full-width rows, open either to check</span></div>
+<div class="dir">
+<div class="tasks">
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="prow" style="display:block;padding:12px 14px;margin-top:2px"><div class="row" style="align-items:flex-start"><div style="flex:1"><span class="cbn" style="font-size:17px">Spaghetti Carbonara</span><span class="km" style="display:block;font-size:11.5px;font-weight:600;color:#8a8276;margin-top:3px">7 ingredients, 3 steps · 4 servings</span><span class="km" style="display:block;font-size:11.5px;font-weight:600;color:#8a8276">14 times · last 3 wks ago · Quick, Comfort, Pasta</span><span style="display:inline-block;font-size:11.5px;font-weight:700;color:#C2552F;margin-top:6px">View this dinner ›</span></div><div class="tick" style="margin-top:3px"></div></div></div>
+<div class="prow" style="display:block;padding:12px 14px"><div class="row" style="align-items:flex-start"><div style="flex:1"><span class="cbn" style="font-size:17px">Spaghetti Carbonara (2)</span><span class="km" style="display:block;font-size:11.5px;font-weight:600;color:#8a8276;margin-top:3px">No recipe · link to bbcgoodfood.com</span><span class="km" style="display:block;font-size:11.5px;font-weight:600;color:#8a8276">3 times · last 8 wks ago · Pasta</span><span style="display:inline-block;font-size:11.5px;font-weight:700;color:#C2552F;margin-top:6px">View this dinner ›</span></div><div class="tick" style="margin-top:3px"></div></div></div>
+<div class="note">The one you keep stays exactly as it is. The other is deleted. Only the planned dates move across.</div>
+<div class="obtn off" style="margin-top:2px">Merge</div>
+</div>
+</div><p class="cap2"><b>Room to describe, and an escape hatch.</b> Rows fit a full line of detail each. When that still isn't enough, View opens the ordinary dinner sheet — the canonical read-only view — and comes back here with the choice intact.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:0 0 70px"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:1">
+<div class="hdl"></div>
+<div class="row" style="align-items:center"><div><span class="metaline" style="display:block">Checking · 3 times · 8 wks ago</span><h2 class="rt" style="margin:1px 0 0">Spaghetti Carbonara (2)</h2></div><div class="obtn" style="margin-left:auto;padding:8px 12px;font-size:11.5px">‹ Back</div></div>
+<div class="trow" style="margin:8px 0 0"><span class="tchip">Pasta</span></div>
+<div class="note" style="margin-top:10px">“Nonna's version, with cream. Ask her for the exact amounts.”</div>
+<div style="font-size:12.5px;font-weight:700;color:#C2552F;margin-top:10px">bbcgoodfood.com/carbonara</div>
+<div style="font-size:12px;color:#a39a8e;font-weight:600;margin-top:14px;line-height:1.6">No ingredients or steps saved.</div>
+<div class="actbar"><div class="obtn pri" style="flex:1">Keep this one</div></div>
+</div>
+</div><p class="cap2"><b>Checked.</b> The sheet is the existing dinner view with the merge context in the header and one action at the bottom, so the trip out ends in the decision rather than dumping the user back into the cookbook.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="prow" style="display:block;padding:12px 14px;margin-top:2px;background:#fff;border-color:#DD6B42"><div class="row" style="align-items:flex-start"><div style="flex:1"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;color:#C2552F">KEEPING</span><span class="cbn" style="font-size:17px;display:block;margin-top:2px">Spaghetti Carbonara</span><span class="km" style="display:block;font-size:11.5px;font-weight:600;color:#8a8276;margin-top:3px">7 ingredients, 3 steps · 4 servings</span><span class="km" style="display:block;font-size:11.5px;font-weight:600;color:#8a8276">14 times · last 3 wks ago · Quick, Comfort, Pasta</span></div><div class="tick on" style="margin-top:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div></div></div>
+<div class="prow" style="display:block;padding:12px 14px;opacity:.62"><div class="row" style="align-items:flex-start"><div style="flex:1"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;color:#a39a8e">DELETING</span><span class="cbn" style="font-size:17px;display:block;margin-top:2px">Spaghetti Carbonara (2)</span><span class="km" style="display:block;font-size:11.5px;font-weight:600;color:#8a8276;margin-top:3px">No recipe · link to bbcgoodfood.com</span><span class="km" style="display:block;font-size:11.5px;font-weight:600;color:#8a8276">3 times · last 8 wks ago · Pasta</span></div><div class="tick" style="margin-top:3px"></div></div></div>
+<div class="note">The one you keep stays exactly as it is. The other is deleted. Only the planned dates move across.</div>
+<div class="obtn pri" style="margin-top:2px">Merge</div>
+</div>
+</div><p class="cap2"><b>Chosen.</b> Rows keep their full detail and gain the state label; the View links retire once a choice is made.</p></div>
+
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="3c">
+<div class="dv-olabel"><a class="dv-oid" href="#3c">3c</a> <span style="font-size:12px;font-weight:700;color:#6d655c">Show only what differs</span></div>
+<div class="dir">
+<div class="tasks">
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="row" style="gap:9px;align-items:stretch;margin-top:4px">
+<div class="kcard" style="min-height:0;padding:10px 12px 11px;gap:3px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn" style="font-size:15px">Spaghetti<br>Carbonara</span><div class="tick"></div></div></div>
+<div class="kcard" style="min-height:0;padding:10px 12px 11px;gap:3px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn" style="font-size:15px">Spaghetti<br>Carbonara (2)</span><div class="tick"></div></div></div>
+</div>
+<div style="background:#F7F4EE;border:1px solid #eee8db;border-radius:12px;overflow:hidden;margin-top:2px">
+<div style="display:flex;font-size:11px;font-weight:700;color:#a39a8e;letter-spacing:.05em;padding:7px 12px 5px">WHERE THEY DIFFER</div>
+<div style="display:flex;gap:10px;padding:6px 12px;border-top:1px solid #eee8db;font-size:11.5px;font-weight:600"><span style="flex:0 0 62px;color:#a39a8e">Recipe</span><span style="flex:1">7 ingredients<br>3 steps</span><span style="flex:1;color:#8a8276">—</span></div>
+<div style="display:flex;gap:10px;padding:6px 12px;border-top:1px solid #eee8db;font-size:11.5px;font-weight:600"><span style="flex:0 0 62px;color:#a39a8e">Notes</span><span style="flex:1;color:#8a8276">—</span><span style="flex:1">“Nonna's, with cream”</span></div>
+<div style="display:flex;gap:10px;padding:6px 12px;border-top:1px solid #eee8db;font-size:11.5px;font-weight:600"><span style="flex:0 0 62px;color:#a39a8e">Link</span><span style="flex:1;color:#8a8276">—</span><span style="flex:1">bbcgoodfood.com</span></div>
+<div style="display:flex;gap:10px;padding:6px 12px;border-top:1px solid #eee8db;font-size:11.5px;font-weight:600"><span style="flex:0 0 62px;color:#a39a8e">Tags</span><span style="flex:1">Quick, Comfort, Pasta</span><span style="flex:1">Pasta</span></div>
+<div style="display:flex;gap:10px;padding:6px 12px;border-top:1px solid #eee8db;font-size:11.5px;font-weight:600"><span style="flex:0 0 62px;color:#a39a8e">Planned</span><span style="flex:1">14 times<br><i style="font-style:normal;color:#8a8276">last 3 wks ago</i></span><span style="flex:1">3 times<br><i style="font-style:normal;color:#8a8276">last 8 wks ago</i></span></div>
+</div>
+<div class="note" style="margin-top:8px">The one you keep stays exactly as it is. The other is deleted. Only the planned dates move across.</div>
+<div class="obtn off">Merge</div>
+</div>
+</div><p class="cap2"><b>A comparison, not two summaries.</b> Fields identical on both are omitted, so what's left is precisely what the decision turns on — and the servings, favourite and any matching fields never take up space. Denser than the other two; two dinners that differ in many fields make a long table.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="row" style="gap:9px;align-items:stretch;margin-top:4px">
+<div class="kcard on" style="min-height:0;padding:10px 12px 11px;gap:3px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn" style="font-size:15px">Spaghetti<br>Carbonara</span><div class="tick on"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div></div><span class="kt" style="margin-top:4px">KEEPING</span></div>
+<div class="kcard dim" style="min-height:0;padding:10px 12px 11px;gap:3px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn" style="font-size:15px">Spaghetti<br>Carbonara (2)</span><div class="tick"></div></div><span class="kt" style="margin-top:4px">DELETING</span></div>
+</div>
+<div style="background:#F7F4EE;border:1px solid #eee8db;border-radius:12px;overflow:hidden;margin-top:2px">
+<div style="display:flex;font-size:11px;font-weight:700;color:#a39a8e;letter-spacing:.05em;padding:7px 12px 5px">WHERE THEY DIFFER</div>
+<div style="display:flex;gap:10px;padding:6px 12px;border-top:1px solid #eee8db;font-size:11.5px;font-weight:600"><span style="flex:0 0 62px;color:#a39a8e">Recipe</span><span style="flex:1">7 ingredients<br>3 steps</span><span style="flex:1;color:#c4bcae">—</span></div>
+<div style="display:flex;gap:10px;padding:6px 12px;border-top:1px solid #eee8db;font-size:11.5px;font-weight:600"><span style="flex:0 0 62px;color:#a39a8e">Notes</span><span style="flex:1;color:#8a8276">—</span><span style="flex:1;color:#c4bcae;text-decoration:line-through">“Nonna's, with cream”</span></div>
+<div style="display:flex;gap:10px;padding:6px 12px;border-top:1px solid #eee8db;font-size:11.5px;font-weight:600"><span style="flex:0 0 62px;color:#a39a8e">Link</span><span style="flex:1;color:#8a8276">—</span><span style="flex:1;color:#c4bcae;text-decoration:line-through">bbcgoodfood.com</span></div>
+<div style="display:flex;gap:10px;padding:6px 12px;border-top:1px solid #eee8db;font-size:11.5px;font-weight:600"><span style="flex:0 0 62px;color:#a39a8e">Tags</span><span style="flex:1">Quick, Comfort, Pasta</span><span style="flex:1;color:#c4bcae;text-decoration:line-through">Pasta</span></div>
+<div style="display:flex;gap:10px;padding:6px 12px;border-top:1px solid #eee8db;font-size:11.5px;font-weight:600"><span style="flex:0 0 62px;color:#a39a8e">Planned</span><span style="flex:1;color:#C2552F">17 times<br><i style="font-style:normal;color:#8a8276">last 3 wks ago</i></span><span style="flex:1;color:#c4bcae">moves across</span></div>
+</div>
+<div class="note" style="margin-top:8px">The one you keep stays exactly as it is. The other is deleted. Only the planned dates move across.</div>
+<div class="obtn pri">Merge</div>
+</div>
+</div><p class="cap2"><b>Chosen.</b> The table becomes the preview of the result: the discarded column strikes through, and the Planned row is the one place the two combine — 14 and 3 becoming 17.</p></div>
+
+</div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">1a, copy trimmed — three takes</span></div>
+<p class="dv-sub">Flow and layout are unchanged from <a href="#1a">1a</a>. The reassurance line is now one sentence and it does not change between the unchosen and chosen states. What differs across <a href="#2a">2a</a>–<a href="#2c">2c</a> is the third line on each card and the wording of the toast.</p>
+<div class="dv-opts">
+
+<div class="dv-opt" id="2a">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a> <span style="font-size:12px;font-weight:700;color:#6d655c">No content line — the label says what happens</span></div>
+<div class="dir">
+<div class="tasks">
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="row" style="gap:9px;align-items:stretch;margin-top:4px">
+<div class="kcard" style="min-height:120px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara</span><div class="tick"></div></div><span class="km">14 times · 3 wks ago</span><span class="km">Quick · Comfort · Pasta</span></div>
+<div class="kcard" style="min-height:120px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara (2)</span><div class="tick"></div></div><span class="km">3 times · 8 wks ago</span><span class="km">Pasta</span></div>
+</div>
+<div class="note">The one you keep stays exactly as it is. The other is deleted. Only the planned dates move across.</div>
+<div class="obtn off" style="margin-top:2px">Merge</div>
+</div>
+</div><p class="cap2"><b>Unchosen.</b> Cards carry only what tells the duplicates apart: how often, how recently, and tags.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="row" style="gap:9px;align-items:stretch;margin-top:4px">
+<div class="kcard on" style="min-height:120px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara</span><div class="tick on"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div></div><span class="km">14 times · 3 wks ago</span><span class="km">Quick · Comfort · Pasta</span><span class="kt">KEEPING</span></div>
+<div class="kcard dim" style="min-height:120px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara (2)</span><div class="tick"></div></div><span class="km">3 times · 8 wks ago</span><span class="km">Pasta</span><span class="kt">DELETING</span></div>
+</div>
+<div class="note">The one you keep stays exactly as it is. The other is deleted. Only the planned dates move across.</div>
+<div class="obtn pri" style="margin-top:2px">Merge</div>
+</div>
+</div><p class="cap2"><b>Chosen.</b> The only new words are KEEPING and DELETING. The line above the button is untouched.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="body" style="flex:1;display:flex;flex-direction:column;padding:22px 18px 0;gap:10px;overflow:hidden">
+<div class="row" style="align-items:center;margin-bottom:4px"><h2 class="h1w">Cookbook</h2><div class="mdots" style="margin-left:auto">...</div></div>
+<div class="row" style="gap:8px"><div class="inp3">Search dinners…</div><div class="fbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg></div></div>
+<div class="prow"><span class="cbn">Spaghetti Bolognese</span><small>6 wks ago</small></div>
+<div class="prow" style="background:#fff;border-color:#DD6B42"><span class="cbn">Spaghetti Carbonara</span><small style="color:#C2552F">17 times · 3 wks ago</small></div>
+<div class="prow"><span class="cbn">Takeaway</span><small>2 wks ago</small></div>
+<div class="toast">Merged into Spaghetti Carbonara.</div>
+</div>
+<div class="tb3" style="align-items:center;padding:14px 0"><div class="ti" style="font-size:15px">Week</div><div style="flex:1;display:flex;justify-content:center"><div class="plus3" style="margin:-36px 0 -8px">＋</div></div><div class="ti on" style="font-size:15px">Cookbook</div></div>
+</div><p class="cap2"><b>Toast.</b> Shortest version — names the survivor, no numbers.</p></div>
+
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="2b">
+<div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a> <span style="font-size:12px;font-weight:700;color:#6d655c">"Recipe" only when there is one</span></div>
+<div class="dir">
+<div class="tasks">
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="row" style="gap:9px;align-items:stretch;margin-top:4px">
+<div class="kcard" style="min-height:132px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara</span><div class="tick"></div></div><span class="km">14 times · 3 wks ago</span><span class="km">Quick · Comfort · Pasta</span><div style="margin-top:auto"><span class="tchip" style="color:#C2552F;border-color:#efc9ba">Recipe</span></div></div>
+<div class="kcard" style="min-height:132px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara (2)</span><div class="tick"></div></div><span class="km">3 times · 8 wks ago</span><span class="km">Pasta</span></div>
+</div>
+<div class="note">The one you keep stays exactly as it is. The other is deleted. Only the planned dates move across.</div>
+<div class="obtn off" style="margin-top:2px">Merge</div>
+</div>
+</div><p class="cap2"><b>Unchosen.</b> Having a recipe is a fact worth seeing, so it appears as a small mark rather than a sentence. Absence says the rest — no "notes only", no "no recipe".</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="row" style="gap:9px;align-items:stretch;margin-top:4px">
+<div class="kcard on" style="min-height:132px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara</span><div class="tick on"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div></div><span class="km">14 times · 3 wks ago</span><span class="km">Quick · Comfort · Pasta</span><div style="margin-top:auto"><span class="tchip" style="color:#C2552F;border-color:#efc9ba">Recipe</span></div></div>
+<div class="kcard dim" style="min-height:132px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara (2)</span><div class="tick"></div></div><span class="km">3 times · 8 wks ago</span><span class="km">Pasta</span></div>
+</div>
+<div class="note">The one you keep stays exactly as it is. The other is deleted. Only the planned dates move across.</div>
+<div class="obtn pri" style="margin-top:2px">Merge</div>
+</div>
+</div><p class="cap2"><b>Chosen.</b> No labels added at all — the border, tick and dimming carry the state, and the sentence stays put.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="body" style="flex:1;display:flex;flex-direction:column;padding:22px 18px 0;gap:10px;overflow:hidden">
+<div class="row" style="align-items:center;margin-bottom:4px"><h2 class="h1w">Cookbook</h2><div class="mdots" style="margin-left:auto">...</div></div>
+<div class="row" style="gap:8px"><div class="inp3">Search dinners…</div><div class="fbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg></div></div>
+<div class="prow"><span class="cbn">Spaghetti Bolognese</span><small>6 wks ago</small></div>
+<div class="prow" style="background:#fff;border-color:#DD6B42"><span class="cbn">Spaghetti Carbonara</span><small style="color:#C2552F">17 times · 3 wks ago</small></div>
+<div class="prow"><span class="cbn">Takeaway</span><small>2 wks ago</small></div>
+<div class="toast">Merged. 3 planned dates moved to Spaghetti Carbonara.</div>
+</div>
+<div class="tb3" style="align-items:center;padding:14px 0"><div class="ti" style="font-size:15px">Week</div><div style="flex:1;display:flex;justify-content:center"><div class="plus3" style="margin:-36px 0 -8px">＋</div></div><div class="ti on" style="font-size:15px">Cookbook</div></div>
+</div><p class="cap2"><b>Toast.</b> States what actually happened. Slightly longer, and it can read as odd when a date collision means fewer records arrive than the user expects.</p></div>
+
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="2c">
+<div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a> <span style="font-size:12px;font-weight:700;color:#6d655c">Cards say nothing but the numbers</span></div>
+<div class="dir">
+<div class="tasks">
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="row" style="gap:9px;align-items:stretch;margin-top:4px">
+<div class="kcard" style="min-height:104px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara</span><div class="tick"></div></div><span class="km" style="margin-top:auto">Cooked 14 times<br>Last 3 wks ago</span></div>
+<div class="kcard" style="min-height:104px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara (2)</span><div class="tick"></div></div><span class="km" style="margin-top:auto">Cooked 3 times<br>Last 8 wks ago</span></div>
+</div>
+<div class="note">The one you keep stays exactly as it is. The other is deleted. Only the planned dates move across.</div>
+<div class="obtn off" style="margin-top:2px">Merge</div>
+</div>
+</div><p class="cap2"><b>Unchosen.</b> Stripped to name and history. Cheapest to read, but two duplicates with similar counts become hard to tell apart.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="row" style="gap:9px;align-items:stretch;margin-top:4px">
+<div class="kcard on" style="min-height:104px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara</span><div class="tick on"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div></div><span class="km" style="margin-top:auto">Cooked 14 times<br>Last 3 wks ago</span></div>
+<div class="kcard dim" style="min-height:104px"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara (2)</span><div class="tick"></div></div><span class="km" style="margin-top:auto">Cooked 3 times<br>Last 8 wks ago</span></div>
+</div>
+<div class="note">The one you keep stays exactly as it is. The other is deleted. Only the planned dates move across.</div>
+<div class="obtn pri" style="margin-top:2px">Merge Spaghetti Carbonara (2) into this</div>
+</div>
+</div><p class="cap2"><b>Chosen.</b> The button absorbs the specifics instead of the card labels, so the direction of the merge is stated once, at the point of committing.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="body" style="flex:1;display:flex;flex-direction:column;padding:22px 18px 0;gap:10px;overflow:hidden">
+<div class="row" style="align-items:center;margin-bottom:4px"><h2 class="h1w">Cookbook</h2><div class="mdots" style="margin-left:auto">...</div></div>
+<div class="row" style="gap:8px"><div class="inp3">Search dinners…</div><div class="fbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg></div></div>
+<div class="prow"><span class="cbn">Spaghetti Bolognese</span><small>6 wks ago</small></div>
+<div class="prow" style="background:#fff;border-color:#DD6B42"><span class="cbn">Spaghetti Carbonara</span><small style="color:#C2552F">17 times · 3 wks ago</small></div>
+<div class="prow"><span class="cbn">Takeaway</span><small>2 wks ago</small></div>
+<div class="toast">Dinners merged. Spaghetti Carbonara kept.</div>
+</div>
+<div class="tb3" style="align-items:center;padding:14px 0"><div class="ti" style="font-size:15px">Week</div><div style="flex:1;display:flex;justify-content:center"><div class="plus3" style="margin:-36px 0 -8px">＋</div></div><div class="ti on" style="font-size:15px">Cookbook</div></div>
+</div><p class="cap2"><b>Toast.</b> Confirms the outcome in the same terms the choice was made in.</p></div>
+
+</div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Merge dinners — two flows</span></div>
+<p class="dv-sub">Both start from Merge in the dinner sheet's ••• menu and reuse the cookbook picker to choose the other dinner. They part at the moment of deciding which dinner survives: <a href="#1a">1a</a> asks it as a neutral two-card choice, <a href="#1b">1b</a> keeps the dinner you opened and offers a swap. Same-date overlaps are resolved silently. One plain toast afterwards, no undo.</p>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a> <span style="font-size:12px;font-weight:700;color:#6d655c">Neutral pick — tap the dinner to keep</span></div>
+<div class="dir">
+<div class="tasks">
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:0 0 70px"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:1">
+<div class="hdl"></div>
+<div style="position:relative">
+<div style="position:absolute;top:62px;right:0;width:210px;background:#fff;border:1px solid #e6e0d4;border-radius:14px;box-shadow:0 8px 28px rgba(60,50,40,.22);overflow:hidden;z-index:2">
+<div class="mrow">Add to favourites</div>
+<div class="mrow hot">Merge</div>
+<div class="mrow warn">Delete dinner</div>
+</div>
+<div class="row" style="align-items:center"><div><span class="metaline" style="display:block">Last cooked 3 wks ago · 14 times</span><h2 class="rt" style="margin:1px 0 0">Spaghetti Carbonara</h2></div><div class="mdots" style="margin-left:auto;width:30px;height:30px;font-size:11px;flex:none;border-color:#DD6B42;color:#C2552F">...</div></div>
+<div class="trow" style="margin:8px 0 0"><span class="tchip">Quick</span><span class="tchip">Comfort</span><span class="tchip">Pasta</span></div>
+<span style="font-size:12px;color:#8a8276;font-weight:600;display:block;margin:8px 0">4 servings</span>
+<div class="ing2"><b>400 g</b><span>spaghetti</span></div>
+<div class="ing2"><b>150 g</b><span>pancetta <i>— diced</i></span></div>
+<div class="ing2"><b>4 pcs</b><span>eggs</span></div>
+<div class="stp2"><b>1</b><span>Boil the spaghetti in well-salted water until al dente.</span></div>
+</div>
+<div class="actbar"><div class="obtn" style="flex:1">Plan this dinner</div><div class="obtn" style="flex:1">Edit</div></div>
+</div>
+</div><p class="cap2"><b>1 · Merge, from •••.</b> The row already exists in the canonical menu — nothing new here.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:0 0 70px"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:1">
+<div class="hdl"></div>
+<div class="shd2">Merge <b style="font-family:'Young Serif',serif;font-weight:400">Spaghetti Carbonara</b> with…</div>
+<div class="row" style="gap:8px;margin-top:2px"><div class="inp3">Search dinners…</div><div class="fbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg></div></div>
+<div class="seg"><span class="on">A–Z</span><span>Haven't had lately</span><span>Favourites</span></div>
+<div class="prow"><span class="cbn">Beef Burger</span><small>2 wks ago</small></div>
+<div class="prow"><span class="cbn">Butter Chicken</span><small>5 wks ago</small></div>
+<div class="prow"><span class="cbn">Caesar Salad</span><small>1 wk ago</small></div>
+<div class="prow"><span class="cbn">Chicken Curry</span><small style="color:#C2552F">tonight</small></div>
+<div class="prow"><span class="cbn">Eggplant Parmesan</span><small>4 wks ago</small></div>
+<div class="prow"><span class="cbn">Leftovers</span><small>3 wks ago</small></div>
+<div class="prow"><span class="cbn">Spaghetti Bolognese</span><small>6 wks ago</small></div>
+<div class="prow" style="border-color:#e2dbcc"><span class="cbn">Spaghetti Carbonara <span style="font-family:Quicksand,sans-serif;font-size:11px;font-weight:700;color:#a39a8e">— this one</span></span></div>
+<span style="font-size:11px;color:#a39a8e;text-align:center;margin-top:2px">⌄ 48 dinners ⌄</span>
+</div>
+</div><p class="cap2"><b>2 · Pick the other dinner.</b> The cookbook picker exactly as it is, with its own sorts and search. The dinner you came from stays visible but inert so the list doesn't shift.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="row" style="gap:9px;align-items:stretch;margin-top:4px">
+<div class="kcard"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara</span><div class="tick"></div></div><span class="km">14 times · 3 wks ago</span><span class="km">Quick · Comfort · Pasta</span><span class="kt">FULL RECIPE, 4 SERVINGS</span></div>
+<div class="kcard"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara (2)</span><div class="tick"></div></div><span class="km">3 times · 8 wks ago</span><span class="km">Pasta</span><span class="kt">NOTES ONLY</span></div>
+</div>
+<div class="note">The one you keep stays exactly as it is. The other is deleted — its recipe, notes, tags and favourite go with it. <b>Only the planned dates move across.</b></div>
+<div class="obtn off" style="margin-top:2px">Merge</div>
+</div>
+</div><p class="cap2"><b>3 · The decision.</b> Two cards, no default, nothing chosen yet — so the merge button is inert. Each card carries just enough to tell the duplicates apart: how often it's been cooked, its tags, and what content it holds.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Which one do you want to keep?</div>
+<div class="row" style="gap:9px;align-items:stretch;margin-top:4px">
+<div class="kcard on"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara</span><div class="tick on"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div></div><span class="km">14 times · 3 wks ago</span><span class="km">Quick · Comfort · Pasta</span><span class="kt">KEEPING THIS ONE</span></div>
+<div class="kcard dim"><div class="row" style="justify-content:space-between;align-items:flex-start"><span class="kn">Spaghetti<br>Carbonara (2)</span><div class="tick"></div></div><span class="km">3 times · 8 wks ago</span><span class="km">Pasta</span><span class="kt">WILL BE DELETED</span></div>
+</div>
+<div class="note">Spaghetti Carbonara keeps its recipe and picks up <b>3 more planned dates</b>, going back to March. Spaghetti Carbonara (2) is then deleted.</div>
+<div class="obtn pri" style="margin-top:2px">Merge and delete the other</div>
+</div>
+</div><p class="cap2"><b>4 · Chosen.</b> The kept card lifts to white with a terracotta border; the other dims and says plainly what happens to it. The summary line turns concrete — the number of dates arriving and how far back they reach — and the button names the destructive half out loud.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="body" style="flex:1;display:flex;flex-direction:column;padding:22px 18px 0;gap:10px;overflow:hidden">
+<div class="row" style="align-items:center;margin-bottom:4px"><h2 class="h1w">Cookbook</h2><div class="mdots" style="margin-left:auto">...</div></div>
+<div class="row" style="gap:8px"><div class="inp3">Search dinners…</div><div class="fbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg></div></div>
+<div class="seg"><span class="on">A–Z</span><span>Haven't had lately</span><span>Favourites</span></div>
+<div class="prow"><span class="cbn">Leftovers</span><small>3 wks ago</small></div>
+<div class="prow"><span class="cbn">Spaghetti Bolognese</span><small>6 wks ago</small></div>
+<div class="prow" style="background:#fff;border-color:#DD6B42"><span class="cbn">Spaghetti Carbonara</span><small style="color:#C2552F">17 times · 3 wks ago</small></div>
+<div class="prow"><span class="cbn">Takeaway</span><small>2 wks ago</small></div>
+<div class="toast">Merged. Spaghetti Carbonara now holds 17 planned dinners.</div>
+</div>
+<div class="tb3" style="align-items:center;padding:14px 0">
+<div class="ti" style="font-size:15px">Week</div>
+<div style="flex:1;display:flex;justify-content:center"><div class="plus3" style="margin:-36px 0 -8px">＋</div></div>
+<div class="ti on" style="font-size:15px">Cookbook</div>
+</div>
+</div><p class="cap2"><b>5 · Done.</b> Both sheets close, the list is one row shorter and the kept dinner is briefly outlined with its new count. The toast states the result and nothing else — no undo, so the confirm step carries the weight.</p></div>
+
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a> <span style="font-size:12px;font-weight:700;color:#6d655c">Default kept — swap if wrong</span></div>
+<div class="dir">
+<div class="tasks">
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:0 0 70px"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:1">
+<div class="hdl"></div>
+<div class="shd2">Merge <b style="font-family:'Young Serif',serif;font-weight:400">Spaghetti Carbonara</b> with…</div>
+<div class="row" style="gap:8px;margin-top:2px"><div class="inp3">carb</div><div class="fbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg></div></div>
+<div class="seg"><span class="on">A–Z</span><span>Haven't had lately</span><span>Favourites</span></div>
+<div class="prow"><span class="cbn">Spaghetti Carbonara (2)</span><small>8 wks ago</small></div>
+<div class="prow" style="border-color:#e2dbcc"><span class="cbn">Spaghetti Carbonara <span style="font-family:Quicksand,sans-serif;font-size:11px;font-weight:700;color:#a39a8e">— this one</span></span></div>
+<span style="font-size:11px;color:#a39a8e;text-align:center;margin-top:4px">2 of 48 dinners</span>
+</div>
+</div><p class="cap2"><b>1 · Same picker, searched.</b> Typing narrows it the way it does everywhere else; in practice the user knows which duplicate they mean.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Merging two dinners</div>
+<div class="prow" style="background:#fff;border-color:#DD6B42;display:block;padding:12px 14px"><div class="row"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;color:#C2552F">KEEPING</span></div><div class="row" style="margin-top:3px"><span class="cbn" style="font-size:17px">Spaghetti Carbonara</span></div><span class="km" style="display:block;font-size:11px;font-weight:600;color:#8a8276;margin-top:3px">Full recipe · 4 servings · 14 times cooked</span></div>
+<div class="prow" style="display:block;padding:12px 14px"><div class="row"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;color:#a39a8e">DELETING</span></div><div class="row" style="margin-top:3px"><span class="cbn" style="font-size:17px;color:#57504a">Spaghetti Carbonara (2)</span></div><span class="km" style="display:block;font-size:11px;font-weight:600;color:#a39a8e;margin-top:3px">Notes only · 3 times cooked</span></div>
+<div class="swap">↕ Keep Spaghetti Carbonara (2) instead</div>
+<div class="note">Its <b>3 planned dates</b> move to Spaghetti Carbonara first. Everything else about the deleted dinner goes — recipe, notes, tags, favourite.</div>
+<div class="obtn pri">Merge and delete the other</div>
+</div>
+</div><p class="cap2"><b>2 · One screen, one default.</b> The dinner you opened is kept; the pair reads top to bottom as keeping / deleting. Fewer taps, and the common case needs no decision — the risk is that a default this quiet gets skimmed past.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div class="shd2">Merging two dinners</div>
+<div class="prow" style="background:#fff;border-color:#DD6B42;display:block;padding:12px 14px"><div class="row"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;color:#C2552F">KEEPING</span></div><div class="row" style="margin-top:3px"><span class="cbn" style="font-size:17px">Spaghetti Carbonara (2)</span></div><span class="km" style="display:block;font-size:11px;font-weight:600;color:#8a8276;margin-top:3px">Notes only · 3 times cooked</span></div>
+<div class="prow" style="display:block;padding:12px 14px"><div class="row"><span style="font-size:10.5px;font-weight:700;letter-spacing:.06em;color:#a39a8e">DELETING</span></div><div class="row" style="margin-top:3px"><span class="cbn" style="font-size:17px;color:#57504a">Spaghetti Carbonara</span></div><span class="km" style="display:block;font-size:11px;font-weight:600;color:#a39a8e;margin-top:3px">Full recipe · 4 servings · 14 times cooked</span></div>
+<div class="swap">↕ Keep Spaghetti Carbonara instead</div>
+<div class="note">Its <b>14 planned dates</b> move to Spaghetti Carbonara (2) first. Everything else about the deleted dinner goes — <b>including its recipe and 4 servings</b>.</div>
+<div class="obtn pri">Merge and delete the other</div>
+</div>
+</div><p class="cap2"><b>3 · Swapped.</b> The two cards trade places and the summary rewrites itself. When the dinner being deleted is the richer of the two, the loss is called out in the line rather than blocked.</p></div>
+
+<div class="task3"><div class="ph3">
+<div class="body" style="flex:1;display:flex;flex-direction:column;padding:22px 18px 0;gap:10px;overflow:hidden">
+<div class="row" style="align-items:center;margin-bottom:4px"><h2 class="h1w">Cookbook</h2><div class="mdots" style="margin-left:auto">...</div></div>
+<div class="row" style="gap:8px"><div class="inp3">Search dinners…</div><div class="fbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg></div></div>
+<div class="seg"><span class="on">A–Z</span><span>Haven't had lately</span><span>Favourites</span></div>
+<div class="prow"><span class="cbn">Leftovers</span><small>3 wks ago</small></div>
+<div class="prow"><span class="cbn">Spaghetti Bolognese</span><small>6 wks ago</small></div>
+<div class="prow" style="background:#fff;border-color:#DD6B42"><span class="cbn">Spaghetti Carbonara</span><small style="color:#C2552F">17 times · 3 wks ago</small></div>
+<div class="prow"><span class="cbn">Takeaway</span><small>2 wks ago</small></div>
+<div class="toast">Merged. Spaghetti Carbonara now holds 17 planned dinners.</div>
+</div>
+<div class="tb3" style="align-items:center;padding:14px 0">
+<div class="ti" style="font-size:15px">Week</div>
+<div style="flex:1;display:flex;justify-content:center"><div class="plus3" style="margin:-36px 0 -8px">＋</div></div>
+<div class="ti on" style="font-size:15px">Cookbook</div>
+</div>
+</div><p class="cap2"><b>4 · Done.</b> Identical ending to <a href="#1a">1a</a>. Two dates that clashed were resolved without asking: one plan record per date, on the kept dinner.</p></div>
+
+</div>
+</div>
+</div>
+
+</div>
+</section>
+
+</x-dc>
+</body>
+</html>

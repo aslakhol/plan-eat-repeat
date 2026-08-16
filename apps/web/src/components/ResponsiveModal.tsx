@@ -90,15 +90,15 @@ export const ResponsiveModalContent = ({
   return <DialogContent className={className}>{children}</DialogContent>;
 };
 
-export function ResponsiveModalScrollViewport({
-  children,
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+export const ResponsiveModalScrollViewport = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ children, className, ...props }, ref) => {
   const isMobile = useIsMobile();
 
   return (
     <div
+      ref={ref}
       data-responsive-modal-scroll-viewport={isMobile ? "" : undefined}
       className={cn("min-h-0 overflow-y-auto", className)}
       {...props}
@@ -106,7 +106,8 @@ export function ResponsiveModalScrollViewport({
       {children}
     </div>
   );
-}
+});
+ResponsiveModalScrollViewport.displayName = "ResponsiveModalScrollViewport";
 
 export const ResponsiveModalHeader = ({
   children,
