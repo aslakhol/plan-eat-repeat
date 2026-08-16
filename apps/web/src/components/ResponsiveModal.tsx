@@ -100,7 +100,11 @@ export const ResponsiveModalScrollViewport = React.forwardRef<
     <div
       ref={ref}
       data-responsive-modal-scroll-viewport={isMobile ? "" : undefined}
-      className={cn("min-h-0 overflow-y-auto", className)}
+      className={cn(
+        "min-h-0 overflow-y-auto",
+        isMobile && "-m-1.5 p-1.5",
+        className,
+      )}
       {...props}
     >
       {children}
