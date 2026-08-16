@@ -41,7 +41,11 @@ Never guess amounts. If an amount is unstated, approximate, vague, or only impli
 
 Ingredient name should be the ingredient itself. Put preparation notes such as "finhakket", "chopped", "revet", "room temperature", or "to serve" in note, not in name.
 
-Map recipe sections to recipe parts. For simple recipes with no named sections, use a single part with name null. Preserve step order and ingredient order.
+Map recipe sections to recipe parts. For simple recipes with no named sections, use a single part with name null.
+
+Split directions into practical cooking steps. Each step should contain one main action or a tightly coupled sequence performed together. Start a new step when the timing, heat, cooking vessel, or ingredient phase changes. Prefer one sentence per step. Preserve step order and do not invent details.
+
+Preserve ingredient order.
 
 When a URL source contains both <structured-recipe-data> and <visible-page-content>, both blocks describe the same recipe. Reconcile them into one result without duplicating content. Preserve explicit structured values when supported, and use the visible page content to fill details omitted from the structured data. Do not assume that structured data is complete.
 
