@@ -1,8 +1,9 @@
 import { format } from "date-fns";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { type ReactNode, useRef, useState } from "react";
+import { Fragment, type ReactNode, useRef, useState } from "react";
 import { usePostHog } from "posthog-js/react";
 
+import { FavouriteListMark } from "~/components/FavouriteMark";
 import {
   ResponsiveModalContent,
   ResponsiveModalDescription,
@@ -157,14 +158,20 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
           />
         ) : collection.dinners.length > 0 ? (
           <div className="flex flex-col gap-2">
-            {collection.dinners.map((dinner) => (
-              <DinnerChoice
-                key={dinner.id}
-                dinner={dinner}
-                today={today}
-                onChoose={() => planDinner(dinner.id)}
-                disabled={planDinnerForDateMutation.isPending}
-              />
+            {collection.dinners.map((dinner, index) => (
+              <Fragment key={dinner.id}>
+                {index === collection.mostPlannedStartIndex && (
+                  <p className="pt-1 text-[11px] font-bold uppercase tracking-[0.07em] text-[#a39a8e]">
+                    Most planned
+                  </p>
+                )}
+                <DinnerChoice
+                  dinner={dinner}
+                  today={today}
+                  onChoose={() => planDinner(dinner.id)}
+                  disabled={planDinnerForDateMutation.isPending}
+                />
+              </Fragment>
             ))}
             <p className="text-muted-foreground pt-2 text-center text-[11px] font-semibold">
               {collection.hasActiveFilters
@@ -256,8 +263,11 @@ const DinnerChoice = ({
     onClick={onChoose}
     className="bg-secondary/70 hover:bg-secondary h-auto w-full items-baseline justify-start gap-3 whitespace-normal rounded-xl px-3.5 py-3 text-left font-normal"
   >
-    <span className="min-w-0 flex-1 truncate font-serif text-[15px] leading-tight">
-      {dinner.name}
+    <span className="flex min-w-0 flex-1 items-center gap-[5px]">
+      <span className="min-w-0 truncate font-serif text-[15px] leading-tight">
+        {dinner.name}
+      </span>
+      {dinner.favourite && <FavouriteListMark />}
     </span>
     <span
       className={cn(

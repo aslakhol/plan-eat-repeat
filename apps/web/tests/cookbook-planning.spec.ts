@@ -40,6 +40,9 @@ test("Cookbook planning, Favourite ordering, and deletion remain coherent", asyn
       .filter({ hasText: "Dinner actions" });
     await dinnerActions.click();
     await page.getByRole("button", { name: "Add to favourites" }).click();
+    await expect(
+      page.locator("article").getByText("Favourite", { exact: true }),
+    ).toBeAttached();
     await dinnerActions.click();
     await expect(
       page.getByRole("button", { name: "Remove from favourites" }),
@@ -62,6 +65,7 @@ test("Cookbook planning, Favourite ordering, and deletion remain coherent", asyn
     await expect(page.getByRole("status")).not.toContainText("Undo");
 
     await page.getByRole("button", { name: "Favourites" }).click();
+    await expect(page.getByText("Most planned", { exact: true })).toBeVisible();
     const orderedDinnerNames = await page
       .locator('a[href^="/dinners/"]')
       .allTextContents();

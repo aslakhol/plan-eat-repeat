@@ -75,6 +75,7 @@ export const DinnersView = () => {
           {collection.dinners.length > 0 ? (
             <DinnerList
               dinners={collection.dinners}
+              mostPlannedStartIndex={collection.mostPlannedStartIndex}
               selectedTags={selectedTags}
               today={today}
             />

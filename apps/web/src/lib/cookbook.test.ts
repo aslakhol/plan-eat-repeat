@@ -198,12 +198,14 @@ void test("the shared collection seam derives ordering, counts, and contextual e
   );
   assert.deepEqual(
     {
+      mostPlannedStartIndex: filtered.mostPlannedStartIndex,
       totalCount: filtered.totalCount,
       matchingCount: filtered.matchingCount,
       hasActiveFilters: filtered.hasActiveFilters,
       emptyState: filtered.emptyState,
     },
     {
+      mostPlannedStartIndex: null,
       totalCount: 2,
       matchingCount: 1,
       hasActiveFilters: true,
@@ -224,6 +226,65 @@ void test("the shared collection seam derives ordering, counts, and contextual e
     sort: "az",
   });
   assert.equal(emptyCookbook.emptyState, "empty-cookbook");
+});
+
+void test("Favourites seam appears only between two visible groups", () => {
+  const dinners = [
+    {
+      ...summary(1, "Favourite B", {
+        favourite: true,
+        cookingFrequency: 2,
+      }),
+      tags: [{ value: "Quick" }],
+    },
+    {
+      ...summary(2, "Favourite A", {
+        favourite: true,
+        cookingFrequency: 2,
+      }),
+      tags: [{ value: "Weekend" }],
+    },
+    {
+      ...summary(3, "Other B", { cookingFrequency: 3 }),
+      tags: [{ value: "Quick" }],
+    },
+    {
+      ...summary(4, "Other A", { cookingFrequency: 3 }),
+      tags: [{ value: "Weekend" }],
+    },
+  ];
+
+  const mixed = deriveDinnerCollection(dinners, {
+    search: "",
+    selectedTags: [],
+    sort: "favourites",
+  });
+  assert.deepEqual(
+    mixed.dinners.map((dinner) => dinner.id),
+    [2, 1, 4, 3],
+  );
+  assert.equal(mixed.mostPlannedStartIndex, 2);
+
+  const favouritesOnly = deriveDinnerCollection(dinners, {
+    search: "favourite",
+    selectedTags: [],
+    sort: "favourites",
+  });
+  assert.equal(favouritesOnly.mostPlannedStartIndex, null);
+
+  const othersOnly = deriveDinnerCollection(dinners, {
+    search: "other",
+    selectedTags: [],
+    sort: "favourites",
+  });
+  assert.equal(othersOnly.mostPlannedStartIndex, null);
+
+  const otherSort = deriveDinnerCollection(dinners, {
+    search: "",
+    selectedTags: [],
+    sort: "az",
+  });
+  assert.equal(otherSort.mostPlannedStartIndex, null);
 });
 
 void test("the Week picker excludes the assigned Dinner before filtering and counting", () => {

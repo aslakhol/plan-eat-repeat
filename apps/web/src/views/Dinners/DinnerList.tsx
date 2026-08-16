@@ -1,17 +1,18 @@
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 
+import { FavouriteListMark } from "~/components/FavouriteMark";
 import { Badge } from "~/components/ui/badge";
 import { Card } from "~/components/ui/card";
 import { cn } from "~/lib/utils";
 import { formatDinnerSummaryLabel } from "~/lib/cookbook";
 import { type RouterOutputs } from "~/utils/api";
 
-type DinnerSummary =
-  RouterOutputs["dinner"]["summaries"]["dinners"][number];
+type DinnerSummary = RouterOutputs["dinner"]["summaries"]["dinners"][number];
 
 type Props = {
   dinners: DinnerSummary[];
+  mostPlannedStartIndex: number | null;
   selectedTags: string[];
   today: Date;
 };
@@ -127,42 +128,56 @@ const TagLine = ({ tags, selectedTags }: TagLineProps) => {
   );
 };
 
-export const DinnerList = ({ dinners, selectedTags, today }: Props) => {
+export const DinnerList = ({
+  dinners,
+  mostPlannedStartIndex,
+  selectedTags,
+  today,
+}: Props) => {
   return (
     <div className="flex flex-col gap-2.5">
-      {dinners.map((dinner) => {
+      {dinners.map((dinner, index) => {
         const hasCurrentWeekPlan = dinner.currentWeekPlanDates.length > 0;
 
         return (
-          <Link
-            key={dinner.id}
-            href={`/dinners/${dinner.id}`}
-            className="group block min-w-0"
-          >
-            <Card className="bg-secondary/70 group-hover:bg-secondary min-w-0 border-0 px-3.5 py-3 shadow-none transition-colors">
-              <div className="flex min-w-0 items-baseline gap-3">
-                <span className="min-w-0 flex-1 truncate font-serif text-[15px] leading-tight">
-                  {dinner.name}
-                </span>
-                <span
-                  className={cn(
-                    "text-muted-foreground shrink-0 text-[11px] font-semibold",
-                    hasCurrentWeekPlan && "text-primary",
-                  )}
-                >
-                  {formatDinnerSummaryLabel({
-                    today,
-                    lastCookedDate: dinner.lastCookedDate,
-                    currentWeekPlanDates: dinner.currentWeekPlanDates,
-                  })}
-                </span>
-              </div>
+          <Fragment key={dinner.id}>
+            {index === mostPlannedStartIndex && (
+              <p className="text-[11px] font-bold uppercase tracking-[0.07em] text-[#a39a8e]">
+                Most planned
+              </p>
+            )}
+            <Link
+              href={`/dinners/${dinner.id}`}
+              className="group block min-w-0"
+            >
+              <Card className="bg-secondary/70 group-hover:bg-secondary min-w-0 border-0 px-3.5 py-3 shadow-none transition-colors">
+                <div className="flex min-w-0 items-baseline gap-3">
+                  <span className="flex min-w-0 flex-1 items-center gap-[5px]">
+                    <span className="min-w-0 truncate font-serif text-[15px] leading-tight">
+                      {dinner.name}
+                    </span>
+                    {dinner.favourite && <FavouriteListMark />}
+                  </span>
+                  <span
+                    className={cn(
+                      "text-muted-foreground shrink-0 text-[11px] font-semibold",
+                      hasCurrentWeekPlan && "text-primary",
+                    )}
+                  >
+                    {formatDinnerSummaryLabel({
+                      today,
+                      lastCookedDate: dinner.lastCookedDate,
+                      currentWeekPlanDates: dinner.currentWeekPlanDates,
+                    })}
+                  </span>
+                </div>
 
-              {dinner.tags.length > 0 && (
-                <TagLine tags={dinner.tags} selectedTags={selectedTags} />
-              )}
-            </Card>
-          </Link>
+                {dinner.tags.length > 0 && (
+                  <TagLine tags={dinner.tags} selectedTags={selectedTags} />
+                )}
+              </Card>
+            </Link>
+          </Fragment>
         );
       })}
     </div>
