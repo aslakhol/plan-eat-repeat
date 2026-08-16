@@ -102,17 +102,58 @@ const recipeTextFromHtml = (html: string, url: string): string => {
   const { document } = parseHTML(html);
 
   const jsonLdRecipe = findJsonLdRecipe(document);
-  if (jsonLdRecipe) {
-    return JSON.stringify(jsonLdRecipe);
+  let readableText: string | null = null;
+
+  try {
+    // Readability mutates the document, so it must run after the JSON-LD pass.
+    const extractedText = extractReadableText(document, url);
+    if (jsonLdRecipe || looksLikeRecipe(extractedText)) {
+      readableText = extractedText;
+    }
+  } catch (error) {
+    if (!jsonLdRecipe) throw error;
   }
 
-  // Readability mutates the document, so it must run after the JSON-LD pass.
-  const readableText = extractReadableText(document, url);
-  if (!looksLikeRecipe(readableText)) {
-    throw new ImportRecipeError("NO_RECIPE_FOUND");
+  if (jsonLdRecipe && readableText) {
+    return combineRecipeEvidence(jsonLdRecipe, readableText);
   }
 
-  return readableText;
+  if (jsonLdRecipe) return JSON.stringify(jsonLdRecipe);
+  if (readableText) return readableText;
+
+  throw new ImportRecipeError("NO_RECIPE_FOUND");
+};
+
+const combineRecipeEvidence = (
+  jsonLdRecipe: JsonLdObject,
+  readableText: string,
+) => {
+  const structuredPrefix = "<structured-recipe-data>\n";
+  const structuredSuffix = "\n</structured-recipe-data>";
+  const readablePrefix = "\n\n<visible-page-content>\n";
+  const readableSuffix = "\n</visible-page-content>";
+  const wrapperLength =
+    structuredPrefix.length +
+    structuredSuffix.length +
+    readablePrefix.length +
+    readableSuffix.length;
+  const evidenceBudget = MAX_TEXT_LENGTH - wrapperLength;
+  const structuredBudget = Math.floor(evidenceBudget / 2);
+  const readableBudget = evidenceBudget - structuredBudget;
+
+  return `${structuredPrefix}${trimEvidence(
+    JSON.stringify(jsonLdRecipe),
+    structuredBudget,
+  )}${structuredSuffix}${readablePrefix}${trimEvidence(
+    readableText,
+    readableBudget,
+  )}${readableSuffix}`;
+};
+
+const trimEvidence = (text: string, maxLength: number) => {
+  const marker = "\n[truncated]";
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength - marker.length)}${marker}`;
 };
 
 // Best-effort archive lookup: returns recipe text if the Wayback Machine has
