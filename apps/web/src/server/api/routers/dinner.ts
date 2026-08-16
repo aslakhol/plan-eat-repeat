@@ -23,6 +23,7 @@ import {
   importRecipeFromUrl,
 } from "~/server/recipes/importRecipe";
 import { acquireYouTubeVideoTitle } from "~/server/recipes/youtube";
+import { planDinnerMerge } from "~/server/merge-dinners";
 import { type PrismaClient } from "@planeatrepeat/db";
 
 const householdImportInstructions = async (
@@ -455,6 +456,82 @@ export const dinnerRouter = createTRPCRouter({
       return {
         dinner,
       };
+    }),
+  merge: protectedProcedureWithHousehold
+    .input(
+      z.object({
+        keptDinnerId: z.number().int(),
+        discardedDinnerId: z.number().int(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (input.keptDinnerId === input.discardedDinnerId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Choose two different Dinners",
+        });
+      }
+
+      const keptDinner = await ctx.db.$transaction(async (tx) => {
+        const dinners = await tx.dinner.findMany({
+          where: {
+            id: { in: [input.keptDinnerId, input.discardedDinnerId] },
+            householdId: ctx.householdId,
+          },
+          select: { id: true, name: true },
+        });
+        if (dinners.length !== 2) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Dinner not found",
+          });
+        }
+
+        const kept = dinners.find((dinner) => dinner.id === input.keptDinnerId);
+        if (!kept) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Dinner not found",
+          });
+        }
+
+        const planSlots = await tx.plan.findMany({
+          where: {
+            dinnerId: {
+              in: [input.keptDinnerId, input.discardedDinnerId],
+            },
+          },
+          select: { id: true, dinnerId: true, date: true },
+        });
+        const changes = planDinnerMerge({
+          keptDinnerId: input.keptDinnerId,
+          discardedDinnerId: input.discardedDinnerId,
+          planSlots,
+        });
+
+        if (changes.reassignPlanSlotIds.length > 0) {
+          await tx.plan.updateMany({
+            where: { id: { in: changes.reassignPlanSlotIds } },
+            data: { dinnerId: input.keptDinnerId },
+          });
+        }
+        if (changes.deletePlanSlotIds.length > 0) {
+          await tx.plan.deleteMany({
+            where: { id: { in: changes.deletePlanSlotIds } },
+          });
+        }
+
+        await tx.dinner.delete({
+          where: {
+            id: input.discardedDinnerId,
+            householdId: ctx.householdId,
+          },
+        });
+
+        return kept;
+      });
+
+      return { keptDinner };
     }),
   setFavourite: protectedProcedureWithHousehold
     .input(z.object({ dinnerId: z.number(), favourite: z.boolean() }))

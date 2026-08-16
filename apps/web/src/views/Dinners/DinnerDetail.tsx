@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { ArrowLeft, MoreHorizontal, UtensilsCrossed } from "lucide-react";
@@ -22,6 +22,7 @@ import {
   parseEditorNavigation,
 } from "~/lib/editor-navigation";
 import { useDinnerWakeLock } from "~/hooks/use-keep-screen-awake";
+import { DinnerMergeSheet } from "./DinnerMergeSheet";
 
 export const DinnerDetail = () => {
   const router = useRouter();
@@ -30,7 +31,9 @@ export const DinnerDetail = () => {
   const { today, query: summariesQuery } = useDinnerSummaries();
   const [editing, setEditing] = useState(false);
   const [planning, setPlanning] = useState(false);
+  const [merging, setMerging] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const actionMenuRef = useRef<HTMLDetailsElement>(null);
   const navigation = parseEditorNavigation(router.query);
   const rawDinnerId = router.query.dinnerId;
   const dinnerId =
@@ -161,6 +164,7 @@ export const DinnerDetail = () => {
     (candidate) => candidate.id === dinner.id,
   );
   const favourite = summary?.favourite ?? dinner.favourite;
+  const closeActionMenu = () => actionMenuRef.current?.removeAttribute("open");
 
   const save = (values: RecipeEditorValues) => {
     posthog.capture("update dinner", { dinnerName: values.name });
@@ -203,7 +207,7 @@ export const DinnerDetail = () => {
         dinner={dinner}
         historyLabel={historyLabel}
         headerAction={
-          <details className="relative">
+          <details ref={actionMenuRef} className="relative">
             <summary className="text-muted-foreground flex h-[30px] w-[30px] cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
               <MoreHorizontal className="size-4" />
               <span className="sr-only">Dinner actions</span>
@@ -213,10 +217,8 @@ export const DinnerDetail = () => {
                 type="button"
                 disabled={favouriteMutation.isPending}
                 className="hover:bg-muted w-full px-3.5 py-3 text-left text-[13.5px] font-semibold disabled:opacity-50"
-                onClick={(event) => {
-                  event.currentTarget
-                    .closest("details")
-                    ?.removeAttribute("open");
+                onClick={() => {
+                  closeActionMenu();
                   favouriteMutation.mutate({
                     dinnerId: dinner.id,
                     favourite: !favourite,
@@ -225,6 +227,20 @@ export const DinnerDetail = () => {
               >
                 {favourite ? "Remove from favourites" : "Add to favourites"}
               </button>
+              {summariesQuery.isSuccess &&
+                summariesQuery.data.dinners.length >= 2 &&
+                summary && (
+                  <button
+                    type="button"
+                    className="hover:bg-muted w-full border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                    onClick={() => {
+                      closeActionMenu();
+                      setMerging(true);
+                    }}
+                  >
+                    Merge
+                  </button>
+                )}
               <DeleteDinnerButton
                 dinnerId={dinner.id}
                 isPending={deleteMutation.isPending}
@@ -238,11 +254,7 @@ export const DinnerDetail = () => {
                   <button
                     type="button"
                     className="text-destructive hover:bg-destructive/5 w-full border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
-                    onClick={(event) =>
-                      event.currentTarget
-                        .closest("details")
-                        ?.removeAttribute("open")
-                    }
+                    onClick={closeActionMenu}
                   >
                     Delete dinner
                   </button>
@@ -285,6 +297,16 @@ export const DinnerDetail = () => {
           void router.replace("/dinners");
         }}
       />
+      {merging && summary && summariesQuery.isSuccess && (
+        <DinnerMergeSheet
+          open
+          origin={{ dinner, summary }}
+          dinners={summariesQuery.data.dinners}
+          today={today}
+          onOpenChange={setMerging}
+          onMerged={() => void router.replace("/dinners")}
+        />
+      )}
     </>
   );
 };

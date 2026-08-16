@@ -50,3 +50,7 @@ _Avoid_: Recipe link
 
 **Clear Recipe**:
 An editor action that removes a Dinner's Recipe parts and serving count while preserving its name, tags, notes, and Source Link.
+
+**Merge Dinners**:
+An irreversible Cookbook action that retains one of two household Dinners, preserves every distinct past and future planned date under it, and then deletes the other without combining Dinner content.
+_Avoid_: Merge Cooking History, combine recipes
