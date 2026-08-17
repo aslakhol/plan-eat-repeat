@@ -49,6 +49,18 @@ export const findPublishedDinner = async (
   });
 };
 
+export const findPublishedDinnerSitemapSlugs = async (db: PrismaClient) => {
+  const dinners = await db.dinner.findMany({
+    where: { publicSlug: { not: null }, publishedAt: { not: null } },
+    select: { publicSlug: true },
+    orderBy: { publicSlug: "asc" },
+  });
+
+  return dinners.flatMap((dinner) =>
+    dinner.publicSlug ? [dinner.publicSlug] : [],
+  );
+};
+
 export const publishDinner = async (
   db: PrismaClient,
   householdId: string,

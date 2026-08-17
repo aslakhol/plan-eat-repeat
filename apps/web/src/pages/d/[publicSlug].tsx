@@ -1,15 +1,29 @@
 import Head from "next/head";
 import { type GetServerSideProps } from "next";
 
-import { type PublishedDinner } from "~/lib/published-dinner";
+import { env } from "~/env";
+import {
+  type PublishedDinner,
+  pickPublishedDinnerUpsell,
+  publishedDinnerUrl,
+  serializePublishedDinnerRecipeJsonLd,
+} from "~/lib/published-dinner";
 import { type NextPageWithLayout } from "~/pages/_app";
 import { db } from "~/server/db";
 import { findPublishedDinner } from "~/server/published-dinner";
 import { PublishedDinnerView } from "~/views/PublishedDinner/PublishedDinnerView";
 
-type Props = { dinner: PublishedDinner | null };
+type Props = {
+  dinner: PublishedDinner | null;
+  canonicalUrl: string | null;
+  upsell: string | null;
+};
 
-const PublishedDinnerPage: NextPageWithLayout<Props> = ({ dinner }) => {
+const PublishedDinnerPage: NextPageWithLayout<Props> = ({
+  dinner,
+  canonicalUrl,
+  upsell,
+}) => {
   if (!dinner) {
     return (
       <>
@@ -32,16 +46,41 @@ const PublishedDinnerPage: NextPageWithLayout<Props> = ({ dinner }) => {
     );
   }
 
+  if (!canonicalUrl || !upsell) return null;
+
+  const title = `${dinner.name} · Plan Eat Repeat`;
+  const description = `A dinner shared by ${dinner.householdName} on Plan Eat Repeat.`;
+  const previewImageUrl = new URL(
+    "/published-dinner-preview.svg",
+    canonicalUrl,
+  ).toString();
+  const recipeJsonLd = serializePublishedDinnerRecipeJsonLd(dinner);
+
   return (
     <>
       <Head>
-        <title>{dinner.name} · Plan Eat Repeat</title>
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={previewImageUrl} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta
-          name="description"
-          content={`A dinner shared by ${dinner.householdName} on Plan Eat Repeat.`}
+          property="og:image:alt"
+          content="Plan Eat Repeat — a free cookbook and dinner planner"
         />
+        {recipeJsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: recipeJsonLd }}
+          />
+        )}
       </Head>
-      <PublishedDinnerView dinner={dinner} />
+      <PublishedDinnerView dinner={dinner} upsell={upsell} />
     </>
   );
 };
@@ -56,10 +95,19 @@ export const getServerSideProps = (async ({ params, res }) => {
   const dinner = await findPublishedDinner(db, publicSlug);
   if (!dinner) {
     res.statusCode = 404;
-    return { props: { dinner: null } };
+    return { props: { dinner: null, canonicalUrl: null, upsell: null } };
   }
 
-  return { props: { dinner } };
+  return {
+    props: {
+      dinner,
+      canonicalUrl: publishedDinnerUrl(
+        dinner.publicSlug,
+        env.NEXT_PUBLIC_APP_URL,
+      ),
+      upsell: pickPublishedDinnerUpsell(),
+    },
+  };
 }) satisfies GetServerSideProps<Props>;
 
 export default PublishedDinnerPage;

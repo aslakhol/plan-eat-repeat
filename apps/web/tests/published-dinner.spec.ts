@@ -1,5 +1,6 @@
 import { createRequire } from "node:module";
 import { expect, test, type Page } from "@playwright/test";
+import { parseHTML } from "linkedom";
 
 import { createPrismaClient } from "@planeatrepeat/db";
 
@@ -75,6 +76,16 @@ test("a Cookbook member publishes a Dinner that anyone can read", async ({
     await expect(page.getByText("Anyone can read this dinner.")).toBeVisible();
     await page.getByRole("button", { name: "Publish dinner" }).click();
 
+    await expect
+      .poll(async () => {
+        const dinner = await testDb.dinner.findFirst({
+          where: { name: dinnerName },
+          orderBy: { id: "desc" },
+        });
+        return dinner?.publishedAt ?? null;
+      })
+      .not.toBeNull();
+
     const publishedDinner = await testDb.dinner.findFirstOrThrow({
       where: { name: dinnerName },
       include: { Household: { select: { name: true } } },
@@ -82,6 +93,17 @@ test("a Cookbook member publishes a Dinner that anyone can read", async ({
     });
     expect(publishedDinner.publicSlug).toBeTruthy();
     expect(publishedDinner.publishedAt).toBeTruthy();
+    await testDb.recipePart.create({
+      data: {
+        dinnerId: publishedDinner.id,
+        name: "Sauce",
+        order: 0,
+        ingredients: {
+          create: { order: 0, name: "tomato", amount: 2, unit: null },
+        },
+        steps: { create: { order: 0, text: "Simmer gently." } },
+      },
+    });
 
     await page.getByRole("button", { name: "Copy" }).click();
     await expect(page.getByText("Copied link", { exact: true })).toBeVisible();
@@ -103,9 +125,73 @@ test("a Cookbook member publishes a Dinner that anyone can read", async ({
     ).toBeVisible();
     await expect(page.getByText(/Opened \d+ times/)).toHaveCount(0);
 
-    const response = await anonymousPage.goto(publicPath!);
+    const response = await anonymousPage.goto(`${publicPath}?save=1`);
     expect(response?.status()).toBe(200);
-    expect(await response?.text()).toContain(dinnerName);
+    const initialHtml = await response!.text();
+    expect(initialHtml).toContain(dinnerName);
+    const jsonLdMatch = initialHtml.match(
+      /<script\b[^>]*\btype="application\/ld\+json"[^>]*>([^<]+)<\/script>/,
+    );
+    expect(jsonLdMatch).not.toBeNull();
+    expect(JSON.parse(jsonLdMatch![1]!)).toMatchObject({
+      "@type": "Recipe",
+      name: dinnerName,
+      author: {
+        "@type": "Organization",
+        name: publishedDinner.Household.name,
+      },
+      recipeIngredient: ["2 tomato"],
+      recipeInstructions: [
+        {
+          "@type": "HowToSection",
+          name: "Sauce",
+          itemListElement: [{ "@type": "HowToStep", text: "Simmer gently." }],
+        },
+      ],
+    });
+    const serverDocument = parseHTML(initialHtml).document;
+    const serverUpsellLines = Array.from(
+      serverDocument.querySelectorAll('[data-published-dinner-upsell="true"]'),
+      (element) => element.textContent,
+    );
+    expect(serverUpsellLines).toHaveLength(2);
+    expect(new Set(serverUpsellLines).size).toBe(1);
+    await anonymousPage.waitForLoadState("networkidle");
+    expect(
+      await anonymousPage
+        .locator('[data-published-dinner-upsell="true"]')
+        .allTextContents(),
+    ).toEqual(serverUpsellLines);
+    const metadataTitle = `${dinnerName} · Plan Eat Repeat`;
+    const metadataDescription = `A dinner shared by ${publishedDinner.Household.name} on Plan Eat Repeat.`;
+    await expect(anonymousPage).toHaveTitle(metadataTitle);
+    await expect(
+      anonymousPage.locator('meta[name="description"]'),
+    ).toHaveAttribute("content", metadataDescription);
+    await expect(
+      anonymousPage.locator('link[rel="canonical"]'),
+    ).toHaveAttribute("href", copiedLink!);
+    await expect(
+      anonymousPage.locator('meta[property="og:title"]'),
+    ).toHaveAttribute("content", metadataTitle);
+    await expect(
+      anonymousPage.locator('meta[property="og:description"]'),
+    ).toHaveAttribute("content", metadataDescription);
+    await expect(
+      anonymousPage.locator('meta[property="og:url"]'),
+    ).toHaveAttribute("content", copiedLink!);
+    await expect(
+      anonymousPage.locator('meta[property="og:image"]'),
+    ).toHaveAttribute(
+      "content",
+      new URL("/published-dinner-preview.svg", copiedLink!).toString(),
+    );
+    const activeSitemap = await anonymousPage.request.get("/sitemap.xml");
+    expect(activeSitemap.status()).toBe(200);
+    expect(activeSitemap.headers()["content-type"]).toContain(
+      "application/xml",
+    );
+    expect(await activeSitemap.text()).toContain(`<loc>${copiedLink}</loc>`);
     await expect(
       anonymousPage.getByRole("heading", { name: dinnerName }),
     ).toBeVisible();
@@ -165,6 +251,11 @@ test("a Cookbook member publishes a Dinner that anyone can read", async ({
     expect(stoppedHtml).toContain('name="robots" content="noindex, nofollow"');
     expect(stoppedHtml).not.toContain(updatedDinnerName);
     expect(stoppedHtml).not.toContain(publishedDinner.Household.name);
+    const stoppedSitemap = await anonymousPage.request.get("/sitemap.xml");
+    expect(stoppedSitemap.status()).toBe(200);
+    expect(await stoppedSitemap.text()).not.toContain(
+      `<loc>${copiedLink}</loc>`,
+    );
     await expect(
       anonymousPage.getByRole("heading", {
         name: "This dinner is no longer shared",
@@ -187,6 +278,13 @@ test("a Cookbook member publishes a Dinner that anyone can read", async ({
 
     const restartedResponse = await anonymousPage.goto(publicPath!);
     expect(restartedResponse?.status()).toBe(200);
+    const restartedSitemap = await anonymousPage.request.get("/sitemap.xml");
+    expect(await restartedSitemap.text()).toContain(
+      `<loc>${restartedLink}</loc>`,
+    );
+    await expect(
+      anonymousPage.locator('link[rel="canonical"]'),
+    ).toHaveAttribute("href", restartedLink!);
     await expect(
       anonymousPage.getByRole("heading", { name: updatedDinnerName }),
     ).toBeVisible();
@@ -309,6 +407,13 @@ test("delete and both Merge Dinner roles keep Published Dinner URLs attached to 
       `/d/${deletedDinner.publicSlug!}`,
     );
     expect(deletedResponse?.status()).toBe(404);
+    const sitemapAfterDelete = await anonymousPage.request.get("/sitemap.xml");
+    expect(await sitemapAfterDelete.text()).not.toContain(
+      `<loc>${new URL(
+        `/d/${deletedDinner.publicSlug!}`,
+        process.env.NEXT_PUBLIC_APP_URL!,
+      ).toString()}</loc>`,
+    );
 
     const mergeResult = await mutateDinner(page, "merge", {
       keptDinnerId: publishedKeptDinner.id,
@@ -320,6 +425,7 @@ test("delete and both Merge Dinner roles keep Published Dinner URLs attached to 
       `/d/${publishedKeptDinner.publicSlug!}`,
     );
     expect(keptResponse?.status()).toBe(200);
+    expect(await keptResponse!.text()).not.toContain("application/ld+json");
     await expect(
       anonymousPage.getByRole("heading", { name: publishedKeptDinner.name }),
     ).toBeVisible();

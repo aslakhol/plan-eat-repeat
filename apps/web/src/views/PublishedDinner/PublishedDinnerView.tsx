@@ -136,10 +136,26 @@ const Notes = ({
     </section>
   ) : null;
 
+const UpsellCopy = ({ upsell }: { upsell: string }) => (
+  <div>
+    <p
+      className="font-serif text-base font-normal text-[#332e29]"
+      data-published-dinner-upsell="true"
+    >
+      {upsell}
+    </p>
+    <p className="text-muted-foreground mt-1 text-xs font-semibold">
+      Plan Eat Repeat is a free cookbook and dinner planner.
+    </p>
+  </div>
+);
+
 export const PublishedDinnerView = ({
   dinner,
+  upsell,
 }: {
   dinner: PublishedDinner;
+  upsell: string;
 }) => {
   const hasIngredients = dinner.parts.some(
     (part) => part.ingredients.length > 0,
@@ -221,7 +237,17 @@ export const PublishedDinnerView = ({
 
           <Notes dinner={dinner} hasRecipe={hasRecipe} />
         </article>
+
+        <aside className="border-border mt-4 rounded-2xl border bg-white px-[18px] py-4 shadow-[0_8px_28px_rgba(60,50,40,.08)] md:hidden">
+          <UpsellCopy upsell={upsell} />
+        </aside>
       </main>
+
+      <footer className="border-border hidden border-t bg-[#f7f4ee] md:block">
+        <div className="mx-auto max-w-[824px] px-8 py-5">
+          <UpsellCopy upsell={upsell} />
+        </div>
+      </footer>
     </div>
   );
 };

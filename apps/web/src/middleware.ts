@@ -6,12 +6,14 @@ const isPublicRoute = createRouteMatcher([
   "/invite/:inviteId",
   "/onboarding",
   "/d/:publicSlug",
+  "/sitemap.xml",
 ]);
 const shouldNotRedirect = createRouteMatcher([
   "/settings",
   "/invite/:inviteId",
   "/onboarding",
   "/d/:publicSlug",
+  "/sitemap.xml",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

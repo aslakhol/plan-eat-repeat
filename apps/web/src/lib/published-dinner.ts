@@ -1,3 +1,5 @@
+import { formatAmount } from "@planeatrepeat/shared";
+
 export type PublishedDinner = {
   publicSlug: string;
   publishedAt: string;
@@ -88,3 +90,102 @@ const publicationDateFormatter = new Intl.DateTimeFormat("en-GB", {
 
 export const formatPublicationDate = (publishedAt: string) =>
   publicationDateFormatter.format(new Date(publishedAt));
+
+type RecipeInstruction =
+  | { readonly "@type": "HowToStep"; readonly text: string }
+  | {
+      readonly "@type": "HowToSection";
+      readonly name: string;
+      readonly itemListElement: Array<{
+        readonly "@type": "HowToStep";
+        readonly text: string;
+      }>;
+    };
+
+export const publishedDinnerRecipeJsonLd = (dinner: PublishedDinner) => {
+  const recipeIngredient = dinner.parts.flatMap((part) =>
+    part.ingredients.map((ingredient) => {
+      const amount = [
+        ingredient.amount === null ? "" : formatAmount(ingredient.amount),
+        ingredient.unit ?? "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      const ingredientName = [amount, ingredient.name]
+        .filter(Boolean)
+        .join(" ");
+      return ingredient.note
+        ? `${ingredientName}, ${ingredient.note}`
+        : ingredientName;
+    }),
+  );
+  const recipeInstructions = dinner.parts.flatMap<RecipeInstruction>((part) => {
+    const steps = part.steps
+      .filter((step) => step.trim().length > 0)
+      .map((step) => ({ "@type": "HowToStep", text: step }) as const);
+
+    if (steps.length === 0) return [];
+    if (!part.name) return steps;
+    return [
+      {
+        "@type": "HowToSection" as const,
+        name: part.name,
+        itemListElement: steps,
+      },
+    ];
+  });
+
+  if (recipeIngredient.length === 0 && recipeInstructions.length === 0) {
+    return null;
+  }
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Recipe",
+    name: dinner.name,
+    author: { "@type": "Organization", name: dinner.householdName },
+    datePublished: dinner.publishedAt,
+    ...(dinner.notes ? { description: dinner.notes } : {}),
+    ...(dinner.tags.length > 0 ? { keywords: dinner.tags.join(", ") } : {}),
+    ...(dinner.servings === null
+      ? {}
+      : { recipeYield: `${dinner.servings} servings` }),
+    ...(recipeIngredient.length > 0 ? { recipeIngredient } : {}),
+    ...(recipeInstructions.length > 0 ? { recipeInstructions } : {}),
+  };
+};
+
+export const serializePublishedDinnerRecipeJsonLd = (
+  dinner: PublishedDinner,
+) => {
+  const jsonLd = publishedDinnerRecipeJsonLd(dinner);
+  if (!jsonLd) return null;
+
+  return JSON.stringify(jsonLd)
+    .replaceAll("&", "\\u0026")
+    .replaceAll("<", "\\u003c")
+    .replaceAll(">", "\\u003e")
+    .replaceAll("\u2028", "\\u2028")
+    .replaceAll("\u2029", "\\u2029");
+};
+
+const publishedDinnerUpsells = [
+  "Never wonder what's for dinner.",
+  "All your recipes in one place.",
+  "Stop screenshotting recipes.",
+  "All your meal planning in five minutes.",
+  "Rescue your recipes from the group chat.",
+  "Fewer trips to the shop at half five.",
+  "Fewer hungry trips to the shop.",
+  "No more “whats for dinner”",
+  "Everyone knows whats for dinner.",
+] as const;
+
+export const pickPublishedDinnerUpsell = (random = Math.random) =>
+  publishedDinnerUpsells[
+    Math.min(
+      Math.floor(random() * publishedDinnerUpsells.length),
+      publishedDinnerUpsells.length - 1,
+    )
+  ] ?? publishedDinnerUpsells[0];

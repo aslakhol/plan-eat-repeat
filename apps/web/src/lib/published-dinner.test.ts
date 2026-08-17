@@ -8,6 +8,8 @@ import { type PrismaClient } from "@planeatrepeat/db";
 import {
   formatPublicationDate,
   type PublishedDinner,
+  publishedDinnerRecipeJsonLd,
+  serializePublishedDinnerRecipeJsonLd,
   publishedDinnerPath,
   publishedDinnerUrl,
   publicSlugForDinner,
@@ -116,9 +118,97 @@ void test("Publication Date uses a stable English UTC calendar date", () => {
   );
 });
 
+void test("Recipe JSON-LD is omitted without ingredients or a non-empty method step", () => {
+  const dinner = {
+    publicSlug: "toast-night-public1",
+    publishedAt: "2026-08-17T12:00:00.000Z",
+    householdName: "The Cooks",
+    name: "Toast night",
+    tags: [],
+    link: null,
+    notes: null,
+    servings: null,
+    parts: [{ name: null, ingredients: [], steps: ["", "   "] }],
+  } satisfies PublishedDinner;
+
+  assert.equal(publishedDinnerRecipeJsonLd(dinner), null);
+});
+
+void test("Recipe JSON-LD contains the available Published Dinner recipe fields", () => {
+  const dinner = {
+    publicSlug: "friday-curry-public1",
+    publishedAt: "2026-08-17T12:00:00.000Z",
+    householdName: "The Cooks",
+    name: "Friday curry",
+    tags: ["Comfort", "Quick"],
+    link: "https://example.com/original-curry",
+    notes: "Double the ginger.",
+    servings: 4,
+    parts: [
+      {
+        name: "Curry",
+        ingredients: [
+          { name: "ginger", amount: 2, unit: "tbsp", note: "grated" },
+        ],
+        steps: ["Fry until fragrant.", "   "],
+      },
+    ],
+  } satisfies PublishedDinner;
+
+  assert.deepEqual(publishedDinnerRecipeJsonLd(dinner), {
+    "@context": "https://schema.org",
+    "@type": "Recipe",
+    name: "Friday curry",
+    author: { "@type": "Organization", name: "The Cooks" },
+    datePublished: "2026-08-17T12:00:00.000Z",
+    description: "Double the ginger.",
+    keywords: "Comfort, Quick",
+    recipeYield: "4 servings",
+    recipeIngredient: ["2 tbsp ginger, grated"],
+    recipeInstructions: [
+      {
+        "@type": "HowToSection",
+        name: "Curry",
+        itemListElement: [
+          { "@type": "HowToStep", text: "Fry until fragrant." },
+        ],
+      },
+    ],
+  });
+});
+
+void test("Recipe JSON-LD serialization safely escapes user-authored content", () => {
+  const dinner = {
+    publicSlug: "dangerous-public1",
+    publishedAt: "2026-08-17T12:00:00.000Z",
+    householdName: "Cooks & Friends",
+    name: "</script><script>alert('dinner')</script>",
+    tags: [],
+    link: null,
+    notes: null,
+    servings: null,
+    parts: [
+      {
+        name: null,
+        ingredients: [],
+        steps: ["Serve <immediately> & enjoy."],
+      },
+    ],
+  } satisfies PublishedDinner;
+
+  const serialized = serializePublishedDinnerRecipeJsonLd(dinner);
+
+  assert.ok(serialized);
+  assert.equal(serialized.includes("<"), false);
+  assert.equal(serialized.includes(">"), false);
+  assert.equal(serialized.includes("&"), false);
+  assert.equal((JSON.parse(serialized) as { name: string }).name, dinner.name);
+});
+
 const renderPublishedDinner = (overrides: Partial<PublishedDinner>) =>
   renderToStaticMarkup(
     createElement(PublishedDinnerView, {
+      upsell: "Test upsell.",
       dinner: {
         publicSlug: "dinner-public1",
         publishedAt: "2026-08-17T12:00:00.000Z",
