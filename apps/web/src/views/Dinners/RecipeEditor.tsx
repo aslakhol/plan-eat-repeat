@@ -36,6 +36,7 @@ import { Form } from "../../components/ui/form";
 import { FancyCombobox } from "../../components/ui/FancyCombobox";
 import { DeleteDinnerButton } from "./DeleteDinnerButton";
 import { AddDinnerSheet } from "./AddDinnerSheet";
+import { DetailsMenu } from "~/components/ui/details-menu";
 import { StickyHeaderCard } from "./StickyHeaderCard";
 import {
   applyExistingDinnerImport,
@@ -216,7 +217,7 @@ export const RecipeEditor = ({
             Cancel
           </Button>
           {dinner && onDelete && (
-            <details className="relative shrink-0">
+            <DetailsMenu className="relative shrink-0">
               <summary className="border-border text-muted-foreground hover:bg-accent flex size-[30px] cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
                 <MoreHorizontal className="size-4" />
                 <span className="sr-only">Editor actions</span>
@@ -258,7 +259,7 @@ export const RecipeEditor = ({
                   }
                 />
               </div>
-            </details>
+            </DetailsMenu>
           )}
         </StickyHeaderCard>
 

@@ -23,6 +23,7 @@ import {
 } from "~/lib/editor-navigation";
 import { useDinnerWakeLock } from "~/hooks/use-keep-screen-awake";
 import { DinnerMergeSheet } from "./DinnerMergeSheet";
+import { DetailsMenu } from "~/components/ui/details-menu";
 
 export const DinnerDetail = () => {
   const router = useRouter();
@@ -207,7 +208,7 @@ export const DinnerDetail = () => {
         dinner={dinner}
         historyLabel={historyLabel}
         headerAction={
-          <details ref={actionMenuRef} className="relative">
+          <DetailsMenu ref={actionMenuRef} className="relative">
             <summary className="text-muted-foreground flex h-[30px] w-[30px] cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
               <MoreHorizontal className="size-4" />
               <span className="sr-only">Dinner actions</span>
@@ -261,7 +262,7 @@ export const DinnerDetail = () => {
                 }
               />
             </div>
-          </details>
+          </DetailsMenu>
         }
         footerActions={
           <>
