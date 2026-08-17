@@ -60,6 +60,64 @@ export async function ensureSignedIn(page: Page) {
   });
 }
 
+export type LocalAuthIdentity =
+  | "save-intent-existing"
+  | "save-intent-first-time";
+
+export async function provisionLocalAuth(
+  page: Page,
+  identity: LocalAuthIdentity,
+) {
+  const response = await page.request.post("/api/dev/auth-bypass", {
+    data: { identity },
+  });
+  const payload = (await response.json()) as {
+    ticket?: string;
+    userId?: string;
+    error?: string;
+  };
+  if (!response.ok() || !payload.ticket || !payload.userId) {
+    throw new Error(payload.error ?? "Failed to provision local auth");
+  }
+  return { ticket: payload.ticket, userId: payload.userId };
+}
+
+export async function completeLocalAuth(
+  page: Page,
+  ticket: string,
+  returnPath: string,
+) {
+  await page.evaluate(
+    async ({ ticket, returnPath }) => {
+      const clerk = (
+        window as typeof window & {
+          Clerk: {
+            client: {
+              signIn: {
+                create: (input: {
+                  strategy: "ticket";
+                  ticket: string;
+                }) => Promise<{ createdSessionId: string | null }>;
+              };
+            };
+            setActive: (input: { session: string }) => Promise<void>;
+          };
+        }
+      ).Clerk;
+      const attempt = await clerk.client.signIn.create({
+        strategy: "ticket",
+        ticket,
+      });
+      if (!attempt.createdSessionId) {
+        throw new Error("Local auth did not create a Clerk session");
+      }
+      await clerk.setActive({ session: attempt.createdSessionId });
+      window.location.assign(returnPath);
+    },
+    { ticket, returnPath },
+  );
+}
+
 export async function captureScreen(
   page: Page,
   pagePath: string,

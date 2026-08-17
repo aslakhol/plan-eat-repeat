@@ -138,6 +138,13 @@ const isAuthed = t.middleware(async ({ next, ctx }) => {
   });
 });
 
+const isAuthenticated = t.middleware(async ({ next, ctx }) => {
+  if (!ctx.auth.userId) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next({ ctx: { auth: ctx.auth } });
+});
+
 const isAuthedAndHasHousehold = t.middleware(async ({ next, ctx }) => {
   if (!ctx.auth.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -178,6 +185,7 @@ export const createTRPCRouter = t.router;
  * are logged in.
  */
 export const publicProcedure = t.procedure.use(hasHouseholdOrUndefined);
+export const authenticatedProcedure = t.procedure.use(isAuthenticated);
 export const protectedProcedure = t.procedure.use(isAuthed);
 export const protectedProcedureWithHousehold = t.procedure.use(
   isAuthedAndHasHousehold,

@@ -9,6 +9,7 @@ import {
   formatPublicationDate,
   type PublishedDinner,
   publishedDinnerRecipeJsonLd,
+  publishedDinnerSaveIntentPath,
   serializePublishedDinnerRecipeJsonLd,
   publishedDinnerPath,
   publishedDinnerUrl,
@@ -105,6 +106,10 @@ void test("public Dinner slugs keep a readable initial name and opaque identity"
   );
   assert.equal(publicSlugForDinner("寿司", "9fK2_xYz"), "dinner-9fK2_xYz");
   assert.equal(publishedDinnerPath("soup-public1"), "/d/soup-public1");
+  assert.equal(
+    publishedDinnerSaveIntentPath("soup-public1"),
+    "/d/soup-public1?save=1",
+  );
   assert.equal(
     publishedDinnerUrl("soup-public1", "https://plan.example/base"),
     "https://plan.example/d/soup-public1",

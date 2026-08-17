@@ -1,8 +1,8 @@
-import { SignInButton, useAuth } from "@clerk/nextjs";
+import { SignInButton, useAuth, useSession } from "@clerk/nextjs";
 import { startOfToday } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   ResponsiveModal,
@@ -12,10 +12,14 @@ import {
 } from "~/components/ResponsiveModal";
 import { Button } from "~/components/ui/button";
 import { toast } from "~/components/ui/use-toast";
-import { type PublishedDinner } from "~/lib/published-dinner";
+import {
+  type PublishedDinner,
+  publishedDinnerSaveIntentPath,
+} from "~/lib/published-dinner";
 import { api } from "~/utils/api";
 import { DinnerPlanningSheet } from "~/views/Dinners/DinnerPlanningSheet";
 import { PublishedDinnerView } from "./PublishedDinnerView";
+import { PublishedDinnerUnavailable } from "./PublishedDinnerUnavailable";
 
 type SavedDinner = { id: number; name: string };
 
@@ -28,6 +32,7 @@ export const PublishedDinnerExperience = ({
 }) => {
   const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
+  const { session } = useSession();
   const [today] = useState(startOfToday);
   const [planning, setPlanning] = useState(false);
   const [saveResult, setSaveResult] = useState<{
@@ -35,6 +40,17 @@ export const PublishedDinnerExperience = ({
     createdNewCopy: boolean;
   } | null>(null);
   const [saveResultOpen, setSaveResultOpen] = useState(false);
+  const [sourceUnavailable, setSourceUnavailable] = useState(false);
+  const resumedSaveIntent = useRef(false);
+
+  const hasSaveIntent = router.isReady && router.query.save === "1";
+  const clearSaveIntent = useCallback(async () => {
+    const query = { ...router.query };
+    delete query.save;
+    await router.replace({ pathname: router.pathname, query }, undefined, {
+      shallow: true,
+    });
+  }, [router]);
 
   const statusQuery = api.dinner.publishedSaveStatus.useQuery(
     { publicSlug: dinner.publicSlug },
@@ -42,11 +58,18 @@ export const PublishedDinnerExperience = ({
   );
   const saveMutation = api.dinner.savePublished.useMutation({
     onSuccess: async (result) => {
+      await session?.reload();
       setSaveResult(result);
       setSaveResultOpen(true);
+      if (hasSaveIntent) await clearSaveIntent();
       await statusQuery.refetch();
     },
     onError: (error) => {
+      if (error.data?.code === "NOT_FOUND") {
+        setSourceUnavailable(true);
+        if (hasSaveIntent) void clearSaveIntent();
+        return;
+      }
       toast({
         variant: "destructive",
         title: "Could not save Dinner",
@@ -54,6 +77,14 @@ export const PublishedDinnerExperience = ({
       });
     },
   });
+
+  useEffect(() => {
+    if (!isSignedIn || !hasSaveIntent || resumedSaveIntent.current) return;
+    resumedSaveIntent.current = true;
+    saveMutation.mutate({ publicSlug: dinner.publicSlug });
+  }, [dinner.publicSlug, hasSaveIntent, isSignedIn, saveMutation]);
+
+  if (sourceUnavailable) return <PublishedDinnerUnavailable />;
 
   const detectedDinner = saveResult?.dinner ?? statusQuery.data?.dinner;
   const createdNewCopy = saveResult?.createdNewCopy ?? false;
@@ -86,7 +117,12 @@ export const PublishedDinnerExperience = ({
 
   const saveAction =
     isLoaded && !isSignedIn ? (
-      <SignInButton mode="modal">{actionButton}</SignInButton>
+      <SignInButton
+        mode="modal"
+        forceRedirectUrl={publishedDinnerSaveIntentPath(dinner.publicSlug)}
+      >
+        {actionButton}
+      </SignInButton>
     ) : (
       actionButton
     );

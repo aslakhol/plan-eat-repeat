@@ -9,9 +9,9 @@ import {
 import { addDays } from "date-fns";
 import { MembershipRole } from "@planeatrepeat/db";
 import { env } from "~/env";
-import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import { randomUUID } from "node:crypto";
+import { updateClerkHouseholdMetadata } from "~/server/clerk-household-metadata";
 
 const onboardingDinnerSchema = z.object({
   name: z.string().trim().min(1).max(200),
@@ -306,21 +306,4 @@ const normalizeSlug = (value: string) => {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "");
   return slug || "household";
-};
-
-const updateClerkHouseholdMetadata = async (
-  userId: string,
-  householdId: string | null,
-) => {
-  try {
-    await (
-      await clerkClient()
-    ).users.updateUserMetadata(userId, {
-      publicMetadata: {
-        householdId,
-      },
-    });
-  } catch (error) {
-    console.error("Failed to update Clerk household metadata", error);
-  }
 };

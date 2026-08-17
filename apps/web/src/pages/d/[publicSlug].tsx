@@ -12,6 +12,7 @@ import { type NextPageWithLayout } from "~/pages/_app";
 import { db } from "~/server/db";
 import { findPublishedDinner } from "~/server/published-dinner";
 import { PublishedDinnerExperience } from "~/views/PublishedDinner/PublishedDinnerExperience";
+import { PublishedDinnerUnavailable } from "~/views/PublishedDinner/PublishedDinnerUnavailable";
 
 type Props = {
   dinner: PublishedDinner | null;
@@ -31,17 +32,7 @@ const PublishedDinnerPage: NextPageWithLayout<Props> = ({
           <title>Dinner unavailable · Plan Eat Repeat</title>
           <meta name="robots" content="noindex, nofollow" />
         </Head>
-        <main className="bg-background flex min-h-screen items-center justify-center px-6">
-          <div className="max-w-md text-center">
-            <p className="text-primary font-serif text-lg">Plan Eat Repeat</p>
-            <h1 className="mt-4 font-serif text-3xl font-normal">
-              This dinner is no longer shared
-            </h1>
-            <p className="text-muted-foreground mt-3 text-sm font-semibold">
-              Sharing may have been stopped or the Dinner may have been deleted.
-            </p>
-          </div>
-        </main>
+        <PublishedDinnerUnavailable />
       </>
     );
   }

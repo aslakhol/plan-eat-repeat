@@ -13,6 +13,7 @@ import {
 } from "@planeatrepeat/shared";
 
 import {
+  authenticatedProcedure,
   createTRPCRouter,
   publicProcedure,
   protectedProcedureWithHousehold,
@@ -35,8 +36,10 @@ import { env } from "~/env";
 import {
   findSavedPublishedDinner,
   PublishedDinnerSaveRateLimitError,
-  savePublishedDinner,
+  savePublishedDinnerForUser,
 } from "~/server/save-published-dinner";
+import { clerkClient } from "@clerk/nextjs/server";
+import { updateClerkHouseholdMetadata } from "~/server/clerk-household-metadata";
 
 const householdImportInstructions = async (
   db: PrismaClient,
@@ -119,17 +122,25 @@ const toImportTRPCError = (error: unknown) => {
 };
 
 export const dinnerRouter = createTRPCRouter({
-  publishedSaveStatus: protectedProcedureWithHousehold
+  publishedSaveStatus: authenticatedProcedure
     .input(z.object({ publicSlug: z.string().min(1) }))
-    .query(async ({ ctx, input }) => ({
-      dinner: await findSavedPublishedDinner(
-        ctx.db,
-        ctx.householdId,
-        input.publicSlug,
-      ),
-    })),
+    .query(async ({ ctx, input }) => {
+      const membership = await ctx.db.membership.findUnique({
+        where: { userId: ctx.auth.userId },
+        select: { householdId: true },
+      });
+      return {
+        dinner: membership
+          ? await findSavedPublishedDinner(
+              ctx.db,
+              membership.householdId,
+              input.publicSlug,
+            )
+          : null,
+      };
+    }),
 
-  savePublished: protectedProcedureWithHousehold
+  savePublished: authenticatedProcedure
     .input(
       z.object({
         publicSlug: z.string().min(1),
@@ -138,9 +149,17 @@ export const dinnerRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const result = await savePublishedDinner(
+        const clerkUser = await (
+          await clerkClient()
+        ).users.getUser(ctx.auth.userId);
+        const result = await savePublishedDinnerForUser(
           ctx.db,
-          ctx.householdId,
+          {
+            id: clerkUser.id,
+            firstName: clerkUser.firstName,
+            lastName: clerkUser.lastName,
+            imageUrl: clerkUser.imageUrl,
+          },
           input.publicSlug,
           { forceCopy: input.forceCopy },
         );
@@ -150,7 +169,11 @@ export const dinnerRouter = createTRPCRouter({
             message: "This Dinner is no longer shared",
           });
         }
-        return result;
+        await updateClerkHouseholdMetadata(ctx.auth.userId, result.householdId);
+        return {
+          dinner: result.dinner,
+          createdNewCopy: result.createdNewCopy,
+        };
       } catch (error) {
         if (error instanceof PublishedDinnerSaveRateLimitError) {
           throw new TRPCError({

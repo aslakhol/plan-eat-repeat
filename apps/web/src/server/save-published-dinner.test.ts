@@ -2,10 +2,25 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  publishedDinnerSaveHouseholdName,
   matchesPublishedDinnerSource,
   projectPublishedDinnerCopy,
   reconcilePublishedDinnerTags,
 } from "./save-published-dinner";
+
+void test("Save Intent Household names derive from the authenticated user with a fallback", () => {
+  assert.equal(
+    publishedDinnerSaveHouseholdName({
+      firstName: "  Ada ",
+      lastName: " Lovelace  ",
+    }),
+    "Ada Lovelace's household",
+  );
+  assert.equal(
+    publishedDinnerSaveHouseholdName({ firstName: " ", lastName: null }),
+    "My household",
+  );
+});
 
 void test("Published Dinner Tags reuse destination spelling case-insensitively without creating Tags", () => {
   assert.deepEqual(
