@@ -27,6 +27,7 @@ import { acquireYouTubeVideoTitle } from "~/server/recipes/youtube";
 import { planDinnerMerge } from "~/server/merge-dinners";
 import { type PrismaClient } from "@planeatrepeat/db";
 import {
+  findPublishedDinnerSaveCount,
   PublicationRateLimitError,
   publishDinner,
   stopDinnerPublication,
@@ -203,6 +204,24 @@ export const dinnerRouter = createTRPCRouter({
         }
         throw error;
       }
+    }),
+
+  publishedSaveCount: protectedProcedureWithHousehold
+    .input(z.object({ dinnerId: z.number().int() }))
+    .query(async ({ ctx, input }) => {
+      const saveCount = await findPublishedDinnerSaveCount(
+        ctx.db,
+        ctx.householdId,
+        input.dinnerId,
+      );
+      if (saveCount === null) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Dinner not found",
+        });
+      }
+
+      return { saveCount };
     }),
 
   publish: protectedProcedureWithHousehold

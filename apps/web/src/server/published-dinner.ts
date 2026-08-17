@@ -61,6 +61,28 @@ export const findPublishedDinnerSitemapSlugs = async (db: PrismaClient) => {
   );
 };
 
+export const findPublishedDinnerSaveCount = async (
+  db: PrismaClient,
+  householdId: string,
+  dinnerId: number,
+) => {
+  const source = await db.dinner.findUnique({
+    where: { id: dinnerId, householdId },
+    select: { id: true },
+  });
+  if (!source) return null;
+
+  const destinationHouseholds = await db.dinner.groupBy({
+    by: ["householdId"],
+    where: {
+      sourceDinnerId: source.id,
+      householdId: { not: householdId },
+    },
+  });
+
+  return destinationHouseholds.length;
+};
+
 export const publishDinner = async (
   db: PrismaClient,
   householdId: string,

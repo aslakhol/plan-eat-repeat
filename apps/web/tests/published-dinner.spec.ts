@@ -297,6 +297,184 @@ test("a Cookbook member publishes a Dinner that anyone can read", async ({
   }
 });
 
+test("the active Share drawer shows the current distinct-Household Save Count", async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  await ensureSignedIn(page);
+  const uniqueId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const sourceName = `Save Count source ${uniqueId}`;
+  const currentUserId = await page.evaluate(
+    () =>
+      (
+        window as typeof window & {
+          Clerk: { user: { id: string } };
+        }
+      ).Clerk.user.id,
+  );
+  let sourceHouseholdId: string | undefined;
+  let destinationHouseholdIds: string[] = [];
+
+  const reopenShareDrawer = async (dinnerId: number) => {
+    await page.goto(`/dinners/${dinnerId}`);
+    await page.getByRole("button", { name: "Share" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Share dinner" }),
+    ).toBeVisible();
+  };
+  const useHouseholdForMutation = async (
+    householdId: string,
+    mutation: () => Promise<{ status: number; body: string }>,
+  ) => {
+    await testDb.membership.update({
+      where: { userId: currentUserId },
+      data: { householdId },
+    });
+    try {
+      return await mutation();
+    } finally {
+      if (sourceHouseholdId) {
+        await testDb.membership.update({
+          where: { userId: currentUserId },
+          data: { householdId: sourceHouseholdId },
+        });
+      }
+    }
+  };
+
+  try {
+    await quickAddDinner(page, sourceName);
+    const source = await testDb.dinner.findFirstOrThrow({
+      where: { name: sourceName },
+      orderBy: { id: "desc" },
+    });
+    sourceHouseholdId = source.householdId;
+    const destinations = await testDb.$transaction(
+      ["first", "second"].map((kind) =>
+        testDb.household.create({
+          data: {
+            name: `Save Count ${kind} destination ${uniqueId}`,
+            slug: `save-count-${kind}-destination-${uniqueId}`,
+          },
+        }),
+      ),
+    );
+    destinationHouseholdIds = destinations.map(({ id }) => id);
+    const [firstDestination, secondDestination] = destinations;
+    expect(firstDestination).toBeTruthy();
+    expect(secondDestination).toBeTruthy();
+
+    const copies = await testDb.$transaction([
+      testDb.dinner.create({
+        data: {
+          name: `Source Household copy ${uniqueId}`,
+          householdId: source.householdId,
+          sourceDinnerId: source.id,
+        },
+      }),
+      testDb.dinner.create({
+        data: {
+          name: `First destination copy one ${uniqueId}`,
+          householdId: firstDestination!.id,
+          sourceDinnerId: source.id,
+        },
+      }),
+      testDb.dinner.create({
+        data: {
+          name: `First destination copy two ${uniqueId}`,
+          householdId: firstDestination!.id,
+          sourceDinnerId: source.id,
+        },
+      }),
+      testDb.dinner.create({
+        data: {
+          name: `Second destination copy ${uniqueId}`,
+          householdId: secondDestination!.id,
+          sourceDinnerId: source.id,
+        },
+      }),
+      testDb.dinner.create({
+        data: {
+          name: `Second destination kept Dinner ${uniqueId}`,
+          householdId: secondDestination!.id,
+        },
+      }),
+    ]);
+    const [, firstCopy, secondCopy, mergeDiscardedCopy, mergeKeptDinner] =
+      copies;
+
+    await page.getByRole("button", { name: "Share" }).click();
+    await page.getByRole("button", { name: "Publish dinner" }).click();
+    await expect(
+      page.getByText("saved by 2 people", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText(/Opened \d+ times/)).toHaveCount(0);
+
+    const firstDelete = await useHouseholdForMutation(
+      firstDestination!.id,
+      () => mutateDinner(page, "delete", { dinnerId: firstCopy!.id }),
+    );
+    expect(firstDelete.status).toBe(200);
+    await reopenShareDrawer(source.id);
+    await expect(
+      page.getByText("saved by 2 people", { exact: true }),
+    ).toBeVisible();
+
+    const lastFirstDestinationDelete = await useHouseholdForMutation(
+      firstDestination!.id,
+      () => mutateDinner(page, "delete", { dinnerId: secondCopy!.id }),
+    );
+    expect(lastFirstDestinationDelete.status).toBe(200);
+    await reopenShareDrawer(source.id);
+    await expect(
+      page.getByText("saved by 1 people", { exact: true }),
+    ).toBeVisible();
+
+    await page.getByRole("button", { name: "Stop sharing" }).click();
+    await expect(
+      page.getByRole("button", { name: "Publish dinner" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Publish dinner" }).click();
+    await expect(
+      page.getByText("saved by 1 people", { exact: true }),
+    ).toBeVisible();
+
+    const merge = await useHouseholdForMutation(secondDestination!.id, () =>
+      mutateDinner(page, "merge", {
+        keptDinnerId: mergeKeptDinner!.id,
+        discardedDinnerId: mergeDiscardedCopy!.id,
+      }),
+    );
+    expect(merge.status).toBe(200);
+    await reopenShareDrawer(source.id);
+    await expect(page.getByText(/saved by \d+ people/)).toHaveCount(0);
+  } finally {
+    if (sourceHouseholdId) {
+      await testDb.membership.update({
+        where: { userId: currentUserId },
+        data: { householdId: sourceHouseholdId },
+      });
+      await testDb.dinner.deleteMany({
+        where: {
+          householdId: sourceHouseholdId,
+          OR: [
+            { name: sourceName },
+            { name: `Source Household copy ${uniqueId}` },
+          ],
+        },
+      });
+    }
+    if (destinationHouseholdIds.length > 0) {
+      await testDb.dinner.deleteMany({
+        where: { householdId: { in: destinationHouseholdIds } },
+      });
+      await testDb.household.deleteMany({
+        where: { id: { in: destinationHouseholdIds } },
+      });
+    }
+  }
+});
+
 test("publication APIs cannot change another Household's Dinner", async ({
   page,
 }) => {
