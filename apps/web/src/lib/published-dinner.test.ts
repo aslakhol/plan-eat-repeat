@@ -234,7 +234,7 @@ void test("Published Dinner places the primary save action on desktop and mobile
     createElement("button", null, "Add to my cookbook"),
   );
 
-  assert.equal(html.match(/Add to my cookbook/g)?.length, 3);
+  assert.equal(html.match(/Add to my cookbook/g)?.length, 4);
 });
 
 for (const shape of [

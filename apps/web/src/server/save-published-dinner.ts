@@ -109,6 +109,11 @@ const matchingSavedDinnerWhere = (
   OR: [{ id: sourceDinnerId }, { sourceDinnerId }],
 });
 
+const activePublishedDinnerWhere = (publicSlug: string) => ({
+  publicSlug,
+  publishedAt: { not: null },
+});
+
 const savedDinnerSelect = { id: true, name: true, sourceDinnerId: true };
 
 export const findSavedPublishedDinner = async (
@@ -117,7 +122,7 @@ export const findSavedPublishedDinner = async (
   publicSlug: string,
 ) => {
   const source = await db.dinner.findUnique({
-    where: { publicSlug, publishedAt: { not: null } },
+    where: activePublishedDinnerWhere(publicSlug),
     select: { id: true },
   });
   if (!source) return null;
@@ -137,12 +142,12 @@ export const savePublishedDinner = async (
 ) =>
   db.$transaction(async (tx) => {
     const initialSource = await tx.dinner.findUnique({
-      where: { publicSlug, publishedAt: { not: null } },
+      where: activePublishedDinnerWhere(publicSlug),
       select: { id: true },
     });
     if (!initialSource) return null;
 
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`${householdId}:${initialSource.id}`}))`;
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`published-dinner-save:${householdId}`}))`;
 
     // Hold a read lock so stopping publication or deleting the source cannot
     // complete between the latest-content read and creation of the copy.
@@ -165,7 +170,7 @@ export const savePublishedDinner = async (
         select: savedDinnerSelect,
       });
       if (existing && matchesPublishedDinnerSource(existing, source.id)) {
-        return { dinner: existing, created: false };
+        return { dinner: existing, createdNewCopy: false };
       }
     }
 
@@ -199,5 +204,5 @@ export const savePublishedDinner = async (
       select: savedDinnerSelect,
     });
 
-    return { dinner, created: true };
+    return { dinner, createdNewCopy: true };
   });

@@ -245,6 +245,7 @@ export const PublishedDinnerView = ({
 
         <aside className="border-border mt-4 rounded-2xl border bg-white px-[18px] py-4 shadow-[0_8px_28px_rgba(60,50,40,.08)] md:hidden">
           <UpsellCopy upsell={upsell} />
+          {saveAction && <div className="mt-4">{saveAction}</div>}
         </aside>
       </main>
 

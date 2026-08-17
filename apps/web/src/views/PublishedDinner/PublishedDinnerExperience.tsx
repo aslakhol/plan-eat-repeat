@@ -32,7 +32,7 @@ export const PublishedDinnerExperience = ({
   const [planning, setPlanning] = useState(false);
   const [saveResult, setSaveResult] = useState<{
     dinner: SavedDinner;
-    created: boolean;
+    createdNewCopy: boolean;
   } | null>(null);
   const [saveResultOpen, setSaveResultOpen] = useState(false);
 
@@ -56,11 +56,11 @@ export const PublishedDinnerExperience = ({
   });
 
   const detectedDinner = saveResult?.dinner ?? statusQuery.data?.dinner;
-  const created = saveResult?.created ?? false;
+  const createdNewCopy = saveResult?.createdNewCopy ?? false;
   const actionLabel = saveMutation.isPending
     ? "Saving…"
     : detectedDinner
-      ? created
+      ? createdNewCopy
         ? "Saved to your cookbook"
         : "Already in your cookbook"
       : "Add to my cookbook";
@@ -102,15 +102,17 @@ export const PublishedDinnerExperience = ({
       <ResponsiveModal open={saveResultOpen} onOpenChange={setSaveResultOpen}>
         <ResponsiveModalContent className="h-auto gap-4 bg-white px-5 pb-6 md:max-w-[480px]">
           <ResponsiveModalTitle className="text-center font-serif text-2xl font-normal">
-            {created ? "Saved to your cookbook" : "Already in your cookbook"}
+            {createdNewCopy
+              ? "Saved to your cookbook"
+              : "Already in your cookbook"}
           </ResponsiveModalTitle>
           <ResponsiveModalDescription className="text-center">
-            {created
+            {createdNewCopy
               ? `Your copy. ${dinner.householdName} won’t see your changes.`
               : "Open the Dinner you already saved, or deliberately save another copy."}
           </ResponsiveModalDescription>
 
-          {created ? (
+          {createdNewCopy ? (
             <div className="grid gap-2">
               <Button
                 type="button"
