@@ -82,6 +82,14 @@ export const publishedDinnerPath = (publicSlug: string) => `/d/${publicSlug}`;
 export const publishedDinnerSaveIntentPath = (publicSlug: string) =>
   `${publishedDinnerPath(publicSlug)}?save=1`;
 
+export const withoutPublishedDinnerSaveIntent = (
+  query: Record<string, string | string[] | undefined>,
+) => {
+  const cleanedQuery = { ...query };
+  delete cleanedQuery.save;
+  return cleanedQuery;
+};
+
 export const publishedDinnerUrl = (publicSlug: string, appUrl: string) =>
   new URL(publishedDinnerPath(publicSlug), appUrl).toString();
 

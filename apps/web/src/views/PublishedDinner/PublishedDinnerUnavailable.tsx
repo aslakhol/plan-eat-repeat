@@ -3,17 +3,21 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 
 import { Button } from "~/components/ui/button";
+import { withoutPublishedDinnerSaveIntent } from "~/lib/published-dinner";
 
 export const PublishedDinnerUnavailable = () => {
   const router = useRouter();
 
   useEffect(() => {
     if (!router.isReady || router.query.save !== "1") return;
-    const query = { ...router.query };
-    delete query.save;
-    void router.replace({ pathname: router.pathname, query }, undefined, {
-      shallow: true,
-    });
+    void router.replace(
+      {
+        pathname: router.pathname,
+        query: withoutPublishedDinnerSaveIntent(router.query),
+      },
+      undefined,
+      { shallow: true },
+    );
   }, [router]);
 
   return (

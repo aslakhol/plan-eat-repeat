@@ -13,10 +13,10 @@ import {
 } from "@planeatrepeat/shared";
 
 import {
-  authenticatedProcedure,
   createTRPCRouter,
   publicProcedure,
   protectedProcedureWithHousehold,
+  sessionProcedure,
 } from "~/server/api/trpc";
 import {
   importRecipeFromImages,
@@ -122,7 +122,7 @@ const toImportTRPCError = (error: unknown) => {
 };
 
 export const dinnerRouter = createTRPCRouter({
-  publishedSaveStatus: authenticatedProcedure
+  publishedSaveStatus: sessionProcedure
     .input(z.object({ publicSlug: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       const membership = await ctx.db.membership.findUnique({
@@ -140,7 +140,7 @@ export const dinnerRouter = createTRPCRouter({
       };
     }),
 
-  savePublished: authenticatedProcedure
+  savePublished: sessionProcedure
     .input(
       z.object({
         publicSlug: z.string().min(1),

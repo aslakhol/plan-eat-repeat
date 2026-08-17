@@ -11,7 +11,8 @@ import { MembershipRole } from "@planeatrepeat/db";
 import { env } from "~/env";
 import { TRPCError } from "@trpc/server";
 import { randomUUID } from "node:crypto";
-import { updateClerkHouseholdMetadata } from "~/server/clerk-household-metadata";
+import { tryUpdateClerkHouseholdMetadata } from "~/server/clerk-household-metadata";
+import { householdSlugBase } from "~/lib/household";
 
 const onboardingDinnerSchema = z.object({
   name: z.string().trim().min(1).max(200),
@@ -34,7 +35,7 @@ export const householdRouter = createTRPCRouter({
 
     if (!ctx.householdId) {
       if (ctx.auth.sessionClaims?.metadata.householdId) {
-        await updateClerkHouseholdMetadata(ctx.auth.userId, null);
+        await tryUpdateClerkHouseholdMetadata(ctx.auth.userId, null);
       }
       return { household: null };
     }
@@ -47,7 +48,7 @@ export const householdRouter = createTRPCRouter({
     if (
       ctx.auth.sessionClaims?.metadata.householdId !== (household?.id ?? null)
     ) {
-      await updateClerkHouseholdMetadata(
+      await tryUpdateClerkHouseholdMetadata(
         ctx.auth.userId,
         household?.id ?? null,
       );
@@ -76,7 +77,7 @@ export const householdRouter = createTRPCRouter({
           });
         }
 
-        const baseSlug = normalizeSlug(input.slug || input.name);
+        const baseSlug = householdSlugBase(input.slug || input.name);
         const slugExists = await tx.household.findUnique({
           where: { slug: baseSlug },
           select: { id: true },
@@ -108,7 +109,7 @@ export const householdRouter = createTRPCRouter({
         });
       });
 
-      await updateClerkHouseholdMetadata(ctx.auth.userId, household.id);
+      await tryUpdateClerkHouseholdMetadata(ctx.auth.userId, household.id);
 
       return { household };
     }),
@@ -261,7 +262,7 @@ export const householdRouter = createTRPCRouter({
         },
       });
 
-      await updateClerkHouseholdMetadata(
+      await tryUpdateClerkHouseholdMetadata(
         ctx.auth.userId,
         membership.householdId,
       );
@@ -289,7 +290,7 @@ export const householdRouter = createTRPCRouter({
         where: { id: memberId },
       });
 
-      await updateClerkHouseholdMetadata(member.userId, null);
+      await tryUpdateClerkHouseholdMetadata(member.userId, null);
 
       return { member };
     }),
@@ -297,13 +298,4 @@ export const householdRouter = createTRPCRouter({
 
 const generateInviteLink = (inviteId: string) => {
   return `${env.NEXT_PUBLIC_APP_URL}invite/${inviteId}`;
-};
-
-const normalizeSlug = (value: string) => {
-  const slug = value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
-  return slug || "household";
 };

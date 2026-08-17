@@ -15,6 +15,7 @@ import { toast } from "~/components/ui/use-toast";
 import {
   type PublishedDinner,
   publishedDinnerSaveIntentPath,
+  withoutPublishedDinnerSaveIntent,
 } from "~/lib/published-dinner";
 import { api } from "~/utils/api";
 import { DinnerPlanningSheet } from "~/views/Dinners/DinnerPlanningSheet";
@@ -45,11 +46,14 @@ export const PublishedDinnerExperience = ({
 
   const hasSaveIntent = router.isReady && router.query.save === "1";
   const clearSaveIntent = useCallback(async () => {
-    const query = { ...router.query };
-    delete query.save;
-    await router.replace({ pathname: router.pathname, query }, undefined, {
-      shallow: true,
-    });
+    await router.replace(
+      {
+        pathname: router.pathname,
+        query: withoutPublishedDinnerSaveIntent(router.query),
+      },
+      undefined,
+      { shallow: true },
+    );
   }, [router]);
 
   const statusQuery = api.dinner.publishedSaveStatus.useQuery(
@@ -120,6 +124,9 @@ export const PublishedDinnerExperience = ({
       <SignInButton
         mode="modal"
         forceRedirectUrl={publishedDinnerSaveIntentPath(dinner.publicSlug)}
+        signUpForceRedirectUrl={publishedDinnerSaveIntentPath(
+          dinner.publicSlug,
+        )}
       >
         {actionButton}
       </SignInButton>

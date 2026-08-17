@@ -2,6 +2,7 @@ import { createRequire } from "node:module";
 
 import { expect, test, type Page } from "@playwright/test";
 import { createPrismaClient } from "@planeatrepeat/db";
+import { createClerkClient } from "@clerk/backend";
 
 import { completeLocalAuth, provisionLocalAuth } from "./capture-support";
 
@@ -11,7 +12,10 @@ const { loadEnvConfig } = createRequire(import.meta.url)(
 loadEnvConfig(process.cwd());
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL is required for browser tests");
+const clerkSecretKey = process.env.CLERK_SECRET_KEY;
+if (!clerkSecretKey) throw new Error("CLERK_SECRET_KEY is required for browser tests");
 const testDb = createPrismaClient(databaseUrl);
+const testClerk = createClerkClient({ secretKey: clerkSecretKey });
 
 test.afterAll(async () => testDb.$disconnect());
 
@@ -35,6 +39,14 @@ const resetLocalIdentity = async (userId: string) => {
     await testDb.household.delete({ where: { id: membership.householdId } });
   }
   await testDb.user.deleteMany({ where: { id: userId } });
+};
+
+const findClerkUserByEmail = async (email: string) => {
+  const users = await testClerk.users.getUserList({
+    emailAddress: [email],
+    limit: 1,
+  });
+  return users.data[0] ?? null;
 };
 
 test("sign-in returns a Save Intent to the stable URL, saves latest content once, and cleans the query", async ({
@@ -134,8 +146,8 @@ test("sign-up return bootstraps a usable one-person Household without onboarding
   const marker = uniqueId();
   const publicSlug = `save-intent-sign-up-${marker}`;
   const returnPath = `/d/${publicSlug}?save=1`;
-  const auth = await provisionLocalAuth(page, "save-intent-first-time");
-  await resetLocalIdentity(auth.userId);
+  const testEmail = `save-intent+clerk_test_${marker.replaceAll("-", "_")}@example.com`;
+  const testPassword = `Codex-${marker}-Aa9!`;
   const sourceHousehold = await testDb.household.create({
     data: {
       name: `First-time source ${marker}`,
@@ -154,20 +166,31 @@ test("sign-up return bootstraps a usable one-person Household without onboarding
   try {
     await page.goto(`/d/${publicSlug}`);
     await publishedDinnerAction(page).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
-    const returnedRequest = page.waitForRequest((request) =>
-      request.url().endsWith(returnPath),
-    );
-    await completeLocalAuth(page, auth.ticket, returnPath);
-    await returnedRequest;
+    const authDialog = page.getByRole("dialog");
+    await expect(authDialog).toBeVisible();
+    await authDialog.getByRole("link", { name: "Sign up" }).click();
+    await authDialog.locator('input[name="firstName"]').fill("First");
+    await authDialog.locator('input[name="lastName"]').fill("Time");
+    await authDialog.locator('input[name="emailAddress"]').fill(testEmail);
+    await authDialog.locator('input[name="password"]').fill(testPassword);
+    await authDialog
+      .getByRole("button", { name: "Continue", exact: true })
+      .click();
+    const verificationCode = authDialog.getByRole("textbox", {
+      name: "Enter verification code",
+    });
+    await expect(verificationCode).toBeVisible();
+    await verificationCode.pressSequentially("424242");
 
     const savedDialog = page.getByRole("dialog", {
       name: "Saved to your cookbook",
     });
     await expect(savedDialog).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`/d/${publicSlug}$`));
+    const clerkUser = await findClerkUserByEmail(testEmail);
+    expect(clerkUser).not.toBeNull();
     const membership = await testDb.membership.findUniqueOrThrow({
-      where: { userId: auth.userId },
+      where: { userId: clerkUser!.id },
       include: { household: true },
     });
     expect(membership.role).toBe("ADMIN");
@@ -185,7 +208,11 @@ test("sign-up return bootstraps a usable one-person Household without onboarding
     await expect(page).toHaveURL(/\/dinners$/);
     await expect(page.getByRole("heading", { name: "Cookbook" })).toBeVisible();
   } finally {
-    await resetLocalIdentity(auth.userId);
+    const clerkUser = await findClerkUserByEmail(testEmail);
+    if (clerkUser) {
+      await resetLocalIdentity(clerkUser.id);
+      await testClerk.users.deleteUser(clerkUser.id);
+    }
     await testDb.dinner.deleteMany({ where: { id: source.id } });
     await testDb.household.deleteMany({ where: { id: sourceHousehold.id } });
   }

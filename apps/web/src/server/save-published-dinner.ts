@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { type Prisma, type PrismaClient } from "@planeatrepeat/db";
+import { householdSlugBase } from "~/lib/household";
 
 const SAVE_BURST_WINDOW_MS = 10_000;
 const SAVE_BURST_LIMIT = 20;
@@ -21,12 +22,7 @@ export const publishedDinnerSaveHouseholdName = (user: {
 };
 
 const publishedDinnerSaveHouseholdSlug = (name: string) => {
-  const base = name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
-  return `${base || "household"}-${randomUUID().slice(0, 8)}`;
+  return `${householdSlugBase(name)}-${randomUUID().slice(0, 8)}`;
 };
 
 export const reconcilePublishedDinnerTags = (

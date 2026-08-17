@@ -15,6 +15,7 @@ import {
   publishedDinnerUrl,
   publicSlugForDinner,
   toPublishedDinner,
+  withoutPublishedDinnerSaveIntent,
 } from "./published-dinner";
 import {
   publishDinner,
@@ -109,6 +110,14 @@ void test("public Dinner slugs keep a readable initial name and opaque identity"
   assert.equal(
     publishedDinnerSaveIntentPath("soup-public1"),
     "/d/soup-public1?save=1",
+  );
+  assert.deepEqual(
+    withoutPublishedDinnerSaveIntent({
+      publicSlug: "soup-public1",
+      save: "1",
+      campaign: "summer",
+    }),
+    { publicSlug: "soup-public1", campaign: "summer" },
   );
   assert.equal(
     publishedDinnerUrl("soup-public1", "https://plan.example/base"),
