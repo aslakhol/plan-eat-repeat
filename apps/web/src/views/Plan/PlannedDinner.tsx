@@ -17,6 +17,7 @@ import {
   planSlotDateFromDate,
 } from "~/lib/editor-navigation";
 import { useDinnerWakeLock } from "~/hooks/use-keep-screen-awake";
+import { DetailsMenu } from "~/components/ui/details-menu";
 
 type Props = {
   dinner: DinnerWithRecipe;
@@ -52,7 +53,7 @@ export const PlannedDinner = ({
           dinner={dinner}
           headerLabel={format(date, "EEEE, LLLL do, y")}
           headerAction={
-            <details ref={menuRef} className="relative">
+            <DetailsMenu ref={menuRef} className="relative">
               <summary className="text-muted-foreground flex h-[30px] w-[30px] cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
                 <MoreHorizontal className="size-4" />
                 <span className="sr-only">Planned Dinner actions</span>
@@ -92,7 +93,7 @@ export const PlannedDinner = ({
                   Clear {format(date, "EEEE")}
                 </ClearDay>
               </div>
-            </details>
+            </DetailsMenu>
           }
         />
       </ResponsiveModalScrollViewport>
