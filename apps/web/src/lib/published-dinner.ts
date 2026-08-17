@@ -169,23 +169,3 @@ export const serializePublishedDinnerRecipeJsonLd = (
     .replaceAll("\u2028", "\\u2028")
     .replaceAll("\u2029", "\\u2029");
 };
-
-const publishedDinnerUpsells = [
-  "Never wonder what's for dinner.",
-  "All your recipes in one place.",
-  "Stop screenshotting recipes.",
-  "All your meal planning in five minutes.",
-  "Rescue your recipes from the group chat.",
-  "Fewer trips to the shop at half five.",
-  "Fewer hungry trips to the shop.",
-  "No more “whats for dinner”",
-  "Everyone knows whats for dinner.",
-] as const;
-
-export const pickPublishedDinnerUpsell = (random = Math.random) =>
-  publishedDinnerUpsells[
-    Math.min(
-      Math.floor(random() * publishedDinnerUpsells.length),
-      publishedDinnerUpsells.length - 1,
-    )
-  ] ?? publishedDinnerUpsells[0];

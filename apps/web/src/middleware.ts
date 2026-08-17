@@ -1,19 +1,17 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const isPublicRoute = createRouteMatcher([
-  "/",
+const householdOptionalRoutes = [
   "/invite/:inviteId",
   "/onboarding",
   "/d/:publicSlug",
   "/sitemap.xml",
-]);
+];
+
+const isPublicRoute = createRouteMatcher(["/", ...householdOptionalRoutes]);
 const shouldNotRedirect = createRouteMatcher([
   "/settings",
-  "/invite/:inviteId",
-  "/onboarding",
-  "/d/:publicSlug",
-  "/sitemap.xml",
+  ...householdOptionalRoutes,
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

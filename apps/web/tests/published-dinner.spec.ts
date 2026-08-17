@@ -184,8 +184,11 @@ test("a Cookbook member publishes a Dinner that anyone can read", async ({
       anonymousPage.locator('meta[property="og:image"]'),
     ).toHaveAttribute(
       "content",
-      new URL("/published-dinner-preview.svg", copiedLink!).toString(),
+      new URL("/published-dinner-preview.png", copiedLink!).toString(),
     );
+    await expect(
+      anonymousPage.locator('meta[property="og:image:type"]'),
+    ).toHaveAttribute("content", "image/png");
     const activeSitemap = await anonymousPage.request.get("/sitemap.xml");
     expect(activeSitemap.status()).toBe(200);
     expect(activeSitemap.headers()["content-type"]).toContain(

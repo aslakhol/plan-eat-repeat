@@ -2,9 +2,9 @@ import Head from "next/head";
 import { type GetServerSideProps } from "next";
 
 import { env } from "~/env";
+import { pickPublishedDinnerUpsell } from "~/lib/published-dinner-upsell";
 import {
   type PublishedDinner,
-  pickPublishedDinnerUpsell,
   publishedDinnerUrl,
   serializePublishedDinnerRecipeJsonLd,
 } from "~/lib/published-dinner";
@@ -51,7 +51,7 @@ const PublishedDinnerPage: NextPageWithLayout<Props> = ({
   const title = `${dinner.name} · Plan Eat Repeat`;
   const description = `A dinner shared by ${dinner.householdName} on Plan Eat Repeat.`;
   const previewImageUrl = new URL(
-    "/published-dinner-preview.svg",
+    "/published-dinner-preview.png",
     canonicalUrl,
   ).toString();
   const recipeJsonLd = serializePublishedDinnerRecipeJsonLd(dinner);
@@ -67,6 +67,7 @@ const PublishedDinnerPage: NextPageWithLayout<Props> = ({
         <meta property="og:description" content={description} />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:image" content={previewImageUrl} />
+        <meta property="og:image:type" content="image/png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta
