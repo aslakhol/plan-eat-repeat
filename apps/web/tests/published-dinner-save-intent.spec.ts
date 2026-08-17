@@ -13,7 +13,8 @@ loadEnvConfig(process.cwd());
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL is required for browser tests");
 const clerkSecretKey = process.env.CLERK_SECRET_KEY;
-if (!clerkSecretKey) throw new Error("CLERK_SECRET_KEY is required for browser tests");
+if (!clerkSecretKey)
+  throw new Error("CLERK_SECRET_KEY is required for browser tests");
 const testDb = createPrismaClient(databaseUrl);
 const testClerk = createClerkClient({ secretKey: clerkSecretKey });
 
@@ -173,9 +174,14 @@ test("sign-up return bootstraps a usable one-person Household without onboarding
     await authDialog.locator('input[name="lastName"]').fill("Time");
     await authDialog.locator('input[name="emailAddress"]').fill(testEmail);
     await authDialog.locator('input[name="password"]').fill(testPassword);
+    const verificationPrepared = page.waitForResponse(
+      (response) =>
+        response.url().includes("/prepare_verification") && response.ok(),
+    );
     await authDialog
       .getByRole("button", { name: "Continue", exact: true })
       .click();
+    await verificationPrepared;
     const verificationCode = authDialog.getByRole("textbox", {
       name: "Enter verification code",
     });
