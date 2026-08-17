@@ -24,8 +24,11 @@ model Dinner {
     favourite   Boolean      @default(false)
     servings    Int?
     parts       RecipePart[]
+    publicSlug  String?      @unique
+    publishedAt DateTime?
 
     @@index([name])
+    @@index([publishedAt])
 }
 
 model RecipePart {

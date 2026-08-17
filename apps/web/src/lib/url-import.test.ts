@@ -119,7 +119,7 @@ void test("source URLs retain differences that identify another source", () => {
   );
 });
 
-void test("a blank Source Link accepts an imported URL without a conflict", () => {
+void test("a blank Link accepts an imported URL without a conflict", () => {
   assert.equal(
     importSourceLinkConflict("", "https://example.com/recipes/tacos"),
     null,

@@ -73,7 +73,7 @@ async function expectDinnerFormFocusTreatments(page: Page) {
     page.getByRole("textbox", { name: "Name", exact: true }),
   );
   await expectUnclippedFocusTreatment(
-    page.getByRole("textbox", { name: "Source Link" }),
+    page.getByRole("textbox", { name: "Link", exact: true }),
   );
   await expectUnclippedFocusTreatment(page.getByPlaceholder("Add tag…"));
   await expectUnclippedFocusTreatment(

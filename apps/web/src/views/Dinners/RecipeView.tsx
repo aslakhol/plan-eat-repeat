@@ -15,6 +15,7 @@ type Props = {
   headerLabel?: string;
   headerAction?: ReactNode;
   footerActions?: ReactNode;
+  footerClassName?: string;
 };
 
 const hasAmounts = (part: DinnerWithRecipe["parts"][number]) =>
@@ -28,6 +29,7 @@ export const RecipeView = ({
   headerLabel,
   headerAction,
   footerActions,
+  footerClassName,
 }: Props) => {
   const hasRecipe = dinner.parts.length > 0;
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -277,7 +279,12 @@ export const RecipeView = ({
         ))}
 
       {footerActions && (
-        <footer className="sticky bottom-0 z-10 -mx-1 mt-8 grid grid-cols-2 gap-2 bg-white py-2">
+        <footer
+          className={cn(
+            "sticky bottom-0 z-10 -mx-1 mt-8 grid grid-cols-2 gap-2 bg-white py-2",
+            footerClassName,
+          )}
+        >
           {footerActions}
         </footer>
       )}

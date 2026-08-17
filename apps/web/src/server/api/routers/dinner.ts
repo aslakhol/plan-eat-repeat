@@ -25,6 +25,11 @@ import {
 import { acquireYouTubeVideoTitle } from "~/server/recipes/youtube";
 import { planDinnerMerge } from "~/server/merge-dinners";
 import { type PrismaClient } from "@planeatrepeat/db";
+import {
+  PublicationRateLimitError,
+  publishDinner,
+} from "~/server/published-dinner";
+import { env } from "~/env";
 
 const householdImportInstructions = async (
   db: PrismaClient,
@@ -107,6 +112,41 @@ const toImportTRPCError = (error: unknown) => {
 };
 
 export const dinnerRouter = createTRPCRouter({
+  publish: protectedProcedureWithHousehold
+    .input(z.object({ dinnerId: z.number().int() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const dinner = await publishDinner(
+          ctx.db,
+          ctx.householdId,
+          input.dinnerId,
+        );
+        if (!dinner?.publicSlug || !dinner.publishedAt) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Dinner not found",
+          });
+        }
+
+        return {
+          publicSlug: dinner.publicSlug,
+          publishedAt: dinner.publishedAt,
+          publicUrl: new URL(
+            `/d/${dinner.publicSlug}`,
+            env.NEXT_PUBLIC_APP_URL,
+          ).toString(),
+        };
+      } catch (error) {
+        if (error instanceof PublicationRateLimitError) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    }),
+
   tags: publicProcedure.query(async ({ ctx }) => {
     const tags = await ctx.db.tag.findMany({
       orderBy: { value: "asc" },

@@ -5,11 +5,13 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/invite/:inviteId",
   "/onboarding",
+  "/d/:publicSlug",
 ]);
 const shouldNotRedirect = createRouteMatcher([
   "/settings",
   "/invite/:inviteId",
   "/onboarding",
+  "/d/:publicSlug",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

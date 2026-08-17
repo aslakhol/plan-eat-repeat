@@ -50,7 +50,7 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
     await quickAddDinner(page, originalName);
     await page.getByRole("button", { name: "Edit" }).click();
     await page
-      .getByRole("textbox", { name: "Source Link" })
+      .getByRole("textbox", { name: "Link", exact: true })
       .fill(originalSourceLink);
     await page.getByRole("button", { name: "Save dinner" }).click();
     await expect(page).toHaveURL(/\/dinners\/\d+$/);
@@ -84,7 +84,7 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
       page.getByText(`The source calls it “${importedName}”`),
     ).toBeVisible();
     await expect(
-      page.getByText(`The source link is “${importedSourceLink}”`),
+      page.getByText(`The imported link is “${importedSourceLink}”`),
     ).toBeVisible();
     await page.getByRole("button", { name: "Use theirs" }).first().click();
     await page.getByRole("button", { name: "Keep our link ✓" }).click();
@@ -92,7 +92,7 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
       importedName,
     );
     await expect(
-      page.getByRole("textbox", { name: "Source Link" }),
+      page.getByRole("textbox", { name: "Link", exact: true }),
     ).toHaveValue(originalSourceLink);
     await expect(
       page.getByRole("spinbutton", { name: "Number of servings" }),
@@ -116,7 +116,7 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
       importedName,
     );
     await expect(
-      page.getByRole("textbox", { name: "Source Link" }),
+      page.getByRole("textbox", { name: "Link", exact: true }),
     ).toHaveValue(originalSourceLink);
     await expect(
       page.getByRole("spinbutton", { name: "Number of servings" }),

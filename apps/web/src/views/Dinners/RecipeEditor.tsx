@@ -222,7 +222,7 @@ export const RecipeEditor = ({
           <Button
             type="button"
             variant="ghost"
-            className="text-primary h-auto shrink-0 px-1 py-1 text-xs font-bold hover:bg-transparent hover:text-primary"
+            className="text-primary hover:text-primary h-auto shrink-0 px-1 py-1 text-xs font-bold hover:bg-transparent"
             onClick={cancel}
           >
             Cancel
@@ -364,7 +364,7 @@ export const RecipeEditor = ({
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <FieldLabel htmlFor="recipe-link">Source Link</FieldLabel>
+                  <FieldLabel htmlFor="recipe-link">Link</FieldLabel>
                   <Input
                     {...form.register("link")}
                     id="recipe-link"
@@ -382,7 +382,7 @@ export const RecipeEditor = ({
               {sourceLinkAlternative && (
                 <div className="mt-3 space-y-3 rounded-lg bg-[hsl(40_33%_95%)] p-3">
                   <p className="break-all text-sm">
-                    The source link is “
+                    The imported link is “
                     <span className="font-semibold">
                       {sourceLinkAlternative}
                     </span>

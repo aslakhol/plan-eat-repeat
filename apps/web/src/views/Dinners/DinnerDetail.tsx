@@ -24,6 +24,7 @@ import {
 import { useDinnerWakeLock } from "~/hooks/use-keep-screen-awake";
 import { DinnerMergeSheet } from "./DinnerMergeSheet";
 import { DetailsMenu } from "~/components/ui/details-menu";
+import { ShareDinnerView } from "./ShareDinnerView";
 
 export const DinnerDetail = () => {
   const router = useRouter();
@@ -33,6 +34,7 @@ export const DinnerDetail = () => {
   const [editing, setEditing] = useState(false);
   const [planning, setPlanning] = useState(false);
   const [merging, setMerging] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const actionMenuRef = useRef<HTMLDetailsElement>(null);
   const navigation = parseEditorNavigation(router.query);
@@ -192,6 +194,10 @@ export const DinnerDetail = () => {
     );
   }
 
+  if (sharing) {
+    return <ShareDinnerView dinner={dinner} onBack={() => setSharing(false)} />;
+  }
+
   const historyLabel = summary
     ? summary.lastCookedDate
       ? `Last cooked ${formatDinnerSummaryLabel({
@@ -285,8 +291,17 @@ export const DinnerDetail = () => {
             >
               Edit
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="bg-white"
+              onClick={() => setSharing(true)}
+            >
+              Share
+            </Button>
           </>
         }
+        footerClassName="grid-cols-[1.4fr_1fr_1fr]"
       />
       <DinnerPlanningSheet
         dinner={dinner}

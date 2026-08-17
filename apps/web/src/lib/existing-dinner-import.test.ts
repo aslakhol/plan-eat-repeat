@@ -67,7 +67,7 @@ void test("URL import replaces Recipe content but preserves Household knowledge"
   );
 });
 
-void test("photo and text imports preserve an existing Source Link", () => {
+void test("photo and text imports preserve an existing Link", () => {
   const result = applyExistingDinnerImport(existing, {
     name: "Taco night",
     recipe: importedRecipe,
@@ -78,7 +78,7 @@ void test("photo and text imports preserve an existing Source Link", () => {
   assert.equal(result.importedSourceLinkAlternative, null);
 });
 
-void test("an empty existing Source Link silently accepts an imported URL", () => {
+void test("an empty existing Link silently accepts an imported URL", () => {
   const result = applyExistingDinnerImport(
     { ...existing, link: "" },
     {
