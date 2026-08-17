@@ -44,6 +44,8 @@ import {
   type ExistingDinnerRecipeImport,
 } from "~/lib/existing-dinner-import";
 import { editorIngredientValues } from "~/lib/recipe-editor-values";
+import { isChickenDinnerTitle, saveDinnerLabel } from "~/lib/chicken-dinner";
+import { launchChickenConfetti } from "~/lib/chicken-confetti";
 
 // Amounts are edited as text so comma decimals like "1,5" can be typed;
 // parseAmount converts back to a number on save.
@@ -153,6 +155,8 @@ export const RecipeEditor = ({
     control: form.control,
     name: "recipe.parts",
   });
+  const saveButtonRef = useRef<HTMLButtonElement>(null);
+  const dinnerName = form.watch("name");
   const watchedParts = form.watch("recipe.parts");
   const servings = form.watch("recipe.servings");
   const multiMode =
@@ -198,10 +202,17 @@ export const RecipeEditor = ({
     }
   };
 
+  const save = (values: RecipeEditorValues) => {
+    if (isChickenDinnerTitle(values.name)) {
+      launchChickenConfetti(saveButtonRef.current);
+    }
+    onSave(values);
+  };
+
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSave)}
+        onSubmit={form.handleSubmit(save)}
         className="mx-auto w-full max-w-[640px] pb-[calc(7rem+env(safe-area-inset-bottom))]"
       >
         <StickyHeaderCard className="sticky top-0 z-20 mb-5 flex min-h-12 items-center gap-2">
@@ -468,9 +479,14 @@ export const RecipeEditor = ({
                 {submitError}
               </p>
             )}
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <Button
+              ref={saveButtonRef}
+              type="submit"
+              className="w-full"
+              disabled={isPending}
+            >
               {isPending && <Loader2 className="animate-spin" />}
-              Save dinner
+              {saveDinnerLabel(dinnerName)}
             </Button>
           </div>
         </div>
