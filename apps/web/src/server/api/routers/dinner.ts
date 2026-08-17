@@ -36,6 +36,7 @@ import { env } from "~/env";
 import {
   findSavedPublishedDinner,
   PublishedDinnerSaveRateLimitError,
+  savePublishedDinner,
   savePublishedDinnerForUser,
 } from "~/server/save-published-dinner";
 import { clerkClient } from "@clerk/nextjs/server";
@@ -149,27 +150,46 @@ export const dinnerRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const clerkUser = await (
-          await clerkClient()
-        ).users.getUser(ctx.auth.userId);
-        const result = await savePublishedDinnerForUser(
-          ctx.db,
-          {
-            id: clerkUser.id,
-            firstName: clerkUser.firstName,
-            lastName: clerkUser.lastName,
-            imageUrl: clerkUser.imageUrl,
-          },
-          input.publicSlug,
-          { forceCopy: input.forceCopy },
-        );
-        if (!result) {
+        const membership = await ctx.db.membership.findUnique({
+          where: { userId: ctx.auth.userId },
+          select: { householdId: true },
+        });
+        let householdId = membership?.householdId;
+        let result: Awaited<ReturnType<typeof savePublishedDinner>>;
+        if (householdId) {
+          result = await savePublishedDinner(
+            ctx.db,
+            householdId,
+            input.publicSlug,
+            { forceCopy: input.forceCopy },
+          );
+        } else {
+          const clerkUser = await (
+            await clerkClient()
+          ).users.getUser(ctx.auth.userId);
+          const bootstrapResult = await savePublishedDinnerForUser(
+            ctx.db,
+            {
+              id: clerkUser.id,
+              firstName: clerkUser.firstName,
+              lastName: clerkUser.lastName,
+              imageUrl: clerkUser.imageUrl,
+            },
+            input.publicSlug,
+            { forceCopy: input.forceCopy },
+          );
+          householdId = bootstrapResult?.householdId;
+          result = bootstrapResult;
+        }
+        if (!result || !householdId) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "This Dinner is no longer shared",
           });
         }
-        await updateClerkHouseholdMetadata(ctx.auth.userId, result.householdId);
+        if (ctx.auth.sessionClaims?.metadata.householdId !== householdId) {
+          await updateClerkHouseholdMetadata(ctx.auth.userId, householdId);
+        }
         return {
           dinner: result.dinner,
           createdNewCopy: result.createdNewCopy,
