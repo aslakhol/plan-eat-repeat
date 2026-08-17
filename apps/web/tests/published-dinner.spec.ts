@@ -17,6 +17,8 @@ const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL is required for browser tests");
 const testDb = createPrismaClient(databaseUrl);
 
+test.afterAll(async () => testDb.$disconnect());
+
 test("a Cookbook member publishes a Dinner that anyone can read", async ({
   browser,
   page,
