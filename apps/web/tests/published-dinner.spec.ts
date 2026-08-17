@@ -322,6 +322,19 @@ test("the active Share drawer shows the current distinct-Household Save Count", 
       page.getByRole("heading", { name: "Share dinner" }),
     ).toBeVisible();
   };
+  const expectReopenedSaveCount = async (
+    dinnerId: number,
+    saveCount: number,
+  ) => {
+    await reopenShareDrawer(dinnerId);
+    if (saveCount === 0) {
+      await expect(page.getByText(/saved by \d+ people/)).toHaveCount(0);
+      return;
+    }
+    await expect(
+      page.getByText(`saved by ${saveCount} people`, { exact: true }),
+    ).toBeVisible();
+  };
   const useHouseholdForMutation = async (
     householdId: string,
     mutation: () => Promise<{ status: number; body: string }>,
@@ -415,20 +428,14 @@ test("the active Share drawer shows the current distinct-Household Save Count", 
       () => mutateDinner(page, "delete", { dinnerId: firstCopy!.id }),
     );
     expect(firstDelete.status).toBe(200);
-    await reopenShareDrawer(source.id);
-    await expect(
-      page.getByText("saved by 2 people", { exact: true }),
-    ).toBeVisible();
+    await expectReopenedSaveCount(source.id, 2);
 
     const lastFirstDestinationDelete = await useHouseholdForMutation(
       firstDestination!.id,
       () => mutateDinner(page, "delete", { dinnerId: secondCopy!.id }),
     );
     expect(lastFirstDestinationDelete.status).toBe(200);
-    await reopenShareDrawer(source.id);
-    await expect(
-      page.getByText("saved by 1 people", { exact: true }),
-    ).toBeVisible();
+    await expectReopenedSaveCount(source.id, 1);
 
     await page.getByRole("button", { name: "Stop sharing" }).click();
     await expect(
@@ -446,8 +453,7 @@ test("the active Share drawer shows the current distinct-Household Save Count", 
       }),
     );
     expect(merge.status).toBe(200);
-    await reopenShareDrawer(source.id);
-    await expect(page.getByText(/saved by \d+ people/)).toHaveCount(0);
+    await expectReopenedSaveCount(source.id, 0);
   } finally {
     if (sourceHouseholdId) {
       await testDb.membership.update({

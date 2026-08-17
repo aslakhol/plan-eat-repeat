@@ -41,6 +41,7 @@ export const ShareDinnerView = ({
     { dinnerId: dinner.id },
     { enabled: publication !== null },
   );
+  const saveCount = saveCountQuery.data?.saveCount ?? 0;
 
   useEffect(() => {
     setCanShare(typeof navigator.share === "function");
@@ -144,9 +145,9 @@ export const ShareDinnerView = ({
               Shared since{" "}
               {formatPublicationDate(publication.publishedAt.toISOString())}
             </p>
-            {(saveCountQuery.data?.saveCount ?? 0) > 0 && (
+            {saveCount > 0 && (
               <p className="text-muted-foreground mt-0.5 text-[11.5px] font-semibold">
-                saved by {saveCountQuery.data!.saveCount} people
+                saved by {saveCount} people
               </p>
             )}
           </div>
