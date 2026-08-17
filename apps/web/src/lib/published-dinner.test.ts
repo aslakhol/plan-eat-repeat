@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createElement } from "react";
+import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { type PrismaClient } from "@planeatrepeat/db";
@@ -205,10 +205,14 @@ void test("Recipe JSON-LD serialization safely escapes user-authored content", (
   assert.equal((JSON.parse(serialized) as { name: string }).name, dinner.name);
 });
 
-const renderPublishedDinner = (overrides: Partial<PublishedDinner>) =>
+const renderPublishedDinner = (
+  overrides: Partial<PublishedDinner>,
+  saveAction?: ReactNode,
+) =>
   renderToStaticMarkup(
     createElement(PublishedDinnerView, {
       upsell: "Test upsell.",
+      saveAction,
       dinner: {
         publicSlug: "dinner-public1",
         publishedAt: "2026-08-17T12:00:00.000Z",
@@ -223,6 +227,15 @@ const renderPublishedDinner = (overrides: Partial<PublishedDinner>) =>
       },
     }),
   );
+
+void test("Published Dinner places the primary save action on desktop and mobile surfaces", () => {
+  const html = renderPublishedDinner(
+    { name: "Toast night" },
+    createElement("button", null, "Add to my cookbook"),
+  );
+
+  assert.equal(html.match(/Add to my cookbook/g)?.length, 3);
+});
 
 for (const shape of [
   {

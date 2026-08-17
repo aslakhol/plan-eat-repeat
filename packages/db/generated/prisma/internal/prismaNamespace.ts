@@ -1203,7 +1203,8 @@ export const DinnerScalarFieldEnum = {
   favourite: 'favourite',
   servings: 'servings',
   publicSlug: 'publicSlug',
-  publishedAt: 'publishedAt'
+  publishedAt: 'publishedAt',
+  sourceDinnerId: 'sourceDinnerId'
 } as const
 
 export type DinnerScalarFieldEnum = (typeof DinnerScalarFieldEnum)[keyof typeof DinnerScalarFieldEnum]

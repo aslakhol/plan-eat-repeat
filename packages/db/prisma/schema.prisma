@@ -11,24 +11,26 @@ datasource db {
 }
 
 model Dinner {
-    id          Int          @id @default(autoincrement())
-    name        String
-    tags        Tag[]
-    createdAt   DateTime     @default(now())
-    updatedAt   DateTime     @updatedAt
-    Plan        Plan[]
-    link        String?
-    notes       String?
-    Household   Household    @relation(fields: [householdId], references: [id])
-    householdId String
-    favourite   Boolean      @default(false)
-    servings    Int?
-    parts       RecipePart[]
-    publicSlug  String?      @unique
-    publishedAt DateTime?
+    id             Int          @id @default(autoincrement())
+    name           String
+    tags           Tag[]
+    createdAt      DateTime     @default(now())
+    updatedAt      DateTime     @updatedAt
+    Plan           Plan[]
+    link           String?
+    notes          String?
+    Household      Household    @relation(fields: [householdId], references: [id])
+    householdId    String
+    favourite      Boolean      @default(false)
+    servings       Int?
+    parts          RecipePart[]
+    publicSlug     String?      @unique
+    publishedAt    DateTime?
+    sourceDinnerId Int?
 
     @@index([name])
     @@index([publishedAt])
+    @@index([sourceDinnerId])
 }
 
 model RecipePart {

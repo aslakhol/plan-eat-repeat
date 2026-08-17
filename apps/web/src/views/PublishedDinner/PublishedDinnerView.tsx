@@ -1,5 +1,5 @@
 import { ExternalLink } from "lucide-react";
-import React from "react";
+import React, { type ReactNode } from "react";
 
 import { formatAmount, sourceLabel } from "@planeatrepeat/shared";
 
@@ -153,9 +153,11 @@ const UpsellCopy = ({ upsell }: { upsell: string }) => (
 export const PublishedDinnerView = ({
   dinner,
   upsell,
+  saveAction,
 }: {
   dinner: PublishedDinner;
   upsell: string;
+  saveAction?: ReactNode;
 }) => {
   const hasIngredients = dinner.parts.some(
     (part) => part.ingredients.length > 0,
@@ -167,10 +169,11 @@ export const PublishedDinnerView = ({
 
   return (
     <div className="min-h-screen bg-[#f2efe8] md:bg-[#faf8f5]">
-      <header className="border-border hidden h-[82px] items-center border-b px-8 md:flex">
+      <header className="border-border hidden h-[82px] items-center justify-between border-b px-8 md:flex">
         <span className="text-primary font-serif text-2xl">
           Plan Eat Repeat
         </span>
+        {saveAction}
       </header>
 
       <main className="mx-auto max-w-[824px] px-4 pb-8 pt-7 md:px-8 md:py-12">
@@ -201,6 +204,8 @@ export const PublishedDinnerView = ({
               )}
             </div>
           )}
+
+          {saveAction && <div className="mt-5 md:hidden">{saveAction}</div>}
 
           {hasLinkOrServings && (
             <div className="text-muted-foreground mt-4 flex flex-wrap items-center gap-2 text-sm font-medium">
@@ -244,8 +249,9 @@ export const PublishedDinnerView = ({
       </main>
 
       <footer className="border-border hidden border-t bg-[#f7f4ee] md:block">
-        <div className="mx-auto max-w-[824px] px-8 py-5">
+        <div className="mx-auto flex max-w-[824px] items-center justify-between gap-6 px-8 py-5">
           <UpsellCopy upsell={upsell} />
+          {saveAction}
         </div>
       </footer>
     </div>

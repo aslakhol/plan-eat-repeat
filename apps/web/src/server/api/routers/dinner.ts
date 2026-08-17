@@ -32,6 +32,11 @@ import {
 } from "~/server/published-dinner";
 import { publishedDinnerUrl } from "~/lib/published-dinner";
 import { env } from "~/env";
+import {
+  findSavedPublishedDinner,
+  PublishedDinnerSaveRateLimitError,
+  savePublishedDinner,
+} from "~/server/save-published-dinner";
 
 const householdImportInstructions = async (
   db: PrismaClient,
@@ -114,6 +119,49 @@ const toImportTRPCError = (error: unknown) => {
 };
 
 export const dinnerRouter = createTRPCRouter({
+  publishedSaveStatus: protectedProcedureWithHousehold
+    .input(z.object({ publicSlug: z.string().min(1) }))
+    .query(async ({ ctx, input }) => ({
+      dinner: await findSavedPublishedDinner(
+        ctx.db,
+        ctx.householdId,
+        input.publicSlug,
+      ),
+    })),
+
+  savePublished: protectedProcedureWithHousehold
+    .input(
+      z.object({
+        publicSlug: z.string().min(1),
+        forceCopy: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const result = await savePublishedDinner(
+          ctx.db,
+          ctx.householdId,
+          input.publicSlug,
+          { forceCopy: input.forceCopy },
+        );
+        if (!result) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "This Dinner is no longer shared",
+          });
+        }
+        return result;
+      } catch (error) {
+        if (error instanceof PublishedDinnerSaveRateLimitError) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    }),
+
   publish: protectedProcedureWithHousehold
     .input(z.object({ dinnerId: z.number().int() }))
     .mutation(async ({ ctx, input }) => {

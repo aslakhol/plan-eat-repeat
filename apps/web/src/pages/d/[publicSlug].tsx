@@ -11,7 +11,7 @@ import {
 import { type NextPageWithLayout } from "~/pages/_app";
 import { db } from "~/server/db";
 import { findPublishedDinner } from "~/server/published-dinner";
-import { PublishedDinnerView } from "~/views/PublishedDinner/PublishedDinnerView";
+import { PublishedDinnerExperience } from "~/views/PublishedDinner/PublishedDinnerExperience";
 
 type Props = {
   dinner: PublishedDinner | null;
@@ -81,7 +81,7 @@ const PublishedDinnerPage: NextPageWithLayout<Props> = ({
           />
         )}
       </Head>
-      <PublishedDinnerView dinner={dinner} upsell={upsell} />
+      <PublishedDinnerExperience dinner={dinner} upsell={upsell} />
     </>
   );
 };

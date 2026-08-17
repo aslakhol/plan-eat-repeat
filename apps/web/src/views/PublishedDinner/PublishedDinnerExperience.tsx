@@ -1,0 +1,169 @@
+import { SignInButton, useAuth } from "@clerk/nextjs";
+import { startOfToday } from "date-fns";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useState } from "react";
+
+import {
+  ResponsiveModal,
+  ResponsiveModalContent,
+  ResponsiveModalDescription,
+  ResponsiveModalTitle,
+} from "~/components/ResponsiveModal";
+import { Button } from "~/components/ui/button";
+import { toast } from "~/components/ui/use-toast";
+import { type PublishedDinner } from "~/lib/published-dinner";
+import { api } from "~/utils/api";
+import { DinnerPlanningSheet } from "~/views/Dinners/DinnerPlanningSheet";
+import { PublishedDinnerView } from "./PublishedDinnerView";
+
+type SavedDinner = { id: number; name: string };
+
+export const PublishedDinnerExperience = ({
+  dinner,
+  upsell,
+}: {
+  dinner: PublishedDinner;
+  upsell: string;
+}) => {
+  const router = useRouter();
+  const { isLoaded, isSignedIn } = useAuth();
+  const [today] = useState(startOfToday);
+  const [planning, setPlanning] = useState(false);
+  const [saveResult, setSaveResult] = useState<{
+    dinner: SavedDinner;
+    created: boolean;
+  } | null>(null);
+  const [saveResultOpen, setSaveResultOpen] = useState(false);
+
+  const statusQuery = api.dinner.publishedSaveStatus.useQuery(
+    { publicSlug: dinner.publicSlug },
+    { enabled: isSignedIn === true },
+  );
+  const saveMutation = api.dinner.savePublished.useMutation({
+    onSuccess: async (result) => {
+      setSaveResult(result);
+      setSaveResultOpen(true);
+      await statusQuery.refetch();
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Could not save Dinner",
+        description: error.message,
+      });
+    },
+  });
+
+  const detectedDinner = saveResult?.dinner ?? statusQuery.data?.dinner;
+  const created = saveResult?.created ?? false;
+  const actionLabel = saveMutation.isPending
+    ? "Saving…"
+    : detectedDinner
+      ? created
+        ? "Saved to your cookbook"
+        : "Already in your cookbook"
+      : "Add to my cookbook";
+
+  const actionButton = (
+    <Button
+      type="button"
+      size="lg"
+      className="w-full shrink-0 md:w-auto"
+      disabled={!isLoaded || saveMutation.isPending}
+      onClick={() => {
+        if (!isSignedIn) return;
+        if (detectedDinner) {
+          setSaveResultOpen(true);
+          return;
+        }
+        saveMutation.mutate({ publicSlug: dinner.publicSlug });
+      }}
+    >
+      {actionLabel}
+    </Button>
+  );
+
+  const saveAction =
+    isLoaded && !isSignedIn ? (
+      <SignInButton mode="modal">{actionButton}</SignInButton>
+    ) : (
+      actionButton
+    );
+
+  return (
+    <>
+      <PublishedDinnerView
+        dinner={dinner}
+        upsell={upsell}
+        saveAction={saveAction}
+      />
+
+      <ResponsiveModal open={saveResultOpen} onOpenChange={setSaveResultOpen}>
+        <ResponsiveModalContent className="h-auto gap-4 bg-white px-5 pb-6 md:max-w-[480px]">
+          <ResponsiveModalTitle className="text-center font-serif text-2xl font-normal">
+            {created ? "Saved to your cookbook" : "Already in your cookbook"}
+          </ResponsiveModalTitle>
+          <ResponsiveModalDescription className="text-center">
+            {created
+              ? `Your copy. ${dinner.householdName} won’t see your changes.`
+              : "Open the Dinner you already saved, or deliberately save another copy."}
+          </ResponsiveModalDescription>
+
+          {created ? (
+            <div className="grid gap-2">
+              <Button
+                type="button"
+                size="lg"
+                onClick={() => {
+                  setSaveResultOpen(false);
+                  setPlanning(true);
+                }}
+              >
+                Plan it
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link href="/dinners">Open my cookbook</Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              <Button asChild size="lg" variant="outline">
+                <Link href={`/dinners/${detectedDinner?.id ?? ""}`}>
+                  Open it
+                </Link>
+              </Button>
+              <Button
+                type="button"
+                size="lg"
+                variant="outline"
+                disabled={saveMutation.isPending}
+                onClick={() =>
+                  saveMutation.mutate({
+                    publicSlug: dinner.publicSlug,
+                    forceCopy: true,
+                  })
+                }
+              >
+                {saveMutation.isPending ? "Saving…" : "Save a copy"}
+              </Button>
+            </div>
+          )}
+        </ResponsiveModalContent>
+      </ResponsiveModal>
+
+      {detectedDinner && (
+        <DinnerPlanningSheet
+          dinner={detectedDinner}
+          open={planning}
+          onOpenChange={setPlanning}
+          onPlanned={() => {
+            setPlanning(false);
+            void router.push("/");
+          }}
+          today={today}
+        />
+      )}
+    </>
+  );
+};
