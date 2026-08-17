@@ -1,10 +1,21 @@
+import { createRequire } from "node:module";
 import { expect, test } from "@playwright/test";
+
+import { createPrismaClient } from "@planeatrepeat/db";
 
 import {
   deleteDinnerIfPresent,
   ensureSignedIn,
   quickAddDinner,
 } from "./capture-support";
+
+const { loadEnvConfig } = createRequire(import.meta.url)(
+  "@next/env",
+) as typeof import("@next/env");
+loadEnvConfig(process.cwd());
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error("DATABASE_URL is required for browser tests");
+const testDb = createPrismaClient(databaseUrl);
 
 test("a Cookbook member publishes a Dinner that anyone can read", async ({
   browser,
@@ -69,5 +80,46 @@ test("a Cookbook member publishes a Dinner that anyone can read", async ({
   } finally {
     await anonymousContext.close();
     await deleteDinnerIfPresent(page, cleanupName);
+  }
+});
+
+test("the publish API cannot expose another Household's Dinner", async ({
+  page,
+}) => {
+  await ensureSignedIn(page);
+  const uniqueId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const foreignHousehold = await testDb.household.create({
+    data: {
+      name: "Foreign Household",
+      slug: `foreign-household-${uniqueId}`,
+      Dinners: { create: { name: "Foreign private Dinner" } },
+    },
+    include: { Dinners: true },
+  });
+  const foreignDinner = foreignHousehold.Dinners[0];
+  if (!foreignDinner) throw new Error("Foreign Dinner was not created");
+
+  try {
+    const response = await page.evaluate(async (dinnerId) => {
+      const result = await fetch("/api/trpc/dinner.publish?batch=1", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ 0: { json: { dinnerId } } }),
+      });
+      return { status: result.status, body: await result.text() };
+    }, foreignDinner.id);
+
+    expect(response.status).toBeGreaterThanOrEqual(400);
+    expect(response.body).toContain('"code":"NOT_FOUND"');
+    await expect
+      .poll(async () =>
+        testDb.dinner.findUnique({ where: { id: foreignDinner.id } }),
+      )
+      .toMatchObject({ publicSlug: null, publishedAt: null });
+  } finally {
+    await testDb.dinner.deleteMany({
+      where: { householdId: foreignHousehold.id },
+    });
+    await testDb.household.delete({ where: { id: foreignHousehold.id } });
   }
 });
