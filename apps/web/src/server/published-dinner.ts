@@ -11,6 +11,13 @@ import {
 const PUBLICATION_BURST_WINDOW_MS = 10_000;
 const PUBLICATION_BURST_LIMIT = 20;
 
+const publishedDinnerIdentitySelect = {
+  id: true,
+  name: true,
+  publicSlug: true,
+  publishedAt: true,
+};
+
 export class PublicationRateLimitError extends Error {}
 
 const publishedDinnerInclude = {
@@ -51,16 +58,15 @@ export const publishDinner = async (
   db.$transaction(async (tx) => {
     const dinner = await tx.dinner.findUnique({
       where: { id: dinnerId, householdId },
-      select: {
-        id: true,
-        name: true,
-        publicSlug: true,
-        publishedAt: true,
-      },
+      select: publishedDinnerIdentitySelect,
     });
 
     if (!dinner) return null;
     if (dinner.publicSlug && dinner.publishedAt) return dinner;
+
+    // Serialize the check and update for one Household so concurrent requests
+    // cannot all observe the same pre-publication count.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${householdId}))`;
 
     const recentPublicationCount = await tx.dinner.count({
       where: {
@@ -80,12 +86,7 @@ export const publishDinner = async (
       return tx.dinner.update({
         where: { id: dinner.id, householdId },
         data: { publishedAt: now },
-        select: {
-          id: true,
-          name: true,
-          publicSlug: true,
-          publishedAt: true,
-        },
+        select: publishedDinnerIdentitySelect,
       });
     }
 
@@ -104,11 +105,6 @@ export const publishDinner = async (
 
     return tx.dinner.findUnique({
       where: { id: dinner.id, householdId },
-      select: {
-        id: true,
-        name: true,
-        publicSlug: true,
-        publishedAt: true,
-      },
+      select: publishedDinnerIdentitySelect,
     });
   });

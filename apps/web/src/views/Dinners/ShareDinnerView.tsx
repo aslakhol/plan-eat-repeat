@@ -5,14 +5,17 @@ import { type DinnerWithRecipe } from "@planeatrepeat/shared";
 
 import { Button } from "~/components/ui/button";
 import { toast } from "~/components/ui/use-toast";
+import { env } from "~/env";
+import {
+  publishedDinnerPath,
+  publishedDinnerUrl,
+} from "~/lib/published-dinner";
 import { api } from "~/utils/api";
 
 type Publication = {
   publicSlug: string;
   publicUrl: string;
 };
-
-const publicHref = (publicSlug: string) => `/d/${publicSlug}`;
 
 export const ShareDinnerView = ({
   dinner,
@@ -25,7 +28,10 @@ export const ShareDinnerView = ({
     dinner.publicSlug && dinner.publishedAt
       ? {
           publicSlug: dinner.publicSlug,
-          publicUrl: publicHref(dinner.publicSlug),
+          publicUrl: publishedDinnerUrl(
+            dinner.publicSlug,
+            env.NEXT_PUBLIC_APP_URL,
+          ),
         }
       : null,
   );
@@ -70,7 +76,7 @@ export const ShareDinnerView = ({
           </p>
           <Button asChild size="lg" className="w-full">
             <a
-              href={publicHref(publication.publicSlug)}
+              href={publishedDinnerPath(publication.publicSlug)}
               target="_blank"
               rel="noopener noreferrer"
             >

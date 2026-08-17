@@ -29,6 +29,7 @@ import {
   PublicationRateLimitError,
   publishDinner,
 } from "~/server/published-dinner";
+import { publishedDinnerUrl } from "~/lib/published-dinner";
 import { env } from "~/env";
 
 const householdImportInstructions = async (
@@ -131,10 +132,10 @@ export const dinnerRouter = createTRPCRouter({
         return {
           publicSlug: dinner.publicSlug,
           publishedAt: dinner.publishedAt,
-          publicUrl: new URL(
-            `/d/${dinner.publicSlug}`,
+          publicUrl: publishedDinnerUrl(
+            dinner.publicSlug,
             env.NEXT_PUBLIC_APP_URL,
-          ).toString(),
+          ),
         };
       } catch (error) {
         if (error instanceof PublicationRateLimitError) {

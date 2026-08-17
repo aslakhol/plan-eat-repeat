@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import React from "react";
 
 import { formatAmount, sourceLabel } from "@planeatrepeat/shared";
 

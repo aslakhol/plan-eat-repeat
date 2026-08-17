@@ -60,6 +60,12 @@ test("a Cookbook member publishes a Dinner that anyone can read", async ({
       anonymousPage.getByText("Now with live public notes."),
     ).toBeVisible();
     expect(new URL(anonymousPage.url()).pathname).toBe(publicPath);
+
+    await page.goto(publicPath!);
+    await expect(
+      page.getByRole("heading", { name: updatedDinnerName }),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "Cookbook" })).toHaveCount(0);
   } finally {
     await anonymousContext.close();
     await deleteDinnerIfPresent(page, cleanupName);

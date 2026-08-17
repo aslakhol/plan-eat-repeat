@@ -75,6 +75,11 @@ export const publicSlugForDinner = (name: string, publicId: string) => {
   return `${readableName || "dinner"}-${publicId}`;
 };
 
+export const publishedDinnerPath = (publicSlug: string) => `/d/${publicSlug}`;
+
+export const publishedDinnerUrl = (publicSlug: string, appUrl: string) =>
+  new URL(publishedDinnerPath(publicSlug), appUrl).toString();
+
 const publicationDateFormatter = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
   month: "long",
