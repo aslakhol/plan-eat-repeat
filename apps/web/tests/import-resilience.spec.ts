@@ -1,6 +1,17 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
 
 import { ensureSignedIn } from "./capture-support";
+
+const expectBoundedDesktopDialog = async (dialog: Locator) => {
+  await expect(dialog).toBeVisible();
+  const bounds = await dialog.boundingBox();
+  expect(bounds).not.toBeNull();
+  expect(bounds!.x).toBeGreaterThanOrEqual(0);
+  expect(bounds!.y).toBeGreaterThanOrEqual(0);
+  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(1280);
+  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(800);
+  expect(bounds!.width).toBeLessThanOrEqual(560);
+};
 
 test("import empty, loading, error, no-match, and missing clipboard states stay recoverable", async ({
   page,
@@ -72,4 +83,49 @@ test("import empty, loading, error, no-match, and missing clipboard states stay 
   ).toBeVisible();
   await page.getByRole("button", { name: "Back" }).click();
   await expect(urlInput).toHaveValue(unreachableUrl);
+});
+
+test("desktop import progress and errors stay in a bounded, recoverable dialog", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await ensureSignedIn(page);
+
+  let releaseImportRequest: () => void = () => undefined;
+  const importRequestGate = new Promise<void>((resolve) => {
+    releaseImportRequest = resolve;
+  });
+  await page.route("**/api/trpc/dinner.importFromUrl**", async (route) => {
+    await importRequestGate;
+    await route.abort();
+  });
+
+  await page.getByRole("button", { name: "Add Dinner" }).click();
+  await page.getByRole("button", { name: "Link" }).click();
+  const urlInput = page.getByRole("textbox", { name: "Recipe URL" });
+  await urlInput.fill("https://example.com/recipe");
+  await page.getByRole("button", { name: "Import recipe" }).click();
+
+  const progressDialog = page.getByRole("dialog", {
+    name: "Reading the recipe",
+  });
+  await expectBoundedDesktopDialog(progressDialog);
+
+  await page.getByRole("button", { name: "Cancel" }).click();
+  releaseImportRequest();
+  await expect(urlInput).toHaveValue("https://example.com/recipe");
+
+  await page.unroute("**/api/trpc/dinner.importFromUrl**");
+  await page.route("**/api/trpc/dinner.importFromUrl**", (route) =>
+    route.abort(),
+  );
+  await page.getByRole("button", { name: "Import recipe" }).click();
+  const errorDialog = page.getByRole("dialog", {
+    name: "Couldn't finish the recipe",
+  });
+  await expectBoundedDesktopDialog(errorDialog);
+  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Write it myself" }),
+  ).toBeVisible();
 });
