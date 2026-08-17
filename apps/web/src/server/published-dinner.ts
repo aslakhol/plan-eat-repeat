@@ -108,3 +108,20 @@ export const publishDinner = async (
       select: publishedDinnerIdentitySelect,
     });
   });
+
+export const stopDinnerPublication = async (
+  db: PrismaClient,
+  householdId: string,
+  dinnerId: number,
+) => {
+  const stopped = await db.dinner.updateMany({
+    where: {
+      id: dinnerId,
+      householdId,
+      publishedAt: { not: null },
+    },
+    data: { publishedAt: null },
+  });
+
+  return stopped.count === 1;
+};

@@ -13,7 +13,10 @@ import {
   publicSlugForDinner,
   toPublishedDinner,
 } from "./published-dinner";
-import { publishDinner } from "~/server/published-dinner";
+import {
+  publishDinner,
+  stopDinnerPublication,
+} from "~/server/published-dinner";
 import { PublishedDinnerView } from "~/views/PublishedDinner/PublishedDinnerView";
 
 void test("Published Dinner projection exposes cooking content without Household activity", () => {
@@ -290,4 +293,35 @@ void test("restarting publication serializes the limit check and keeps the slug"
   assert.equal(result?.publicSlug, "original-name-public1");
   assert.equal(result?.publishedAt, now);
   assert.deepEqual(trace, ["lock", "count", "update"]);
+});
+
+void test("stopping publication preserves the stable Link identity", async () => {
+  const transaction = {
+    dinner: {
+      updateMany: ({
+        where,
+        data,
+      }: {
+        where: {
+          id: number;
+          householdId: string;
+          publishedAt: { not: null };
+        };
+        data: { publishedAt: null };
+      }) => {
+        assert.deepEqual(where, {
+          id: 82,
+          householdId: "household-a",
+          publishedAt: { not: null },
+        });
+        assert.deepEqual(data, { publishedAt: null });
+        return Promise.resolve({ count: 1 });
+      },
+    },
+  };
+  const db = transaction as unknown as PrismaClient;
+
+  const stopped = await stopDinnerPublication(db, "household-a", 82);
+
+  assert.equal(stopped, true);
 });

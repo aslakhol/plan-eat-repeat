@@ -28,6 +28,7 @@ import { type PrismaClient } from "@planeatrepeat/db";
 import {
   PublicationRateLimitError,
   publishDinner,
+  stopDinnerPublication,
 } from "~/server/published-dinner";
 import { publishedDinnerUrl } from "~/lib/published-dinner";
 import { env } from "~/env";
@@ -146,6 +147,24 @@ export const dinnerRouter = createTRPCRouter({
         }
         throw error;
       }
+    }),
+
+  stopPublication: protectedProcedureWithHousehold
+    .input(z.object({ dinnerId: z.number().int() }))
+    .mutation(async ({ ctx, input }) => {
+      const stopped = await stopDinnerPublication(
+        ctx.db,
+        ctx.householdId,
+        input.dinnerId,
+      );
+      if (!stopped) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Dinner not found",
+        });
+      }
+
+      return { stopped: true };
     }),
 
   tags: publicProcedure.query(async ({ ctx }) => {

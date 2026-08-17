@@ -1,5 +1,5 @@
-import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { type DinnerWithRecipe } from "@planeatrepeat/shared";
 
@@ -7,14 +7,14 @@ import { Button } from "~/components/ui/button";
 import { toast } from "~/components/ui/use-toast";
 import { env } from "~/env";
 import {
-  publishedDinnerPath,
   publishedDinnerUrl,
+  formatPublicationDate,
 } from "~/lib/published-dinner";
 import { api } from "~/utils/api";
 
 type Publication = {
-  publicSlug: string;
   publicUrl: string;
+  publishedAt: Date;
 };
 
 export const ShareDinnerView = ({
@@ -27,7 +27,7 @@ export const ShareDinnerView = ({
   const [publication, setPublication] = useState<Publication | null>(() =>
     dinner.publicSlug && dinner.publishedAt
       ? {
-          publicSlug: dinner.publicSlug,
+          publishedAt: dinner.publishedAt,
           publicUrl: publishedDinnerUrl(
             dinner.publicSlug,
             env.NEXT_PUBLIC_APP_URL,
@@ -35,7 +35,13 @@ export const ShareDinnerView = ({
         }
       : null,
   );
+  const [canShare, setCanShare] = useState(false);
   const utils = api.useUtils();
+
+  useEffect(() => {
+    setCanShare(typeof navigator.share === "function");
+  }, []);
+
   const publishMutation = api.dinner.publish.useMutation({
     onSuccess: async (published) => {
       setPublication(published);
@@ -50,6 +56,43 @@ export const ShareDinnerView = ({
       });
     },
   });
+  const stopMutation = api.dinner.stopPublication.useMutation({
+    onSuccess: async () => {
+      setPublication(null);
+      await utils.dinner.get.invalidate({ dinnerId: dinner.id });
+      toast({ title: "Sharing stopped" });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Could not stop sharing",
+        description: error.message,
+      });
+    },
+  });
+
+  const copyLink = async () => {
+    if (!publication) return;
+    try {
+      await navigator.clipboard.writeText(publication.publicUrl);
+      toast({ title: "Copied link" });
+    } catch {
+      toast({ variant: "destructive", title: "Could not copy link" });
+    }
+  };
+
+  const shareLink = async () => {
+    if (!publication || !navigator.share) return;
+    try {
+      await navigator.share({
+        title: dinner.name,
+        url: publication.publicUrl,
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      toast({ variant: "destructive", title: "Could not share Dinner" });
+    }
+  };
 
   return (
     <section className="mx-auto w-full max-w-[640px] px-1 pb-2">
@@ -70,19 +113,42 @@ export const ShareDinnerView = ({
             <span className="min-w-0 flex-1 truncate text-xs font-semibold">
               {publication.publicUrl}
             </span>
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto p-0 text-xs font-bold no-underline hover:no-underline"
+              onClick={() => void copyLink()}
+            >
+              Copy
+            </Button>
           </div>
           <p className="text-muted-foreground text-[11.5px] font-semibold">
-            Anyone can read this dinner.
+            Anyone with the link can read this dinner.
           </p>
-          <Button asChild size="lg" className="w-full">
-            <a
-              href={publishedDinnerPath(publication.publicSlug)}
-              target="_blank"
-              rel="noopener noreferrer"
+          {canShare && (
+            <Button
+              type="button"
+              size="lg"
+              className="w-full"
+              onClick={() => void shareLink()}
             >
-              Open published dinner
-              <ExternalLink />
-            </a>
+              Share…
+            </Button>
+          )}
+          <div className="border-border border-t pt-4">
+            <p className="text-[13.5px] font-bold">
+              Shared since{" "}
+              {formatPublicationDate(publication.publishedAt.toISOString())}
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="link"
+            className="mx-auto flex h-auto p-0 text-[12.5px] font-bold text-[#a34524] no-underline hover:text-[#a34524] hover:no-underline"
+            disabled={stopMutation.isPending}
+            onClick={() => stopMutation.mutate({ dinnerId: dinner.id })}
+          >
+            {stopMutation.isPending ? "Stopping sharing…" : "Stop sharing"}
           </Button>
         </div>
       ) : (
