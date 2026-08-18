@@ -58,6 +58,7 @@ export const DinnerDetail = () => {
     { dinnerId },
     { enabled: router.isReady && validDinnerId },
   );
+  const dinnerName = dinnerQuery.data?.dinner?.name;
   useDinnerWakeLock(Boolean(dinnerQuery.data?.dinner) && !editing);
 
   const editMutation = api.dinner.edit.useMutation({
@@ -128,7 +129,7 @@ export const DinnerDetail = () => {
         utils.dinner.get.invalidate({ dinnerId }),
         utils.dinner.summaries.invalidate(),
       ]);
-      toast({ title: "Sharing started" });
+      toast({ title: `${dinnerName ?? "Dinner"} is now public` });
       setSharing(true);
     },
     onError: (error) => {
