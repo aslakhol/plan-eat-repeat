@@ -297,7 +297,7 @@ export const DinnerDetail = () => {
               className="bg-white"
               onClick={() => setSharing(true)}
             >
-              Share
+              {dinner.publishedAt ? "Sharing" : "Share"}
             </Button>
           </>
         }
