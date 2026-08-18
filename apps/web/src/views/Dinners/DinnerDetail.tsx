@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { ArrowLeft, MoreHorizontal, UtensilsCrossed } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  MoreHorizontal,
+  UtensilsCrossed,
+} from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import { api } from "../../utils/api";
 import { toast } from "../../components/ui/use-toast";
@@ -112,6 +117,24 @@ export const DinnerDetail = () => {
       toast({
         variant: "destructive",
         title: "Could not update favourite",
+        description: error.message,
+      });
+    },
+  });
+
+  const publishMutation = api.dinner.publish.useMutation({
+    onSuccess: async () => {
+      await Promise.all([
+        utils.dinner.get.invalidate({ dinnerId }),
+        utils.dinner.summaries.invalidate(),
+      ]);
+      toast({ title: "Sharing started" });
+      setSharing(true);
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Could not share dinner",
         description: error.message,
       });
     },
@@ -295,9 +318,23 @@ export const DinnerDetail = () => {
               type="button"
               variant="outline"
               className="bg-white"
-              onClick={() => setSharing(true)}
+              disabled={publishMutation.isPending}
+              onClick={() => {
+                if (dinner.publishedAt) {
+                  setSharing(true);
+                  return;
+                }
+                publishMutation.mutate({ dinnerId: dinner.id });
+              }}
             >
-              {dinner.publishedAt ? "Sharing" : "Share"}
+              {publishMutation.isPending && (
+                <Loader2 className="animate-spin" />
+              )}
+              {publishMutation.isPending
+                ? "Sharing…"
+                : dinner.publishedAt
+                  ? "Sharing"
+                  : "Share"}
             </Button>
           </>
         }

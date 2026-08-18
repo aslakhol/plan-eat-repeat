@@ -1,4 +1,4 @@
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { type DinnerWithRecipe } from "@planeatrepeat/shared";
@@ -24,7 +24,7 @@ export const ShareDinnerView = ({
   dinner: DinnerWithRecipe;
   onBack: () => void;
 }) => {
-  const [publication, setPublication] = useState<Publication | null>(() =>
+  const publication: Publication | null =
     dinner.publicSlug && dinner.publishedAt
       ? {
           publishedAt: dinner.publishedAt,
@@ -33,8 +33,7 @@ export const ShareDinnerView = ({
             env.NEXT_PUBLIC_APP_URL,
           ),
         }
-      : null,
-  );
+      : null;
   const [canShare, setCanShare] = useState(false);
   const utils = api.useUtils();
   const saveCountQuery = api.dinner.publishedSaveCount.useQuery(
@@ -47,31 +46,14 @@ export const ShareDinnerView = ({
     setCanShare(typeof navigator.share === "function");
   }, []);
 
-  const publishMutation = api.dinner.publish.useMutation({
-    onSuccess: async (published) => {
-      setPublication(published);
-      await Promise.all([
-        utils.dinner.get.invalidate({ dinnerId: dinner.id }),
-        utils.dinner.summaries.invalidate(),
-      ]);
-      toast({ title: `${dinner.name} is now public` });
-    },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Could not publish dinner",
-        description: error.message,
-      });
-    },
-  });
   const stopMutation = api.dinner.stopPublication.useMutation({
     onSuccess: async () => {
-      setPublication(null);
       await Promise.all([
         utils.dinner.get.invalidate({ dinnerId: dinner.id }),
         utils.dinner.summaries.invalidate(),
       ]);
       toast({ title: "Sharing stopped" });
+      onBack();
     },
     onError: (error) => {
       toast({
@@ -118,7 +100,7 @@ export const ShareDinnerView = ({
 
       <h1 className="mt-7 font-serif text-2xl font-normal">Share dinner</h1>
 
-      {publication ? (
+      {publication && (
         <div className="mt-6 space-y-4">
           <div className="border-border bg-muted flex items-center gap-3 rounded-xl border px-4 py-3">
             <span className="min-w-0 flex-1 truncate text-xs font-semibold">
@@ -165,19 +147,6 @@ export const ShareDinnerView = ({
             onClick={() => stopMutation.mutate({ dinnerId: dinner.id })}
           >
             {stopMutation.isPending ? "Stopping sharing…" : "Stop sharing"}
-          </Button>
-        </div>
-      ) : (
-        <div className="mt-6 space-y-5">
-          <Button
-            type="button"
-            size="lg"
-            className="w-full"
-            disabled={publishMutation.isPending}
-            onClick={() => publishMutation.mutate({ dinnerId: dinner.id })}
-          >
-            {publishMutation.isPending && <Loader2 className="animate-spin" />}
-            Publish dinner
           </Button>
         </div>
       )}
