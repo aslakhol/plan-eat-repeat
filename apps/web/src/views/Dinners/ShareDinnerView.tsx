@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { type DinnerWithRecipe } from "@planeatrepeat/shared";
@@ -6,15 +6,11 @@ import { type DinnerWithRecipe } from "@planeatrepeat/shared";
 import { Button } from "~/components/ui/button";
 import { toast } from "~/components/ui/use-toast";
 import { env } from "~/env";
-import {
-  publishedDinnerUrl,
-  formatPublicationDate,
-} from "~/lib/published-dinner";
+import { publishedDinnerUrl } from "~/lib/published-dinner";
 import { api } from "~/utils/api";
 
 type Publication = {
   publicUrl: string;
-  publishedAt: Date;
 };
 
 export const ShareDinnerView = ({
@@ -27,7 +23,6 @@ export const ShareDinnerView = ({
   const publication: Publication | null =
     dinner.publicSlug && dinner.publishedAt
       ? {
-          publishedAt: dinner.publishedAt,
           publicUrl: publishedDinnerUrl(
             dinner.publicSlug,
             env.NEXT_PUBLIC_APP_URL,
@@ -94,15 +89,21 @@ export const ShareDinnerView = ({
         className="text-muted-foreground inline-flex items-center gap-1 text-[12.5px] font-bold"
         onClick={onBack}
       >
-        <ArrowLeft className="size-3.5" />
+        <ChevronLeft className="size-3.5" />
         <span className="truncate">{dinner.name}</span>
       </button>
 
-      <h1 className="mt-7 font-serif text-2xl font-normal">Share dinner</h1>
+      <h1 className="mt-7 font-serif text-3xl font-normal">Sharing</h1>
 
       {publication && (
-        <div className="mt-6 space-y-4">
-          <div className="border-border bg-muted flex items-center gap-3 rounded-xl border px-4 py-3">
+        <div>
+          {saveCount > 0 && (
+            <p className="text-muted-foreground mt-1 text-[13.5px] font-semibold">
+              Saved by {saveCount} {saveCount === 1 ? "person" : "people"}
+            </p>
+          )}
+
+          <div className="border-border bg-muted mt-5 flex items-center gap-3 rounded-xl border px-4 py-3">
             <span className="min-w-0 flex-1 truncate text-xs font-semibold">
               {publication.publicUrl}
             </span>
@@ -115,39 +116,34 @@ export const ShareDinnerView = ({
               Copy
             </Button>
           </div>
-          <p className="text-muted-foreground text-[11.5px] font-semibold">
-            Anyone with the link can read this dinner.
-          </p>
-          {canShare && (
+
+          <div
+            className={
+              canShare ? "mt-3 grid grid-cols-2 gap-2" : "mt-3 grid gap-2"
+            }
+          >
+            {canShare && (
+              <Button
+                type="button"
+                size="lg"
+                variant="outline"
+                className="bg-white"
+                onClick={() => void shareLink()}
+              >
+                Share…
+              </Button>
+            )}
             <Button
               type="button"
               size="lg"
-              className="w-full"
-              onClick={() => void shareLink()}
+              variant="outline"
+              className="bg-white text-[#a34524] hover:text-[#a34524]"
+              disabled={stopMutation.isPending}
+              onClick={() => stopMutation.mutate({ dinnerId: dinner.id })}
             >
-              Share…
+              {stopMutation.isPending ? "Stopping…" : "Stop sharing"}
             </Button>
-          )}
-          <div className="border-border border-t pt-4">
-            <p className="text-[13.5px] font-bold">
-              Shared since{" "}
-              {formatPublicationDate(publication.publishedAt.toISOString())}
-            </p>
-            {saveCount > 0 && (
-              <p className="text-muted-foreground mt-0.5 text-[11.5px] font-semibold">
-                saved by {saveCount} {saveCount === 1 ? "person" : "people"}
-              </p>
-            )}
           </div>
-          <Button
-            type="button"
-            variant="link"
-            className="mx-auto flex h-auto p-0 text-[12.5px] font-bold text-[#a34524] no-underline hover:text-[#a34524] hover:no-underline"
-            disabled={stopMutation.isPending}
-            onClick={() => stopMutation.mutate({ dinnerId: dinner.id })}
-          >
-            {stopMutation.isPending ? "Stopping sharing…" : "Stop sharing"}
-          </Button>
         </div>
       )}
     </section>
