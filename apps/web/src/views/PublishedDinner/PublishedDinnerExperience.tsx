@@ -164,7 +164,9 @@ export const PublishedDinnerExperience = ({
                 Plan it
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="/dinners">Open my cookbook</Link>
+                <Link href={`/dinners/${detectedDinner?.id ?? ""}`}>
+                  Open my cookbook
+                </Link>
               </Button>
             </div>
           ) : (
