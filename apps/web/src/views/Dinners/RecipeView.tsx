@@ -7,6 +7,7 @@ import {
 } from "@planeatrepeat/shared";
 import { cn } from "../../lib/utils";
 import { FavouriteChip } from "~/components/FavouriteMark";
+import { SharedDinnerChip } from "~/components/SharedDinnerMark";
 import { StickyHeaderCard } from "./StickyHeaderCard";
 
 type Props = {
@@ -99,9 +100,12 @@ export const RecipeView = ({
           )}
         </div>
 
-        {(dinner.favourite || dinner.tags.length > 0) && (
+        {(dinner.favourite ||
+          dinner.publishedAt !== null ||
+          dinner.tags.length > 0) && (
           <div className="flex flex-wrap gap-1.5">
             {dinner.favourite && <FavouriteChip />}
+            {dinner.publishedAt && <SharedDinnerChip />}
             {dinner.tags.map((tag) => (
               <span
                 key={tag.value}
