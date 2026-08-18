@@ -1,0 +1,3 @@
+# Keep Published Dinner URLs Stable
+
+A Published Dinner receives a non-sequential public identity and a URL that remains unchanged across Dinner renames and periods when sharing is stopped. Stopping sharing makes the URL return 404, while restarting restores that same URL; we chose canonical link durability over permanently revoking previously distributed URLs because publication is public and indexable rather than a secret-link security boundary. Deleting the Dinner, including as the discarded Dinner in a merge, permanently ends its publication instead of transferring the URL to different content.

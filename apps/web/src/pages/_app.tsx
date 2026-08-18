@@ -1,4 +1,6 @@
-import { type AppType } from "next/app";
+import { type AppProps } from "next/app";
+import { type NextPage } from "next";
+import { type ReactElement, type ReactNode } from "react";
 
 import { api } from "~/utils/api";
 
@@ -41,8 +43,22 @@ if (
   });
 }
 
-const MyApp: AppType = ({ Component, pageProps }) => {
+export type NextPageWithLayout<P = Record<string, never>, IP = P> = NextPage<
+  P,
+  IP
+> & {
+  getLayout?: (page: ReactElement) => ReactNode;
+};
+
+type AppPropsWithLayout = AppProps & {
+  Component: NextPageWithLayout;
+};
+
+const defaultGetLayout = (page: ReactElement) => <AppLayout>{page}</AppLayout>;
+
+const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const router = useRouter();
+  const getLayout = Component.getLayout ?? defaultGetLayout;
 
   useEffect(() => {
     document.body.classList.add(
@@ -69,9 +85,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
         <main
           className={`${youngSerif.variable} ${quicksand.variable} font-sans`}
         >
-          <AppLayout>
-            <Component {...pageProps} />
-          </AppLayout>
+          {getLayout(<Component {...pageProps} />)}
           <Toaster />
         </main>
       </ClerkProvider>

@@ -20,7 +20,7 @@ export const FavouriteListMark = () => (
 
 export const FavouriteChip = () => (
   <span className="inline-flex h-6 shrink-0 items-center rounded-full border border-[#e7b9a4] bg-[#F6DDD2] px-2 py-[3px]">
-    <FavouriteHeart className="size-3" />
+    <FavouriteHeart className="size-3 -translate-y-px" />
     <span className="sr-only">Favourite</span>
   </span>
 );

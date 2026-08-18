@@ -16,6 +16,7 @@ import {
   createTRPCRouter,
   publicProcedure,
   protectedProcedureWithHousehold,
+  sessionProcedure,
 } from "~/server/api/trpc";
 import {
   importRecipeFromImages,
@@ -25,6 +26,22 @@ import {
 import { acquireYouTubeVideoTitle } from "~/server/recipes/youtube";
 import { planDinnerMerge } from "~/server/merge-dinners";
 import { type PrismaClient } from "@planeatrepeat/db";
+import {
+  findPublishedDinnerSaveCount,
+  PublicationRateLimitError,
+  publishDinner,
+  stopDinnerPublication,
+} from "~/server/published-dinner";
+import { publishedDinnerUrl } from "~/lib/published-dinner";
+import { env } from "~/env";
+import {
+  findSavedPublishedDinner,
+  PublishedDinnerSaveRateLimitError,
+  savePublishedDinner,
+  savePublishedDinnerForUser,
+} from "~/server/save-published-dinner";
+import { clerkClient } from "@clerk/nextjs/server";
+import { updateClerkHouseholdMetadata } from "~/server/clerk-household-metadata";
 
 const householdImportInstructions = async (
   db: PrismaClient,
@@ -107,6 +124,159 @@ const toImportTRPCError = (error: unknown) => {
 };
 
 export const dinnerRouter = createTRPCRouter({
+  publishedSaveStatus: sessionProcedure
+    .input(z.object({ publicSlug: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const membership = await ctx.db.membership.findUnique({
+        where: { userId: ctx.auth.userId },
+        select: { householdId: true },
+      });
+      return {
+        dinner: membership
+          ? await findSavedPublishedDinner(
+              ctx.db,
+              membership.householdId,
+              input.publicSlug,
+            )
+          : null,
+      };
+    }),
+
+  savePublished: sessionProcedure
+    .input(
+      z.object({
+        publicSlug: z.string().min(1),
+        forceCopy: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const membership = await ctx.db.membership.findUnique({
+          where: { userId: ctx.auth.userId },
+          select: { householdId: true },
+        });
+        let householdId = membership?.householdId;
+        let result: Awaited<ReturnType<typeof savePublishedDinner>>;
+        if (householdId) {
+          result = await savePublishedDinner(
+            ctx.db,
+            householdId,
+            input.publicSlug,
+            { forceCopy: input.forceCopy },
+          );
+        } else {
+          const clerkUser = await (
+            await clerkClient()
+          ).users.getUser(ctx.auth.userId);
+          const bootstrapResult = await savePublishedDinnerForUser(
+            ctx.db,
+            {
+              id: clerkUser.id,
+              firstName: clerkUser.firstName,
+              lastName: clerkUser.lastName,
+              imageUrl: clerkUser.imageUrl,
+            },
+            input.publicSlug,
+            { forceCopy: input.forceCopy },
+          );
+          householdId = bootstrapResult?.householdId;
+          result = bootstrapResult;
+        }
+        if (!result || !householdId) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "This Dinner is no longer shared",
+          });
+        }
+        if (ctx.auth.sessionClaims?.metadata.householdId !== householdId) {
+          await updateClerkHouseholdMetadata(ctx.auth.userId, householdId);
+        }
+        return {
+          dinner: result.dinner,
+          createdNewCopy: result.createdNewCopy,
+        };
+      } catch (error) {
+        if (error instanceof PublishedDinnerSaveRateLimitError) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    }),
+
+  publishedSaveCount: protectedProcedureWithHousehold
+    .input(z.object({ dinnerId: z.number().int() }))
+    .query(async ({ ctx, input }) => {
+      const saveCount = await findPublishedDinnerSaveCount(
+        ctx.db,
+        ctx.householdId,
+        input.dinnerId,
+      );
+      if (saveCount === null) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Dinner not found",
+        });
+      }
+
+      return { saveCount };
+    }),
+
+  publish: protectedProcedureWithHousehold
+    .input(z.object({ dinnerId: z.number().int() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const dinner = await publishDinner(
+          ctx.db,
+          ctx.householdId,
+          input.dinnerId,
+        );
+        if (!dinner?.publicSlug || !dinner.publishedAt) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Dinner not found",
+          });
+        }
+
+        return {
+          publicSlug: dinner.publicSlug,
+          publishedAt: dinner.publishedAt,
+          publicUrl: publishedDinnerUrl(
+            dinner.publicSlug,
+            env.NEXT_PUBLIC_APP_URL,
+          ),
+        };
+      } catch (error) {
+        if (error instanceof PublicationRateLimitError) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+    }),
+
+  stopPublication: protectedProcedureWithHousehold
+    .input(z.object({ dinnerId: z.number().int() }))
+    .mutation(async ({ ctx, input }) => {
+      const stopped = await stopDinnerPublication(
+        ctx.db,
+        ctx.householdId,
+        input.dinnerId,
+      );
+      if (!stopped) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Dinner not found",
+        });
+      }
+
+      return { stopped: true };
+    }),
+
   tags: publicProcedure.query(async ({ ctx }) => {
     const tags = await ctx.db.tag.findMany({
       orderBy: { value: "asc" },

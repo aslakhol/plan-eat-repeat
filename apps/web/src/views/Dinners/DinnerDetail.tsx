@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { ArrowLeft, MoreHorizontal, UtensilsCrossed } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  MoreHorizontal,
+  UtensilsCrossed,
+} from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import { api } from "../../utils/api";
 import { toast } from "../../components/ui/use-toast";
@@ -24,6 +29,7 @@ import {
 import { useDinnerWakeLock } from "~/hooks/use-keep-screen-awake";
 import { DinnerMergeSheet } from "./DinnerMergeSheet";
 import { DetailsMenu } from "~/components/ui/details-menu";
+import { ShareDinnerView } from "./ShareDinnerView";
 
 export const DinnerDetail = () => {
   const router = useRouter();
@@ -33,6 +39,7 @@ export const DinnerDetail = () => {
   const [editing, setEditing] = useState(false);
   const [planning, setPlanning] = useState(false);
   const [merging, setMerging] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const actionMenuRef = useRef<HTMLDetailsElement>(null);
   const navigation = parseEditorNavigation(router.query);
@@ -51,6 +58,7 @@ export const DinnerDetail = () => {
     { dinnerId },
     { enabled: router.isReady && validDinnerId },
   );
+  const dinnerName = dinnerQuery.data?.dinner?.name;
   useDinnerWakeLock(Boolean(dinnerQuery.data?.dinner) && !editing);
 
   const editMutation = api.dinner.edit.useMutation({
@@ -110,6 +118,24 @@ export const DinnerDetail = () => {
       toast({
         variant: "destructive",
         title: "Could not update favourite",
+        description: error.message,
+      });
+    },
+  });
+
+  const publishMutation = api.dinner.publish.useMutation({
+    onSuccess: async () => {
+      await Promise.all([
+        utils.dinner.get.invalidate({ dinnerId }),
+        utils.dinner.summaries.invalidate(),
+      ]);
+      toast({ title: `${dinnerName ?? "Dinner"} is now public` });
+      setSharing(true);
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Could not share dinner",
         description: error.message,
       });
     },
@@ -190,6 +216,10 @@ export const DinnerDetail = () => {
         }}
       />
     );
+  }
+
+  if (sharing) {
+    return <ShareDinnerView dinner={dinner} onBack={() => setSharing(false)} />;
   }
 
   const historyLabel = summary
@@ -285,8 +315,31 @@ export const DinnerDetail = () => {
             >
               Edit
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="bg-white"
+              disabled={publishMutation.isPending}
+              onClick={() => {
+                if (dinner.publishedAt) {
+                  setSharing(true);
+                  return;
+                }
+                publishMutation.mutate({ dinnerId: dinner.id });
+              }}
+            >
+              {publishMutation.isPending && (
+                <Loader2 className="animate-spin" />
+              )}
+              {publishMutation.isPending
+                ? "Sharing…"
+                : dinner.publishedAt
+                  ? "Sharing"
+                  : "Share"}
+            </Button>
           </>
         }
+        footerClassName="grid-cols-[1.4fr_1fr_1fr]"
       />
       <DinnerPlanningSheet
         dinner={dinner}

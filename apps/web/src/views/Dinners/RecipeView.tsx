@@ -7,6 +7,7 @@ import {
 } from "@planeatrepeat/shared";
 import { cn } from "../../lib/utils";
 import { FavouriteChip } from "~/components/FavouriteMark";
+import { SharedDinnerChip } from "~/components/SharedDinnerMark";
 import { StickyHeaderCard } from "./StickyHeaderCard";
 
 type Props = {
@@ -15,6 +16,7 @@ type Props = {
   headerLabel?: string;
   headerAction?: ReactNode;
   footerActions?: ReactNode;
+  footerClassName?: string;
 };
 
 const hasAmounts = (part: DinnerWithRecipe["parts"][number]) =>
@@ -28,6 +30,7 @@ export const RecipeView = ({
   headerLabel,
   headerAction,
   footerActions,
+  footerClassName,
 }: Props) => {
   const hasRecipe = dinner.parts.length > 0;
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -97,9 +100,12 @@ export const RecipeView = ({
           )}
         </div>
 
-        {(dinner.favourite || dinner.tags.length > 0) && (
+        {(dinner.favourite ||
+          dinner.publishedAt !== null ||
+          dinner.tags.length > 0) && (
           <div className="flex flex-wrap gap-1.5">
             {dinner.favourite && <FavouriteChip />}
+            {dinner.publishedAt && <SharedDinnerChip />}
             {dinner.tags.map((tag) => (
               <span
                 key={tag.value}
@@ -277,7 +283,12 @@ export const RecipeView = ({
         ))}
 
       {footerActions && (
-        <footer className="sticky bottom-0 z-10 -mx-1 mt-8 grid grid-cols-2 gap-2 bg-white py-2">
+        <footer
+          className={cn(
+            "sticky bottom-0 z-10 -mx-1 mt-8 grid grid-cols-2 gap-2 bg-white py-2",
+            footerClassName,
+          )}
+        >
           {footerActions}
         </footer>
       )}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Fragment, useEffect, useRef, useState } from "react";
 
 import { FavouriteListMark } from "~/components/FavouriteMark";
+import { SharedDinnerListMark } from "~/components/SharedDinnerMark";
 import { Badge } from "~/components/ui/badge";
 import { Card } from "~/components/ui/card";
 import { cn } from "~/lib/utils";
@@ -157,6 +158,7 @@ export const DinnerList = ({
                       {dinner.name}
                     </span>
                     {dinner.favourite && <FavouriteListMark />}
+                    {dinner.publishedAt && <SharedDinnerListMark />}
                   </span>
                   <span
                     className={cn(
