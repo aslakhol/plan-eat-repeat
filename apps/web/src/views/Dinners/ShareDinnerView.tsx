@@ -169,9 +169,6 @@ export const ShareDinnerView = ({
         </div>
       ) : (
         <div className="mt-6 space-y-5">
-          <p className="text-muted-foreground text-sm font-semibold">
-            Anyone can read this dinner.
-          </p>
           <Button
             type="button"
             size="lg"
