@@ -145,10 +145,8 @@ export const PublishedDinnerExperience = ({
               ? "Saved to your cookbook"
               : "Already in your cookbook"}
           </ResponsiveModalTitle>
-          <ResponsiveModalDescription className="text-center">
-            {createdNewCopy
-              ? `Your copy. ${dinner.householdName} won’t see your changes.`
-              : "Open the Dinner you already saved, or deliberately save another copy."}
+          <ResponsiveModalDescription className="sr-only">
+            Cookbook save result
           </ResponsiveModalDescription>
 
           {createdNewCopy ? (
