@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Link2 } from "lucide-react";
 import { Fragment, useEffect, useRef, useState } from "react";
 
 import { FavouriteListMark } from "~/components/FavouriteMark";
@@ -157,6 +158,15 @@ export const DinnerList = ({
                       {dinner.name}
                     </span>
                     {dinner.favourite && <FavouriteListMark />}
+                    {dinner.publishedAt && (
+                      <span className="inline-flex shrink-0 items-center">
+                        <Link2
+                          aria-hidden="true"
+                          className="text-primary size-[13px] stroke-[2.25]"
+                        />
+                        <span className="sr-only">Shared publicly</span>
+                      </span>
+                    )}
                   </span>
                   <span
                     className={cn(
