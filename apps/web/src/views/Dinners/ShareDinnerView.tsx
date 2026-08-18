@@ -153,7 +153,7 @@ export const ShareDinnerView = ({
             </p>
             {saveCount > 0 && (
               <p className="text-muted-foreground mt-0.5 text-[11.5px] font-semibold">
-                saved by {saveCount} people
+                saved by {saveCount} {saveCount === 1 ? "person" : "people"}
               </p>
             )}
           </div>
