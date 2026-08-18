@@ -94,11 +94,7 @@ export const PublishedDinnerExperience = ({
   const createdNewCopy = saveResult?.createdNewCopy ?? false;
   const actionLabel = saveMutation.isPending
     ? "Saving…"
-    : detectedDinner
-      ? createdNewCopy
-        ? "Saved to your cookbook"
-        : "Already in your cookbook"
-      : "Add to my cookbook";
+    : "Add to my cookbook";
 
   const actionButton = (
     <Button
