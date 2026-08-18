@@ -50,7 +50,10 @@ export const ShareDinnerView = ({
   const publishMutation = api.dinner.publish.useMutation({
     onSuccess: async (published) => {
       setPublication(published);
-      await utils.dinner.get.invalidate({ dinnerId: dinner.id });
+      await Promise.all([
+        utils.dinner.get.invalidate({ dinnerId: dinner.id }),
+        utils.dinner.summaries.invalidate(),
+      ]);
       toast({ title: `${dinner.name} is now public` });
     },
     onError: (error) => {
@@ -64,7 +67,10 @@ export const ShareDinnerView = ({
   const stopMutation = api.dinner.stopPublication.useMutation({
     onSuccess: async () => {
       setPublication(null);
-      await utils.dinner.get.invalidate({ dinnerId: dinner.id });
+      await Promise.all([
+        utils.dinner.get.invalidate({ dinnerId: dinner.id }),
+        utils.dinner.summaries.invalidate(),
+      ]);
       toast({ title: "Sharing stopped" });
     },
     onError: (error) => {
