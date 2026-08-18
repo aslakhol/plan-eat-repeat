@@ -13,7 +13,7 @@ export const SharedDinnerListMark = () => (
 
 export const SharedDinnerChip = () => (
   <span className="border-primary/30 bg-primary/10 inline-flex h-6 shrink-0 items-center gap-1 rounded-full border px-2.5 py-[3px]">
-    <SharedDinnerIcon className="text-primary size-3 stroke-[2.25]" />
+    <SharedDinnerIcon className="text-primary size-3 -translate-y-px stroke-[2.25]" />
     <span className="text-primary text-xs font-semibold leading-none">
       Shared
     </span>
