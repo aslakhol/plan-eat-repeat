@@ -14,7 +14,7 @@ const globalForPrisma = globalThis as unknown as {
 // With the pg driver adapter, `pg.Pool` owns connection pooling and ignores the
 // `connection_limit` URL parameter. Keep modest per-instance concurrency and
 // release idle clients before Vercel suspends a Fluid Compute instance.
-const POOL_MAX = Number(process.env.DATABASE_POOL_MAX ?? 3);
+const POOL_MAX = 3;
 const POOL_IDLE_TIMEOUT_MS = 5_000;
 
 function createPool(connectionString: string) {
