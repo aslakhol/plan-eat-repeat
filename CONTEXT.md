@@ -45,7 +45,7 @@ _Avoid_: Personal favourite, favorite
 Unsaved Dinner editor content produced from an import source. It changes the Cookbook only when the user saves it; cancelling discards it.
 
 **Link**:
-The optional URL associated with a Dinner. It often identifies the source of a Recipe, but may point somewhere else chosen by the Household.
+The optional HTTP(S) URL associated with a Dinner. It often identifies the source of a Recipe, but may point somewhere else chosen by the Household.
 _Avoid_: Source Link, Recipe link
 
 **Clear Recipe**:
