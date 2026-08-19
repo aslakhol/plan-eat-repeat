@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="../_ds/plan-eat-repeat-d901d8ce-3c98-4c10-a14d-11f441b80480/styles.css">
+<script src="../_ds/plan-eat-repeat-d901d8ce-3c98-4c10-a14d-11f441b80480/_ds_bundle.js"></script>
+<style>
+body{margin:0;background:#f2efe8;font-family:Quicksand,system-ui,sans-serif;color:#221d1a}
+.canonical-frame{padding:40px 44px 60px}
+.dir{background:#fff;border:1px solid #e6e0d4;border-radius:14px;box-shadow:0 1px 3px rgba(60,50,40,.06);padding:26px 28px;display:flex;flex-direction:column;gap:20px}
+.tasks{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.row{display:flex;gap:5px;align-items:center}
+.hdl{width:34px;height:4px;border-radius:99px;background:#d9d2c4;margin:0 auto 2px}
+.ph3{width:390px;height:800px;background:#FAF8F5;border:1px solid #ddd6c8;border-radius:28px;box-shadow:0 6px 20px rgba(60,50,40,.14);overflow:hidden;display:flex;flex-direction:column;font-family:Quicksand,sans-serif;color:#24201b}
+.ph3 .body{flex:1;display:flex;flex-direction:column;padding:22px 18px 0;gap:10px;overflow:hidden}
+.task3{width:390px;display:flex;flex-direction:column;gap:10px}
+.h1w{font-family:"Young Serif",serif;font-size:30px;margin:0;font-weight:400}
+.mdots{width:36px;height:36px;border-radius:99px;border:1px solid #ddd6c8;background:#fff;display:flex;align-items:center;justify-content:center;color:#57504a;font-size:13px;letter-spacing:1.5px;font-weight:700;padding-bottom:5px}
+.tb3{display:flex;align-items:flex-end;border-top:1px solid #e6e0d4;background:#FAF8F5;padding:8px 0 16px}
+.tb3 .ti{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;color:#a39a8e}
+.tb3 .ti.on{color:#C2552F}
+.plus3{width:52px;height:52px;border-radius:99px;background:#DD6B42;color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;margin:-26px auto 0;box-shadow:0 4px 10px rgba(221,107,66,.4)}
+.sheet3{margin-top:auto;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -6px 24px rgba(60,50,40,.18);display:flex;flex-direction:column;padding:10px 18px 16px;gap:10px;overflow:hidden}
+.dimw{opacity:.35;padding:22px 18px 8px;display:flex;flex-direction:column;gap:10px;flex:1;overflow:hidden}
+.prow{background:#F7F4EE;border:1px solid #eee8db;border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:8px}
+.prow small{margin-left:auto;font-size:11px;color:#a39a8e;font-weight:600;white-space:nowrap}
+.inp3{flex:1;background:#fff;border:1px solid #e2dbcc;border-radius:12px;padding:10px 14px;font-size:13px;color:#a39a8e}
+.fbtn{width:42px;height:42px;flex:0 0 42px;border-radius:12px;border:1px solid #e2dbcc;background:#fff;display:flex;align-items:center;justify-content:center;color:#57504a}
+.seg{display:flex;background:#F1EDE6;border-radius:10px;padding:3px;gap:2px}
+.seg span{flex:1;text-align:center;font-size:11px;font-weight:700;color:#8a8276;padding:6px 0;border-radius:8px;white-space:nowrap}
+.seg span.on{background:#fff;color:#C2552F;box-shadow:0 1px 2px rgba(60,50,40,.1)}
+.mrow{background:#fff;padding:11px 14px;font-size:13.5px;font-weight:600;color:#332e29;border-bottom:1px solid #f0ebe0;display:flex;align-items:center;gap:8px}
+.mrow:last-child{border-bottom:none}
+.mrow.warn{color:#a34524}
+.cbn{font-family:"Young Serif",serif;font-size:15px;font-weight:400}
+.tchip{border:1px solid #e6e0d4;background:#fff;border-radius:99px;padding:3px 9px;font-size:10.5px;font-weight:600;color:#8a8276;white-space:nowrap}
+.tchip.more{border-style:none;background:none;padding-left:2px;color:#bdb4a6}
+.trow{display:flex;gap:5px;overflow:hidden;flex-wrap:nowrap;margin-top:7px}
+.metaline{font-size:11.5px;font-weight:600;color:#8a8276}
+.backlink{display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;color:#8a8276}
+.srow{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e6e0d4;border-radius:12px;padding:11px 14px}
+.strip{border:1px solid #e2dbcc;background:#fff;border-radius:12px;padding:10px 13px;display:flex;align-items:center;gap:9px}
+</style>
+</helmet>
+
+<main class="canonical-frame">
+<div class="dir"><div class="tasks">
+
+<div class="task3"><div class="ph3" data-screen-label="5a-1 Cookbook header">
+<div class="body">
+<div class="row" style="align-items:center;margin-bottom:4px;gap:8px"><h2 class="h1w">Cookbook</h2><div style="margin-left:auto;display:flex;align-items:center;gap:7px"><div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid #ddd6c8;background:#fff;border-radius:99px;color:#57504a"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div><div class="mdots" style="margin-left:0">...</div></div></div>
+<div class="row" style="gap:8px"><div class="inp3">Search dinners…</div><div class="fbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg></div></div>
+<div class="seg"><span class="on">A–Z</span><span>Haven't had lately</span><span>Favourites</span></div>
+<div class="prow" style="display:block"><div class="row"><span class="cbn">Beef Burger</span><small style="margin-left:auto;font-size:11px;color:#a39a8e;font-weight:600">2 wks ago</small></div><div class="trow"><span class="tchip">Quick</span><span class="tchip">Comfort</span><span class="tchip">Meat</span></div></div>
+<div class="prow" style="display:block"><div class="row"><span class="cbn">Butter Chicken</span><small style="margin-left:auto;font-size:11px;color:#a39a8e;font-weight:600">5 wks ago</small></div><div class="trow"><span class="tchip">Comfort</span><span class="tchip">Indian</span><span class="tchip">Chicken</span><span class="tchip more">+5</span></div></div>
+<div class="prow"><span class="cbn">Caesar Salad</span><small>1 wk ago</small></div>
+<div class="prow" style="display:block"><div class="row"><span class="cbn">Chicken Curry</span><small style="margin-left:auto;font-size:11px;color:#C2552F;font-weight:600">tonight</small></div><div class="trow"><span class="tchip">Comfort</span><span class="tchip">Asian</span><span class="tchip">Chicken</span></div></div>
+<div class="prow"><span class="cbn">Leftovers</span><small>3 wks ago</small></div>
+<span style="font-size:11px;color:#a39a8e;text-align:center;margin-top:2px">⌄ 48 dinners ⌄</span>
+</div>
+<div class="tb3" style="align-items:center;padding:14px 0">
+<div class="ti" style="font-size:15px">Week</div>
+<div style="flex:1;display:flex;justify-content:center"><div class="plus3" style="margin:-36px 0 -8px">＋</div></div>
+<div class="ti on" style="font-size:15px">Cookbook</div>
+</div>
+</div></div>
+
+<div class="task3"><div class="ph3" data-screen-label="5a-2 Settings drawer" style="height:560px">
+<div class="dimw" style="flex:1"><h2 class="h1w">Cookbook</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<h2 class="h1w" style="font-size:22px;margin:2px 2px 6px">Settings</h2>
+<div style="border:1px solid #e6e0d4;border-radius:12px;overflow:hidden">
+<div class="mrow">Household<span style="margin-left:auto;color:#a39a8e;font-weight:600;font-size:12px">Hendersons ›</span></div>
+<div class="mrow">Shared dinners<span style="margin-left:auto;color:#bdb4a6">›</span></div>
+<div class="mrow">Preferences<span style="margin-left:auto;color:#bdb4a6">›</span></div>
+<div class="mrow">Tags<span style="margin-left:auto;color:#bdb4a6">›</span></div>
+<div class="mrow">Help<span style="margin-left:auto;color:#bdb4a6">›</span></div>
+</div>
+</div>
+</div></div>
+
+<div class="task3"><div class="ph3" data-screen-label="5a-3 Shared dinners list">
+<div class="body">
+<div class="row" style="align-items:center"><span class="backlink">‹ Cookbook</span></div>
+<h2 class="h1w" style="font-size:26px;margin:4px 0 2px">Shared dinners</h2>
+<div class="strip" style="background:#F7F4EE;border-color:#e6e0d4"><div style="flex:1;min-width:0"><b style="font-size:12.5px;font-weight:700;color:#453e37;display:block">Hendersons' public page</b><small style="font-size:10.5px;color:#a39a8e;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block">planeatrepeat.com/h/hendersons-4b7q</small></div><span style="font-size:12px;font-weight:700;color:#C2552F">View</span></div>
+<div class="row" style="gap:8px"><div class="inp3">Search shared…</div><div class="fbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg></div></div>
+<div class="seg"><span class="on">Recently shared</span><span>A–Z</span><span>Most saved</span></div>
+<div class="srow" style="display:block;background:#F7F4EE;border-color:#eee8db"><div class="row"><span class="cbn">Spaghetti Carbonara</span><span style="margin-left:auto;color:#bdb4a6;font-size:15px">›</span></div><small style="display:block;font-size:11px;color:#8a8276;font-weight:600;margin-top:2px">Shared 12 Aug · saved by 2</small></div>
+<div class="srow" style="display:block;background:#F7F4EE;border-color:#eee8db"><div class="row"><span class="cbn">Beef Burger</span><span style="margin-left:auto;color:#bdb4a6;font-size:15px">›</span></div><small style="display:block;font-size:11px;color:#8a8276;font-weight:600;margin-top:2px">Shared 2 Aug · saved by 4</small></div>
+<div class="srow" style="display:block;background:#F7F4EE;border-color:#eee8db"><div class="row"><span class="cbn">Butter Chicken</span><span style="margin-left:auto;color:#bdb4a6;font-size:15px">›</span></div><small style="display:block;font-size:11px;color:#8a8276;font-weight:600;margin-top:2px">Shared 19 Jul · saved by 1</small></div>
+<div class="srow" style="display:block;background:#F7F4EE;border-color:#eee8db"><div class="row"><span class="cbn">Taco Night</span><span style="margin-left:auto;color:#bdb4a6;font-size:15px">›</span></div><small style="display:block;font-size:11px;color:#8a8276;font-weight:600;margin-top:2px">Shared 4 Jul · saved by 6</small></div>
+</div>
+<div class="tb3" style="align-items:center;padding:14px 0">
+<div class="ti" style="font-size:15px">Week</div>
+<div style="flex:1;display:flex;justify-content:center"><div class="plus3" style="margin:-36px 0 -8px">＋</div></div>
+<div class="ti on" style="font-size:15px">Cookbook</div>
+</div>
+</div></div>
+
+<div class="task3"><div class="ph3" data-screen-label="5a-4 Row sheet" style="height:600px">
+<div class="dimw" style="flex:1"><h2 class="h1w" style="font-size:26px">Shared dinners</h2></div>
+<div class="sheet3" style="flex:none">
+<div class="hdl"></div>
+<div style="padding:2px 2px 4px"><span class="metaline" style="display:block">Shared 12 Aug · saved by 2</span><h2 class="h1w" style="font-size:20px;margin:1px 0 0">Spaghetti Carbonara</h2></div>
+<div style="margin-top:4px;display:flex;align-items:center;gap:10px;background:#F7F4EE;border:1px solid #e6e0d4;border-radius:12px;padding:11px 13px;font-size:12px;font-weight:600;color:#57504a">planeatrepeat.com/d/carbonara-9fk2<b style="margin-left:auto;color:#C2552F;white-space:nowrap">Copy</b></div>
+<div style="border:1px solid #e6e0d4;border-radius:12px;overflow:hidden;margin-top:6px">
+<div class="mrow">Open public page</div>
+<div class="mrow">Open dinner</div>
+<div class="mrow warn">Stop sharing</div>
+</div>
+</div>
+</div></div>
+
+</div>
+</div>
+</main>
+
+</x-dc>
+</body>
+</html>
