@@ -100,7 +100,7 @@ export const DinnersView = () => {
           <p className="text-muted-foreground text-center text-[11px] font-semibold">
             {collection.hasActiveFilters
               ? `${collection.matchingCount} ${collection.matchingCount === 1 ? "dinner" : "dinners"} match`
-              : `⌄ ${collection.totalCount} ${collection.totalCount === 1 ? "dinner" : "dinners"} ⌄`}
+              : `${collection.totalCount} ${collection.totalCount === 1 ? "dinner" : "dinners"}`}
           </p>
         </>
       )}
