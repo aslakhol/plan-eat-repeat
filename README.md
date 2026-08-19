@@ -16,8 +16,9 @@ The web app is hosted on [Vercel](https://vercel.com/) at [PlanEatRepeat.com](ht
 
 ### Deployments and database migrations
 
-- Vercel Preview deployments build the web app but never run database
-  migrations. Their `DATABASE_URL` must not point at production.
+- Vercel Preview deployments build the web app but have no database access and
+  never run database migrations. Their `DATABASE_URL` is a non-routable
+  sentinel, and `MIGRATION_DATABASE_URL` is not configured for Preview.
 - Vercel Production builds the app first, then runs `prisma migrate deploy`
   through `MIGRATION_DATABASE_URL`. A failed build or migration prevents the
   new deployment from being published.

@@ -1,0 +1,3 @@
+# Separate Runtime and Migration Database Connections
+
+Vercel Production application traffic uses Supabase's transaction-mode pooler so autoscaled functions share database connections instead of pinning session-mode connections, while schema migrations keep a separate direct connection or session-mode pooler because migration tooling requires session features that transaction pooling does not provide. Preview deployments deliberately have no database access and never receive `MIGRATION_DATABASE_URL`; we accept that Preview cannot verify database behavior in exchange for keeping Preview isolated from Production without maintaining a second Supabase project.
