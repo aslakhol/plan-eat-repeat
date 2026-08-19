@@ -333,11 +333,6 @@ const PickerContent = ({
               </div>
             )}
 
-            <p className="text-muted-foreground pt-2 text-center text-[11px] font-semibold">
-              {collection.hasActiveFilters
-                ? `${collection.matchingCount} ${collection.matchingCount === 1 ? "dinner" : "dinners"} match`
-                : `⌄ ${collection.totalCount} ${collection.totalCount === 1 ? "dinner" : "dinners"} ⌄`}
-            </p>
           </div>
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-3 px-4 text-center">

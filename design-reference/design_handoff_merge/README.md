@@ -48,7 +48,7 @@ Tapping a Dinner fetches its complete detail for the keeper cards; do not load e
 
 The picker may open the existing tag-filter sheet above the Merge sheet. Dismissing the tag filter returns to the picker; dismissing the Merge sheet returns to the underlying Dinner sheet.
 
-If active filters leave the inert origin as the only matching row, keep that row visible and show "No other dinners match" with the existing Clear filters action. Determine this state from actionable candidates rather than the raw matching-row count. The normal result count still includes every visible matching row, including the origin.
+If active filters leave the inert origin as the only matching row, keep that row visible and show "No other dinners match" with the existing Clear filters action. Determine this state from actionable candidates rather than the raw matching-row count.
 
 ### 3. Choose which one is kept (`screens/03-choose-keeper.png`)
 
