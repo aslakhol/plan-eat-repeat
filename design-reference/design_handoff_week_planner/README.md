@@ -56,7 +56,7 @@ Opens over/instead of the picker (same sheet swap or a second sheet). No heading
 Same picker sheet with a filter active:
 - Funnel button becomes **tinted**: primary border, `#F6DDD2` fill, primary icon. (No count in the button.)
 - A removable chip row of the active tags ("Quick ✕" "Vegetarian ✕", filled chip style) appears between search and the sort control — only while a filter is on.
-- List shows only matching dinners; end-of-list caption "9 dinners match" (11px, muted, centered).
+- List shows only matching dinners.
 - Sort control and footer buttons unchanged.
 
 ### 5. Planned day → viewing sheet (`screens/05-planned-day-sheet.png`)

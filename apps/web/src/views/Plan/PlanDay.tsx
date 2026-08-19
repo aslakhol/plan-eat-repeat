@@ -173,13 +173,6 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
                 />
               </Fragment>
             ))}
-            {collection.hasActiveFilters && (
-              <p className="text-muted-foreground pt-2 text-center text-[11px] font-semibold">
-                {collection.matchingCount}{" "}
-                {collection.matchingCount === 1 ? "dinner" : "dinners"}{" "}
-                match
-              </p>
-            )}
           </div>
         ) : collection.emptyState === "empty-cookbook" ? (
           <PickerMessage

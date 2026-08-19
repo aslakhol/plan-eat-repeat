@@ -97,12 +97,6 @@ export const DinnersView = () => {
               </Button>
             </div>
           )}
-          {collection.hasActiveFilters && (
-            <p className="text-muted-foreground text-center text-[11px] font-semibold">
-              {collection.matchingCount}{" "}
-              {collection.matchingCount === 1 ? "dinner" : "dinners"} match
-            </p>
-          )}
         </>
       )}
     </div>

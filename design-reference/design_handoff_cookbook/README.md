@@ -27,7 +27,6 @@ The Cookbook deliberately reuses the Week planner's vocabulary. Read `design_han
   - Second line (only when the dinner has tags): a **single non-wrapping row of tag chips**, clipped to the card width, with a quiet **"+5"** overflow marker in muted text at the end. Chips: white fill, 1px `#e6e0d4`, full radius, 3px 9px, 10.5px 600, muted text.
   - **Dinners with no tags lose the second line entirely** and the card shrinks to one line. This is intended — the list should have rhythm, not forced uniform height.
   - A dinner with 8 tags must never be taller than one with 3. Truncate, never wrap.
-- **Filtered results**: caption "9 dinners match" (11px, muted, centered) while search or tag filtering is active. Favourites changes ordering, not membership, so it does not show a count by itself.
 - **No "Surprise me!" and no "New dinner" button in the Cookbook.** New dinners come from the ＋ tab; Surprise me! belongs to the day picker, where a random pick is actionable.
 - Tab bar identical to Week, with **Cookbook** active.
 
