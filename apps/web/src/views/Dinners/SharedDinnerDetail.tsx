@@ -44,6 +44,7 @@ export const SharedDinnerDetail = () => {
   const stopMutation = api.dinner.stopPublication.useMutation({
     onSuccess: async () => {
       if (!dinner) return;
+      unavailableHandled.current = true;
       utils.dinner.sharedDinners.setData(undefined, (current) =>
         current
           ? {
