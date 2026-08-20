@@ -59,6 +59,10 @@ _Avoid_: Merge Cooking History, combine recipes
 A search-indexable public view of a Dinner, created explicitly by any Household member and readable by anyone while sharing is enabled. Every Dinner can be published, including a Name-only Dinner or Notes-only Dinner; it presents the Dinner's current name, tags, notes, Link, and optional Recipe, and its attribution uses the Household's name.
 _Avoid_: Public Recipe, shared Recipe
 
+**Shared Dinners**:
+The Household's view of its currently Published Dinners. It is a collection view, not a separate kind of Dinner.
+_Avoid_: Shared Dinner entity, Published Dinner library
+
 **Publication Date**:
 The UTC calendar date on which sharing was most recently enabled for a Published Dinner. It resets when sharing restarts and is used in both public attribution and share status.
 

@@ -8,9 +8,12 @@ type DinnerSummaryLabelInput = {
   currentWeekPlanDates: readonly Date[];
 };
 
-type OrderableDinnerSummary = {
+type NamedDinner = {
   id: number;
   name: string;
+};
+
+type OrderableDinnerSummary = NamedDinner & {
   favourite: boolean;
   cookingFrequency: number;
   lastCookedDate: Date | null;
@@ -37,10 +40,8 @@ const dinnerNameCollator = new Intl.Collator("en", {
   sensitivity: "base",
 });
 
-const compareDinnerNames = (
-  left: OrderableDinnerSummary,
-  right: OrderableDinnerSummary,
-) => dinnerNameCollator.compare(left.name, right.name) || left.id - right.id;
+export const compareDinnerNames = (left: NamedDinner, right: NamedDinner) =>
+  dinnerNameCollator.compare(left.name, right.name) || left.id - right.id;
 
 const weekdayFormatter = new Intl.DateTimeFormat("en", { weekday: "long" });
 

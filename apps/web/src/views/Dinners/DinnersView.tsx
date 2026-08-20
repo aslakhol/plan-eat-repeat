@@ -50,7 +50,12 @@ export const DinnersView = () => {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
       <div className="flex flex-col gap-4">
-        <CookSettingsHeader title="Cookbook" />
+        <CookSettingsHeader
+          title="Cookbook"
+          showSharedDinnersShortcut={dinnersQuery.data.dinners.some(
+            (dinner) => dinner.publishedAt !== null,
+          )}
+        />
         <DinnerCollectionControls
           dinners={dinnersQuery.data.dinners}
           search={search}

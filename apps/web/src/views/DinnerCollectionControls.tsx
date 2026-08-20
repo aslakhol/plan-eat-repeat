@@ -24,32 +24,32 @@ type CollectionDinner = {
   tags: ReadonlyArray<{ value: string }>;
 };
 
-type SortOption = {
-  value: CookbookSort;
+type SortOption<Sort extends string> = {
+  value: Sort;
   label: string;
 };
 
-const cookbookSortOptions: readonly SortOption[] = [
+const cookbookSortOptions: readonly SortOption<CookbookSort>[] = [
   { value: "az", label: "A–Z" },
   { value: "not-lately", label: "Haven't had lately" },
   { value: "favourites", label: "Favourites" },
 ];
 
-type Props = {
+type Props<Sort extends string> = {
   dinners: readonly CollectionDinner[];
   tagVocabularyDinners?: readonly CollectionDinner[];
   search: string;
   onSearchChange: (search: string) => void;
   selectedTags: string[];
   onSelectedTagsChange: (tags: string[]) => void;
-  sort: CookbookSort;
-  onSortChange: (sort: CookbookSort) => void;
+  sort: Sort;
+  onSortChange: (sort: Sort) => void;
   placeholder?: string;
-  sortOptions?: readonly SortOption[];
+  sortOptions?: readonly SortOption<Sort>[];
   className?: string;
 };
 
-export const DinnerCollectionControls = ({
+export const DinnerCollectionControls = <Sort extends string = CookbookSort>({
   dinners,
   tagVocabularyDinners = dinners,
   search,
@@ -59,9 +59,9 @@ export const DinnerCollectionControls = ({
   sort,
   onSortChange,
   placeholder = "Search dinners…",
-  sortOptions = cookbookSortOptions,
+  sortOptions = cookbookSortOptions as readonly SortOption<Sort>[],
   className,
-}: Props) => {
+}: Props<Sort>) => {
   const [tagFilterOpen, setTagFilterOpen] = useState(false);
   const [draftTags, setDraftTags] = useState<string[]>(selectedTags);
   const [tagSearch, setTagSearch] = useState("");

@@ -83,6 +83,52 @@ export const findPublishedDinnerSaveCount = async (
   return destinationHouseholds.length;
 };
 
+export const findSharedDinners = async (
+  db: PrismaClient,
+  householdId: string,
+) => {
+  const dinners = await db.dinner.findMany({
+    where: {
+      householdId,
+      publicSlug: { not: null },
+      publishedAt: { not: null },
+    },
+    select: {
+      id: true,
+      name: true,
+      publicSlug: true,
+      publishedAt: true,
+      tags: { select: { value: true }, orderBy: { value: "asc" } },
+    },
+    orderBy: [{ publishedAt: "desc" }, { name: "asc" }, { id: "asc" }],
+  });
+
+  if (dinners.length === 0) return [];
+
+  const destinationHouseholds = await db.dinner.groupBy({
+    by: ["sourceDinnerId", "householdId"],
+    where: {
+      sourceDinnerId: { in: dinners.map((dinner) => dinner.id) },
+      householdId: { not: householdId },
+    },
+  });
+  const saveCounts = new Map<number, number>();
+  for (const copy of destinationHouseholds) {
+    if (copy.sourceDinnerId === null) continue;
+    saveCounts.set(
+      copy.sourceDinnerId,
+      (saveCounts.get(copy.sourceDinnerId) ?? 0) + 1,
+    );
+  }
+
+  return dinners.map((dinner) => ({
+    ...dinner,
+    publicSlug: dinner.publicSlug!,
+    publishedAt: dinner.publishedAt!,
+    saveCount: saveCounts.get(dinner.id) ?? 0,
+  }));
+};
+
 export const publishDinner = async (
   db: PrismaClient,
   householdId: string,

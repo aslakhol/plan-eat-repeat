@@ -27,6 +27,7 @@ import { acquireYouTubeVideoTitle } from "~/server/recipes/youtube";
 import { planDinnerMerge } from "~/server/merge-dinners";
 import { type PrismaClient } from "@planeatrepeat/db";
 import {
+  findSharedDinners,
   findPublishedDinnerSaveCount,
   PublicationRateLimitError,
   publishDinner,
@@ -124,6 +125,10 @@ const toImportTRPCError = (error: unknown) => {
 };
 
 export const dinnerRouter = createTRPCRouter({
+  sharedDinners: protectedProcedureWithHousehold.query(async ({ ctx }) => ({
+    dinners: await findSharedDinners(ctx.db, ctx.householdId),
+  })),
+
   publishedSaveStatus: sessionProcedure
     .input(z.object({ publicSlug: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
