@@ -148,6 +148,13 @@ test("an anonymous visitor browses every Published Dinner with the approved cont
       page.getByRole("heading", { name: householdName }),
     ).toBeVisible();
     await expect(page.getByPlaceholder("Search their dinners…")).toBeVisible();
+    await expect(page.getByPlaceholder("Search their dinners…")).toHaveCSS(
+      "height",
+      "42px",
+    );
+    await expect(
+      page.getByRole("button", { name: "Filter by tags" }),
+    ).toHaveCSS("height", "42px");
     await expect(
       page.getByRole("button", { name: "Recently shared" }),
     ).toHaveAttribute("aria-pressed", "true");
@@ -237,7 +244,18 @@ test("an anonymous visitor browses every Published Dinner with the approved cont
     await expect(
       page.locator("[data-public-list-desktop-footer]"),
     ).toBeHidden();
-    await expect(page.locator("[data-public-dinner-collection]")).toHaveCSS(
+    await expect(page.locator("[data-public-list-mobile-wordmark]")).toHaveCSS(
+      "font-size",
+      "13px",
+    );
+    await expect(page.getByPlaceholder("Search their dinners…")).toHaveCSS(
+      "height",
+      "38px",
+    );
+    await expect(
+      page.getByRole("button", { name: "Filter by tags" }),
+    ).toHaveCSS("height", "38px");
+    await expect(page.locator("[data-public-dinner-list]")).toHaveCSS(
       "display",
       "block",
     );

@@ -3,7 +3,7 @@ import { publicSlugForName } from "~/lib/public-slug";
 
 export type PublicDinnerListSort = "recent" | "az" | "most-saved";
 
-type PublicDinnerCollectionDinner = {
+export type PublicDinnerListDinner = {
   name: string;
   publicSlug: string;
   publishedAt: string;
@@ -17,22 +17,20 @@ const publicDinnerNameCollator = new Intl.Collator("en", {
 });
 
 const comparePublicDinnerNames = (
-  left: PublicDinnerCollectionDinner,
-  right: PublicDinnerCollectionDinner,
+  left: PublicDinnerListDinner,
+  right: PublicDinnerListDinner,
 ) =>
   publicDinnerNameCollator.compare(left.name, right.name) ||
   left.publicSlug.localeCompare(right.publicSlug);
 
 const compareRecentlyShared = (
-  left: PublicDinnerCollectionDinner,
-  right: PublicDinnerCollectionDinner,
+  left: PublicDinnerListDinner,
+  right: PublicDinnerListDinner,
 ) =>
   Date.parse(right.publishedAt) - Date.parse(left.publishedAt) ||
   comparePublicDinnerNames(left, right);
 
-export const derivePublicDinnerCollection = <
-  Dinner extends PublicDinnerCollectionDinner,
->(
+export const derivePublicDinnerList = <Dinner extends PublicDinnerListDinner>(
   dinners: readonly Dinner[],
   controls: {
     search: string;
@@ -75,13 +73,7 @@ export const derivePublicDinnerCollection = <
 export type PublicDinnerList = {
   publicSlug: string;
   householdName: string;
-  dinners: Array<{
-    name: string;
-    publicSlug: string;
-    publishedAt: string;
-    saveCount: number;
-    tags: string[];
-  }>;
+  dinners: PublicDinnerListDinner[];
 };
 
 export const publicSlugForHousehold = (name: string, publicId: string) =>

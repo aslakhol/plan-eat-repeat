@@ -4,7 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import {
-  derivePublicDinnerCollection,
+  derivePublicDinnerList,
   publicDinnerListPath,
   publicDinnerListUrl,
   publicSlugForHousehold,
@@ -31,7 +31,7 @@ void test("Public Dinner List URLs keep a readable initial Household name and op
   );
 });
 
-void test("Public Dinner List collection searches names and tags and requires every selected tag", () => {
+void test("Public Dinner List searches names and tags and requires every selected tag", () => {
   const dinners = [
     {
       name: "Crème brûlée",
@@ -57,7 +57,7 @@ void test("Public Dinner List collection searches names and tags and requires ev
   ];
 
   assert.deepEqual(
-    derivePublicDinnerCollection(dinners, {
+    derivePublicDinnerList(dinners, {
       search: "creme",
       selectedTags: [],
       sort: "recent",
@@ -65,7 +65,7 @@ void test("Public Dinner List collection searches names and tags and requires ev
     ["Crème brûlée"],
   );
   assert.deepEqual(
-    derivePublicDinnerCollection(dinners, {
+    derivePublicDinnerList(dinners, {
       search: "indian",
       selectedTags: ["Quick", "Indian"],
       sort: "recent",
@@ -73,7 +73,7 @@ void test("Public Dinner List collection searches names and tags and requires ev
     ["Friday curry"],
   );
   assert.equal(
-    derivePublicDinnerCollection(dinners, {
+    derivePublicDinnerList(dinners, {
       search: "soup",
       selectedTags: [],
       sort: "recent",
@@ -82,7 +82,7 @@ void test("Public Dinner List collection searches names and tags and requires ev
   );
 });
 
-void test("Public Dinner List collection applies all three public sorts with deterministic ties", () => {
+void test("Public Dinner List applies all three public sorts with deterministic ties", () => {
   const dinners = [
     {
       name: "Apple stew",
@@ -107,7 +107,7 @@ void test("Public Dinner List collection applies all three public sorts with det
     },
   ];
   const slugsFor = (sort: "recent" | "az" | "most-saved") =>
-    derivePublicDinnerCollection(dinners, {
+    derivePublicDinnerList(dinners, {
       search: "",
       selectedTags: [],
       sort,

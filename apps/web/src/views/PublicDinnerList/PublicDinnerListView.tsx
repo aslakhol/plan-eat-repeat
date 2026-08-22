@@ -4,8 +4,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import {
-  derivePublicDinnerCollection,
+  derivePublicDinnerList,
   type PublicDinnerList,
+  type PublicDinnerListDinner,
   type PublicDinnerListSort,
 } from "~/lib/public-dinner-list";
 import { publishedDinnerPath } from "~/lib/published-dinner";
@@ -63,7 +64,7 @@ const PublicDinnerLink = ({
   dinner,
   lastMobileRow,
 }: {
-  dinner: PublicDinnerList["dinners"][number];
+  dinner: PublicDinnerListDinner;
   lastMobileRow: boolean;
 }) => (
   <Link
@@ -122,13 +123,14 @@ export const PublicDinnerListView = ({
       })),
     [dinnerList.dinners],
   );
-  const collection = derivePublicDinnerCollection(dinnerList.dinners, {
+  const publicDinnerList = derivePublicDinnerList(dinnerList.dinners, {
     search,
     selectedTags,
     sort,
   });
-  const visibleDinners = collection.dinners.slice(0, visibleCount);
-  const remainingCount = collection.dinners.length - visibleDinners.length;
+  const visibleDinners = publicDinnerList.dinners.slice(0, visibleCount);
+  const remainingCount =
+    publicDinnerList.dinners.length - visibleDinners.length;
 
   useEffect(
     () => setVisibleCount(DINNER_BATCH_SIZE),
@@ -150,7 +152,10 @@ export const PublicDinnerListView = ({
       </header>
 
       <main className="mx-auto w-full max-w-[824px] flex-1 px-4 pb-6 pt-7 md:px-8 md:py-12">
-        <div className="text-primary mb-6 font-serif text-xl md:hidden">
+        <div
+          data-public-list-mobile-wordmark
+          className="text-primary mb-6 font-serif text-[13px] md:hidden"
+        >
           Plan Eat Repeat
         </div>
 
@@ -180,14 +185,16 @@ export const PublicDinnerListView = ({
             sortOptions={publicDinnerListSortOptions}
             placeholder="Search their dinners…"
             className="mt-6"
+            searchInputClassName="h-[38px] md:h-[42px]"
+            filterButtonClassName="h-[38px] w-[38px] md:h-[42px] md:w-[42px]"
           />
         </Card>
 
         <Card
-          data-public-dinner-collection
+          data-public-dinner-list
           className="mt-5 block rounded-2xl px-5 py-1 shadow-[0_8px_28px_rgba(60,50,40,.08)] md:mt-7 md:grid md:grid-cols-3 md:gap-2.5 md:rounded-none md:border-0 md:bg-transparent md:px-0 md:py-0 md:shadow-none"
         >
-          {collection.emptyState === "no-matches" ? (
+          {publicDinnerList.emptyState === "no-matches" ? (
             <NoMatches onClear={clearFilters} />
           ) : (
             <>
@@ -217,7 +224,8 @@ export const PublicDinnerListView = ({
         </Card>
 
         <p className="sr-only" role="status" aria-live="polite">
-          Showing {visibleDinners.length} of {collection.dinners.length} dinners
+          Showing {visibleDinners.length} of {publicDinnerList.dinners.length}{" "}
+          dinners
         </p>
 
         <Card

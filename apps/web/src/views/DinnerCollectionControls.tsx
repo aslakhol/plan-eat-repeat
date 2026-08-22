@@ -47,6 +47,8 @@ type Props<Sort extends string> = {
   placeholder?: string;
   sortOptions?: readonly SortOption<Sort>[];
   className?: string;
+  searchInputClassName?: string;
+  filterButtonClassName?: string;
 };
 
 export const DinnerCollectionControls = <Sort extends string = CookbookSort>({
@@ -61,6 +63,8 @@ export const DinnerCollectionControls = <Sort extends string = CookbookSort>({
   placeholder = "Search dinners…",
   sortOptions = cookbookSortOptions as readonly SortOption<Sort>[],
   className,
+  searchInputClassName,
+  filterButtonClassName,
 }: Props<Sort>) => {
   const [tagFilterOpen, setTagFilterOpen] = useState(false);
   const [draftTags, setDraftTags] = useState<string[]>(selectedTags);
@@ -105,7 +109,10 @@ export const DinnerCollectionControls = <Sort extends string = CookbookSort>({
           placeholder={placeholder}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
-          className="h-11 min-w-0 rounded-full bg-white px-4"
+          className={cn(
+            "h-11 min-w-0 rounded-full bg-white px-4",
+            searchInputClassName,
+          )}
         />
         <Button
           type="button"
@@ -116,6 +123,7 @@ export const DinnerCollectionControls = <Sort extends string = CookbookSort>({
           aria-expanded={tagFilterOpen}
           className={cn(
             "h-11 w-11 shrink-0 rounded-lg",
+            filterButtonClassName,
             selectedTags.length > 0 &&
               "border-primary bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
           )}
