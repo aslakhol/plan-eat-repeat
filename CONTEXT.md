@@ -63,6 +63,10 @@ _Avoid_: Public Recipe, shared Recipe
 The Household's view of its currently Published Dinners. It is a collection view, not a separate kind of Dinner.
 _Avoid_: Shared Dinner entity, Published Dinner library
 
+**Public Dinner List**:
+The public view of one Household's currently Published Dinners. It exists only while that Household has at least one Published Dinner.
+_Avoid_: Public Cookbook, Shared Dinners
+
 **Publication Date**:
 The UTC calendar date on which sharing was most recently enabled for a Published Dinner. It resets when sharing restarts and is used in both public attribution and share status.
 
