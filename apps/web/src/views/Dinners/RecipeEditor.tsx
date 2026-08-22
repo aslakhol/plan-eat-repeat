@@ -23,6 +23,7 @@ import {
   type DinnerWithRecipe,
   amountInputSchema,
   dinnerNameSchema,
+  normalizeDinnerLinkInput,
   parseAmount,
   recipeSchema,
   recipeIngredientSchema,
@@ -55,11 +56,24 @@ const editorIngredientSchema = recipeIngredientSchema.extend({
   note: z.string(),
 });
 
+const editorDinnerLinkSchema = z.string().transform((value, context) => {
+  if (value.trim() === "") return "";
+
+  const normalized = normalizeDinnerLinkInput(value);
+  if (normalized) return normalized;
+
+  context.addIssue({
+    code: z.ZodIssueCode.custom,
+    message: "Enter a valid link",
+  });
+  return z.NEVER;
+});
+
 const recipeEditorSchema = z.object({
   name: dinnerNameSchema,
   tags: z.array(z.string()),
   newTag: z.string().optional(),
-  link: z.union([z.literal(""), z.string().url("Enter a valid URL")]),
+  link: editorDinnerLinkSchema,
   notes: z.string(),
   recipe: z.object({
     servings: z.number().int().positive().nullable(),
@@ -173,6 +187,28 @@ export const RecipeEditor = ({
   const hasRecipeContent =
     watchedParts.length > 0 ||
     (typeof servings === "number" && Number.isFinite(servings) && servings > 0);
+  const linkRegistration = form.register("link");
+
+  const normalizeLinkField = (value: string) => {
+    const normalized = normalizeDinnerLinkInput(value);
+    if (normalized) {
+      form.setValue("link", normalized, {
+        shouldDirty: normalized !== value,
+        shouldValidate: true,
+      });
+      return;
+    }
+
+    if (value.trim() === "") {
+      form.setValue("link", "", {
+        shouldDirty: value !== "",
+        shouldValidate: true,
+      });
+      return;
+    }
+
+    void form.trigger("link");
+  };
 
   const applyImport = (imported: ExistingDinnerRecipeImport) => {
     const result = applyExistingDinnerImport(form.getValues(), imported);
@@ -209,10 +245,15 @@ export const RecipeEditor = ({
     onSave(values);
   };
 
+  const submit = form.handleSubmit(save);
+
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(save)}
+        onSubmit={(event) => {
+          normalizeLinkField(form.getValues("link"));
+          void submit(event);
+        }}
         className="mx-auto w-full max-w-[640px] pb-[calc(7rem+env(safe-area-inset-bottom))]"
       >
         <StickyHeaderCard className="sticky top-0 z-20 mb-5 flex min-h-12 items-center gap-2">
@@ -366,10 +407,15 @@ export const RecipeEditor = ({
                 <div className="space-y-1.5">
                   <FieldLabel htmlFor="recipe-link">Link</FieldLabel>
                   <Input
-                    {...form.register("link")}
+                    {...linkRegistration}
                     id="recipe-link"
-                    type="url"
+                    type="text"
+                    inputMode="url"
                     className="bg-white"
+                    onBlur={(event) => {
+                      void linkRegistration.onBlur(event);
+                      normalizeLinkField(event.target.value);
+                    }}
                   />
                 </div>
               </div>
