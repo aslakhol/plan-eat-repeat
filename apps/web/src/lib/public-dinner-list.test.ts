@@ -4,6 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import {
+  derivePublicDinnerCollection,
   publicDinnerListPath,
   publicDinnerListUrl,
   publicSlugForHousehold,
@@ -30,6 +31,105 @@ void test("Public Dinner List URLs keep a readable initial Household name and op
   );
 });
 
+void test("Public Dinner List collection searches names and tags and requires every selected tag", () => {
+  const dinners = [
+    {
+      name: "Crème brûlée",
+      publicSlug: "creme-brulee-one",
+      publishedAt: "2026-08-20T12:00:00.000Z",
+      saveCount: 2,
+      tags: ["Dessert", "French"],
+    },
+    {
+      name: "Friday curry",
+      publicSlug: "friday-curry-two",
+      publishedAt: "2026-08-21T12:00:00.000Z",
+      saveCount: 4,
+      tags: ["Quick", "Indian"],
+    },
+    {
+      name: "Quick noodles",
+      publicSlug: "quick-noodles-three",
+      publishedAt: "2026-08-22T12:00:00.000Z",
+      saveCount: 0,
+      tags: ["Quick", "Vegetarian"],
+    },
+  ];
+
+  assert.deepEqual(
+    derivePublicDinnerCollection(dinners, {
+      search: "creme",
+      selectedTags: [],
+      sort: "recent",
+    }).dinners.map((dinner) => dinner.name),
+    ["Crème brûlée"],
+  );
+  assert.deepEqual(
+    derivePublicDinnerCollection(dinners, {
+      search: "indian",
+      selectedTags: ["Quick", "Indian"],
+      sort: "recent",
+    }).dinners.map((dinner) => dinner.name),
+    ["Friday curry"],
+  );
+  assert.equal(
+    derivePublicDinnerCollection(dinners, {
+      search: "soup",
+      selectedTags: [],
+      sort: "recent",
+    }).emptyState,
+    "no-matches",
+  );
+});
+
+void test("Public Dinner List collection applies all three public sorts with deterministic ties", () => {
+  const dinners = [
+    {
+      name: "Apple stew",
+      publicSlug: "apple-stew-b",
+      publishedAt: "2026-08-20T12:00:00.000Z",
+      saveCount: 2,
+      tags: [],
+    },
+    {
+      name: "Apple stew",
+      publicSlug: "apple-stew-a",
+      publishedAt: "2026-08-20T12:00:00.000Z",
+      saveCount: 2,
+      tags: [],
+    },
+    {
+      name: "Ziti",
+      publicSlug: "ziti-newest",
+      publishedAt: "2026-08-22T12:00:00.000Z",
+      saveCount: 1,
+      tags: [],
+    },
+  ];
+  const slugsFor = (sort: "recent" | "az" | "most-saved") =>
+    derivePublicDinnerCollection(dinners, {
+      search: "",
+      selectedTags: [],
+      sort,
+    }).dinners.map((dinner) => dinner.publicSlug);
+
+  assert.deepEqual(slugsFor("recent"), [
+    "ziti-newest",
+    "apple-stew-a",
+    "apple-stew-b",
+  ]);
+  assert.deepEqual(slugsFor("az"), [
+    "apple-stew-a",
+    "apple-stew-b",
+    "ziti-newest",
+  ]);
+  assert.deepEqual(slugsFor("most-saved"), [
+    "apple-stew-a",
+    "apple-stew-b",
+    "ziti-newest",
+  ]);
+});
+
 void test("a Public Dinner List renders Household attribution and Published Dinner links in server markup", () => {
   const html = renderToStaticMarkup(
     createElement(PublicDinnerListView, {
@@ -40,6 +140,8 @@ void test("a Public Dinner List renders Household attribution and Published Dinn
           {
             name: "Spaghetti Carbonara",
             publicSlug: "spaghetti-carbonara-dinner1",
+            publishedAt: "2026-08-12T12:00:00.000Z",
+            saveCount: 2,
             tags: ["Quick", "Pasta"],
           },
         ],

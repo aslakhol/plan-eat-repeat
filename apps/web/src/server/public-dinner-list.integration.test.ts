@@ -65,6 +65,16 @@ void test("a Public Dinner List exposes only one Household's active Published Di
         publicSlug: `other-dinner-${uniqueId}`,
         publishedAt: new Date("2026-08-13T12:00:00.000Z"),
       },
+      {
+        name: `First copy ${uniqueId}`,
+        householdId: otherHousehold.id,
+        sourceDinnerId: active.id,
+      },
+      {
+        name: `Second copy ${uniqueId}`,
+        householdId: otherHousehold.id,
+        sourceDinnerId: active.id,
+      },
     ],
   });
 
@@ -82,6 +92,8 @@ void test("a Public Dinner List exposes only one Household's active Published Di
         {
           name: active.name,
           publicSlug: active.publicSlug,
+          publishedAt: "2026-08-12T23:30:00.000Z",
+          saveCount: 1,
           tags: [tagValue],
         },
       ],
@@ -102,6 +114,8 @@ void test("a Public Dinner List exposes only one Household's active Published Di
         {
           name: active.name,
           publicSlug: active.publicSlug,
+          publishedAt: "2026-08-12T23:30:00.000Z",
+          saveCount: 1,
           tags: [tagValue],
         },
       ],

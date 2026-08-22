@@ -9,6 +9,7 @@ export const findPublicDinnerList = async (
   const household = await db.household.findUnique({
     where: { publicSlug },
     select: {
+      id: true,
       name: true,
       publicSlug: true,
       Dinners: {
@@ -17,8 +18,10 @@ export const findPublicDinnerList = async (
           publishedAt: { not: null },
         },
         select: {
+          id: true,
           name: true,
           publicSlug: true,
+          publishedAt: true,
           tags: { select: { value: true }, orderBy: { value: "asc" } },
         },
         orderBy: [{ publishedAt: "desc" }, { name: "asc" }, { id: "asc" }],
@@ -28,12 +31,30 @@ export const findPublicDinnerList = async (
 
   if (!household?.publicSlug || household.Dinners.length === 0) return null;
 
+  const destinationHouseholds = await db.dinner.groupBy({
+    by: ["sourceDinnerId", "householdId"],
+    where: {
+      sourceDinnerId: { in: household.Dinners.map((dinner) => dinner.id) },
+      householdId: { not: household.id },
+    },
+  });
+  const saveCounts = new Map<number, number>();
+  for (const copy of destinationHouseholds) {
+    if (copy.sourceDinnerId === null) continue;
+    saveCounts.set(
+      copy.sourceDinnerId,
+      (saveCounts.get(copy.sourceDinnerId) ?? 0) + 1,
+    );
+  }
+
   return {
     publicSlug: household.publicSlug,
     householdName: household.name,
     dinners: household.Dinners.map((dinner) => ({
       name: dinner.name,
       publicSlug: dinner.publicSlug!,
+      publishedAt: dinner.publishedAt!.toISOString(),
+      saveCount: saveCounts.get(dinner.id) ?? 0,
       tags: dinner.tags.map((tag) => tag.value),
     })),
   };
