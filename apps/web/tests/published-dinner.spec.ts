@@ -4,6 +4,9 @@ import { parseHTML } from "linkedom";
 
 import { createPrismaClient } from "@planeatrepeat/db";
 
+import { publicDinnerListPath } from "~/lib/public-dinner-list";
+import { publishedDinnerPath } from "~/lib/published-dinner";
+
 import {
   deleteDinnerIfPresent,
   ensureSignedIn,
@@ -19,6 +22,131 @@ if (!databaseUrl) throw new Error("DATABASE_URL is required for browser tests");
 const testDb = createPrismaClient(databaseUrl);
 
 test.afterAll(async () => testDb.$disconnect());
+
+test("an anonymous visitor follows stable Household attribution to its active Public Dinner List", async ({
+  page,
+}) => {
+  const uniqueId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const householdName = `Public Household ${uniqueId}`;
+  const householdPublicSlug = `public-household-${uniqueId}`;
+  const dinnerName = `Visible Dinner ${uniqueId}`;
+  const dinnerPublicSlug = `visible-dinner-${uniqueId}`;
+  const otherDinnerName = `Other Household Dinner ${uniqueId}`;
+  const tagValue = `Public Tag ${uniqueId}`;
+  const [household, otherHousehold] = await testDb.$transaction([
+    testDb.household.create({
+      data: {
+        name: householdName,
+        slug: `public-route-source-${uniqueId}`,
+        publicSlug: householdPublicSlug,
+      },
+    }),
+    testDb.household.create({
+      data: {
+        name: `Other Household ${uniqueId}`,
+        slug: `public-route-other-${uniqueId}`,
+        publicSlug: `other-public-household-${uniqueId}`,
+      },
+    }),
+  ]);
+  const dinner = await testDb.dinner.create({
+    data: {
+      name: dinnerName,
+      householdId: household.id,
+      publicSlug: dinnerPublicSlug,
+      publishedAt: new Date(),
+      favourite: true,
+      notes: `Private list sentinel ${uniqueId}`,
+      tags: { create: { value: tagValue } },
+    },
+  });
+  await testDb.dinner.create({
+    data: {
+      name: otherDinnerName,
+      householdId: otherHousehold.id,
+      publicSlug: `other-visible-dinner-${uniqueId}`,
+      publishedAt: new Date(),
+    },
+  });
+
+  const householdPath = publicDinnerListPath(householdPublicSlug);
+  const dinnerPath = publishedDinnerPath(dinnerPublicSlug);
+
+  try {
+    const dinnerResponse = await page.goto(dinnerPath);
+    expect(dinnerResponse?.status()).toBe(200);
+    await expect(page.locator(`a[href="${householdPath}"]`)).toHaveCount(2);
+    await page.getByRole("link", { name: householdName, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`${householdPath}$`));
+    await expect(
+      page.getByRole("heading", { name: householdName }),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: dinnerName })).toHaveAttribute(
+      "href",
+      dinnerPath,
+    );
+    await expect(page.getByText(tagValue)).toBeVisible();
+    await expect(page.getByText(otherDinnerName)).toHaveCount(0);
+    await expect(
+      page.getByText(`Private list sentinel ${uniqueId}`),
+    ).toHaveCount(0);
+
+    const renamedHousehold = `Renamed Household ${uniqueId}`;
+    const renamedDinner = `Renamed Dinner ${uniqueId}`;
+    await testDb.$transaction([
+      testDb.household.update({
+        where: { id: household.id },
+        data: { name: renamedHousehold },
+      }),
+      testDb.dinner.update({
+        where: { id: dinner.id },
+        data: { name: renamedDinner },
+      }),
+    ]);
+    await page.reload();
+    await expect(page).toHaveURL(new RegExp(`${householdPath}$`));
+    await expect(
+      page.getByRole("heading", { name: renamedHousehold }),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: renamedDinner })).toBeVisible();
+
+    await testDb.dinner.update({
+      where: { id: dinner.id },
+      data: { publishedAt: null },
+    });
+    const unavailableResponse = await page.goto(householdPath);
+    expect(unavailableResponse?.status()).toBe(404);
+    const unavailableHtml = await unavailableResponse!.text();
+    expect(unavailableHtml).toContain("This page is no longer shared");
+    expect(unavailableHtml).toContain(
+      'name="robots" content="noindex, nofollow"',
+    );
+    expect(unavailableHtml).not.toContain(renamedHousehold);
+    expect(unavailableHtml).not.toContain(renamedDinner);
+
+    await testDb.dinner.update({
+      where: { id: dinner.id },
+      data: { publishedAt: new Date() },
+    });
+    const restoredResponse = await page.goto(householdPath);
+    expect(restoredResponse?.status()).toBe(200);
+    expect(
+      (
+        await testDb.household.findUniqueOrThrow({
+          where: { id: household.id },
+        })
+      ).publicSlug,
+    ).toBe(householdPublicSlug);
+  } finally {
+    await testDb.dinner.deleteMany({
+      where: { householdId: { in: [household.id, otherHousehold.id] } },
+    });
+    await testDb.tag.deleteMany({ where: { value: tagValue } });
+    await testDb.household.deleteMany({
+      where: { id: { in: [household.id, otherHousehold.id] } },
+    });
+  }
+});
 
 const mutateDinner = (
   page: Page,
@@ -539,6 +667,10 @@ test("delete and both Merge Dinner roles keep Published Dinner URLs attached to 
     const marker = await testDb.dinner.findFirstOrThrow({
       where: { name: markerName },
       orderBy: { id: "desc" },
+    });
+    await testDb.household.update({
+      where: { id: marker.householdId },
+      data: { publicSlug: `publication-lifecycle-${uniqueId}` },
     });
     const created = await testDb.$transaction([
       testDb.dinner.create({

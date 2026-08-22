@@ -70,7 +70,11 @@ test("sign-in returns a Save Intent to the stable URL, saves latest content once
     },
   });
   const sourceHousehold = await testDb.household.create({
-    data: { name: `Source ${marker}`, slug: `source-${marker}` },
+    data: {
+      name: `Source ${marker}`,
+      slug: `source-${marker}`,
+      publicSlug: `source-${marker}-public`,
+    },
   });
   const source = await testDb.dinner.create({
     data: {
@@ -153,6 +157,7 @@ test("sign-up return bootstraps a usable one-person Household without onboarding
     data: {
       name: `First-time source ${marker}`,
       slug: `first-source-${marker}`,
+      publicSlug: `first-source-${marker}-public`,
     },
   });
   const source = await testDb.dinner.create({
@@ -237,6 +242,7 @@ test("a Dinner stopped during authentication saves nothing and returns the unava
     data: {
       name: `Stopped source ${marker}`,
       slug: `stopped-source-${marker}`,
+      publicSlug: `stopped-source-${marker}-public`,
     },
   });
   const source = await testDb.dinner.create({

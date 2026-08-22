@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import Link from "next/link";
 import React, { type ReactNode } from "react";
 
 import { formatAmount, sourceLabel } from "@planeatrepeat/shared";
@@ -7,6 +8,7 @@ import {
   formatPublicationDate,
   type PublishedDinner,
 } from "~/lib/published-dinner";
+import { publicDinnerListPath } from "~/lib/public-dinner-list";
 
 const ingredientAmount = (amount: number | null, unit: string | null) =>
   [amount === null ? "" : formatAmount(amount), unit ?? ""]
@@ -18,9 +20,24 @@ const Attribution = ({ dinner }: { dinner: PublishedDinner }) => (
     <span className="bg-primary/15 text-primary flex size-[26px] shrink-0 items-center justify-center rounded-full font-bold">
       {dinner.householdName.trim().charAt(0).toUpperCase() || "P"}
     </span>
-    <span>
-      Shared by {dinner.householdName} ·{" "}
-      {formatPublicationDate(dinner.publishedAt)}
+    <span className="hidden md:inline">
+      Shared by{" "}
+      <Link
+        href={publicDinnerListPath(dinner.householdPublicSlug)}
+        className="text-primary decoration-primary/40 font-bold underline underline-offset-2"
+      >
+        {dinner.householdName}
+      </Link>{" "}
+      · {formatPublicationDate(dinner.publishedAt)}
+    </span>
+    <span className="md:hidden">
+      <Link
+        href={publicDinnerListPath(dinner.householdPublicSlug)}
+        className="text-primary decoration-primary/40 font-bold underline underline-offset-2"
+      >
+        {dinner.householdName}
+      </Link>{" "}
+      shared a dinner with you
     </span>
   </div>
 );
