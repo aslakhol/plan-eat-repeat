@@ -6,20 +6,18 @@ import {
   recipeSchema,
 } from "@planeatrepeat/shared";
 
-export const createDinnerInputSchema = z.object({
+const dinnerInputSchema = z.object({
   dinnerName: dinnerNameSchema,
   tagList: z.array(z.string()),
   link: dinnerLinkSchema,
   notes: z.string().nullable().optional(),
   recipe: recipeSchema.optional(),
+});
+
+export const createDinnerInputSchema = dinnerInputSchema.extend({
   planDate: z.date().optional(),
 });
 
-export const editDinnerInputSchema = z.object({
-  dinnerName: dinnerNameSchema,
+export const editDinnerInputSchema = dinnerInputSchema.extend({
   dinnerId: z.number(),
-  tagList: z.array(z.string()),
-  link: dinnerLinkSchema,
-  notes: z.string().nullable().optional(),
-  recipe: recipeSchema.optional(),
 });

@@ -245,10 +245,15 @@ export const RecipeEditor = ({
     onSave(values);
   };
 
+  const submit = form.handleSubmit(save);
+
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(save)}
+        onSubmit={(event) => {
+          normalizeLinkField(form.getValues("link"));
+          void submit(event);
+        }}
         className="mx-auto w-full max-w-[640px] pb-[calc(7rem+env(safe-area-inset-bottom))]"
       >
         <StickyHeaderCard className="sticky top-0 z-20 mb-5 flex min-h-12 items-center gap-2">

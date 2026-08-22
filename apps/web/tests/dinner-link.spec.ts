@@ -21,6 +21,13 @@ test("the Dinner editor normalizes web Links and rejects other schemes", async (
     await page.getByRole("textbox", { name: "Name" }).click();
     await expect(linkInput).toHaveValue("https://example.com/recipe");
 
+    const nameInput = page.getByRole("textbox", { name: "Name" });
+    await nameInput.fill("");
+    await linkInput.fill("submitted.example.com/recipe");
+    await linkInput.press("Enter");
+    await expect(linkInput).toHaveValue("https://submitted.example.com/recipe");
+    await nameInput.fill(dinnerName);
+
     await linkInput.fill("mailto:cook@example.com");
     await page.getByRole("textbox", { name: "Name" }).click();
     await expect(page.getByText("Enter a valid link")).toBeVisible();
