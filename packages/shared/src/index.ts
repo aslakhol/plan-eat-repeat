@@ -2,6 +2,7 @@
 export * from "./types";
 export * from "./recipe";
 export * from "./recipeImport";
+export * from "./dinnerLink";
 
 // Type-only import ensures global Clerk augmentations are included at compile time
 import type {} from "./clerk-types";

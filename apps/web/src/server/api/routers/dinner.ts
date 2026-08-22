@@ -2,11 +2,9 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
   ImportRecipeError,
-  dinnerNameSchema,
   importErrorMessages,
   MAX_RECIPE_IMPORT_IMAGE_DATA_LENGTH,
   MAX_RECIPE_IMPORT_IMAGES,
-  recipeSchema,
   youtubeVideoIdFromUrl,
   type DinnerWithRecipe,
   type RecipeInput,
@@ -43,6 +41,10 @@ import {
 } from "~/server/save-published-dinner";
 import { clerkClient } from "@clerk/nextjs/server";
 import { updateClerkHouseholdMetadata } from "~/server/clerk-household-metadata";
+import {
+  createDinnerInputSchema,
+  editDinnerInputSchema,
+} from "~/server/dinner-input";
 
 const householdImportInstructions = async (
   db: PrismaClient,
@@ -493,16 +495,7 @@ export const dinnerRouter = createTRPCRouter({
     }),
 
   create: protectedProcedureWithHousehold
-    .input(
-      z.object({
-        dinnerName: dinnerNameSchema,
-        tagList: z.array(z.string()),
-        link: z.string().nullable().optional(),
-        notes: z.string().nullable().optional(),
-        recipe: recipeSchema.optional(),
-        planDate: z.date().optional(),
-      }),
-    )
+    .input(createDinnerInputSchema)
     .mutation(async ({ ctx, input }) => {
       const householdId = ctx.householdId;
 
@@ -560,16 +553,7 @@ export const dinnerRouter = createTRPCRouter({
       };
     }),
   edit: protectedProcedureWithHousehold
-    .input(
-      z.object({
-        dinnerName: dinnerNameSchema,
-        dinnerId: z.number(),
-        tagList: z.array(z.string()),
-        link: z.string().nullable().optional(),
-        notes: z.string().nullable().optional(),
-        recipe: recipeSchema.optional(),
-      }),
-    )
+    .input(editDinnerInputSchema)
     .mutation(async ({ ctx, input }) => {
       const dinner = await ctx.db.$transaction(async (tx) => {
         const previousDinner = await tx.dinner.findUniqueOrThrow({
