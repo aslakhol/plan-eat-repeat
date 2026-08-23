@@ -7,11 +7,9 @@ import { Button } from "~/components/ui/button";
 import { toast } from "~/components/ui/use-toast";
 import { env } from "~/env";
 import { publishedDinnerUrl } from "~/lib/published-dinner";
+import { displayPublicUrl } from "~/lib/public-url";
 import { formatSharedDinnerMeta } from "~/lib/shared-dinners";
 import { api } from "~/utils/api";
-
-const displayPublicUrl = (publicUrl: string) =>
-  publicUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
 export const SharedDinnerDetail = () => {
   const router = useRouter();

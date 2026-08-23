@@ -15,6 +15,7 @@ import {
   publicDinnerListPath,
   publicDinnerListUrl,
 } from "~/lib/public-dinner-list";
+import { displayPublicUrl } from "~/lib/public-url";
 import {
   deriveSharedDinnerCollection,
   formatSharedDinnerMeta,
@@ -34,9 +35,7 @@ const PublicDinnerListLink = ({
   publicSlug: string;
 }) => {
   const path = publicDinnerListPath(publicSlug);
-  const publicUrl = new URL(
-    publicDinnerListUrl(publicSlug, env.NEXT_PUBLIC_APP_URL),
-  );
+  const publicUrl = publicDinnerListUrl(publicSlug, env.NEXT_PUBLIC_APP_URL);
 
   return (
     <Link
@@ -49,8 +48,7 @@ const PublicDinnerListLink = ({
           {householdName} public page
         </p>
         <p className="text-muted-foreground truncate text-[10.5px] font-semibold">
-          {publicUrl.host}
-          {publicUrl.pathname}
+          {displayPublicUrl(publicUrl)}
         </p>
       </div>
       <span className="text-primary shrink-0 text-xs font-bold">View</span>

@@ -5,7 +5,11 @@ import { expect, test } from "@playwright/test";
 import { createPrismaClient } from "@planeatrepeat/db";
 import { createClerkClient } from "@clerk/backend";
 
-import { completeLocalAuth, provisionLocalAuth } from "./capture-support";
+import {
+  completeLocalAuth,
+  provisionLocalAuth,
+  resetLocalIdentity,
+} from "./capture-support";
 
 const { loadEnvConfig } = createRequire(import.meta.url)(
   "@next/env",
@@ -24,20 +28,6 @@ const testClerk = createClerkClient({ secretKey: clerkSecretKey });
 
 test.afterAll(async () => testDb.$disconnect());
 
-const resetLocalIdentity = async (userId: string) => {
-  const membership = await testDb.membership.findUnique({
-    where: { userId },
-    select: { householdId: true },
-  });
-  if (membership) {
-    await testDb.dinner.deleteMany({
-      where: { householdId: membership.householdId },
-    });
-    await testDb.household.delete({ where: { id: membership.householdId } });
-  }
-  await testDb.user.deleteMany({ where: { id: userId } });
-};
-
 test("Shared Dinners links the Household's active Public Dinner List and hides the link after the last publication stops", async ({
   page,
 }) => {
@@ -47,7 +37,7 @@ test("Shared Dinners links the Household's active Public Dinner List and hides t
   const householdPublicSlug = `original-household-name-${marker}`;
   const dinnerName = `Shared pasta ${marker}`;
   const auth = await provisionLocalAuth(page, "save-intent-first-time");
-  await resetLocalIdentity(auth.userId);
+  await resetLocalIdentity(testDb, auth.userId);
   await testDb.user.create({
     data: { id: auth.userId, firstName: "Shared", lastName: "Dinners" },
   });
@@ -152,7 +142,7 @@ test("Shared Dinners links the Household's active Public Dinner List and hides t
       page.getByRole("heading", { name: "No shared dinners yet" }),
     ).toBeVisible();
   } finally {
-    await resetLocalIdentity(auth.userId);
+    await resetLocalIdentity(testDb, auth.userId);
     await testClerk.users.updateUserMetadata(auth.userId, {
       publicMetadata: { householdId: null },
     });
