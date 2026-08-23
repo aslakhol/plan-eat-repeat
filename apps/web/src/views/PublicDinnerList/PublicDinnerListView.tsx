@@ -63,16 +63,22 @@ const DinnerTags = ({ tags }: { tags: readonly string[] }) =>
 const PublicDinnerLink = ({
   dinner,
   lastMobileRow,
+  visible,
 }: {
   dinner: PublicDinnerListDinner;
   lastMobileRow: boolean;
+  visible: boolean;
 }) => (
   <Link
     href={publishedDinnerPath(dinner.publicSlug)}
-    data-public-dinner-link
+    data-public-dinner-link={visible ? true : undefined}
+    hidden={!visible}
+    aria-hidden={visible ? undefined : true}
+    tabIndex={visible ? undefined : -1}
     className={cn(
       "hover:bg-secondary/40 group flex min-w-0 flex-col px-0 py-4 transition-colors md:min-h-[118px] md:rounded-lg md:border md:bg-white md:px-3.5 md:py-3",
       !lastMobileRow && "border-b md:border-b",
+      !visible && "!hidden",
     )}
   >
     <div className="flex min-w-0 items-start justify-between gap-3">
@@ -198,15 +204,20 @@ export const PublicDinnerListView = ({
             <NoMatches onClear={clearFilters} />
           ) : (
             <>
-              {visibleDinners.map((dinner, index) => (
-                <PublicDinnerLink
-                  key={dinner.publicSlug}
-                  dinner={dinner}
-                  lastMobileRow={
-                    index === visibleDinners.length - 1 && remainingCount === 0
-                  }
-                />
-              ))}
+              {publicDinnerList.dinners.map((dinner, index) => {
+                const visible = index < visibleCount;
+                return (
+                  <PublicDinnerLink
+                    key={dinner.publicSlug}
+                    dinner={dinner}
+                    visible={visible}
+                    lastMobileRow={
+                      index === publicDinnerList.dinners.length - 1 &&
+                      remainingCount === 0
+                    }
+                  />
+                );
+              })}
               {remainingCount > 0 && (
                 <button
                   type="button"

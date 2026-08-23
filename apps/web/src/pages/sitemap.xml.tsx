@@ -15,7 +15,7 @@ const escapeXml = (value: string) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&apos;");
 
-const PublishedDinnerSitemap = () => null;
+const Sitemap = () => null;
 
 export const getServerSideProps = (async ({ res }) => {
   const [publishedDinnerSlugs, publicDinnerListSlugs] = await Promise.all([
@@ -45,4 +45,4 @@ export const getServerSideProps = (async ({ res }) => {
   return { props: {} };
 }) satisfies GetServerSideProps;
 
-export default PublishedDinnerSitemap;
+export default Sitemap;

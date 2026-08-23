@@ -157,6 +157,29 @@ void test("a Public Dinner List renders Household attribution and Published Dinn
   assert.match(html, /Pasta/);
 });
 
+void test("server markup links every Published Dinner beyond the visible batch", () => {
+  const dinners = Array.from({ length: 8 }, (_, index) => ({
+    name: `Dinner ${index + 1}`,
+    publicSlug: `dinner-${index + 1}`,
+    publishedAt: `2026-08-${String(20 - index).padStart(2, "0")}T12:00:00.000Z`,
+    saveCount: 0,
+    tags: [],
+  }));
+  const html = renderToStaticMarkup(
+    createElement(PublicDinnerListView, {
+      dinnerList: {
+        publicSlug: "hendersons-9fK2_xYz",
+        householdName: "Hendersons",
+        dinners,
+      },
+    }),
+  );
+
+  for (const dinner of dinners) {
+    assert.match(html, new RegExp(`href="/d/${dinner.publicSlug}"`));
+  }
+});
+
 void test("an inactive Public Dinner List renders the public unavailable experience", () => {
   const html = renderToStaticMarkup(createElement(PublicDinnerListUnavailable));
 
