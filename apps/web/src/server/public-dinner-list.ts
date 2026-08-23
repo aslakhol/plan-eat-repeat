@@ -2,6 +2,23 @@ import { type PrismaClient } from "@planeatrepeat/db";
 
 import { type PublicDinnerList } from "~/lib/public-dinner-list";
 
+export const findPublicDinnerListSitemapSlugs = async (db: PrismaClient) => {
+  const households = await db.household.findMany({
+    where: {
+      publicSlug: { not: null },
+      Dinners: {
+        some: { publicSlug: { not: null }, publishedAt: { not: null } },
+      },
+    },
+    select: { publicSlug: true },
+    orderBy: { publicSlug: "asc" },
+  });
+
+  return households.flatMap((household) =>
+    household.publicSlug ? [household.publicSlug] : [],
+  );
+};
+
 export const findPublicDinnerList = async (
   db: PrismaClient,
   publicSlug: string,

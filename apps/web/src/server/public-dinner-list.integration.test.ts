@@ -4,7 +4,10 @@ import test from "node:test";
 
 import { createPrismaClient } from "@planeatrepeat/db";
 
-import { findPublicDinnerList } from "./public-dinner-list";
+import {
+  findPublicDinnerList,
+  findPublicDinnerListSitemapSlugs,
+} from "./public-dinner-list";
 
 const { loadEnvConfig } = createRequire(import.meta.url)(
   "@next/env",
@@ -15,6 +18,10 @@ const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl)
   throw new Error("DATABASE_URL is required for integration tests");
 const testDb = createPrismaClient(databaseUrl);
+
+test.after(async () => {
+  await testDb.$disconnect();
+});
 
 void test("a Public Dinner List exposes only one Household's active Published Dinners", async () => {
   const uniqueId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -140,6 +147,104 @@ void test("a Public Dinner List exposes only one Household's active Published Di
     });
     await testDb.tag.deleteMany({ where: { value: tagValue } });
     await testDb.household.deleteMany({ where: { id: { in: householdIds } } });
-    await testDb.$disconnect();
+  }
+});
+
+void test("the sitemap lists each active Public Dinner List once and restores its stable identity after republishing", async () => {
+  const uniqueId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const activePublicSlug = `active-public-list-${uniqueId}`;
+  const inactivePublicSlug = `inactive-public-list-${uniqueId}`;
+  const privatePublicSlug = `private-public-list-${uniqueId}`;
+  const [activeHousehold, inactiveHousehold, privateHousehold] =
+    await testDb.$transaction(
+      [
+        { kind: "active", publicSlug: activePublicSlug },
+        { kind: "inactive", publicSlug: inactivePublicSlug },
+        { kind: "private", publicSlug: privatePublicSlug },
+      ].map(({ kind, publicSlug }, index) =>
+        testDb.household.create({
+          data: {
+            name: `${kind} Household ${uniqueId}`,
+            slug: `sitemap-household-${kind}-${uniqueId}-${index}`,
+            publicSlug,
+          },
+        }),
+      ),
+    );
+  assert.ok(activeHousehold);
+  assert.ok(inactiveHousehold);
+  assert.ok(privateHousehold);
+
+  const activeDinners = await testDb.$transaction(
+    ["first", "second"].map((kind) =>
+      testDb.dinner.create({
+        data: {
+          name: `${kind} Published Dinner ${uniqueId}`,
+          householdId: activeHousehold.id,
+          publicSlug: `${kind}-published-dinner-${uniqueId}`,
+          publishedAt: new Date("2026-08-23T12:00:00.000Z"),
+        },
+      }),
+    ),
+  );
+  await testDb.dinner.createMany({
+    data: [
+      {
+        name: `Stopped Dinner ${uniqueId}`,
+        householdId: inactiveHousehold.id,
+        publicSlug: `stopped-dinner-${uniqueId}`,
+        publishedAt: null,
+      },
+      {
+        name: `Private Dinner ${uniqueId}`,
+        householdId: privateHousehold.id,
+      },
+    ],
+  });
+
+  const householdIds = [
+    activeHousehold.id,
+    inactiveHousehold.id,
+    privateHousehold.id,
+  ];
+  const occurrences = (slugs: string[], publicSlug: string) =>
+    slugs.filter((slug) => slug === publicSlug).length;
+
+  try {
+    const activeSlugs = await findPublicDinnerListSitemapSlugs(testDb);
+    assert.equal(occurrences(activeSlugs, activePublicSlug), 1);
+    assert.equal(occurrences(activeSlugs, inactivePublicSlug), 0);
+    assert.equal(occurrences(activeSlugs, privatePublicSlug), 0);
+
+    await testDb.dinner.updateMany({
+      where: { householdId: activeHousehold.id },
+      data: { publishedAt: null },
+    });
+    assert.equal(
+      occurrences(
+        await findPublicDinnerListSitemapSlugs(testDb),
+        activePublicSlug,
+      ),
+      0,
+    );
+
+    await testDb.dinner.update({
+      where: { id: activeDinners[0]!.id },
+      data: { publishedAt: new Date("2026-08-24T12:00:00.000Z") },
+    });
+    assert.equal(
+      occurrences(
+        await findPublicDinnerListSitemapSlugs(testDb),
+        activePublicSlug,
+      ),
+      1,
+    );
+  } finally {
+    await testDb.dinner.deleteMany({
+      where: { householdId: { in: householdIds } },
+    });
+    await testDb.household.deleteMany({
+      where: { id: { in: householdIds } },
+    });
   }
 });

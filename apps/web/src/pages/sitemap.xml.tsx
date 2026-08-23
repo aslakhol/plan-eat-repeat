@@ -1,8 +1,10 @@
 import { type GetServerSideProps } from "next";
 
 import { env } from "~/env";
+import { publicDinnerListUrl } from "~/lib/public-dinner-list";
 import { publishedDinnerUrl } from "~/lib/published-dinner";
 import { db } from "~/server/db";
+import { findPublicDinnerListSitemapSlugs } from "~/server/public-dinner-list";
 import { findPublishedDinnerSitemapSlugs } from "~/server/published-dinner";
 
 const escapeXml = (value: string) =>
@@ -16,14 +18,20 @@ const escapeXml = (value: string) =>
 const PublishedDinnerSitemap = () => null;
 
 export const getServerSideProps = (async ({ res }) => {
-  const publicSlugs = await findPublishedDinnerSitemapSlugs(db);
-  const urls = publicSlugs
-    .map(
-      (publicSlug) =>
-        `<url><loc>${escapeXml(
-          publishedDinnerUrl(publicSlug, env.NEXT_PUBLIC_APP_URL),
-        )}</loc></url>`,
-    )
+  const [publishedDinnerSlugs, publicDinnerListSlugs] = await Promise.all([
+    findPublishedDinnerSitemapSlugs(db),
+    findPublicDinnerListSitemapSlugs(db),
+  ]);
+  const publicUrls = [
+    ...publishedDinnerSlugs.map((publicSlug) =>
+      publishedDinnerUrl(publicSlug, env.NEXT_PUBLIC_APP_URL),
+    ),
+    ...publicDinnerListSlugs.map((publicSlug) =>
+      publicDinnerListUrl(publicSlug, env.NEXT_PUBLIC_APP_URL),
+    ),
+  ];
+  const urls = publicUrls
+    .map((publicUrl) => `<url><loc>${escapeXml(publicUrl)}</loc></url>`)
     .join("");
   const sitemap =
     '<?xml version="1.0" encoding="UTF-8"?>' +

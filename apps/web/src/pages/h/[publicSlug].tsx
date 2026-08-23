@@ -1,7 +1,11 @@
 import Head from "next/head";
 import { type GetServerSideProps } from "next";
 
-import { type PublicDinnerList } from "~/lib/public-dinner-list";
+import { env } from "~/env";
+import {
+  type PublicDinnerList,
+  publicDinnerListUrl,
+} from "~/lib/public-dinner-list";
 import { type NextPageWithLayout } from "~/pages/_app";
 import { db } from "~/server/db";
 import { findPublicDinnerList } from "~/server/public-dinner-list";
@@ -23,10 +27,19 @@ const PublicDinnerListPage: NextPageWithLayout<Props> = ({ dinnerList }) => {
     );
   }
 
+  const title = `Dinners shared by ${dinnerList.householdName} · Plan Eat Repeat`;
+  const description = `Browse dinners shared publicly by ${dinnerList.householdName} on Plan Eat Repeat.`;
+  const canonicalUrl = publicDinnerListUrl(
+    dinnerList.publicSlug,
+    env.NEXT_PUBLIC_APP_URL,
+  );
+
   return (
     <>
       <Head>
-        <title>{`${dinnerList.householdName} · Plan Eat Repeat`}</title>
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={canonicalUrl} />
       </Head>
       <PublicDinnerListView dinnerList={dinnerList} />
     </>
