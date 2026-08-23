@@ -4,7 +4,7 @@ import test from "node:test";
 
 import { createPrismaClient } from "@planeatrepeat/db";
 
-import { findSharedDinners } from "./published-dinner";
+import { findSharedDinners, findSharedDinnersPage } from "./published-dinner";
 
 const { loadEnvConfig } = createRequire(import.meta.url)(
   "@next/env",
@@ -24,8 +24,13 @@ void test("a Household receives its active Published Dinners with distinct desti
         (kind, index) =>
           testDb.household.create({
             data: {
-              name: `${kind} ${uniqueId}`,
+              name:
+                kind === "source"
+                  ? `Hendersons ${uniqueId}`
+                  : `${kind} ${uniqueId}`,
               slug: `shared-dinners-${kind}-${uniqueId}-${index}`,
+              publicSlug:
+                kind === "source" ? `stable-household-${uniqueId}` : null,
             },
           }),
       ),
@@ -96,6 +101,31 @@ void test("a Household receives its active Published Dinners with distinct desti
         saveCount: 2,
       },
     ]);
+    assert.deepEqual(await findSharedDinnersPage(testDb, sourceHousehold.id), {
+      dinners: [
+        {
+          id: active.id,
+          name: active.name,
+          publicSlug: active.publicSlug,
+          publishedAt,
+          tags: [{ value: tagValue }],
+          saveCount: 2,
+        },
+      ],
+      publicDinnerList: {
+        householdName: sourceHousehold.name,
+        publicSlug: sourceHousehold.publicSlug,
+      },
+    });
+
+    await testDb.dinner.update({
+      where: { id: active.id },
+      data: { publishedAt: null },
+    });
+    assert.deepEqual(await findSharedDinnersPage(testDb, sourceHousehold.id), {
+      dinners: [],
+      publicDinnerList: null,
+    });
   } finally {
     await testDb.dinner.deleteMany({
       where: { householdId: { in: householdIds } },

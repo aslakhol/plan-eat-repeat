@@ -45,15 +45,18 @@ export const SharedDinnerDetail = () => {
     onSuccess: async () => {
       if (!dinner) return;
       unavailableHandled.current = true;
-      utils.dinner.sharedDinners.setData(undefined, (current) =>
-        current
-          ? {
-              dinners: current.dinners.filter(
-                (candidate) => candidate.id !== dinner.id,
-              ),
-            }
-          : current,
-      );
+      utils.dinner.sharedDinners.setData(undefined, (current) => {
+        if (!current) return current;
+        const dinners = current.dinners.filter(
+          (candidate) => candidate.id !== dinner.id,
+        );
+        return {
+          ...current,
+          dinners,
+          publicDinnerList:
+            dinners.length > 0 ? current.publicDinnerList : null,
+        };
+      });
       toast({ title: `${dinner.name} is no longer shared` });
       await router.replace("/dinners/shared");
       await Promise.all([

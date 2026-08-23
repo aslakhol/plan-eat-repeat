@@ -160,6 +160,31 @@ export const findSharedDinners = async (
   }));
 };
 
+export const findSharedDinnersPage = async (
+  db: PrismaClient,
+  householdId: string,
+) => {
+  const dinners = await findSharedDinners(db, householdId);
+  if (dinners.length === 0) {
+    return { dinners, publicDinnerList: null };
+  }
+
+  const household = await db.household.findUniqueOrThrow({
+    where: { id: householdId },
+    select: { name: true, publicSlug: true },
+  });
+
+  return {
+    dinners,
+    publicDinnerList: household.publicSlug
+      ? {
+          householdName: household.name,
+          publicSlug: household.publicSlug,
+        }
+      : null,
+  };
+};
+
 export const publishDinner = async (
   db: PrismaClient,
   householdId: string,

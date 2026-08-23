@@ -10,6 +10,11 @@ import { useState } from "react";
 
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
+import { env } from "~/env";
+import {
+  publicDinnerListPath,
+  publicDinnerListUrl,
+} from "~/lib/public-dinner-list";
 import {
   deriveSharedDinnerCollection,
   formatSharedDinnerMeta,
@@ -20,6 +25,38 @@ import { api, type RouterOutputs } from "~/utils/api";
 import { DinnerCollectionControls } from "~/views/DinnerCollectionControls";
 
 type SharedDinner = RouterOutputs["dinner"]["sharedDinners"]["dinners"][number];
+
+const PublicDinnerListLink = ({
+  householdName,
+  publicSlug,
+}: {
+  householdName: string;
+  publicSlug: string;
+}) => {
+  const path = publicDinnerListPath(publicSlug);
+  const publicUrl = new URL(
+    publicDinnerListUrl(publicSlug, env.NEXT_PUBLIC_APP_URL),
+  );
+
+  return (
+    <Link
+      href={path}
+      data-shared-dinners-public-list
+      className="border-border bg-muted hover:bg-secondary sticky top-4 z-10 flex min-w-0 items-center gap-3 rounded-xl border px-3.5 py-2.5 transition-colors md:top-8"
+    >
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[12.5px] font-bold">
+          {householdName} public page
+        </p>
+        <p className="text-muted-foreground truncate text-[10.5px] font-semibold">
+          {publicUrl.host}
+          {publicUrl.pathname}
+        </p>
+      </div>
+      <span className="text-primary shrink-0 text-xs font-bold">View</span>
+    </Link>
+  );
+};
 
 const SharedDinnerList = ({ dinners }: { dinners: SharedDinner[] }) => (
   <div className="flex flex-col gap-2.5">
@@ -78,6 +115,7 @@ export const SharedDinnersView = () => {
   }
 
   const dinners = sharedDinnersQuery.data.dinners;
+  const publicDinnerList = sharedDinnersQuery.data.publicDinnerList;
   const collection = deriveSharedDinnerCollection(dinners, {
     search,
     selectedTags,
@@ -96,6 +134,8 @@ export const SharedDinnersView = () => {
         </Link>
         <h1 className="mt-5 font-serif text-3xl font-normal">Shared dinners</h1>
       </header>
+
+      {publicDinnerList && <PublicDinnerListLink {...publicDinnerList} />}
 
       <DinnerCollectionControls
         dinners={dinners}

@@ -128,6 +128,7 @@ export const DinnerDetail = () => {
       await Promise.all([
         utils.dinner.get.invalidate({ dinnerId }),
         utils.dinner.summaries.invalidate(),
+        utils.dinner.sharedDinners.invalidate(),
       ]);
       toast({ title: `${dinnerName ?? "Dinner"} is now public` });
       setSharing(true);
