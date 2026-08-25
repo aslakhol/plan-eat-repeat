@@ -45,6 +45,10 @@ Guidance for agents working in this repository.
 - For DB changes: update `schema.prisma`, run `pnpm db:migrate`, then `pnpm db:generate` if needed.
 - For web UI, prefer existing shadcn/ui components in `apps/web/src/components/ui`.
 
+## Reading design handoffs
+
+- A mockup may include text such as "1 more" or "6 more" only to show that content continues beyond the captured area. Treat it as a design-process annotation, not as a disclosure control, pagination, or hidden content. Render the full collection with ordinary scrolling unless the written product requirements separately call for progressive disclosure or pagination.
+
 ## Agent skills
 
 ### Issue tracker
