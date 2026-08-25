@@ -36,7 +36,10 @@ void test("Published Dinner projection exposes cooking content without Household
     updatedAt: new Date("2026-08-17T18:30:00.000Z"),
     publicSlug: "friday-curry-public1",
     publishedAt: new Date("2026-08-17T23:30:00.000Z"),
-    Household: { name: "The Hendersons" },
+    Household: {
+      name: "The Hendersons",
+      publicSlug: "the-hendersons-household1",
+    },
     tags: [{ value: "Quick" }, { value: "Comfort" }],
     parts: [
       {
@@ -71,6 +74,7 @@ void test("Published Dinner projection exposes cooking content without Household
     publicSlug: "friday-curry-public1",
     publishedAt: "2026-08-17T23:30:00.000Z",
     householdName: "The Hendersons",
+    householdPublicSlug: "the-hendersons-household1",
     name: "Friday curry",
     tags: ["Quick", "Comfort"],
     link: "https://example.com/curry",
@@ -137,6 +141,7 @@ void test("Recipe JSON-LD is omitted without ingredients or a non-empty method s
     publicSlug: "toast-night-public1",
     publishedAt: "2026-08-17T12:00:00.000Z",
     householdName: "The Cooks",
+    householdPublicSlug: "the-cooks-household1",
     name: "Toast night",
     tags: [],
     link: null,
@@ -153,6 +158,7 @@ void test("Recipe JSON-LD contains the available Published Dinner recipe fields"
     publicSlug: "friday-curry-public1",
     publishedAt: "2026-08-17T12:00:00.000Z",
     householdName: "The Cooks",
+    householdPublicSlug: "the-cooks-household1",
     name: "Friday curry",
     tags: ["Comfort", "Quick"],
     link: "https://example.com/original-curry",
@@ -196,6 +202,7 @@ void test("Recipe JSON-LD serialization safely escapes user-authored content", (
     publicSlug: "dangerous-public1",
     publishedAt: "2026-08-17T12:00:00.000Z",
     householdName: "Cooks & Friends",
+    householdPublicSlug: "cooks-friends-household1",
     name: "</script><script>alert('dinner')</script>",
     tags: [],
     link: null,
@@ -231,6 +238,7 @@ const renderPublishedDinner = (
         publicSlug: "dinner-public1",
         publishedAt: "2026-08-17T12:00:00.000Z",
         householdName: "The Cooks",
+        householdPublicSlug: "the-cooks-household1",
         name: "Dinner",
         tags: [],
         link: null,
@@ -249,6 +257,17 @@ void test("Published Dinner places the primary save action on desktop and mobile
   );
 
   assert.equal(html.match(/Add to my cookbook/g)?.length, 4);
+});
+
+void test("Published Dinner links its responsive Household attribution to the Public Dinner List", () => {
+  const html = renderPublishedDinner({
+    householdName: "Hendersons",
+    householdPublicSlug: "hendersons-household1",
+  });
+
+  assert.equal(html.match(/href="\/h\/hendersons-household1"/g)?.length, 2);
+  assert.match(html, /Shared by/);
+  assert.match(html, /Hendersons.*shared a dinner with you/);
 });
 
 for (const shape of [
@@ -373,6 +392,15 @@ void test("restarting publication serializes the limit check and keeps the slug"
   const trace: string[] = [];
   const now = new Date("2026-08-18T09:00:00.000Z");
   const transaction = {
+    household: {
+      findUnique: () => {
+        trace.push("household");
+        return Promise.resolve({
+          name: "The Cooks",
+          publicSlug: "the-cooks-household1",
+        });
+      },
+    },
     dinner: {
       findUnique: () =>
         Promise.resolve({
@@ -409,7 +437,52 @@ void test("restarting publication serializes the limit check and keeps the slug"
 
   assert.equal(result?.publicSlug, "original-name-public1");
   assert.equal(result?.publishedAt, now);
-  assert.deepEqual(trace, ["lock", "count", "update"]);
+  assert.deepEqual(trace, ["lock", "count", "household", "update"]);
+});
+
+void test("first publication creates the Household public identity before publishing the Dinner", async () => {
+  let householdPublicSlug: string | null = null;
+  const now = new Date("2026-08-18T09:00:00.000Z");
+  const dinner = {
+    id: 83,
+    name: "Toast night",
+    publicSlug: null,
+    publishedAt: null,
+  };
+  const transaction = {
+    household: {
+      findUnique: () =>
+        Promise.resolve({ name: "The Cooks", publicSlug: householdPublicSlug }),
+      update: ({ data }: { data: { publicSlug: string } }) => {
+        householdPublicSlug = data.publicSlug;
+        return Promise.resolve({ publicSlug: data.publicSlug });
+      },
+    },
+    dinner: {
+      findUnique: () => Promise.resolve(dinner),
+      count: () => Promise.resolve(0),
+      updateMany: ({
+        data,
+      }: {
+        data: { publicSlug: string; publishedAt: Date };
+      }) => {
+        assert.match(data.publicSlug, /^toast-night-[a-f0-9]{12}$/);
+        assert.equal(data.publishedAt, now);
+        assert.match(householdPublicSlug ?? "", /^the-cooks-[a-f0-9]{12}$/);
+        return Promise.resolve({ count: 1 });
+      },
+    },
+    $executeRaw: () => Promise.resolve(1),
+  };
+  const db = {
+    $transaction: async (work: (tx: typeof transaction) => Promise<unknown>) =>
+      work(transaction),
+  } as unknown as PrismaClient;
+
+  const result = await publishDinner(db, "household-a", dinner.id, now);
+
+  assert.match(result?.publicSlug ?? "", /^toast-night-[a-f0-9]{12}$/);
+  assert.equal(result?.publishedAt, now);
 });
 
 void test("stopping publication preserves the stable Link identity", async () => {

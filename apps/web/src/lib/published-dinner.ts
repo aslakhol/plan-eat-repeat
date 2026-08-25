@@ -1,9 +1,12 @@
 import { formatAmount } from "@planeatrepeat/shared";
 
+import { publicSlugForName } from "~/lib/public-slug";
+
 export type PublishedDinner = {
   publicSlug: string;
   publishedAt: string;
   householdName: string;
+  householdPublicSlug: string;
   name: string;
   tags: string[];
   link: string | null;
@@ -28,7 +31,7 @@ type PublishedDinnerSource = {
   link: string | null;
   notes: string | null;
   servings: number | null;
-  Household: { name: string };
+  Household: { name: string; publicSlug: string };
   tags: Array<{ value: string }>;
   parts: Array<{
     name: string | null;
@@ -48,6 +51,7 @@ export const toPublishedDinner = <T extends PublishedDinnerSource>(
   publicSlug: dinner.publicSlug,
   publishedAt: dinner.publishedAt.toISOString(),
   householdName: dinner.Household.name,
+  householdPublicSlug: dinner.Household.publicSlug,
   name: dinner.name,
   tags: dinner.tags.map((tag) => tag.value),
   link: dinner.link,
@@ -65,17 +69,8 @@ export const toPublishedDinner = <T extends PublishedDinnerSource>(
   })),
 });
 
-export const publicSlugForDinner = (name: string, publicId: string) => {
-  const readableName = name
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
-
-  return `${readableName || "dinner"}-${publicId}`;
-};
+export const publicSlugForDinner = (name: string, publicId: string) =>
+  publicSlugForName(name, publicId, "dinner");
 
 export const publishedDinnerPath = (publicSlug: string) => `/d/${publicSlug}`;
 

@@ -5,6 +5,7 @@ const householdOptionalRoutes = [
   "/invite/:inviteId",
   "/onboarding",
   "/d/:publicSlug",
+  "/h/:publicSlug",
   "/sitemap.xml",
 ];
 

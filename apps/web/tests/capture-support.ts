@@ -3,6 +3,8 @@ import { fileURLToPath } from "node:url";
 import { mkdir } from "node:fs/promises";
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import type { PrismaClient } from "@planeatrepeat/db";
+
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFilePath);
 const captureWebDir = path.resolve(currentDir, "../../../capture/web");
@@ -116,6 +118,20 @@ export async function completeLocalAuth(
     },
     { ticket, returnPath },
   );
+}
+
+export async function resetLocalIdentity(testDb: PrismaClient, userId: string) {
+  const membership = await testDb.membership.findUnique({
+    where: { userId },
+    select: { householdId: true },
+  });
+  if (membership) {
+    await testDb.dinner.deleteMany({
+      where: { householdId: membership.householdId },
+    });
+    await testDb.household.delete({ where: { id: membership.householdId } });
+  }
+  await testDb.user.deleteMany({ where: { id: userId } });
 }
 
 export async function captureScreen(

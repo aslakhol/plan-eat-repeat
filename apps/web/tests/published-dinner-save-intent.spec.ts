@@ -4,7 +4,11 @@ import { expect, test, type Page } from "@playwright/test";
 import { createPrismaClient } from "@planeatrepeat/db";
 import { createClerkClient } from "@clerk/backend";
 
-import { completeLocalAuth, provisionLocalAuth } from "./capture-support";
+import {
+  completeLocalAuth,
+  provisionLocalAuth,
+  resetLocalIdentity,
+} from "./capture-support";
 
 const { loadEnvConfig } = createRequire(import.meta.url)(
   "@next/env",
@@ -28,20 +32,6 @@ const publishedDinnerAction = (page: Page) =>
     name: "Add to my cookbook",
   });
 
-const resetLocalIdentity = async (userId: string) => {
-  const membership = await testDb.membership.findUnique({
-    where: { userId },
-    select: { householdId: true },
-  });
-  if (membership) {
-    await testDb.dinner.deleteMany({
-      where: { householdId: membership.householdId },
-    });
-    await testDb.household.delete({ where: { id: membership.householdId } });
-  }
-  await testDb.user.deleteMany({ where: { id: userId } });
-};
-
 const findClerkUserByEmail = async (email: string) => {
   const users = await testClerk.users.getUserList({
     emailAddress: [email],
@@ -58,7 +48,7 @@ test("sign-in returns a Save Intent to the stable URL, saves latest content once
   const publicSlug = `save-intent-sign-in-${marker}`;
   const returnPath = `/d/${publicSlug}?save=1`;
   const auth = await provisionLocalAuth(page, "save-intent-existing");
-  await resetLocalIdentity(auth.userId);
+  await resetLocalIdentity(testDb, auth.userId);
   await testDb.user.create({
     data: { id: auth.userId, firstName: "Existing", lastName: "Visitor" },
   });
@@ -70,7 +60,11 @@ test("sign-in returns a Save Intent to the stable URL, saves latest content once
     },
   });
   const sourceHousehold = await testDb.household.create({
-    data: { name: `Source ${marker}`, slug: `source-${marker}` },
+    data: {
+      name: `Source ${marker}`,
+      slug: `source-${marker}`,
+      publicSlug: `source-${marker}-public`,
+    },
   });
   const source = await testDb.dinner.create({
     data: {
@@ -134,7 +128,7 @@ test("sign-in returns a Save Intent to the stable URL, saves latest content once
       }),
     ).toBe(1);
   } finally {
-    await resetLocalIdentity(auth.userId);
+    await resetLocalIdentity(testDb, auth.userId);
     await testDb.dinner.deleteMany({ where: { id: source.id } });
     await testDb.household.deleteMany({ where: { id: sourceHousehold.id } });
   }
@@ -153,6 +147,7 @@ test("sign-up return bootstraps a usable one-person Household without onboarding
     data: {
       name: `First-time source ${marker}`,
       slug: `first-source-${marker}`,
+      publicSlug: `first-source-${marker}-public`,
     },
   });
   const source = await testDb.dinner.create({
@@ -216,7 +211,7 @@ test("sign-up return bootstraps a usable one-person Household without onboarding
   } finally {
     const clerkUser = await findClerkUserByEmail(testEmail);
     if (clerkUser) {
-      await resetLocalIdentity(clerkUser.id);
+      await resetLocalIdentity(testDb, clerkUser.id);
       await testClerk.users.deleteUser(clerkUser.id);
     }
     await testDb.dinner.deleteMany({ where: { id: source.id } });
@@ -232,11 +227,12 @@ test("a Dinner stopped during authentication saves nothing and returns the unava
   const publicSlug = `save-intent-stopped-${marker}`;
   const returnPath = `/d/${publicSlug}?save=1`;
   const auth = await provisionLocalAuth(page, "save-intent-first-time");
-  await resetLocalIdentity(auth.userId);
+  await resetLocalIdentity(testDb, auth.userId);
   const sourceHousehold = await testDb.household.create({
     data: {
       name: `Stopped source ${marker}`,
       slug: `stopped-source-${marker}`,
+      publicSlug: `stopped-source-${marker}-public`,
     },
   });
   const source = await testDb.dinner.create({
@@ -278,7 +274,7 @@ test("a Dinner stopped during authentication saves nothing and returns the unava
       await testDb.dinner.count({ where: { sourceDinnerId: source.id } }),
     ).toBe(0);
   } finally {
-    await resetLocalIdentity(auth.userId);
+    await resetLocalIdentity(testDb, auth.userId);
     await testDb.dinner.deleteMany({ where: { id: source.id } });
     await testDb.household.deleteMany({ where: { id: sourceHousehold.id } });
   }

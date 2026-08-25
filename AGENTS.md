@@ -45,6 +45,15 @@ Guidance for agents working in this repository.
 - For DB changes: update `schema.prisma`, run `pnpm db:migrate`, then `pnpm db:generate` if needed.
 - For web UI, prefer existing shadcn/ui components in `apps/web/src/components/ui`.
 
+## Reading design handoffs
+
+- A mockup may include text such as "1 more" or "6 more" only to show that content continues beyond the captured area. Treat it as a design-process annotation, not as a disclosure control, pagination, or hidden content. Render the full collection with ordinary scrolling unless the written product requirements separately call for progressive disclosure or pagination.
+
+## Local web testing
+
+- Before running `pnpm dev:web`, check whether a Next.js dev server is already running for this checkout. Do not start a second server on another port. Both processes write to `apps/web/.next`, which can cause a continuous Fast Refresh reload loop and make Playwright fail before it can inspect the page.
+- Reuse the existing server when it is serving the current checkout and has loaded the latest changes. If a clean restart is needed and the user owns the running process, ask the user to stop it instead of killing it. If an agent started the duplicate process, stop that process before rerunning the browser test.
+
 ## Agent skills
 
 ### Issue tracker

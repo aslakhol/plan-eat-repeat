@@ -74,9 +74,12 @@ test("a signed-in Household saves, revisits, copies, plans, and keeps a detached
       addDays(currentWeekStart, index),
     ).find(
       (date) =>
-        !currentWeekPlans.some((plan) => plan.date.getTime() === date.getTime()),
+        !currentWeekPlans.some(
+          (plan) => plan.date.getTime() === date.getTime(),
+        ),
     );
-    if (!occupiedDate) throw new Error("The current week has no free Plan Slot");
+    if (!occupiedDate)
+      throw new Error("The current week has no free Plan Slot");
 
     const destinationTagDinner = await testDb.dinner.create({
       data: {
@@ -101,6 +104,7 @@ test("a signed-in Household saves, revisits, copies, plans, and keeps a detached
       data: {
         name: sourceHouseholdName,
         slug: `source-household-${uniqueId}`,
+        publicSlug: `source-household-${uniqueId}-public`,
       },
     });
     sourceHouseholdId = sourceHousehold.id;
@@ -354,6 +358,7 @@ test("concurrent saves across different sources respect the Household burst limi
       data: {
         name: `Save Burst Sources ${uniqueId}`,
         slug: `save-burst-sources-${uniqueId}`,
+        publicSlug: `save-burst-sources-${uniqueId}-public`,
       },
     });
     sourceHouseholdId = sourceHousehold.id;

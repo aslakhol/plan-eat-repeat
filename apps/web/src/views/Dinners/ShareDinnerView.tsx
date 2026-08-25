@@ -46,6 +46,7 @@ export const ShareDinnerView = ({
       await Promise.all([
         utils.dinner.get.invalidate({ dinnerId: dinner.id }),
         utils.dinner.summaries.invalidate(),
+        utils.dinner.sharedDinners.invalidate(),
       ]);
       toast({ title: "Sharing stopped" });
       onBack();

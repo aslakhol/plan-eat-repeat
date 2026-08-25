@@ -1,12 +1,13 @@
 import { randomUUID } from "node:crypto";
 
-import { type PrismaClient } from "@planeatrepeat/db";
+import type { Prisma, PrismaClient } from "@planeatrepeat/db";
 
 import {
   publicSlugForDinner,
   toPublishedDinner,
   type PublishedDinner,
 } from "~/lib/published-dinner";
+import { publicSlugForHousehold } from "~/lib/public-dinner-list";
 
 const PUBLICATION_BURST_WINDOW_MS = 10_000;
 const PUBLICATION_BURST_LIMIT = 20;
@@ -21,7 +22,7 @@ const publishedDinnerIdentitySelect = {
 export class PublicationRateLimitError extends Error {}
 
 const publishedDinnerInclude = {
-  Household: { select: { name: true } },
+  Household: { select: { name: true, publicSlug: true } },
   tags: { orderBy: { value: "asc" as const } },
   parts: {
     orderBy: { order: "asc" as const },
@@ -30,6 +31,27 @@ const publishedDinnerInclude = {
       steps: { orderBy: { order: "asc" as const } },
     },
   },
+};
+
+const ensureHouseholdPublicSlug = async (
+  tx: Prisma.TransactionClient,
+  householdId: string,
+) => {
+  const household = await tx.household.findUnique({
+    where: { id: householdId },
+    select: { name: true, publicSlug: true },
+  });
+  if (!household || household.publicSlug) return household?.publicSlug ?? null;
+
+  const publicSlug = publicSlugForHousehold(
+    household.name,
+    randomUUID().replaceAll("-", "").slice(0, 12),
+  );
+  await tx.household.update({
+    where: { id: householdId },
+    data: { publicSlug },
+  });
+  return publicSlug;
 };
 
 export const findPublishedDinner = async (
@@ -41,11 +63,20 @@ export const findPublishedDinner = async (
     include: publishedDinnerInclude,
   });
 
-  if (!dinner?.publicSlug || !dinner.publishedAt) return null;
+  if (
+    !dinner?.publicSlug ||
+    !dinner.publishedAt ||
+    !dinner.Household.publicSlug
+  )
+    return null;
   return toPublishedDinner({
     ...dinner,
     publicSlug: dinner.publicSlug,
     publishedAt: dinner.publishedAt,
+    Household: {
+      name: dinner.Household.name,
+      publicSlug: dinner.Household.publicSlug,
+    },
   });
 };
 
@@ -129,6 +160,31 @@ export const findSharedDinners = async (
   }));
 };
 
+export const findSharedDinnersPage = async (
+  db: PrismaClient,
+  householdId: string,
+) => {
+  const dinners = await findSharedDinners(db, householdId);
+  if (dinners.length === 0) {
+    return { dinners, publicDinnerList: null };
+  }
+
+  const household = await db.household.findUniqueOrThrow({
+    where: { id: householdId },
+    select: { name: true, publicSlug: true },
+  });
+
+  return {
+    dinners,
+    publicDinnerList: household.publicSlug
+      ? {
+          householdName: household.name,
+          publicSlug: household.publicSlug,
+        }
+      : null,
+  };
+};
+
 export const publishDinner = async (
   db: PrismaClient,
   householdId: string,
@@ -161,6 +217,8 @@ export const publishDinner = async (
         "Too many Dinners were published at once. Try again shortly.",
       );
     }
+
+    await ensureHouseholdPublicSlug(tx, householdId);
 
     if (dinner.publicSlug) {
       return tx.dinner.update({

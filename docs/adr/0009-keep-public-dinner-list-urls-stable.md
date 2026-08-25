@@ -1,0 +1,3 @@
+# Keep Public Dinner List URLs Stable
+
+A Household receives a non-sequential public identity when its Public Dinner List is first created. Its `publicSlug` combines the Household name at that time with a random public ID, following the same model as Published Dinner URLs. The URL remains unchanged across Household renames and periods with no Published Dinners; an empty list returns 404, and publishing another Dinner restores the same URL. We chose a separate immutable public identity over the Household's editable slug or internal ID so distributed and indexed URLs remain valid without exposing internal identity.

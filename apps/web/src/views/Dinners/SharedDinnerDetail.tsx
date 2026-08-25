@@ -7,11 +7,9 @@ import { Button } from "~/components/ui/button";
 import { toast } from "~/components/ui/use-toast";
 import { env } from "~/env";
 import { publishedDinnerUrl } from "~/lib/published-dinner";
+import { displayPublicUrl } from "~/lib/public-url";
 import { formatSharedDinnerMeta } from "~/lib/shared-dinners";
 import { api } from "~/utils/api";
-
-const displayPublicUrl = (publicUrl: string) =>
-  publicUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
 export const SharedDinnerDetail = () => {
   const router = useRouter();
@@ -45,15 +43,18 @@ export const SharedDinnerDetail = () => {
     onSuccess: async () => {
       if (!dinner) return;
       unavailableHandled.current = true;
-      utils.dinner.sharedDinners.setData(undefined, (current) =>
-        current
-          ? {
-              dinners: current.dinners.filter(
-                (candidate) => candidate.id !== dinner.id,
-              ),
-            }
-          : current,
-      );
+      utils.dinner.sharedDinners.setData(undefined, (current) => {
+        if (!current) return current;
+        const dinners = current.dinners.filter(
+          (candidate) => candidate.id !== dinner.id,
+        );
+        return {
+          ...current,
+          dinners,
+          publicDinnerList:
+            dinners.length > 0 ? current.publicDinnerList : null,
+        };
+      });
       toast({ title: `${dinner.name} is no longer shared` });
       await router.replace("/dinners/shared");
       await Promise.all([
