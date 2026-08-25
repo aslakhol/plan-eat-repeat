@@ -33,7 +33,7 @@ Warm off-white page `#FAF8F5`, single centred column, same measure as the dinner
 - **Search row:** full-width search field ("Search their dinners…") + 42px funnel button, 10px gap. Same pair as the in-app cookbook list.
 - **Sort segment:** `#F1EDE6` track, 4px padding, **full column width with the three options each taking a third** — Recently shared (default) · A–Z · Most saved. Active pill is white with a soft shadow, label in primary. The full width matters: a narrow segment between two full-width bands reads as a mistake.
 - **Grid:** three columns, 10px gap. Each card is white, 1px `border-border`, 12px radius, min-height 86px: dinner name in Young Serif 16px, tag chips beneath, and **saved by N** pinned to the card floor (10.5px, muted) when non-zero.
-- **"⌄ 6 more ⌄"** centred below the grid — paginate or lazy-load, implementation's choice.
+- Render every dinner in the grid and let the page scroll normally. The **"⌄ 6 more ⌄"** text in the reference image is a design-process annotation showing that more content continues below the captured area. It is not product UI.
 - **Footer band** `#F7F4EE`: "All your recipes in one place." (Young Serif 15px) over "Plan Eat Repeat is a free cookbook and dinner planner." (12.5px muted), with **Start my cookbook** repeated at the right.
 
 Tapping a card opens that dinner's public page. Tapping the household name there returns here.

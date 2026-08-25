@@ -162,19 +162,16 @@ test("an anonymous visitor browses every Published Dinner with the approved cont
     await expect(
       page.getByRole("button", { name: "Most saved" }),
     ).toBeVisible();
-    await expect(dinnerLinks).toHaveCount(6);
-    await expect(dinnerLinks.first()).toContainText(names.beta);
-    await expect(page.getByRole("status")).toHaveText("Showing 6 of 8 dinners");
-    await expect(
-      page.getByRole("button", { name: /Show 2 more dinners/ }),
-    ).toBeVisible();
-    await page.getByRole("button", { name: /Show 2 more dinners/ }).click();
     await expect(dinnerLinks).toHaveCount(8);
+    await expect(dinnerLinks.first()).toContainText(names.beta);
+    await expect(page.getByRole("status")).toHaveText("Showing 8 dinners");
+    await expect(
+      page.getByRole("button", { name: /more dinners/ }),
+    ).toHaveCount(0);
 
     await page.getByRole("button", { name: "A–Z" }).click();
     await expect(dinnerLinks.first()).toContainText(names.alpha);
-    await expect(dinnerLinks).toHaveCount(6);
-    await page.getByRole("button", { name: /Show 2 more dinners/ }).click();
+    await expect(dinnerLinks).toHaveCount(8);
     await expect(dinnerLinks.last()).toContainText(names.zeta);
 
     await page.getByRole("button", { name: "Most saved" }).click();
@@ -210,7 +207,7 @@ test("an anonymous visitor browses every Published Dinner with the approved cont
       page.getByRole("heading", { name: "No dinners match" }),
     ).toBeVisible();
     await page.getByRole("button", { name: "Clear filters" }).click();
-    await expect(dinnerLinks).toHaveCount(6);
+    await expect(dinnerLinks).toHaveCount(8);
 
     await expect(
       page.getByRole("link", { name: "Start my cookbook" }),

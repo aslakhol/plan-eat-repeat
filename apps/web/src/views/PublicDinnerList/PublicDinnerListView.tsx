@@ -1,5 +1,5 @@
 import Link from "next/link";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
@@ -12,8 +12,6 @@ import {
 import { publishedDinnerPath } from "~/lib/published-dinner";
 import { cn } from "~/lib/utils";
 import { DinnerCollectionControls } from "~/views/DinnerCollectionControls";
-
-const DINNER_BATCH_SIZE = 6;
 
 const publicDinnerListSortOptions = [
   { value: "recent", label: "Recently shared" },
@@ -63,22 +61,16 @@ const DinnerTags = ({ tags }: { tags: readonly string[] }) =>
 const PublicDinnerLink = ({
   dinner,
   lastMobileRow,
-  visible,
 }: {
   dinner: PublicDinnerListDinner;
   lastMobileRow: boolean;
-  visible: boolean;
 }) => (
   <Link
     href={publishedDinnerPath(dinner.publicSlug)}
-    data-public-dinner-link={visible ? true : undefined}
-    hidden={!visible}
-    aria-hidden={visible ? undefined : true}
-    tabIndex={visible ? undefined : -1}
+    data-public-dinner-link
     className={cn(
       "hover:bg-secondary/40 group flex min-w-0 flex-col px-0 py-4 transition-colors md:min-h-[118px] md:rounded-lg md:border md:bg-white md:px-3.5 md:py-3",
       !lastMobileRow && "border-b md:border-b",
-      !visible && "!hidden",
     )}
   >
     <div className="flex min-w-0 items-start justify-between gap-3">
@@ -120,7 +112,6 @@ export const PublicDinnerListView = ({
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sort, setSort] = useState<PublicDinnerListSort>("recent");
-  const [visibleCount, setVisibleCount] = useState(DINNER_BATCH_SIZE);
   const controlDinners = useMemo(
     () =>
       dinnerList.dinners.map((dinner) => ({
@@ -134,14 +125,6 @@ export const PublicDinnerListView = ({
     selectedTags,
     sort,
   });
-  const visibleDinners = publicDinnerList.dinners.slice(0, visibleCount);
-  const remainingCount =
-    publicDinnerList.dinners.length - visibleDinners.length;
-
-  useEffect(
-    () => setVisibleCount(DINNER_BATCH_SIZE),
-    [search, selectedTags, sort],
-  );
 
   const clearFilters = () => {
     setSearch("");
@@ -203,40 +186,19 @@ export const PublicDinnerListView = ({
           {publicDinnerList.emptyState === "no-matches" ? (
             <NoMatches onClear={clearFilters} />
           ) : (
-            <>
-              {publicDinnerList.dinners.map((dinner, index) => {
-                const visible = index < visibleCount;
-                return (
-                  <PublicDinnerLink
-                    key={dinner.publicSlug}
-                    dinner={dinner}
-                    visible={visible}
-                    lastMobileRow={
-                      index === publicDinnerList.dinners.length - 1 &&
-                      remainingCount === 0
-                    }
-                  />
-                );
-              })}
-              {remainingCount > 0 && (
-                <button
-                  type="button"
-                  aria-label={`Show ${Math.min(DINNER_BATCH_SIZE, remainingCount)} more dinners`}
-                  className="text-muted-foreground w-full py-4 text-xs font-bold md:col-span-3 md:py-5"
-                  onClick={() =>
-                    setVisibleCount((count) => count + DINNER_BATCH_SIZE)
-                  }
-                >
-                  ⌄ {remainingCount} more ⌄
-                </button>
-              )}
-            </>
+            publicDinnerList.dinners.map((dinner, index) => (
+              <PublicDinnerLink
+                key={dinner.publicSlug}
+                dinner={dinner}
+                lastMobileRow={index === publicDinnerList.dinners.length - 1}
+              />
+            ))
           )}
         </Card>
 
         <p className="sr-only" role="status" aria-live="polite">
-          Showing {visibleDinners.length} of {publicDinnerList.dinners.length}{" "}
-          dinners
+          Showing {publicDinnerList.dinners.length}{" "}
+          {publicDinnerList.dinners.length === 1 ? "dinner" : "dinners"}
         </p>
 
         <Card

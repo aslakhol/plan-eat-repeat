@@ -157,7 +157,7 @@ void test("a Public Dinner List renders Household attribution and Published Dinn
   assert.match(html, /Pasta/);
 });
 
-void test("server markup links every Published Dinner beyond the visible batch", () => {
+void test("server markup links every Published Dinner", () => {
   const dinners = Array.from({ length: 8 }, (_, index) => ({
     name: `Dinner ${index + 1}`,
     publicSlug: `dinner-${index + 1}`,
