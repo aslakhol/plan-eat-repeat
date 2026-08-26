@@ -89,6 +89,19 @@ const fetchYouTubeData = async (
   let automaticFallbackUrl: string | null = null;
   let embeddedPlayer: YouTubePlayerResponse | null = null;
   let visitorData = "";
+  const diagnostics: {
+    embeddedCaptionTrackCount?: number;
+    embeddedHasVideoDetails?: boolean;
+    embeddedPlayabilityStatus?: string;
+    playerError?: string;
+    playerHttpStatus?: number;
+    playerPlayabilityStatus?: string;
+    transcriptError?: string;
+    watchHasInnerTubeApiKey?: boolean;
+    watchHasRecaptcha?: boolean;
+    watchError?: string;
+    watchHttpStatus?: number;
+  } = {};
   const acquired: {
     poTokenFallbackTrack: CaptionTrack | null;
     videoDetails: YouTubeVideoDetails | null;
@@ -97,13 +110,44 @@ const fetchYouTubeData = async (
     videoDetails: null,
   };
 
+  const capturePlayerData = (player: YouTubePlayerResponse) => {
+    if (isUsablePlayer(player)) {
+      acquired.videoDetails = player.videoDetails;
+    }
+
+    const tracks = [...(captionTracks(player) ?? [])].sort(
+      (left, right) => Number(isAutomatic(left)) - Number(isAutomatic(right)),
+    );
+    if (tracks[0] && !isAutomatic(tracks[0])) {
+      automaticFallbackUrl = trackUrl(tracks.find(isAutomatic));
+    }
+    acquired.poTokenFallbackTrack =
+      tracks[0] ?? acquired.poTokenFallbackTrack;
+  };
+
   const videoFetch = async (params: FetchParams) => {
-    const response = await fetchFromParams(params);
+    let response: Response;
+    try {
+      response = await fetchFromParams(params);
+    } catch (error) {
+      diagnostics.watchError = errorLabel(error);
+      throw error;
+    }
+    diagnostics.watchHttpStatus = response.status;
     if (!response.ok) return response;
 
     const body = await response.text();
     embeddedPlayer = embeddedPlayerResponse(body);
     visitorData = embeddedVisitorData(body);
+    diagnostics.watchHasInnerTubeApiKey = hasInnerTubeApiKey(body);
+    diagnostics.watchHasRecaptcha = body.includes('class="g-recaptcha"');
+    diagnostics.embeddedPlayabilityStatus =
+      embeddedPlayer?.playabilityStatus?.status;
+    diagnostics.embeddedHasVideoDetails = Boolean(embeddedPlayer?.videoDetails);
+    diagnostics.embeddedCaptionTrackCount = embeddedPlayer
+      ? (captionTracks(embeddedPlayer)?.length ?? 0)
+      : 0;
+    if (embeddedPlayer) capturePlayerData(embeddedPlayer);
 
     return responseWithBody(response, body, "text/html");
   };
@@ -114,37 +158,28 @@ const fetchYouTubeData = async (
 
     try {
       response = await fetchFromParams(params);
+      diagnostics.playerHttpStatus = response.status;
       if (!response.ok) {
         if (!isUsablePlayer(embeddedPlayer)) return response;
         response = Response.json(embeddedPlayer);
       }
 
       const upstreamPlayer = (await response.json()) as YouTubePlayerResponse;
+      diagnostics.playerPlayabilityStatus =
+        upstreamPlayer.playabilityStatus?.status;
       player = isUsablePlayer(upstreamPlayer)
         ? upstreamPlayer
         : isUsablePlayer(embeddedPlayer)
           ? embeddedPlayer
           : upstreamPlayer;
     } catch (error) {
+      diagnostics.playerError = errorLabel(error);
       if (!isUsablePlayer(embeddedPlayer)) throw error;
       response = Response.json(embeddedPlayer);
       player = embeddedPlayer;
     }
 
-    if (player.playabilityStatus?.status === "OK" && player.videoDetails) {
-      acquired.videoDetails = player.videoDetails;
-    }
-
-    const tracks = captionTracks(player);
-    if (tracks) {
-      tracks.sort(
-        (left, right) => Number(isAutomatic(left)) - Number(isAutomatic(right)),
-      );
-      if (tracks[0] && !isAutomatic(tracks[0])) {
-        automaticFallbackUrl = trackUrl(tracks.find(isAutomatic));
-      }
-      acquired.poTokenFallbackTrack = tracks[0] ?? null;
-    }
+    capturePlayerData(player);
 
     return responseWithBody(
       response,
@@ -186,8 +221,9 @@ const fetchYouTubeData = async (
       playerFetch,
       transcriptFetch,
     });
-  } catch {
-    // Written descriptions are sufficient; caption retrieval is best effort.
+  } catch (error) {
+    diagnostics.transcriptError = errorLabel(error);
+    // The watch-page data and PO-token fallback below may still be usable.
   }
 
   const poTokenCaptionUrl = trackUrl(
@@ -210,7 +246,14 @@ const fetchYouTubeData = async (
     }
   }
 
-  if (!acquired.videoDetails) throw new ImportRecipeError("FETCH_FAILED");
+  if (!acquired.videoDetails) {
+    console.warn("YouTube import could not acquire video details", {
+      videoId,
+      ...diagnostics,
+      aborted: signal.aborted,
+    });
+    throw new ImportRecipeError("FETCH_FAILED");
+  }
 
   return { videoDetails: acquired.videoDetails, transcript };
 };
@@ -239,6 +282,13 @@ const embeddedPlayerResponse = (html: string): YouTubePlayerResponse | null => {
 
 const embeddedVisitorData = (html: string) =>
   /"visitorData":"([^"]+)"/.exec(html)?.[1] ?? "";
+
+const hasInnerTubeApiKey = (html: string) =>
+  /"INNERTUBE_API_KEY":"[^"]+"/.test(html) ||
+  /INNERTUBE_API_KEY\\":\\"[^\\"]+\\"/.test(html);
+
+const errorLabel = (error: unknown) =>
+  error instanceof Error ? error.name : typeof error;
 
 const jsonObjectAt = (text: string, start: number) => {
   let depth = 0;
