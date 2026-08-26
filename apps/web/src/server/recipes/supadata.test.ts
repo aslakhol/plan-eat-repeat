@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ImportRecipeError } from "@planeatrepeat/shared";
 
-import { createSupadataYouTubeAdapter } from "./supadata";
+import { createSupadataYouTubeAdapter as createProductionAdapter } from "./supadata";
+
+type AdapterOptions = Parameters<typeof createProductionAdapter>[0];
+
+const createSupadataYouTubeAdapter = (options: AdapterOptions) =>
+  createProductionAdapter({ minimumRequestIntervalMs: 0, ...options });
 
 const requestUrl = (input: string | URL | Request) =>
   new URL(
@@ -96,6 +101,82 @@ void test("Supadata acquires native YouTube captions and metadata", async () => 
     { operation: "transcript", status: 200, billableRequests: "1" },
     { operation: "metadata", status: 200, billableRequests: "1" },
   ]);
+});
+
+void test("Supadata completes the transcript request before starting metadata", async () => {
+  const videoId = "BoFkDmTm2uc";
+  const requestPaths: string[] = [];
+  let releaseTranscript: (() => void) | undefined;
+  const transcriptReleased = new Promise<void>((resolve) => {
+    releaseTranscript = resolve;
+  });
+  const adapter = createSupadataYouTubeAdapter({
+    apiKey: "test-key",
+    fetch: (async (input: string | URL | Request) => {
+      const url = requestUrl(input);
+      requestPaths.push(url.pathname);
+      if (url.pathname === "/v1/transcript") {
+        await transcriptReleased;
+        return Response.json({
+          content: "Transcript",
+          lang: "en",
+          availableLangs: ["en"],
+        });
+      }
+      return Response.json({
+        platform: "youtube",
+        type: "video",
+        id: videoId,
+        title: "Title",
+        description: "Description",
+      });
+    }) as typeof fetch,
+    diagnostics: { info: () => undefined, warn: () => undefined },
+  });
+
+  const acquisition = adapter.acquire(videoId, new AbortController().signal);
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  assert.deepEqual(requestPaths, ["/v1/transcript"]);
+
+  releaseTranscript?.();
+  await acquisition;
+  assert.deepEqual(requestPaths, ["/v1/transcript", "/v1/metadata"]);
+});
+
+void test("Supadata spaces request starts for the free-tier rate limit", async () => {
+  const videoId = "BoFkDmTm2uc";
+  const requestStartedAt: number[] = [];
+  const adapter = createProductionAdapter({
+    apiKey: "test-key",
+    fetch: ((input: string | URL | Request) => {
+      const url = requestUrl(input);
+      requestStartedAt.push(Date.now());
+      if (url.pathname === "/v1/transcript") {
+        return Promise.resolve(
+          Response.json({
+            content: "Transcript",
+            lang: "en",
+            availableLangs: ["en"],
+          }),
+        );
+      }
+      return Promise.resolve(
+        Response.json({
+          platform: "youtube",
+          type: "video",
+          id: videoId,
+          title: "Title",
+          description: "Description",
+        }),
+      );
+    }) as typeof fetch,
+    diagnostics: { info: () => undefined, warn: () => undefined },
+  });
+
+  await adapter.acquire(videoId, new AbortController().signal);
+
+  assert.equal(requestStartedAt.length, 2);
+  assert.ok(requestStartedAt[1]! - requestStartedAt[0]! >= 1_000);
 });
 
 void test("Supadata returns metadata when native captions are unavailable", async () => {
@@ -224,7 +305,9 @@ for (const [status, providerCode] of providerFailures) {
     await assert.rejects(
       adapter.acquire(videoId, new AbortController().signal),
       (error: unknown) =>
-        error instanceof ImportRecipeError && error.code === "FETCH_FAILED",
+        error instanceof ImportRecipeError &&
+        error.code ===
+          (status === 429 ? "IMPORT_LIMIT_REACHED" : "FETCH_FAILED"),
     );
     assert.deepEqual(warnings, [
       {
@@ -238,6 +321,56 @@ for (const [status, providerCode] of providerFailures) {
     ]);
   });
 }
+
+void test("Supadata maps a metadata request limit to IMPORT_LIMIT_REACHED", async () => {
+  const videoId = "BoFkDmTm2uc";
+  const warnings: Array<Record<string, unknown>> = [];
+  const adapter = createSupadataYouTubeAdapter({
+    apiKey: "test-key",
+    fetch: ((input: string | URL | Request) => {
+      const url = requestUrl(input);
+      if (url.pathname === "/v1/transcript") {
+        return Promise.resolve(
+          Response.json({
+            content: "Transcript",
+            lang: "en",
+            availableLangs: ["en"],
+          }),
+        );
+      }
+      return Promise.resolve(
+        Response.json(
+          {
+            error: "limit-exceeded",
+            message: "Request rate or credit quota exceeded",
+          },
+          { status: 429 },
+        ),
+      );
+    }) as typeof fetch,
+    diagnostics: {
+      info: () => undefined,
+      warn: (_message, fields) => warnings.push(fields),
+    },
+  });
+
+  await assert.rejects(
+    adapter.acquire(videoId, new AbortController().signal),
+    (error: unknown) =>
+      error instanceof ImportRecipeError &&
+      error.code === "IMPORT_LIMIT_REACHED",
+  );
+  assert.deepEqual(warnings, [
+    {
+      videoId,
+      category: "provider",
+      operation: "metadata",
+      status: 429,
+      providerCode: "limit-exceeded",
+      billableRequests: null,
+    },
+  ]);
+});
 
 void test("Supadata polls a native transcript job to completion", async () => {
   const videoId = "nHDNtxvrhHc";

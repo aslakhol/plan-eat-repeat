@@ -84,6 +84,8 @@ Supadata publishes a standard JSON error body with `error`, `message`, `details`
 
 Sources: [transcript unavailable](https://docs.supadata.ai/errors/transcript-unavailable), [invalid request](https://docs.supadata.ai/errors/invalid-request), [unauthorized](https://docs.supadata.ai/errors/unauthorized), [upgrade required](https://docs.supadata.ai/errors/upgrade-required), [forbidden](https://docs.supadata.ai/errors/forbidden), [not found](https://docs.supadata.ai/errors/not-found), [limit exceeded](https://docs.supadata.ai/errors/limit-exceeded), [internal error](https://docs.supadata.ai/errors/internal-error).
 
+Because the 429 response covers both request-rate and credit-quota failures, the application cannot name which limit was reached. It should return one `IMPORT_LIMIT_REACHED` outcome that asks the user to tell Aslak the Supadata plan needs upgrading.
+
 Supadata's accessibility guide overlaps 403 and 404. It specifically says private or nonexistent video can be 404, while authentication or access restrictions can be 403. Both statuses can therefore describe a video that the importer cannot use; diagnostics may retain the distinction even if the product maps them to the same user-facing outcome. Only complete media is supported, so an ongoing live stream is unavailable. [Video accessibility and live streams](https://docs.supadata.ai/get-transcript#video-accessibility)
 
 Transport failure, client cancellation, invalid JSON, an oversized response, and a response that fails local schema validation are not separate Supadata error codes. The adapter needs its own provider-failure categories for those cases.
@@ -114,6 +116,8 @@ Current published plans and request rates are:
 | Supa | 1,000,000 | $897 | 100/second |
 
 Basic is annual-only. Prices exclude tax, credits do not roll over, and paid plans can enable automatic recharge. Without more credits or automatic recharge, calls stop at the plan limit and return the documented 429 quota error. [Current pricing and quota behavior](https://supadata.ai/pricing), [limit-exceeded error](https://docs.supadata.ai/errors/limit-exceeded)
+
+The adapter must support the free plan. It should serialize transcript, transcript-job, and metadata calls and keep request starts at least one second apart. Awaiting each response without spacing is insufficient because two fast responses could still start within the same one-second rate-limit window.
 
 The docs do not state whether failed metadata calls or transcript failures other than the explicitly billed 206 consume credits. They also do not state how partial generated minutes are rounded. Neither uncertainty changes the native-only mode choice, but a production trial should verify actual charges for representative failures.
 

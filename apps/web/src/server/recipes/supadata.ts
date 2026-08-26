@@ -3,6 +3,7 @@ import { ImportRecipeError } from "@planeatrepeat/shared";
 
 const SUPADATA_API_BASE_URL = "https://api.supadata.ai/v1";
 const MAX_SUPADATA_RESPONSE_BYTES = 1_048_576;
+const MINIMUM_REQUEST_INTERVAL_MS = 1_000;
 
 const transcriptSchema = z.object({
   content: z.string(),
@@ -59,6 +60,7 @@ type SupadataYouTubeAdapterOptions = {
   apiKey?: string;
   fetch: typeof fetch;
   diagnostics?: SupadataDiagnostics;
+  minimumRequestIntervalMs?: number;
   pollIntervalMs?: number;
 };
 
@@ -93,6 +95,7 @@ export const createSupadataYouTubeAdapter = ({
   apiKey,
   fetch: fetchImplementation,
   diagnostics = console,
+  minimumRequestIntervalMs = MINIMUM_REQUEST_INTERVAL_MS,
   pollIntervalMs = 1_000,
 }: SupadataYouTubeAdapterOptions) => ({
   acquire: async (
@@ -113,10 +116,18 @@ export const createSupadataYouTubeAdapter = ({
       transcriptUrl.searchParams.set("mode", "native");
       transcriptUrl.searchParams.set("text", "true");
       const metadataUrl = supadataUrl("metadata", videoUrl);
+      let previousRequestStartedAt: number | undefined;
       const request = async (
         operation: SupadataOperation,
         url: URL,
       ): Promise<SupadataResponse> => {
+        if (previousRequestStartedAt !== undefined) {
+          const elapsedMs = Date.now() - previousRequestStartedAt;
+          const delayMs = minimumRequestIntervalMs - elapsedMs;
+          if (delayMs > 0) await waitForPoll(delayMs, signal);
+        }
+        previousRequestStartedAt = Date.now();
+
         let response: Response;
         try {
           response = await fetchImplementation(url, {
@@ -144,16 +155,14 @@ export const createSupadataYouTubeAdapter = ({
         };
       };
 
-      const [transcriptResponse, metadataResponse] = await Promise.all([
-        request("transcript", transcriptUrl),
-        request("metadata", metadataUrl),
-      ]);
+      const transcriptResponse = await request("transcript", transcriptUrl);
       const transcript = await transcriptFromResponse(
         transcriptResponse,
         request,
         signal,
         pollIntervalMs,
       );
+      const metadataResponse = await request("metadata", metadataUrl);
       const metadata = metadataFromResponse(metadataResponse, videoId);
 
       return {
@@ -180,7 +189,9 @@ export const createSupadataYouTubeAdapter = ({
           ? {}
           : { billableRequests: failure.billableRequests }),
       });
-      throw new ImportRecipeError("FETCH_FAILED");
+      throw new ImportRecipeError(
+        failure.status === 429 ? "IMPORT_LIMIT_REACHED" : "FETCH_FAILED",
+      );
     }
   },
 });
