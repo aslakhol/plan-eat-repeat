@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { validUrlOrNull } from "@planeatrepeat/shared";
+import {
+  importErrorMessages,
+  validUrlOrNull,
+} from "@planeatrepeat/shared";
 import {
   importErrorCopy,
   importNameConflict,
@@ -63,6 +66,30 @@ void test("typed import errors use plain source-specific copy", () => {
       title: "Couldn't find a recipe",
       body: "This video doesn't seem to include a readable recipe.",
     },
+  );
+  assert.deepEqual(
+    urlImportErrorCopy(
+      "FETCH_FAILED",
+      "https://youtube.com/watch?v=dQw4w9WgXcQ",
+    ),
+    {
+      title: "Couldn't reach the video",
+      body: "The video may be unavailable, or video importing may be temporarily unavailable. Try again later.",
+    },
+  );
+  assert.deepEqual(
+    urlImportErrorCopy(
+      "IMPORT_LIMIT_REACHED",
+      "https://youtube.com/watch?v=dQw4w9WgXcQ",
+    ),
+    {
+      title: "Video import limit reached",
+      body: "We've hit the video import limit. Please let Aslak know that we need to upgrade the Supadata plan.",
+    },
+  );
+  assert.equal(
+    importErrorMessages.IMPORT_LIMIT_REACHED,
+    "We've hit the video import limit. Please let Aslak know that we need to upgrade the Supadata plan.",
   );
 });
 

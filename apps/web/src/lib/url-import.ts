@@ -121,12 +121,17 @@ export const urlImportErrorCopy = (
       return video
         ? {
             title: "Couldn't reach the video",
-            body: "YouTube didn't answer. The video may be unavailable, or your connection dropped.",
+            body: "The video may be unavailable, or video importing may be temporarily unavailable. Try again later.",
           }
         : {
             title: "Couldn't reach the site",
             body: `${host} didn't answer. It may be down, or your connection dropped.`,
           };
+    case "IMPORT_LIMIT_REACHED":
+      return {
+        title: "Video import limit reached",
+        body: "We've hit the video import limit. Please let Aslak know that we need to upgrade the Supadata plan.",
+      };
     case "SITE_BLOCKED":
       return {
         title: "The site wouldn't let us in",

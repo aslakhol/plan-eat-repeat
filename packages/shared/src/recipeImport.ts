@@ -1,5 +1,6 @@
 export const importRecipeErrorCodes = [
   "FETCH_FAILED",
+  "IMPORT_LIMIT_REACHED",
   "SITE_BLOCKED",
   "PAGE_UNREADABLE",
   "NO_RECIPE_FOUND",
@@ -34,6 +35,8 @@ export class ImportRecipeError extends Error {
 export const importErrorMessages: Record<ImportRecipeErrorCode, string> = {
   FETCH_FAILED:
     "We couldn't open that link. Double-check the URL, or paste the recipe text below.",
+  IMPORT_LIMIT_REACHED:
+    "We've hit the video import limit. Please let Aslak know that we need to upgrade the Supadata plan.",
   SITE_BLOCKED:
     "This site blocks automated requests, so we couldn't read it. Paste the recipe text below and we'll structure it for you.",
   PAGE_UNREADABLE:
