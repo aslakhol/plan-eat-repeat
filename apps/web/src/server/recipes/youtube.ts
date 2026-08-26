@@ -5,6 +5,8 @@ import {
   type TranscriptSegment,
 } from "youtube-transcript-plus";
 
+import { fetchPoTokenTranscript } from "./youtube-po-token";
+
 const ACQUISITION_TIMEOUT_MS = 20_000;
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36 PlanEatRepeatRecipeImport/1.0";
@@ -18,6 +20,7 @@ type CaptionTrack = {
   baseUrl?: string;
   url?: string;
   kind?: string;
+  languageCode?: string;
 };
 
 type YouTubePlayerResponse = {
@@ -61,29 +64,73 @@ export const acquireYouTubeVideoTitle = async (
 export const acquireYouTubeRecipeText = async (
   videoId: string,
   requestSignal?: AbortSignal,
+  poTokenTranscriptFetch = fetchPoTokenTranscript,
 ) => {
   const timeoutSignal = AbortSignal.timeout(ACQUISITION_TIMEOUT_MS);
   const signal = requestSignal
     ? AbortSignal.any([requestSignal, timeoutSignal])
     : timeoutSignal;
-  const { videoDetails, transcript } = await fetchYouTubeData(videoId, signal);
+  const { videoDetails, transcript } = await fetchYouTubeData(
+    videoId,
+    signal,
+    poTokenTranscriptFetch,
+  );
   const description = videoDetails.shortDescription?.trim() ?? "";
   const transcriptText = transcript.map((segment) => segment.text).join(" ");
 
   return `YouTube title:\n${videoDetails.title ?? ""}\n\nYouTube description:\n${description}\n\nCaption transcript:\n${transcriptText}`;
 };
 
-const fetchYouTubeData = async (videoId: string, signal: AbortSignal) => {
+const fetchYouTubeData = async (
+  videoId: string,
+  signal: AbortSignal,
+  poTokenTranscriptFetch: typeof fetchPoTokenTranscript,
+) => {
   let automaticFallbackUrl: string | null = null;
-  const acquired: { videoDetails: YouTubeVideoDetails | null } = {
+  let embeddedPlayer: YouTubePlayerResponse | null = null;
+  let visitorData = "";
+  const acquired: {
+    poTokenFallbackTrack: CaptionTrack | null;
+    videoDetails: YouTubeVideoDetails | null;
+  } = {
+    poTokenFallbackTrack: null,
     videoDetails: null,
   };
 
-  const playerFetch = async (params: FetchParams) => {
+  const videoFetch = async (params: FetchParams) => {
     const response = await fetchFromParams(params);
     if (!response.ok) return response;
 
-    const player = (await response.json()) as YouTubePlayerResponse;
+    const body = await response.text();
+    embeddedPlayer = embeddedPlayerResponse(body);
+    visitorData = embeddedVisitorData(body);
+
+    return responseWithBody(response, body, "text/html");
+  };
+
+  const playerFetch = async (params: FetchParams) => {
+    let response: Response;
+    let player: YouTubePlayerResponse;
+
+    try {
+      response = await fetchFromParams(params);
+      if (!response.ok) {
+        if (!isUsablePlayer(embeddedPlayer)) return response;
+        response = Response.json(embeddedPlayer);
+      }
+
+      const upstreamPlayer = (await response.json()) as YouTubePlayerResponse;
+      player = isUsablePlayer(upstreamPlayer)
+        ? upstreamPlayer
+        : isUsablePlayer(embeddedPlayer)
+          ? embeddedPlayer
+          : upstreamPlayer;
+    } catch (error) {
+      if (!isUsablePlayer(embeddedPlayer)) throw error;
+      response = Response.json(embeddedPlayer);
+      player = embeddedPlayer;
+    }
+
     if (player.playabilityStatus?.status === "OK" && player.videoDetails) {
       acquired.videoDetails = player.videoDetails;
     }
@@ -96,13 +143,14 @@ const fetchYouTubeData = async (videoId: string, signal: AbortSignal) => {
       if (tracks[0] && !isAutomatic(tracks[0])) {
         automaticFallbackUrl = trackUrl(tracks.find(isAutomatic));
       }
+      acquired.poTokenFallbackTrack = tracks[0] ?? null;
     }
 
-    return new Response(JSON.stringify(player), {
-      status: response.status,
-      statusText: response.statusText,
-      headers: { "Content-Type": "application/json" },
-    });
+    return responseWithBody(
+      response,
+      JSON.stringify(player),
+      "application/json",
+    );
   };
 
   const transcriptFetch = async (params: FetchParams) => {
@@ -134,6 +182,7 @@ const fetchYouTubeData = async (videoId: string, signal: AbortSignal) => {
     transcript = await fetchTranscript(videoId, {
       userAgent: USER_AGENT,
       signal,
+      videoFetch,
       playerFetch,
       transcriptFetch,
     });
@@ -141,9 +190,86 @@ const fetchYouTubeData = async (videoId: string, signal: AbortSignal) => {
     // Written descriptions are sufficient; caption retrieval is best effort.
   }
 
+  const poTokenCaptionUrl = trackUrl(
+    acquired.poTokenFallbackTrack ?? undefined,
+  );
+  if (transcript.length === 0 && poTokenCaptionUrl) {
+    try {
+      transcript = await poTokenTranscriptFetch({
+        captionUrl: poTokenCaptionUrl,
+        languageCode: acquired.poTokenFallbackTrack?.languageCode,
+        signal,
+        videoId,
+        visitorData,
+      });
+    } catch (error) {
+      console.warn("YouTube PoToken transcript fallback failed", {
+        videoId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   if (!acquired.videoDetails) throw new ImportRecipeError("FETCH_FAILED");
 
   return { videoDetails: acquired.videoDetails, transcript };
+};
+
+const isUsablePlayer = (
+  player: YouTubePlayerResponse | null,
+): player is YouTubePlayerResponse & { videoDetails: YouTubeVideoDetails } =>
+  player?.playabilityStatus?.status === "OK" && Boolean(player.videoDetails);
+
+const embeddedPlayerResponse = (html: string): YouTubePlayerResponse | null => {
+  const assignment = /ytInitialPlayerResponse\s*=\s*/.exec(html);
+  if (!assignment) return null;
+
+  const start = html.indexOf("{", assignment.index + assignment[0].length);
+  if (start < 0) return null;
+
+  const json = jsonObjectAt(html, start);
+  if (!json) return null;
+
+  try {
+    return JSON.parse(json) as YouTubePlayerResponse;
+  } catch {
+    return null;
+  }
+};
+
+const embeddedVisitorData = (html: string) =>
+  /"visitorData":"([^"]+)"/.exec(html)?.[1] ?? "";
+
+const jsonObjectAt = (text: string, start: number) => {
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let index = start; index < text.length; index += 1) {
+    const character = text[index];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (character === "\\") {
+        escaped = true;
+      } else if (character === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (character === '"') {
+      inString = true;
+    } else if (character === "{") {
+      depth += 1;
+    } else if (character === "}") {
+      depth -= 1;
+      if (depth === 0) return text.slice(start, index + 1);
+    }
+  }
+
+  return null;
 };
 
 const captionTracks = (player: YouTubePlayerResponse) =>
@@ -167,3 +293,17 @@ const fetchFromParams = (params: FetchParams, url = params.url) => {
     signal: params.signal,
   });
 };
+
+const responseWithBody = (
+  response: Response,
+  body: string,
+  fallbackContentType: string,
+) =>
+  new Response(body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: {
+      "Content-Type":
+        response.headers.get("Content-Type") ?? fallbackContentType,
+    },
+  });
