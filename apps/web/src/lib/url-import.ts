@@ -121,7 +121,7 @@ export const urlImportErrorCopy = (
       return video
         ? {
             title: "Couldn't reach the video",
-            body: "YouTube didn't answer. The video may be unavailable, or your connection dropped.",
+            body: "The video may be unavailable, or video importing may be temporarily unavailable. Try again later.",
           }
         : {
             title: "Couldn't reach the site",

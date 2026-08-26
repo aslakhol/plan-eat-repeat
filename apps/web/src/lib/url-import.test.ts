@@ -64,6 +64,16 @@ void test("typed import errors use plain source-specific copy", () => {
       body: "This video doesn't seem to include a readable recipe.",
     },
   );
+  assert.deepEqual(
+    urlImportErrorCopy(
+      "FETCH_FAILED",
+      "https://youtube.com/watch?v=dQw4w9WgXcQ",
+    ),
+    {
+      title: "Couldn't reach the video",
+      body: "The video may be unavailable, or video importing may be temporarily unavailable. Try again later.",
+    },
+  );
 });
 
 void test("photo and text imports expose source-specific progress", () => {
