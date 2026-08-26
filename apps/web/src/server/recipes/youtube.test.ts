@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ImportRecipeError } from "@planeatrepeat/shared";
 
-import { createYouTubeRecipeTextAcquirer } from "./youtube";
+import {
+  acquireYouTubeVideoTitle,
+  createYouTubeRecipeTextAcquirer,
+} from "./youtube";
 
 const productionRegressionVideoIds = [
   "BoFkDmTm2uc",
@@ -142,4 +145,41 @@ void test("YouTube import propagates caller cancellation", async () => {
   controller.abort(cancellation);
 
   await assert.rejects(result, (error: unknown) => error === cancellation);
+});
+
+void test("YouTube title preview remains an independent oEmbed request", async () => {
+  const originalFetch = globalThis.fetch;
+  const requests: URL[] = [];
+  globalThis.fetch = ((input: string | URL | Request) => {
+    const url = new URL(
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.href
+          : input.url,
+    );
+    requests.push(url);
+    return Promise.resolve(Response.json({ title: "  Preview title  " }));
+  }) as typeof fetch;
+
+  try {
+    assert.equal(await acquireYouTubeVideoTitle("BoFkDmTm2uc"), "Preview title");
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0]?.hostname, "www.youtube.com");
+    assert.equal(requests[0]?.pathname, "/oembed");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+void test("YouTube title preview returns null when oEmbed fails", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (() =>
+    Promise.reject(new Error("oEmbed unavailable"))) as typeof fetch;
+
+  try {
+    assert.equal(await acquireYouTubeVideoTitle("YdFjuglEAds"), null);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

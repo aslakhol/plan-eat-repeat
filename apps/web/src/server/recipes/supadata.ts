@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ImportRecipeError } from "@planeatrepeat/shared";
 
 const SUPADATA_API_BASE_URL = "https://api.supadata.ai/v1";
-const MAX_SUPADATA_RESPONSE_BYTES = 1_000_000;
+const MAX_SUPADATA_RESPONSE_BYTES = 1_048_576;
 
 const transcriptSchema = z.object({
   content: z.string(),
@@ -68,10 +68,18 @@ type SupadataResponse = {
   billableRequests: string | null;
 };
 
+type SupadataOperation = "metadata" | "transcript" | "transcript-job";
+type SupadataFailureCategory =
+  | "invalid-response"
+  | "job-failed"
+  | "provider"
+  | "response-too-large"
+  | "transport";
+
 class SupadataFailure extends Error {
   constructor(
-    readonly category: string,
-    readonly operation?: string,
+    readonly category: SupadataFailureCategory,
+    readonly operation?: SupadataOperation,
     readonly status?: number,
     readonly providerCode?: string,
     readonly billableRequests?: string | null,
@@ -106,7 +114,7 @@ export const createSupadataYouTubeAdapter = ({
       transcriptUrl.searchParams.set("text", "true");
       const metadataUrl = supadataUrl("metadata", videoUrl);
       const request = async (
-        operation: string,
+        operation: SupadataOperation,
         url: URL,
       ): Promise<SupadataResponse> => {
         let response: Response;
@@ -179,7 +187,7 @@ export const createSupadataYouTubeAdapter = ({
 
 const transcriptFromResponse = async (
   response: SupadataResponse,
-  request: (operation: string, url: URL) => Promise<SupadataResponse>,
+  request: (operation: SupadataOperation, url: URL) => Promise<SupadataResponse>,
   signal: AbortSignal,
   pollIntervalMs: number,
 ) => {
@@ -207,7 +215,7 @@ const transcriptFromResponse = async (
 
 const pollTranscriptJob = async (
   jobId: string,
-  request: (operation: string, url: URL) => Promise<SupadataResponse>,
+  request: (operation: SupadataOperation, url: URL) => Promise<SupadataResponse>,
   signal: AbortSignal,
   pollIntervalMs: number,
 ) => {
@@ -285,14 +293,17 @@ const metadataFromResponse = (
 const parseProviderResponse = <Output>(
   schema: z.ZodType<Output>,
   response: SupadataResponse,
-  operation: string,
+  operation: SupadataOperation,
 ): Output => {
   const parsed = schema.safeParse(response.body);
   if (!parsed.success) throw invalidResponse(operation, response);
   return parsed.data;
 };
 
-const invalidResponse = (operation: string, response: SupadataResponse) =>
+const invalidResponse = (
+  operation: SupadataOperation,
+  response: SupadataResponse,
+) =>
   new SupadataFailure(
     "invalid-response",
     operation,
@@ -306,7 +317,10 @@ const abortReason = (signal: AbortSignal) =>
     ? signal.reason
     : new DOMException("The operation was aborted", "AbortError");
 
-const providerFailure = (operation: string, response: SupadataResponse) => {
+const providerFailure = (
+  operation: SupadataOperation,
+  response: SupadataResponse,
+) => {
   const providerError = providerErrorSchema.safeParse(response.body);
   return new SupadataFailure(
     "provider",
@@ -319,7 +333,7 @@ const providerFailure = (operation: string, response: SupadataResponse) => {
 
 const readJsonBody = async (
   response: Response,
-  operation: string,
+  operation: SupadataOperation,
   billableRequests: string | null,
 ): Promise<unknown> => {
   const contentLength = Number(response.headers.get("content-length"));
