@@ -53,6 +53,10 @@ void test("URL progress follows parsed acquisition instead of the entry label", 
     ["Fetching the video", "Reading the recipe", "Structuring it"],
   );
   assert.deepEqual(
+    urlImportPhases("https://www.instagram.com/share/reel/_69O6RoGd/"),
+    ["Fetching the video", "Reading the recipe", "Structuring it"],
+  );
+  assert.deepEqual(
     importPhases("youtube", "https://www.instagram.com/reel/C7Example_1/"),
     ["Fetching the video", "Reading the recipe", "Structuring it"],
   );

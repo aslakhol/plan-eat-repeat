@@ -2,7 +2,6 @@ import { Readability } from "@mozilla/readability";
 import { parseHTML } from "linkedom";
 import {
   ImportRecipeError,
-  instagramMediaIdFromUrl,
   youtubeVideoIdFromUrl,
 } from "@planeatrepeat/shared";
 
@@ -11,9 +10,12 @@ import {
   type ExtractInput,
   type ExtractResult,
 } from "~/server/ai/extractRecipe";
-import { acquireYouTubeRecipeText } from "~/server/recipes/youtube";
-import { acquireInstagramRecipeText } from "~/server/recipes/instagram";
+import {
+  acquireInstagramRecipeText,
+  resolveInstagramMediaSource,
+} from "~/server/recipes/instagram";
 import { scrapeRecipeTextWithSupadata } from "~/server/recipes/supadataWeb";
+import { acquireYouTubeRecipeText } from "~/server/recipes/youtube";
 
 const FETCH_TIMEOUT_MS = 12_000;
 const MIN_READABLE_TEXT_LENGTH = 400;
@@ -30,11 +32,17 @@ export const importRecipeFromUrl = async (
   signal?: AbortSignal,
 ): Promise<ExtractResult> => {
   const videoId = youtubeVideoIdFromUrl(url);
-  const instagramMediaId = instagramMediaIdFromUrl(url);
+  const instagramSource = videoId
+    ? null
+    : await resolveInstagramMediaSource(url, signal);
   const source = videoId
     ? await acquireYouTubeRecipeText(videoId, signal)
-    : instagramMediaId
-      ? await acquireInstagramRecipeText(url, instagramMediaId, signal)
+    : instagramSource
+      ? await acquireInstagramRecipeText(
+          instagramSource.mediaUrl,
+          instagramSource.mediaId,
+          signal,
+        )
       : await acquireRecipeTextFromUrl(url, signal);
   return extractOrThrow(
     [{ type: "text", text: trimForModel(source) }],
