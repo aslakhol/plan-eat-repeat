@@ -1,9 +1,13 @@
 import { z } from "zod";
-import { ImportRecipeError } from "@planeatrepeat/shared";
+import {
+  canonicalInstagramMediaUrl,
+  ImportRecipeError,
+  instagramMediaIdFromUrl,
+} from "@planeatrepeat/shared";
 
 const SUPADATA_API_BASE_URL = "https://api.supadata.ai/v1";
 const MAX_SUPADATA_RESPONSE_BYTES = 1_048_576;
-const MINIMUM_REQUEST_INTERVAL_MS = 1_000;
+const MINIMUM_REQUEST_INTERVAL_MS = 1_500;
 
 const transcriptSchema = z.object({
   content: z.string(),
@@ -36,10 +40,19 @@ const nestedCompletedTranscriptJobSchema = z.object({
   result: transcriptSchema,
 });
 
-const metadataSchema = z.object({
+const youtubeMetadataSchema = z.object({
   platform: z.literal("youtube"),
   type: z.literal("video"),
   id: z.string(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+});
+
+const instagramMetadataSchema = z.object({
+  platform: z.literal("instagram"),
+  type: z.enum(["video", "image", "carousel", "post"]),
+  id: z.string(),
+  url: z.string().url().optional(),
   title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
 });
@@ -50,6 +63,8 @@ export type SupadataYouTubeEvidence = {
   transcript: string;
   transcriptLanguage: string | null;
 };
+
+export type SupadataInstagramEvidence = SupadataYouTubeEvidence;
 
 type SupadataDiagnostics = {
   info: (message: string, fields: Record<string, unknown>) => void;
@@ -63,6 +78,8 @@ type SupadataYouTubeAdapterOptions = {
   minimumRequestIntervalMs?: number;
   pollIntervalMs?: number;
 };
+
+type SupadataInstagramAdapterOptions = SupadataYouTubeAdapterOptions;
 
 type SupadataResponse = {
   status: number;
@@ -116,44 +133,13 @@ export const createSupadataYouTubeAdapter = ({
       transcriptUrl.searchParams.set("mode", "native");
       transcriptUrl.searchParams.set("text", "true");
       const metadataUrl = supadataUrl("metadata", videoUrl);
-      let previousRequestStartedAt: number | undefined;
-      const request = async (
-        operation: SupadataOperation,
-        url: URL,
-      ): Promise<SupadataResponse> => {
-        if (previousRequestStartedAt !== undefined) {
-          const elapsedMs = Date.now() - previousRequestStartedAt;
-          const delayMs = minimumRequestIntervalMs - elapsedMs;
-          if (delayMs > 0) await waitForPoll(delayMs, signal);
-        }
-        previousRequestStartedAt = Date.now();
-
-        let response: Response;
-        try {
-          response = await fetchImplementation(url, {
-            headers: { "x-api-key": apiKey },
-            signal,
-          });
-        } catch (error) {
-          if (signal.aborted) throw error;
-          throw new SupadataFailure("transport", operation);
-        }
-        const billableRequests = response.headers.get("x-billable-requests");
-        diagnostics.info("Supadata request completed", {
-          operation,
-          status: response.status,
-          billableRequests,
-        });
-        return {
-          status: response.status,
-          body: await readJsonBody(
-            response,
-            operation,
-            billableRequests,
-          ),
-          billableRequests,
-        };
-      };
+      const request = createSupadataRequester({
+        apiKey,
+        fetchImplementation,
+        diagnostics,
+        minimumRequestIntervalMs,
+        signal,
+      });
 
       const transcriptResponse = await request("transcript", transcriptUrl);
       const transcript = await transcriptFromResponse(
@@ -182,9 +168,7 @@ export const createSupadataYouTubeAdapter = ({
         category: failure.category,
         ...(failure.operation ? { operation: failure.operation } : {}),
         ...(failure.status === undefined ? {} : { status: failure.status }),
-        ...(failure.providerCode
-          ? { providerCode: failure.providerCode }
-          : {}),
+        ...(failure.providerCode ? { providerCode: failure.providerCode } : {}),
         ...(failure.billableRequests === undefined
           ? {}
           : { billableRequests: failure.billableRequests }),
@@ -196,9 +180,146 @@ export const createSupadataYouTubeAdapter = ({
   },
 });
 
+export const createSupadataInstagramAdapter = ({
+  apiKey,
+  fetch: fetchImplementation,
+  diagnostics = console,
+  minimumRequestIntervalMs = MINIMUM_REQUEST_INTERVAL_MS,
+  pollIntervalMs = 1_000,
+}: SupadataInstagramAdapterOptions) => ({
+  acquire: async (
+    mediaUrl: string,
+    expectedMediaId: string,
+    signal: AbortSignal,
+  ): Promise<SupadataInstagramEvidence> => {
+    if (!apiKey?.trim()) {
+      diagnostics.warn("Supadata Instagram acquisition failed", {
+        mediaId: expectedMediaId,
+        category: "configuration",
+      });
+      throw new ImportRecipeError("FETCH_FAILED");
+    }
+
+    try {
+      const providerMediaUrl = canonicalInstagramMediaUrl(mediaUrl);
+      if (!providerMediaUrl) {
+        throw new SupadataFailure("invalid-response");
+      }
+      const request = createSupadataRequester({
+        apiKey,
+        fetchImplementation,
+        diagnostics,
+        minimumRequestIntervalMs,
+        signal,
+      });
+      const metadataResponse = await request(
+        "metadata",
+        supadataUrl("metadata", providerMediaUrl),
+      );
+      const metadata = instagramMetadataFromResponse(
+        metadataResponse,
+        expectedMediaId,
+      );
+      let transcript: z.infer<typeof transcriptSchema> | null = null;
+
+      if (metadata.type === "video") {
+        const transcriptUrl = supadataUrl("transcript", providerMediaUrl);
+        transcriptUrl.searchParams.set("mode", "auto");
+        transcriptUrl.searchParams.set("text", "true");
+        const transcriptResponse = await request("transcript", transcriptUrl);
+        transcript = await transcriptFromResponse(
+          transcriptResponse,
+          request,
+          signal,
+          pollIntervalMs,
+        );
+      }
+
+      return {
+        title: metadata.title ?? "",
+        description: metadata.description ?? "",
+        transcript: transcript?.content ?? "",
+        transcriptLanguage: transcript?.lang ?? null,
+      };
+    } catch (error) {
+      if (signal.aborted) throw error;
+      const failure =
+        error instanceof SupadataFailure
+          ? error
+          : new SupadataFailure("invalid-response");
+      diagnostics.warn("Supadata Instagram acquisition failed", {
+        mediaId: expectedMediaId,
+        category: failure.category,
+        ...(failure.operation ? { operation: failure.operation } : {}),
+        ...(failure.status === undefined ? {} : { status: failure.status }),
+        ...(failure.providerCode ? { providerCode: failure.providerCode } : {}),
+        ...(failure.billableRequests === undefined
+          ? {}
+          : { billableRequests: failure.billableRequests }),
+      });
+      throw new ImportRecipeError(
+        failure.status === 429 ? "IMPORT_LIMIT_REACHED" : "FETCH_FAILED",
+      );
+    }
+  },
+});
+
+const createSupadataRequester = ({
+  apiKey,
+  fetchImplementation,
+  diagnostics,
+  minimumRequestIntervalMs,
+  signal,
+}: {
+  apiKey: string;
+  fetchImplementation: typeof fetch;
+  diagnostics: SupadataDiagnostics;
+  minimumRequestIntervalMs: number;
+  signal: AbortSignal;
+}) => {
+  let previousRequestStartedAt: number | undefined;
+
+  return async (
+    operation: SupadataOperation,
+    url: URL,
+  ): Promise<SupadataResponse> => {
+    if (previousRequestStartedAt !== undefined) {
+      const elapsedMs = Date.now() - previousRequestStartedAt;
+      const delayMs = minimumRequestIntervalMs - elapsedMs;
+      if (delayMs > 0) await waitForPoll(delayMs, signal);
+    }
+    previousRequestStartedAt = Date.now();
+
+    let response: Response;
+    try {
+      response = await fetchImplementation(url, {
+        headers: { "x-api-key": apiKey },
+        signal,
+      });
+    } catch (error) {
+      if (signal.aborted) throw error;
+      throw new SupadataFailure("transport", operation);
+    }
+    const billableRequests = response.headers.get("x-billable-requests");
+    diagnostics.info("Supadata request completed", {
+      operation,
+      status: response.status,
+      billableRequests,
+    });
+    return {
+      status: response.status,
+      body: await readJsonBody(response, operation, billableRequests),
+      billableRequests,
+    };
+  };
+};
+
 const transcriptFromResponse = async (
   response: SupadataResponse,
-  request: (operation: SupadataOperation, url: URL) => Promise<SupadataResponse>,
+  request: (
+    operation: SupadataOperation,
+    url: URL,
+  ) => Promise<SupadataResponse>,
   signal: AbortSignal,
   pollIntervalMs: number,
 ) => {
@@ -214,11 +335,7 @@ const transcriptFromResponse = async (
     return pollTranscriptJob(jobId, request, signal, pollIntervalMs);
   }
   if (response.status === 206) {
-    parseProviderResponse(
-      transcriptUnavailableSchema,
-      response,
-      "transcript",
-    );
+    parseProviderResponse(transcriptUnavailableSchema, response, "transcript");
     return null;
   }
   throw providerFailure("transcript", response);
@@ -226,7 +343,10 @@ const transcriptFromResponse = async (
 
 const pollTranscriptJob = async (
   jobId: string,
-  request: (operation: SupadataOperation, url: URL) => Promise<SupadataResponse>,
+  request: (
+    operation: SupadataOperation,
+    url: URL,
+  ) => Promise<SupadataResponse>,
   signal: AbortSignal,
   pollIntervalMs: number,
 ) => {
@@ -289,11 +409,35 @@ const metadataFromResponse = (
 ) => {
   if (response.status === 200) {
     const metadata = parseProviderResponse(
-      metadataSchema,
+      youtubeMetadataSchema,
       response,
       "metadata",
     );
     if (metadata.id !== expectedVideoId) {
+      throw invalidResponse("metadata", response);
+    }
+    return metadata;
+  }
+  throw providerFailure("metadata", response);
+};
+
+const instagramMetadataFromResponse = (
+  response: SupadataResponse,
+  expectedMediaId: string,
+) => {
+  if (response.status === 200) {
+    const metadata = parseProviderResponse(
+      instagramMetadataSchema,
+      response,
+      "metadata",
+    );
+    const canonicalMediaId = metadata.url
+      ? instagramMediaIdFromUrl(metadata.url)
+      : null;
+    if (
+      metadata.id !== expectedMediaId &&
+      canonicalMediaId !== expectedMediaId
+    ) {
       throw invalidResponse("metadata", response);
     }
     return metadata;

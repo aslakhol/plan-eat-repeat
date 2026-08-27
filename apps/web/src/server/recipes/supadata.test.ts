@@ -64,10 +64,7 @@ void test("Supadata acquires native YouTube captions and metadata", async () => 
     },
   });
 
-  const evidence = await adapter.acquire(
-    videoId,
-    new AbortController().signal,
-  );
+  const evidence = await adapter.acquire(videoId, new AbortController().signal);
 
   assert.deepEqual(evidence, {
     title: "Biscuits and gravy",
@@ -176,7 +173,7 @@ void test("Supadata spaces request starts for the free-tier rate limit", async (
   await adapter.acquire(videoId, new AbortController().signal);
 
   assert.equal(requestStartedAt.length, 2);
-  assert.ok(requestStartedAt[1]! - requestStartedAt[0]! >= 1_000);
+  assert.ok(requestStartedAt[1]! - requestStartedAt[0]! >= 1_500);
 });
 
 void test("Supadata returns metadata when native captions are unavailable", async () => {
@@ -214,10 +211,7 @@ void test("Supadata returns metadata when native captions are unavailable", asyn
     diagnostics: { info: () => undefined, warn: () => undefined },
   });
 
-  const evidence = await adapter.acquire(
-    videoId,
-    new AbortController().signal,
-  );
+  const evidence = await adapter.acquire(videoId, new AbortController().signal);
 
   assert.deepEqual(evidence, {
     title: "Crispy potatoes",
@@ -391,7 +385,9 @@ void test("Supadata polls a native transcript job to completion", async () => {
     fetch: ((input: string | URL | Request) => {
       const url = requestUrl(input);
       if (url.pathname === "/v1/transcript") {
-        return Promise.resolve(Response.json({ jobId: "job-1" }, { status: 202 }));
+        return Promise.resolve(
+          Response.json({ jobId: "job-1" }, { status: 202 }),
+        );
       }
       if (url.pathname === "/v1/transcript/job-1") {
         const body = jobResponses[jobPolls];
@@ -411,10 +407,7 @@ void test("Supadata polls a native transcript job to completion", async () => {
     diagnostics: { info: () => undefined, warn: () => undefined },
   });
 
-  const evidence = await adapter.acquire(
-    videoId,
-    new AbortController().signal,
-  );
+  const evidence = await adapter.acquire(videoId, new AbortController().signal);
 
   assert.equal(jobPolls, 3);
   assert.deepEqual(evidence, {
@@ -645,10 +638,7 @@ void test("Supadata accepts the SDK's nested completed-job result", async () => 
     diagnostics: { info: () => undefined, warn: () => undefined },
   });
 
-  const evidence = await adapter.acquire(
-    videoId,
-    new AbortController().signal,
-  );
+  const evidence = await adapter.acquire(videoId, new AbortController().signal);
 
   assert.equal(evidence.transcript, "Nested transcript");
   assert.equal(evidence.transcriptLanguage, "zh-TW");
@@ -807,10 +797,7 @@ void test("Supadata treats an empty native transcript as unavailable", async () 
     diagnostics: { info: () => undefined, warn: () => undefined },
   });
 
-  const evidence = await adapter.acquire(
-    videoId,
-    new AbortController().signal,
-  );
+  const evidence = await adapter.acquire(videoId, new AbortController().signal);
 
   assert.equal(evidence.transcript, "");
   assert.deepEqual(requestedModes, ["native"]);
@@ -937,10 +924,7 @@ void test("Supadata accepts a declared response below one MiB", async () => {
     diagnostics: { info: () => undefined, warn: () => undefined },
   });
 
-  const evidence = await adapter.acquire(
-    videoId,
-    new AbortController().signal,
-  );
+  const evidence = await adapter.acquire(videoId, new AbortController().signal);
 
   assert.equal(evidence.transcript, "Transcript");
 });
