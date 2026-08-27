@@ -49,7 +49,7 @@ Preserve ingredient order.
 
 When a URL source contains both <structured-recipe-data> and <visible-page-content>, both blocks describe the same recipe. Reconcile them into one result without duplicating content. Preserve explicit structured values when supported, and use the visible page content to fill details omitted from the structured data. Do not assume that structured data is complete.
 
-When a source contains labeled YouTube title, description, and caption transcript sections, prefer exact written ingredients and amounts in the description over approximate spoken wording in the transcript when they conflict.`;
+When a social video source contains labeled title, description or caption, and transcript sections, prefer exact written ingredients and amounts in the description or caption over approximate spoken wording in the transcript when they conflict.`;
 
 const householdPreferencesPrompt = (instructions?: string | null) => {
   if (!instructions) return "";

@@ -1,5 +1,6 @@
 import {
   type ImportRecipeErrorCode,
+  isInstagramMediaUrl,
   isImportRecipeErrorCode,
   isYouTubeVideoUrl,
   sourceLabel,
@@ -10,7 +11,12 @@ export type UrlImportErrorCopy = {
   body: string;
 };
 
-export type RecipeImportSource = "link" | "youtube" | "photos" | "text";
+export type RecipeImportSource =
+  | "link"
+  | "youtube"
+  | "instagram"
+  | "photos"
+  | "text";
 
 export const importErrorCodeFromUnknown = (
   error: unknown,
@@ -104,7 +110,9 @@ export const importSourceLinkConflict = (
 };
 
 export const urlImportPhases = (url: string) => [
-  isYouTubeVideoUrl(url) ? "Fetching the video" : "Fetching the page",
+  isYouTubeVideoUrl(url) || isInstagramMediaUrl(url)
+    ? "Fetching the video"
+    : "Fetching the page",
   "Reading the recipe",
   "Structuring it",
 ];
@@ -113,7 +121,7 @@ export const urlImportErrorCopy = (
   code: ImportRecipeErrorCode,
   url: string,
 ): UrlImportErrorCopy => {
-  const video = isYouTubeVideoUrl(url);
+  const video = isYouTubeVideoUrl(url) || isInstagramMediaUrl(url);
   const host = sourceLabel(url);
 
   switch (code) {
@@ -205,6 +213,7 @@ const importSourceCopy: Record<
 > = {
   link: urlSourceCopy,
   youtube: urlSourceCopy,
+  instagram: urlSourceCopy,
   photos: {
     phases: () => [
       "Reading the photos",
