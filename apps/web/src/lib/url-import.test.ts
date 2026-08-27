@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-  importErrorMessages,
-  validUrlOrNull,
-} from "@planeatrepeat/shared";
+import { importErrorMessages, validUrlOrNull } from "@planeatrepeat/shared";
 import {
   importErrorCopy,
   importNameConflict,
@@ -22,6 +19,10 @@ void test("URL imports accept HTTP(S) pages regardless of entry label", () => {
   assert.equal(
     validUrlOrNull("https://youtu.be/dQw4w9WgXcQ"),
     "https://youtu.be/dQw4w9WgXcQ",
+  );
+  assert.equal(
+    validUrlOrNull("https://www.instagram.com/reel/C7Example_1/"),
+    "https://www.instagram.com/reel/C7Example_1/",
   );
   assert.equal(validUrlOrNull("mailto:cook@example.com"), null);
   assert.equal(validUrlOrNull("not a URL"), null);
@@ -44,6 +45,24 @@ void test("URL progress follows parsed acquisition instead of the entry label", 
   ]);
   assert.deepEqual(urlImportPhases("https://youtu.be/dQw4w9WgXcQ"), [
     "Fetching the video",
+    "Reading the recipe",
+    "Structuring it",
+  ]);
+  assert.deepEqual(
+    urlImportPhases("https://www.instagram.com/reel/C7Example_1/"),
+    ["Fetching the video", "Reading the recipe", "Structuring it"],
+  );
+  assert.deepEqual(
+    importPhases("youtube", "https://www.instagram.com/reel/C7Example_1/"),
+    ["Fetching the video", "Reading the recipe", "Structuring it"],
+  );
+  assert.deepEqual(importPhases("instagram", "https://youtu.be/dQw4w9WgXcQ"), [
+    "Fetching the video",
+    "Reading the recipe",
+    "Structuring it",
+  ]);
+  assert.deepEqual(importPhases("instagram", "https://example.com/recipe"), [
+    "Fetching the page",
     "Reading the recipe",
     "Structuring it",
   ]);
@@ -88,10 +107,7 @@ void test("typed import errors use plain source-specific copy", () => {
     },
   );
   assert.deepEqual(
-    urlImportErrorCopy(
-      "IMPORT_LIMIT_REACHED",
-      "https://example.com/recipe",
-    ),
+    urlImportErrorCopy("IMPORT_LIMIT_REACHED", "https://example.com/recipe"),
     {
       title: "Recipe import limit reached",
       body: "We've hit the recipe import limit. Please let Aslak know that we need to upgrade the Supadata plan.",

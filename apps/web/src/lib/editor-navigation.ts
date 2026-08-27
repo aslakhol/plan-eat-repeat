@@ -1,6 +1,6 @@
 export type EditorOrigin = "cookbook" | "week";
 export type EditorMode = "manual";
-export type EditorImportSource = "link" | "youtube";
+export type EditorImportSource = "link" | "youtube" | "instagram";
 declare const planSlotDateBrand: unique symbol;
 export type PlanSlotDate = string & {
   readonly [planSlotDateBrand]: true;

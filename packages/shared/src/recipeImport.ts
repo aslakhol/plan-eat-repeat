@@ -84,6 +84,48 @@ export const youtubeVideoIdFromUrl = (value: string | URL) => {
 export const isYouTubeVideoUrl = (value: string | URL) =>
   youtubeVideoIdFromUrl(value) !== null;
 
+const INSTAGRAM_MEDIA_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
+
+export const instagramMediaIdFromUrl = (value: string | URL) => {
+  let url: URL;
+  try {
+    url = typeof value === "string" ? new URL(value) : value;
+  } catch {
+    return null;
+  }
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+
+  const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
+  if (hostname !== "instagram.com") return null;
+
+  const pathSegments = url.pathname.split("/").filter(Boolean);
+  const [kind, mediaId] = pathSegments;
+  if (
+    pathSegments.length !== 2 ||
+    (kind !== "reel" && kind !== "reels" && kind !== "p" && kind !== "tv") ||
+    !mediaId ||
+    !INSTAGRAM_MEDIA_ID_PATTERN.test(mediaId)
+  ) {
+    return null;
+  }
+
+  return mediaId;
+};
+
+export const isInstagramMediaUrl = (value: string | URL) =>
+  instagramMediaIdFromUrl(value) !== null;
+
+export const canonicalInstagramMediaUrl = (value: string | URL) => {
+  const mediaId = instagramMediaIdFromUrl(value);
+  if (!mediaId) return null;
+
+  const url = typeof value === "string" ? new URL(value) : value;
+  const [kind] = url.pathname.split("/").filter(Boolean);
+  const canonicalKind = kind === "reels" ? "reel" : kind;
+  return `https://www.instagram.com/${canonicalKind}/${mediaId}/`;
+};
+
 export const validUrlOrNull = (value: string) => {
   try {
     const url = new URL(value.trim());
