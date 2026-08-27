@@ -83,13 +83,23 @@ void test("typed import errors use plain source-specific copy", () => {
       "https://youtube.com/watch?v=dQw4w9WgXcQ",
     ),
     {
-      title: "Video import limit reached",
-      body: "We've hit the video import limit. Please let Aslak know that we need to upgrade the Supadata plan.",
+      title: "Recipe import limit reached",
+      body: "We've hit the recipe import limit. Please let Aslak know that we need to upgrade the Supadata plan.",
+    },
+  );
+  assert.deepEqual(
+    urlImportErrorCopy(
+      "IMPORT_LIMIT_REACHED",
+      "https://example.com/recipe",
+    ),
+    {
+      title: "Recipe import limit reached",
+      body: "We've hit the recipe import limit. Please let Aslak know that we need to upgrade the Supadata plan.",
     },
   );
   assert.equal(
     importErrorMessages.IMPORT_LIMIT_REACHED,
-    "We've hit the video import limit. Please let Aslak know that we need to upgrade the Supadata plan.",
+    "We've hit the recipe import limit. Please let Aslak know that we need to upgrade the Supadata plan.",
   );
 });
 

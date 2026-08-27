@@ -11,9 +11,9 @@ import {
   type ExtractResult,
 } from "~/server/ai/extractRecipe";
 import { acquireYouTubeRecipeText } from "~/server/recipes/youtube";
+import { scrapeRecipeTextWithSupadata } from "~/server/recipes/supadataWeb";
 
 const FETCH_TIMEOUT_MS = 12_000;
-const WAYBACK_TIMEOUT_MS = 12_000;
 const MIN_READABLE_TEXT_LENGTH = 400;
 const MAX_TEXT_LENGTH = 40_000;
 const USER_AGENT =
@@ -86,17 +86,28 @@ const acquireRecipeTextFromUrl = async (
     const html = await fetchHtml(url, signal);
     return recipeTextFromHtml(html, url);
   } catch (error) {
-    // Bot-protected sites (Cloudflare et al.) refuse our fetch. Try the
-    // Wayback Machine's cached copy before giving up. If that misses, we
-    // re-throw the original SITE_BLOCKED — the user just sees the same error,
-    // with no mention that we attempted an archive lookup.
-    if (error instanceof ImportRecipeError && error.code === "SITE_BLOCKED") {
-      const archived = await recipeTextFromWayback(url, signal);
-      if (archived) return archived;
+    if (isSupadataFallbackEligible(error)) {
+      try {
+        return await scrapeRecipeTextWithSupadata(url, signal);
+      } catch (fallbackError) {
+        if (signal?.aborted) throw fallbackError;
+        if (
+          fallbackError instanceof ImportRecipeError &&
+          fallbackError.code === "IMPORT_LIMIT_REACHED"
+        ) {
+          throw fallbackError;
+        }
+      }
     }
     throw error;
   }
 };
+
+const isSupadataFallbackEligible = (error: unknown) =>
+  error instanceof ImportRecipeError &&
+  (error.code === "SITE_BLOCKED" ||
+    error.code === "FETCH_FAILED" ||
+    error.code === "PAGE_UNREADABLE");
 
 const recipeTextFromHtml = (html: string, url: string): string => {
   const { document } = parseHTML(html);
@@ -154,45 +165,6 @@ const trimEvidence = (text: string, maxLength: number) => {
   const marker = "\n[truncated]";
   if (text.length <= maxLength) return text;
   return `${text.slice(0, maxLength - marker.length)}${marker}`;
-};
-
-// Best-effort archive lookup: returns recipe text if the Wayback Machine has
-// a usable snapshot, otherwise null. Never throws — any miss falls back to the
-// original live-fetch error.
-const recipeTextFromWayback = async (
-  url: string,
-  signal?: AbortSignal,
-): Promise<string | null> => {
-  const html = await fetchArchivedHtml(url, signal);
-  if (!html) return null;
-
-  try {
-    return recipeTextFromHtml(html, url);
-  } catch {
-    return null;
-  }
-};
-
-const fetchArchivedHtml = async (
-  url: string,
-  signal?: AbortSignal,
-): Promise<string | null> => {
-  try {
-    // "2" is a partial timestamp Wayback resolves to the closest snapshot
-    // (302 redirect, 404 when none exists); the `id_` modifier returns the
-    // original archived HTML without the archive.org toolbar/URL rewrites,
-    // so our normal extraction works on it.
-    const res = await timedFetch(
-      `https://web.archive.org/web/2id_/${url}`,
-      WAYBACK_TIMEOUT_MS,
-      { "User-Agent": USER_AGENT },
-      signal,
-    );
-    if (!res.ok) return null;
-    return await res.text();
-  } catch {
-    return null;
-  }
 };
 
 const fetchHtml = async (url: string, signal?: AbortSignal) => {
