@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import {
   dinnerNameSchema,
+  isInstagramMediaUrl,
   isYouTubeVideoUrl,
   MAX_RECIPE_IMPORT_IMAGES,
   sourceLabel,
@@ -89,7 +90,13 @@ type ImportInput = {
 
 const urlInputReady = ({ url }: ImportInput) => url !== null;
 const urlLoadingLabel = ({ url }: ImportInput) =>
-  url && isYouTubeVideoUrl(url) ? "YouTube video" : url ? sourceLabel(url) : "";
+  url && isYouTubeVideoUrl(url)
+    ? "YouTube video"
+    : url && isInstagramMediaUrl(url)
+      ? "Instagram video"
+      : url
+        ? sourceLabel(url)
+        : "";
 
 const sourceDefinitions: Record<
   RecipeImportSource,
@@ -115,6 +122,13 @@ const sourceDefinitions: Record<
     inputReady: urlInputReady,
     loadingLabel: urlLoadingLabel,
   },
+  instagram: {
+    label: "Instagram",
+    screen: "url",
+    createsSourceLink: true,
+    inputReady: urlInputReady,
+    loadingLabel: urlLoadingLabel,
+  },
   photos: {
     label: "Photos",
     screen: "photos",
@@ -135,6 +149,7 @@ const sourceDefinitions: Record<
 const importSourceOrder: RecipeImportSource[] = [
   "link",
   "youtube",
+  "instagram",
   "photos",
   "text",
 ];
@@ -370,6 +385,7 @@ export function AddDinnerSheet(props: Props) {
       > = {
         link: importUrl,
         youtube: importUrl,
+        instagram: importUrl,
         photos: () =>
           utils.client.dinner.importFromImages.mutate(
             {
