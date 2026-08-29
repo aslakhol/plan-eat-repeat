@@ -45,7 +45,7 @@ import {
   type ExistingDinnerRecipeImport,
 } from "~/lib/existing-dinner-import";
 import { editorIngredientValues } from "~/lib/recipe-editor-values";
-import { isChickenDinnerTitle, saveDinnerLabel } from "~/lib/chicken-dinner";
+import { isChickenDinner, saveDinnerLabel } from "~/lib/chicken-dinner";
 import { launchChickenConfetti } from "~/lib/chicken-confetti";
 
 // Amounts are edited as text so comma decimals like "1,5" can be typed;
@@ -171,6 +171,7 @@ export const RecipeEditor = ({
   });
   const saveButtonRef = useRef<HTMLButtonElement>(null);
   const dinnerName = form.watch("name");
+  const dinnerTags = form.watch("tags");
   const watchedParts = form.watch("recipe.parts");
   const servings = form.watch("recipe.servings");
   const multiMode =
@@ -239,7 +240,7 @@ export const RecipeEditor = ({
   };
 
   const save = (values: RecipeEditorValues) => {
-    if (isChickenDinnerTitle(values.name)) {
+    if (isChickenDinner(values.name, values.tags)) {
       launchChickenConfetti(saveButtonRef.current);
     }
     onSave(values);
@@ -532,7 +533,7 @@ export const RecipeEditor = ({
               disabled={isPending}
             >
               {isPending && <Loader2 className="animate-spin" />}
-              {saveDinnerLabel(dinnerName)}
+              {saveDinnerLabel(dinnerName, dinnerTags)}
             </Button>
           </div>
         </div>
