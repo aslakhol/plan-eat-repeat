@@ -251,6 +251,82 @@ void test("Supadata keeps Instagram caption metadata when no transcript is avail
   assert.equal(evidence.transcriptUnavailable, true);
 });
 
+void test("Supadata keeps an Instagram caption when transcript acquisition fails", async () => {
+  const mediaId = "CaptionFallback";
+  const adapter = createSupadataInstagramAdapter({
+    apiKey: "test-key",
+    fetch: ((input: string | URL | Request) => {
+      const url = requestUrl(input);
+      return Promise.resolve(
+        url.pathname === "/v1/metadata"
+          ? Response.json({
+              platform: "instagram",
+              type: "video",
+              id: mediaId,
+              title: "Potatoes",
+              description: "Roast 500 g potatoes.",
+            })
+          : Response.json({ error: "internal-error" }, { status: 500 }),
+      );
+    }) as typeof fetch,
+    diagnostics: { info: () => undefined, warn: () => undefined },
+  });
+
+  const evidence = await adapter.acquire(
+    `https://www.instagram.com/reel/${mediaId}/`,
+    mediaId,
+    new AbortController().signal,
+  );
+
+  assert.deepEqual(evidence, {
+    title: "Potatoes",
+    description: "Roast 500 g potatoes.",
+    transcript: "",
+    transcriptLanguage: null,
+    transcriptUnavailable: true,
+  });
+});
+
+void test("Supadata keeps an Instagram transcript when metadata acquisition fails", async () => {
+  const mediaId = "TranscriptFallback";
+  const requests: URL[] = [];
+  const adapter = createSupadataInstagramAdapter({
+    apiKey: "test-key",
+    fetch: ((input: string | URL | Request) => {
+      const url = requestUrl(input);
+      requests.push(url);
+      return Promise.resolve(
+        url.pathname === "/v1/metadata"
+          ? Response.json({ error: "internal-error" }, { status: 500 })
+          : Response.json({
+              content: "Boil the potatoes, then roast them.",
+              lang: "en",
+              availableLangs: ["en"],
+            }),
+      );
+    }) as typeof fetch,
+    diagnostics: { info: () => undefined, warn: () => undefined },
+  });
+
+  const evidence = await adapter.acquire(
+    `https://www.instagram.com/reel/${mediaId}/`,
+    mediaId,
+    new AbortController().signal,
+  );
+
+  assert.deepEqual(evidence, {
+    title: "",
+    description: "",
+    transcript: "Boil the potatoes, then roast them.",
+    transcriptLanguage: "en",
+    transcriptUnavailable: false,
+  });
+  assert.deepEqual(
+    requests.map((url) => url.pathname),
+    ["/v1/metadata", "/v1/transcript"],
+  );
+});
+
 for (const metadata of [
   { platform: "youtube", type: "video", id: "C7Example_1" },
   { platform: "instagram", type: "video", id: "DifferentId" },
