@@ -10,7 +10,7 @@ import {
   type SupadataInstagramEvidence,
 } from "./supadata";
 
-const ACQUISITION_TIMEOUT_MS = 30_000;
+const ACQUISITION_TIMEOUT_MS = 120_000;
 const SHARE_RESOLUTION_TIMEOUT_MS = 10_000;
 const MAX_SHARE_REDIRECTS = 3;
 const MAX_INSTAGRAM_EVIDENCE_LENGTH = 40_000;
