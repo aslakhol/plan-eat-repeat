@@ -127,7 +127,11 @@ export const createInstagramRecipeTextAcquirer =
     try {
       const evidence = await adapter.acquire(mediaUrl, mediaId, signal);
       if (!evidence.description.trim() && !evidence.transcript.trim()) {
-        throw new ImportRecipeError("NO_RECIPE_FOUND");
+        throw new ImportRecipeError(
+          evidence.transcriptUnavailable
+            ? "TRANSCRIPT_UNAVAILABLE"
+            : "NO_RECIPE_FOUND",
+        );
       }
       return formatInstagramEvidence(evidence);
     } catch (error) {

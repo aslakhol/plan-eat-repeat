@@ -102,6 +102,16 @@ void test("typed import errors use plain source-specific copy", () => {
   );
   assert.deepEqual(
     urlImportErrorCopy(
+      "TRANSCRIPT_UNAVAILABLE",
+      "https://www.instagram.com/reel/C7Example_1/",
+    ),
+    {
+      title: "No transcript available",
+      body: "This video has no transcript, and its caption doesn't contain a readable recipe.",
+    },
+  );
+  assert.deepEqual(
+    urlImportErrorCopy(
       "IMPORT_LIMIT_REACHED",
       "https://youtube.com/watch?v=dQw4w9WgXcQ",
     ),

@@ -3,6 +3,7 @@ export const importRecipeErrorCodes = [
   "IMPORT_LIMIT_REACHED",
   "SITE_BLOCKED",
   "PAGE_UNREADABLE",
+  "TRANSCRIPT_UNAVAILABLE",
   "NO_RECIPE_FOUND",
   "EXTRACTION_FAILED",
 ] as const;
@@ -41,6 +42,8 @@ export const importErrorMessages: Record<ImportRecipeErrorCode, string> = {
     "This site blocks automated requests, so we couldn't read it. Paste the recipe text below and we'll structure it for you.",
   PAGE_UNREADABLE:
     "We couldn't read this page automatically — some sites build their recipe with JavaScript, so there's nothing on the page for us to grab. Paste the recipe text below and we'll structure it for you.",
+  TRANSCRIPT_UNAVAILABLE:
+    "We couldn't import this video because no transcript was available and its caption didn't contain a readable recipe. Paste the recipe text below.",
   NO_RECIPE_FOUND:
     "We couldn't find a recipe in that source. If there is one, paste the text below.",
   EXTRACTION_FAILED:

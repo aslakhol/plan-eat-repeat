@@ -18,7 +18,7 @@ const requestUrl = (input: string | URL | Request) =>
         : input.url,
   );
 
-void test("Supadata acquires Instagram video metadata before an automatic transcript", async () => {
+void test("Supadata acquires Instagram video metadata before a native transcript", async () => {
   const mediaId = "C7Example_1";
   const mediaUrl = `https://www.instagram.com/reel/${mediaId}/?igsh=share`;
   const requests: Array<{ headers: Headers; url: URL }> = [];
@@ -66,6 +66,7 @@ void test("Supadata acquires Instagram video metadata before an automatic transc
     description: "250 g pasta\n400 g tomatoes",
     transcript: "Boil the pasta and simmer the tomatoes.",
     transcriptLanguage: "en",
+    transcriptUnavailable: false,
   });
   assert.deepEqual(
     requests.map(({ url }) => url.pathname),
@@ -74,7 +75,7 @@ void test("Supadata acquires Instagram video metadata before an automatic transc
   const providerMediaUrl = `https://www.instagram.com/reel/${mediaId}/`;
   assert.equal(requests[0]?.url.searchParams.get("url"), providerMediaUrl);
   assert.equal(requests[1]?.url.searchParams.get("url"), providerMediaUrl);
-  assert.equal(requests[1]?.url.searchParams.get("mode"), "auto");
+  assert.equal(requests[1]?.url.searchParams.get("mode"), "native");
   assert.equal(requests[1]?.url.searchParams.get("text"), "true");
   assert.equal(requests[1]?.url.searchParams.has("lang"), false);
   assert.equal(requests[0]?.headers.get("x-api-key"), "test-key");
@@ -212,6 +213,7 @@ for (const type of ["image", "carousel", "post"] as const) {
       description: "2 eggs\nWhisk and fry.",
       transcript: "",
       transcriptLanguage: null,
+      transcriptUnavailable: false,
     });
     assert.equal(requestCount, 1);
   });
@@ -246,6 +248,7 @@ void test("Supadata keeps Instagram caption metadata when no transcript is avail
 
   assert.equal(evidence.description, "Roast 500 g potatoes.");
   assert.equal(evidence.transcript, "");
+  assert.equal(evidence.transcriptUnavailable, true);
 });
 
 for (const metadata of [

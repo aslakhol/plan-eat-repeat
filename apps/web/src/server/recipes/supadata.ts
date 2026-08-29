@@ -64,7 +64,9 @@ export type SupadataYouTubeEvidence = {
   transcriptLanguage: string | null;
 };
 
-export type SupadataInstagramEvidence = SupadataYouTubeEvidence;
+export type SupadataInstagramEvidence = SupadataYouTubeEvidence & {
+  transcriptUnavailable: boolean;
+};
 
 type SupadataDiagnostics = {
   info: (message: string, fields: Record<string, unknown>) => void;
@@ -224,7 +226,7 @@ export const createSupadataInstagramAdapter = ({
 
       if (metadata.type === "video") {
         const transcriptUrl = supadataUrl("transcript", providerMediaUrl);
-        transcriptUrl.searchParams.set("mode", "auto");
+        transcriptUrl.searchParams.set("mode", "native");
         transcriptUrl.searchParams.set("text", "true");
         const transcriptResponse = await request("transcript", transcriptUrl);
         transcript = await transcriptFromResponse(
@@ -240,6 +242,8 @@ export const createSupadataInstagramAdapter = ({
         description: metadata.description ?? "",
         transcript: transcript?.content ?? "",
         transcriptLanguage: transcript?.lang ?? null,
+        transcriptUnavailable:
+          metadata.type === "video" && !transcript?.content.trim(),
       };
     } catch (error) {
       if (signal.aborted) throw error;

@@ -152,6 +152,11 @@ export const urlImportErrorCopy = (
           ? "The video didn't provide enough readable information for a recipe."
           : `${host} didn't provide a page we could read.`,
       };
+    case "TRANSCRIPT_UNAVAILABLE":
+      return {
+        title: "No transcript available",
+        body: "This video has no transcript, and its caption doesn't contain a readable recipe.",
+      };
     case "NO_RECIPE_FOUND":
       return {
         title: "Couldn't find a recipe",
