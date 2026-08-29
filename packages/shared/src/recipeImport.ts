@@ -43,7 +43,7 @@ export const importErrorMessages: Record<ImportRecipeErrorCode, string> = {
   PAGE_UNREADABLE:
     "We couldn't read this page automatically — some sites build their recipe with JavaScript, so there's nothing on the page for us to grab. Paste the recipe text below and we'll structure it for you.",
   TRANSCRIPT_UNAVAILABLE:
-    "We couldn't import this video because no transcript was available and its caption didn't contain a readable recipe. Paste the recipe text below.",
+    "We couldn't import this Instagram video. It may be age-restricted. Paste the recipe text below.",
   NO_RECIPE_FOUND:
     "We couldn't find a recipe in that source. If there is one, paste the text below.",
   EXTRACTION_FAILED:

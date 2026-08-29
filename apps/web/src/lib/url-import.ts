@@ -154,8 +154,8 @@ export const urlImportErrorCopy = (
       };
     case "TRANSCRIPT_UNAVAILABLE":
       return {
-        title: "No transcript available",
-        body: "This video has no transcript, and its caption doesn't contain a readable recipe.",
+        title: "We can't import this video",
+        body: "It may be age-restricted on Instagram.",
       };
     case "NO_RECIPE_FOUND":
       return {

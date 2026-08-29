@@ -106,8 +106,8 @@ void test("typed import errors use plain source-specific copy", () => {
       "https://www.instagram.com/reel/C7Example_1/",
     ),
     {
-      title: "No transcript available",
-      body: "This video has no transcript, and its caption doesn't contain a readable recipe.",
+      title: "We can't import this video",
+      body: "It may be age-restricted on Instagram.",
     },
   );
   assert.deepEqual(
