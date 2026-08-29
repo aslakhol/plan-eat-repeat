@@ -64,7 +64,9 @@ export type SupadataYouTubeEvidence = {
   transcriptLanguage: string | null;
 };
 
-export type SupadataInstagramEvidence = SupadataYouTubeEvidence;
+export type SupadataInstagramEvidence = SupadataYouTubeEvidence & {
+  transcriptUnavailable: boolean;
+};
 
 type SupadataDiagnostics = {
   info: (message: string, fields: Record<string, unknown>) => void;
@@ -212,35 +214,75 @@ export const createSupadataInstagramAdapter = ({
         minimumRequestIntervalMs,
         signal,
       });
-      const metadataResponse = await request(
-        "metadata",
-        supadataUrl("metadata", providerMediaUrl),
-      );
-      const metadata = instagramMetadataFromResponse(
-        metadataResponse,
-        expectedMediaId,
-      );
-      let transcript: z.infer<typeof transcriptSchema> | null = null;
+      let metadata: z.infer<typeof instagramMetadataSchema> | null = null;
+      let metadataFailure: SupadataFailure | null = null;
 
-      if (metadata.type === "video") {
-        const transcriptUrl = supadataUrl("transcript", providerMediaUrl);
-        transcriptUrl.searchParams.set("mode", "auto");
-        transcriptUrl.searchParams.set("text", "true");
-        const transcriptResponse = await request("transcript", transcriptUrl);
-        transcript = await transcriptFromResponse(
-          transcriptResponse,
-          request,
-          signal,
-          pollIntervalMs,
+      try {
+        const metadataResponse = await request(
+          "metadata",
+          supadataUrl("metadata", providerMediaUrl),
+        );
+        metadata = instagramMetadataFromResponse(
+          metadataResponse,
+          expectedMediaId,
+        );
+      } catch (error) {
+        if (signal.aborted) throw error;
+        metadataFailure = normalizeSupadataFailure(error);
+        warnInstagramEvidenceFailure(
+          diagnostics,
+          expectedMediaId,
+          "metadata",
+          metadataFailure,
         );
       }
 
-      return {
-        title: metadata.title ?? "",
-        description: metadata.description ?? "",
+      let transcript: z.infer<typeof transcriptSchema> | null = null;
+      let transcriptFailure: SupadataFailure | null = null;
+      const shouldAcquireTranscript =
+        metadata === null || metadata.type === "video";
+
+      if (shouldAcquireTranscript) {
+        try {
+          const transcriptUrl = supadataUrl("transcript", providerMediaUrl);
+          transcriptUrl.searchParams.set("mode", "native");
+          transcriptUrl.searchParams.set("text", "true");
+          const transcriptResponse = await request("transcript", transcriptUrl);
+          transcript = await transcriptFromResponse(
+            transcriptResponse,
+            request,
+            signal,
+            pollIntervalMs,
+          );
+        } catch (error) {
+          if (signal.aborted) throw error;
+          transcriptFailure = normalizeSupadataFailure(error);
+          warnInstagramEvidenceFailure(
+            diagnostics,
+            expectedMediaId,
+            "transcript",
+            transcriptFailure,
+          );
+        }
+      }
+
+      const evidence = {
+        title: metadata?.title ?? "",
+        description: metadata?.description ?? "",
         transcript: transcript?.content ?? "",
         transcriptLanguage: transcript?.lang ?? null,
+        transcriptUnavailable:
+          shouldAcquireTranscript && !transcript?.content.trim(),
       };
+
+      if (evidence.description.trim() || evidence.transcript.trim()) {
+        return evidence;
+      }
+      if (metadata && (metadata.type !== "video" || !transcriptFailure)) {
+        return evidence;
+      }
+
+      throw preferredSupadataFailure(metadataFailure, transcriptFailure);
     } catch (error) {
       if (signal.aborted) throw error;
       const failure =
@@ -263,6 +305,43 @@ export const createSupadataInstagramAdapter = ({
     }
   },
 });
+
+const normalizeSupadataFailure = (error: unknown) =>
+  error instanceof SupadataFailure
+    ? error
+    : new SupadataFailure("invalid-response");
+
+const preferredSupadataFailure = (
+  metadataFailure: SupadataFailure | null,
+  transcriptFailure: SupadataFailure | null,
+) => {
+  const failures = [metadataFailure, transcriptFailure].filter(
+    (failure): failure is SupadataFailure => failure !== null,
+  );
+  return (
+    failures.find((failure) => failure.status === 429) ??
+    failures.at(-1) ??
+    new SupadataFailure("invalid-response")
+  );
+};
+
+const warnInstagramEvidenceFailure = (
+  diagnostics: SupadataDiagnostics,
+  mediaId: string,
+  source: "metadata" | "transcript",
+  failure: SupadataFailure,
+) =>
+  diagnostics.warn("Supadata Instagram evidence source failed", {
+    mediaId,
+    source,
+    category: failure.category,
+    ...(failure.operation ? { operation: failure.operation } : {}),
+    ...(failure.status === undefined ? {} : { status: failure.status }),
+    ...(failure.providerCode ? { providerCode: failure.providerCode } : {}),
+    ...(failure.billableRequests === undefined
+      ? {}
+      : { billableRequests: failure.billableRequests }),
+  });
 
 const createSupadataRequester = ({
   apiKey,

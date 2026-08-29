@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Circle,
   Image as ImageIcon,
+  Info,
   Loader2,
   Plus,
   UtensilsCrossed,
@@ -891,6 +892,35 @@ export function AddDinnerSheet(props: Props) {
               <ResponsiveModalDescription className="text-muted-foreground mt-3 text-lg leading-relaxed">
                 {errorCopy.body}
               </ResponsiveModalDescription>
+              {sourceDefinitions[source].screen === "url" && (
+                <div className="border-border bg-muted/50 mt-6 flex w-full gap-3 rounded-lg border p-4 text-left">
+                  <Info
+                    aria-hidden="true"
+                    className="text-muted-foreground mt-0.5 size-5 shrink-0"
+                  />
+                  <div>
+                    <p className="text-sm font-semibold">
+                      Can you still see the recipe?
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+                      Some sites block us from fetching recipes. Copy the recipe
+                      text, then paste it into text import.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="mt-2 h-auto p-0 text-sm"
+                      onClick={() => {
+                        setSource("text");
+                        setImportError(null);
+                        setScreen("text");
+                      }}
+                    >
+                      Open text import
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="mx-auto w-full max-w-sm space-y-3">
               <Button

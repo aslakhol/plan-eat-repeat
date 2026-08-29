@@ -10,7 +10,7 @@ import {
   type SupadataInstagramEvidence,
 } from "./supadata";
 
-const ACQUISITION_TIMEOUT_MS = 30_000;
+const ACQUISITION_TIMEOUT_MS = 120_000;
 const SHARE_RESOLUTION_TIMEOUT_MS = 10_000;
 const MAX_SHARE_REDIRECTS = 3;
 const MAX_INSTAGRAM_EVIDENCE_LENGTH = 40_000;
@@ -127,7 +127,11 @@ export const createInstagramRecipeTextAcquirer =
     try {
       const evidence = await adapter.acquire(mediaUrl, mediaId, signal);
       if (!evidence.description.trim() && !evidence.transcript.trim()) {
-        throw new ImportRecipeError("NO_RECIPE_FOUND");
+        throw new ImportRecipeError(
+          evidence.transcriptUnavailable
+            ? "TRANSCRIPT_UNAVAILABLE"
+            : "NO_RECIPE_FOUND",
+        );
       }
       return formatInstagramEvidence(evidence);
     } catch (error) {

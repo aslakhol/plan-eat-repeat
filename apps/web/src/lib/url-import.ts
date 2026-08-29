@@ -152,6 +152,11 @@ export const urlImportErrorCopy = (
           ? "The video didn't provide enough readable information for a recipe."
           : `${host} didn't provide a page we could read.`,
       };
+    case "TRANSCRIPT_UNAVAILABLE":
+      return {
+        title: "We can't import this video",
+        body: "It may be age-restricted on Instagram.",
+      };
     case "NO_RECIPE_FOUND":
       return {
         title: "Couldn't find a recipe",

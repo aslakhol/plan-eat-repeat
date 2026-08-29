@@ -154,6 +154,7 @@ void test("Instagram import builds bounded recipe evidence from caption and tran
         description: "250 g pasta\n400 g tomatoes",
         transcript: "Boil the pasta and simmer the tomatoes.",
         transcriptLanguage: "en",
+        transcriptUnavailable: false,
       });
     },
   });
@@ -177,6 +178,7 @@ void test("Instagram import caps evidence without discarding caption metadata", 
         description: "D".repeat(10_000),
         transcript: "S".repeat(50_000),
         transcriptLanguage: "en",
+        transcriptUnavailable: false,
       }),
   });
 
@@ -196,6 +198,7 @@ void test("Instagram import accepts a written caption without a transcript", asy
         description: "Boil the potatoes, then roast until crisp.",
         transcript: "",
         transcriptLanguage: null,
+        transcriptUnavailable: true,
       }),
   });
 
@@ -205,7 +208,7 @@ void test("Instagram import accepts a written caption without a transcript", asy
   assert.match(text, /Transcript:\n$/);
 });
 
-void test("Instagram import rejects evidence without a caption or transcript", async () => {
+void test("Instagram import reports when a video has no caption or transcript", async () => {
   const acquireInstagramRecipeText = createInstagramRecipeTextAcquirer({
     acquire: () =>
       Promise.resolve({
@@ -213,6 +216,27 @@ void test("Instagram import rejects evidence without a caption or transcript", a
         description: "  ",
         transcript: "",
         transcriptLanguage: null,
+        transcriptUnavailable: true,
+      }),
+  });
+
+  await assert.rejects(
+    acquireInstagramRecipeText(mediaUrl, mediaId),
+    (error: unknown) =>
+      error instanceof ImportRecipeError &&
+      error.code === "TRANSCRIPT_UNAVAILABLE",
+  );
+});
+
+void test("Instagram import keeps the general error for a post without a caption", async () => {
+  const acquireInstagramRecipeText = createInstagramRecipeTextAcquirer({
+    acquire: () =>
+      Promise.resolve({
+        title: "An image post",
+        description: "",
+        transcript: "",
+        transcriptLanguage: null,
+        transcriptUnavailable: false,
       }),
   });
 
