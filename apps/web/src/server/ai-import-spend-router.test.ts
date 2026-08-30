@@ -347,6 +347,28 @@ void test("the reporting query returns each deployment environment label", async
   }
 });
 
+void test("the access query identifies allowlisted System Admins", async () => {
+  const access = await createCaller({ userId: "system-admin" }).access();
+
+  assert.deepEqual(access, { isSystemAdmin: true });
+});
+
+void test("the access query hides System Admin navigation from other users", async () => {
+  const access = await createCaller({ userId: "ordinary-user" }).access();
+
+  assert.deepEqual(access, { isSystemAdmin: false });
+});
+
+void test("the access query requires a signed-in user", async () => {
+  const caller = createCaller({ userId: null });
+
+  await assert.rejects(
+    caller.access(),
+    (error: unknown) =>
+      error instanceof TRPCError && error.code === "UNAUTHORIZED",
+  );
+});
+
 void test("a non-allowlisted Household administrator is forbidden", async () => {
   const caller = createCaller({ userId: "household-admin" });
 

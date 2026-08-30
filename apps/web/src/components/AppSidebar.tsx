@@ -1,4 +1,4 @@
-import { Calendar, Plus, Settings, UtensilsCrossed } from "lucide-react";
+import { Bot, Calendar, Plus, Settings, UtensilsCrossed } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,6 +13,7 @@ import {
 } from "src/components/ui/sidebar";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { api } from "~/utils/api";
 
 const items = [
   {
@@ -34,6 +35,7 @@ const items = [
 
 export function AppSidebar({ onAddDinner }: { onAddDinner: () => void }) {
   const router = useRouter();
+  const { data: access } = api.aiImportSpend.access.useQuery();
 
   return (
     <Sidebar collapsible="icon">
@@ -70,6 +72,20 @@ export function AppSidebar({ onAddDinner }: { onAddDinner: () => void }) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              {access?.isSystemAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={router.pathname.startsWith("/system-admin")}
+                    tooltip="AI dashboard"
+                  >
+                    <Link href="/system-admin/ai-import-spend">
+                      <Bot />
+                      <span>AI dashboard</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
