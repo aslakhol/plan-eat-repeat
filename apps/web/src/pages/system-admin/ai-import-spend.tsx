@@ -4,9 +4,10 @@ import type { GetServerSideProps } from "next";
 import Head from "next/head";
 
 import { DailySpendCard } from "~/components/ai-import-spend/daily-spend-card";
+import { HouseholdsCard } from "~/components/ai-import-spend/households-card";
 import { ImportSourcesCard } from "~/components/ai-import-spend/import-sources-card";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Card, CardContent } from "~/components/ui/card";
 import { Skeleton } from "~/components/ui/skeleton";
 import { env } from "~/env";
 import {
@@ -116,9 +117,11 @@ const Dashboard = ({
       onShowNewer={onShowNewer}
     />
 
-    {projection.attemptSummary.attempts === 0 && (
-      <EmptyReportCard title="Households" />
-    )}
+    <HouseholdsCard
+      periodLabel={projection.period.label}
+      period={projection.period}
+      households={projection.households}
+    />
 
     <ImportSourcesCard
       periodLabel={projection.period.label}
@@ -399,20 +402,6 @@ const HeroMetric = ({
     <p className="mt-0.5 text-[17px] font-semibold">{value}</p>
     <p className="text-xs font-semibold text-[hsl(150_18%_32%)]">{detail}</p>
   </div>
-);
-
-const EmptyReportCard = ({ title }: { title: string }) => (
-  <Card>
-    <CardHeader className="px-5 pb-4 pt-6 sm:px-7">
-      <CardTitle className="font-serif text-lg font-normal">{title}</CardTitle>
-    </CardHeader>
-    <CardContent className="border-t px-5 py-11 text-center sm:px-7">
-      <p className="font-serif text-[17px]">No AI Import Attempts yet</p>
-      <p className="text-muted-foreground mt-1 text-sm">
-        Data starts with the first AI Import Attempt.
-      </p>
-    </CardContent>
-  </Card>
 );
 
 const DashboardLoading = () => (
