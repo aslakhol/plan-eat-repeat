@@ -32,7 +32,12 @@ export const aiImportSpendRouter = createTRPCRouter({
       const attemptsBySource = await ctx.db.aiImportAttempt.groupBy({
         by: ["source"],
         _count: { _all: true },
-        _sum: { estimatedAiImportCostUsd: true },
+        _sum: {
+          estimatedAiImportCostUsd: true,
+          supadataCredits: true,
+          supadataOperationsStarted: true,
+          supadataUnknownOperationCount: true,
+        },
         _min: { startedAt: true },
       });
       const sourceSummaries = IMPORT_SOURCE_ORDER.map((source) => {
@@ -68,6 +73,20 @@ export const aiImportSpendRouter = createTRPCRouter({
           ),
           estimatedAiImportCostUsd: sourceSummaries.reduce(
             (total, summary) => total + summary.estimatedAiImportCostUsd,
+            0,
+          ),
+          supadataCredits: attemptsBySource.reduce(
+            (total, summary) => total + (summary._sum.supadataCredits ?? 0),
+            0,
+          ),
+          supadataOperationsStarted: attemptsBySource.reduce(
+            (total, summary) =>
+              total + (summary._sum.supadataOperationsStarted ?? 0),
+            0,
+          ),
+          supadataUnknownOperationCount: attemptsBySource.reduce(
+            (total, summary) =>
+              total + (summary._sum.supadataUnknownOperationCount ?? 0),
             0,
           ),
           sources: sourceSummaries,

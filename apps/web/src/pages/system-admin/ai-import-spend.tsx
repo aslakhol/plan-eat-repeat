@@ -154,7 +154,7 @@ const AttemptSummaryCard = ({
         AI Import Attempts
       </CardTitle>
     </CardHeader>
-    <CardContent className="grid gap-5 border-t px-5 py-5 sm:grid-cols-3 sm:px-7">
+    <CardContent className="grid gap-5 border-t px-5 py-5 sm:grid-cols-2 sm:px-7 lg:grid-cols-4">
       <HeroMetric
         label="AI Import Attempts"
         value={String(projection.attemptSummary.attempts)}
@@ -171,6 +171,11 @@ const AttemptSummaryCard = ({
           projection.attemptSummary.estimatedAiImportCostUsd,
         )}
         detail="estimated inference total"
+      />
+      <HeroMetric
+        label="Supadata Credit Spend"
+        value={formatCredits(projection.attemptSummary.supadataCredits)}
+        detail={`${projection.attemptSummary.supadataOperationsStarted} operations used · ${projection.attemptSummary.supadataUnknownOperationCount} unknown`}
       />
       <HeroMetric
         label="Collection started"

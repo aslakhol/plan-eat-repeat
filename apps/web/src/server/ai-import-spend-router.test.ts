@@ -35,6 +35,9 @@ const createCaller = ({
     source: AiImportSource;
     attempts: number;
     estimatedAiImportCostUsd: number | null;
+    supadataCredits?: number | null;
+    supadataOperationsStarted?: number | null;
+    supadataUnknownOperationCount?: number | null;
     collectionStartedOn: Date | null;
   }>;
 }): AiImportSpendCaller =>
@@ -49,6 +52,11 @@ const createCaller = ({
               _count: { _all: summary.attempts },
               _sum: {
                 estimatedAiImportCostUsd: summary.estimatedAiImportCostUsd,
+                supadataCredits: summary.supadataCredits ?? 0,
+                supadataOperationsStarted:
+                  summary.supadataOperationsStarted ?? 0,
+                supadataUnknownOperationCount:
+                  summary.supadataUnknownOperationCount ?? 0,
               },
               _min: { startedAt: summary.collectionStartedOn },
             })),
@@ -77,6 +85,9 @@ void test("an allowlisted System Admin without a Household receives the empty sp
     attemptSummary: {
       attempts: 0,
       estimatedAiImportCostUsd: 0,
+      supadataCredits: 0,
+      supadataOperationsStarted: 0,
+      supadataUnknownOperationCount: 0,
       sources: [
         { source: "TEXT", attempts: 0, estimatedAiImportCostUsd: 0 },
         { source: "PHOTO", attempts: 0, estimatedAiImportCostUsd: 0 },
@@ -148,6 +159,9 @@ void test("the report exposes all five recorded Import Sources", async () => {
   assert.deepEqual(projection.attemptSummary, {
     attempts: 3,
     estimatedAiImportCostUsd: 0.0123456789,
+    supadataCredits: 0,
+    supadataOperationsStarted: 0,
+    supadataUnknownOperationCount: 0,
     sources: [
       { source: "TEXT", attempts: 0, estimatedAiImportCostUsd: 0 },
       {
@@ -165,6 +179,36 @@ void test("the report exposes all five recorded Import Sources", async () => {
     ],
   });
   assert.equal(projection.collectionStartedOn, collectionStartedOn);
+});
+
+void test("the report summarizes known Supadata credits and unresolved operations", async () => {
+  const projection = await createCaller({
+    userId: "system-admin",
+    sourceSummaries: [
+      {
+        source: "YOUTUBE",
+        attempts: 2,
+        estimatedAiImportCostUsd: 0.01,
+        supadataCredits: 3,
+        supadataOperationsStarted: 4,
+        supadataUnknownOperationCount: 1,
+        collectionStartedOn: new Date("2026-08-30T08:00:00.000Z"),
+      },
+      {
+        source: "LINK",
+        attempts: 2,
+        estimatedAiImportCostUsd: 0.005,
+        supadataCredits: 1,
+        supadataOperationsStarted: 2,
+        supadataUnknownOperationCount: 1,
+        collectionStartedOn: new Date("2026-08-30T09:00:00.000Z"),
+      },
+    ],
+  }).dashboard(dashboardInput);
+
+  assert.equal(projection.attemptSummary.supadataCredits, 4);
+  assert.equal(projection.attemptSummary.supadataOperationsStarted, 6);
+  assert.equal(projection.attemptSummary.supadataUnknownOperationCount, 2);
 });
 
 void test("the reporting query returns each deployment environment label", async () => {
