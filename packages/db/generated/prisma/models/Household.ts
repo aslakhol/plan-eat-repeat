@@ -30,6 +30,7 @@ export type HouseholdMinAggregateOutputType = {
   slug: string | null
   publicSlug: string | null
   importInstructions: string | null
+  aiImportSpendAttributionKey: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -40,6 +41,7 @@ export type HouseholdMaxAggregateOutputType = {
   slug: string | null
   publicSlug: string | null
   importInstructions: string | null
+  aiImportSpendAttributionKey: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -50,6 +52,7 @@ export type HouseholdCountAggregateOutputType = {
   slug: number
   publicSlug: number
   importInstructions: number
+  aiImportSpendAttributionKey: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -62,6 +65,7 @@ export type HouseholdMinAggregateInputType = {
   slug?: true
   publicSlug?: true
   importInstructions?: true
+  aiImportSpendAttributionKey?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -72,6 +76,7 @@ export type HouseholdMaxAggregateInputType = {
   slug?: true
   publicSlug?: true
   importInstructions?: true
+  aiImportSpendAttributionKey?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -82,6 +87,7 @@ export type HouseholdCountAggregateInputType = {
   slug?: true
   publicSlug?: true
   importInstructions?: true
+  aiImportSpendAttributionKey?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -165,6 +171,7 @@ export type HouseholdGroupByOutputType = {
   slug: string
   publicSlug: string | null
   importInstructions: string | null
+  aiImportSpendAttributionKey: string
   createdAt: Date
   updatedAt: Date
   _count: HouseholdCountAggregateOutputType | null
@@ -196,11 +203,13 @@ export type HouseholdWhereInput = {
   slug?: Prisma.StringFilter<"Household"> | string
   publicSlug?: Prisma.StringNullableFilter<"Household"> | string | null
   importInstructions?: Prisma.StringNullableFilter<"Household"> | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFilter<"Household"> | string
   createdAt?: Prisma.DateTimeFilter<"Household"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Household"> | Date | string
   Dinners?: Prisma.DinnerListRelationFilter
   Members?: Prisma.MembershipListRelationFilter
   Invite?: Prisma.InviteListRelationFilter
+  AiImportAttempts?: Prisma.AiImportAttemptListRelationFilter
 }
 
 export type HouseholdOrderByWithRelationInput = {
@@ -209,17 +218,20 @@ export type HouseholdOrderByWithRelationInput = {
   slug?: Prisma.SortOrder
   publicSlug?: Prisma.SortOrderInput | Prisma.SortOrder
   importInstructions?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiImportSpendAttributionKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   Dinners?: Prisma.DinnerOrderByRelationAggregateInput
   Members?: Prisma.MembershipOrderByRelationAggregateInput
   Invite?: Prisma.InviteOrderByRelationAggregateInput
+  AiImportAttempts?: Prisma.AiImportAttemptOrderByRelationAggregateInput
 }
 
 export type HouseholdWhereUniqueInput = Prisma.AtLeast<{
   id?: string
   slug?: string
   publicSlug?: string
+  aiImportSpendAttributionKey?: string
   AND?: Prisma.HouseholdWhereInput | Prisma.HouseholdWhereInput[]
   OR?: Prisma.HouseholdWhereInput[]
   NOT?: Prisma.HouseholdWhereInput | Prisma.HouseholdWhereInput[]
@@ -230,7 +242,8 @@ export type HouseholdWhereUniqueInput = Prisma.AtLeast<{
   Dinners?: Prisma.DinnerListRelationFilter
   Members?: Prisma.MembershipListRelationFilter
   Invite?: Prisma.InviteListRelationFilter
-}, "id" | "slug" | "publicSlug">
+  AiImportAttempts?: Prisma.AiImportAttemptListRelationFilter
+}, "id" | "slug" | "publicSlug" | "aiImportSpendAttributionKey">
 
 export type HouseholdOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -238,6 +251,7 @@ export type HouseholdOrderByWithAggregationInput = {
   slug?: Prisma.SortOrder
   publicSlug?: Prisma.SortOrderInput | Prisma.SortOrder
   importInstructions?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiImportSpendAttributionKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.HouseholdCountOrderByAggregateInput
@@ -254,6 +268,7 @@ export type HouseholdScalarWhereWithAggregatesInput = {
   slug?: Prisma.StringWithAggregatesFilter<"Household"> | string
   publicSlug?: Prisma.StringNullableWithAggregatesFilter<"Household"> | string | null
   importInstructions?: Prisma.StringNullableWithAggregatesFilter<"Household"> | string | null
+  aiImportSpendAttributionKey?: Prisma.StringWithAggregatesFilter<"Household"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Household"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Household"> | Date | string
 }
@@ -264,11 +279,13 @@ export type HouseholdCreateInput = {
   slug: string
   publicSlug?: string | null
   importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUncheckedCreateInput = {
@@ -277,11 +294,13 @@ export type HouseholdUncheckedCreateInput = {
   slug: string
   publicSlug?: string | null
   importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUpdateInput = {
@@ -290,11 +309,13 @@ export type HouseholdUpdateInput = {
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdUncheckedUpdateInput = {
@@ -303,11 +324,13 @@ export type HouseholdUncheckedUpdateInput = {
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdCreateManyInput = {
@@ -316,6 +339,7 @@ export type HouseholdCreateManyInput = {
   slug: string
   publicSlug?: string | null
   importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -326,6 +350,7 @@ export type HouseholdUpdateManyMutationInput = {
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -336,6 +361,7 @@ export type HouseholdUncheckedUpdateManyInput = {
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -351,6 +377,7 @@ export type HouseholdCountOrderByAggregateInput = {
   slug?: Prisma.SortOrder
   publicSlug?: Prisma.SortOrder
   importInstructions?: Prisma.SortOrder
+  aiImportSpendAttributionKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -361,6 +388,7 @@ export type HouseholdMaxOrderByAggregateInput = {
   slug?: Prisma.SortOrder
   publicSlug?: Prisma.SortOrder
   importInstructions?: Prisma.SortOrder
+  aiImportSpendAttributionKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -371,8 +399,14 @@ export type HouseholdMinOrderByAggregateInput = {
   slug?: Prisma.SortOrder
   publicSlug?: Prisma.SortOrder
   importInstructions?: Prisma.SortOrder
+  aiImportSpendAttributionKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type HouseholdNullableScalarRelationFilter = {
+  is?: Prisma.HouseholdWhereInput | null
+  isNot?: Prisma.HouseholdWhereInput | null
 }
 
 export type HouseholdCreateNestedOneWithoutDinnersInput = {
@@ -403,6 +437,22 @@ export type HouseholdUpdateOneRequiredWithoutMembersNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.HouseholdUpdateToOneWithWhereWithoutMembersInput, Prisma.HouseholdUpdateWithoutMembersInput>, Prisma.HouseholdUncheckedUpdateWithoutMembersInput>
 }
 
+export type HouseholdCreateNestedOneWithoutAiImportAttemptsInput = {
+  create?: Prisma.XOR<Prisma.HouseholdCreateWithoutAiImportAttemptsInput, Prisma.HouseholdUncheckedCreateWithoutAiImportAttemptsInput>
+  connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutAiImportAttemptsInput
+  connect?: Prisma.HouseholdWhereUniqueInput
+}
+
+export type HouseholdUpdateOneWithoutAiImportAttemptsNestedInput = {
+  create?: Prisma.XOR<Prisma.HouseholdCreateWithoutAiImportAttemptsInput, Prisma.HouseholdUncheckedCreateWithoutAiImportAttemptsInput>
+  connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutAiImportAttemptsInput
+  upsert?: Prisma.HouseholdUpsertWithoutAiImportAttemptsInput
+  disconnect?: Prisma.HouseholdWhereInput | boolean
+  delete?: Prisma.HouseholdWhereInput | boolean
+  connect?: Prisma.HouseholdWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.HouseholdUpdateToOneWithWhereWithoutAiImportAttemptsInput, Prisma.HouseholdUpdateWithoutAiImportAttemptsInput>, Prisma.HouseholdUncheckedUpdateWithoutAiImportAttemptsInput>
+}
+
 export type HouseholdCreateNestedOneWithoutInviteInput = {
   create?: Prisma.XOR<Prisma.HouseholdCreateWithoutInviteInput, Prisma.HouseholdUncheckedCreateWithoutInviteInput>
   connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutInviteInput
@@ -423,10 +473,12 @@ export type HouseholdCreateWithoutDinnersInput = {
   slug: string
   publicSlug?: string | null
   importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUncheckedCreateWithoutDinnersInput = {
@@ -435,10 +487,12 @@ export type HouseholdUncheckedCreateWithoutDinnersInput = {
   slug: string
   publicSlug?: string | null
   importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdCreateOrConnectWithoutDinnersInput = {
@@ -463,10 +517,12 @@ export type HouseholdUpdateWithoutDinnersInput = {
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdUncheckedUpdateWithoutDinnersInput = {
@@ -475,10 +531,12 @@ export type HouseholdUncheckedUpdateWithoutDinnersInput = {
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdCreateWithoutMembersInput = {
@@ -487,10 +545,12 @@ export type HouseholdCreateWithoutMembersInput = {
   slug: string
   publicSlug?: string | null
   importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUncheckedCreateWithoutMembersInput = {
@@ -499,10 +559,12 @@ export type HouseholdUncheckedCreateWithoutMembersInput = {
   slug: string
   publicSlug?: string | null
   importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdCreateOrConnectWithoutMembersInput = {
@@ -527,10 +589,12 @@ export type HouseholdUpdateWithoutMembersInput = {
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdUncheckedUpdateWithoutMembersInput = {
@@ -539,9 +603,83 @@ export type HouseholdUncheckedUpdateWithoutMembersInput = {
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
+  Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
+}
+
+export type HouseholdCreateWithoutAiImportAttemptsInput = {
+  id?: string
+  name: string
+  slug: string
+  publicSlug?: string | null
+  importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
+  Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
+  Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
+}
+
+export type HouseholdUncheckedCreateWithoutAiImportAttemptsInput = {
+  id?: string
+  name: string
+  slug: string
+  publicSlug?: string | null
+  importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
+  Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
+  Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
+}
+
+export type HouseholdCreateOrConnectWithoutAiImportAttemptsInput = {
+  where: Prisma.HouseholdWhereUniqueInput
+  create: Prisma.XOR<Prisma.HouseholdCreateWithoutAiImportAttemptsInput, Prisma.HouseholdUncheckedCreateWithoutAiImportAttemptsInput>
+}
+
+export type HouseholdUpsertWithoutAiImportAttemptsInput = {
+  update: Prisma.XOR<Prisma.HouseholdUpdateWithoutAiImportAttemptsInput, Prisma.HouseholdUncheckedUpdateWithoutAiImportAttemptsInput>
+  create: Prisma.XOR<Prisma.HouseholdCreateWithoutAiImportAttemptsInput, Prisma.HouseholdUncheckedCreateWithoutAiImportAttemptsInput>
+  where?: Prisma.HouseholdWhereInput
+}
+
+export type HouseholdUpdateToOneWithWhereWithoutAiImportAttemptsInput = {
+  where?: Prisma.HouseholdWhereInput
+  data: Prisma.XOR<Prisma.HouseholdUpdateWithoutAiImportAttemptsInput, Prisma.HouseholdUncheckedUpdateWithoutAiImportAttemptsInput>
+}
+
+export type HouseholdUpdateWithoutAiImportAttemptsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
+  Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
+  Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
+}
+
+export type HouseholdUncheckedUpdateWithoutAiImportAttemptsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
+  Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
@@ -551,10 +689,12 @@ export type HouseholdCreateWithoutInviteInput = {
   slug: string
   publicSlug?: string | null
   importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUncheckedCreateWithoutInviteInput = {
@@ -563,10 +703,12 @@ export type HouseholdUncheckedCreateWithoutInviteInput = {
   slug: string
   publicSlug?: string | null
   importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
   Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdCreateOrConnectWithoutInviteInput = {
@@ -591,10 +733,12 @@ export type HouseholdUpdateWithoutInviteInput = {
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdUncheckedUpdateWithoutInviteInput = {
@@ -603,10 +747,12 @@ export type HouseholdUncheckedUpdateWithoutInviteInput = {
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
 
@@ -618,12 +764,14 @@ export type HouseholdCountOutputType = {
   Dinners: number
   Members: number
   Invite: number
+  AiImportAttempts: number
 }
 
 export type HouseholdCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   Dinners?: boolean | HouseholdCountOutputTypeCountDinnersArgs
   Members?: boolean | HouseholdCountOutputTypeCountMembersArgs
   Invite?: boolean | HouseholdCountOutputTypeCountInviteArgs
+  AiImportAttempts?: boolean | HouseholdCountOutputTypeCountAiImportAttemptsArgs
 }
 
 /**
@@ -657,6 +805,13 @@ export type HouseholdCountOutputTypeCountInviteArgs<ExtArgs extends runtime.Type
   where?: Prisma.InviteWhereInput
 }
 
+/**
+ * HouseholdCountOutputType without action
+ */
+export type HouseholdCountOutputTypeCountAiImportAttemptsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AiImportAttemptWhereInput
+}
+
 
 export type HouseholdSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -664,11 +819,13 @@ export type HouseholdSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   slug?: boolean
   publicSlug?: boolean
   importInstructions?: boolean
+  aiImportSpendAttributionKey?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   Dinners?: boolean | Prisma.Household$DinnersArgs<ExtArgs>
   Members?: boolean | Prisma.Household$MembersArgs<ExtArgs>
   Invite?: boolean | Prisma.Household$InviteArgs<ExtArgs>
+  AiImportAttempts?: boolean | Prisma.Household$AiImportAttemptsArgs<ExtArgs>
   _count?: boolean | Prisma.HouseholdCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["household"]>
 
@@ -678,6 +835,7 @@ export type HouseholdSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   slug?: boolean
   publicSlug?: boolean
   importInstructions?: boolean
+  aiImportSpendAttributionKey?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["household"]>
@@ -688,6 +846,7 @@ export type HouseholdSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   slug?: boolean
   publicSlug?: boolean
   importInstructions?: boolean
+  aiImportSpendAttributionKey?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["household"]>
@@ -698,15 +857,17 @@ export type HouseholdSelectScalar = {
   slug?: boolean
   publicSlug?: boolean
   importInstructions?: boolean
+  aiImportSpendAttributionKey?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type HouseholdOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "slug" | "publicSlug" | "importInstructions" | "createdAt" | "updatedAt", ExtArgs["result"]["household"]>
+export type HouseholdOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "slug" | "publicSlug" | "importInstructions" | "aiImportSpendAttributionKey" | "createdAt" | "updatedAt", ExtArgs["result"]["household"]>
 export type HouseholdInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   Dinners?: boolean | Prisma.Household$DinnersArgs<ExtArgs>
   Members?: boolean | Prisma.Household$MembersArgs<ExtArgs>
   Invite?: boolean | Prisma.Household$InviteArgs<ExtArgs>
+  AiImportAttempts?: boolean | Prisma.Household$AiImportAttemptsArgs<ExtArgs>
   _count?: boolean | Prisma.HouseholdCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type HouseholdIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -718,6 +879,7 @@ export type $HouseholdPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     Dinners: Prisma.$DinnerPayload<ExtArgs>[]
     Members: Prisma.$MembershipPayload<ExtArgs>[]
     Invite: Prisma.$InvitePayload<ExtArgs>[]
+    AiImportAttempts: Prisma.$AiImportAttemptPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -725,6 +887,7 @@ export type $HouseholdPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     slug: string
     publicSlug: string | null
     importInstructions: string | null
+    aiImportSpendAttributionKey: string
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["household"]>
@@ -1124,6 +1287,7 @@ export interface Prisma__HouseholdClient<T, Null = never, ExtArgs extends runtim
   Dinners<T extends Prisma.Household$DinnersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$DinnersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DinnerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   Members<T extends Prisma.Household$MembersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$MembersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   Invite<T extends Prisma.Household$InviteArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$InviteArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvitePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  AiImportAttempts<T extends Prisma.Household$AiImportAttemptsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$AiImportAttemptsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AiImportAttemptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1158,6 +1322,7 @@ export interface HouseholdFieldRefs {
   readonly slug: Prisma.FieldRef<"Household", 'String'>
   readonly publicSlug: Prisma.FieldRef<"Household", 'String'>
   readonly importInstructions: Prisma.FieldRef<"Household", 'String'>
+  readonly aiImportSpendAttributionKey: Prisma.FieldRef<"Household", 'String'>
   readonly createdAt: Prisma.FieldRef<"Household", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Household", 'DateTime'>
 }
@@ -1617,6 +1782,30 @@ export type Household$InviteArgs<ExtArgs extends runtime.Types.Extensions.Intern
   take?: number
   skip?: number
   distinct?: Prisma.InviteScalarFieldEnum | Prisma.InviteScalarFieldEnum[]
+}
+
+/**
+ * Household.AiImportAttempts
+ */
+export type Household$AiImportAttemptsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AiImportAttempt
+   */
+  select?: Prisma.AiImportAttemptSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AiImportAttempt
+   */
+  omit?: Prisma.AiImportAttemptOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AiImportAttemptInclude<ExtArgs> | null
+  where?: Prisma.AiImportAttemptWhereInput
+  orderBy?: Prisma.AiImportAttemptOrderByWithRelationInput | Prisma.AiImportAttemptOrderByWithRelationInput[]
+  cursor?: Prisma.AiImportAttemptWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AiImportAttemptScalarFieldEnum | Prisma.AiImportAttemptScalarFieldEnum[]
 }
 
 /**
