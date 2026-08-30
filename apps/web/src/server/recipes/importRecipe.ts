@@ -10,6 +10,7 @@ import {
   type ExtractInput,
   type ExtractResult,
 } from "~/server/ai/extractRecipe";
+import type { LanguageModelUsage } from "ai";
 import {
   acquireInstagramRecipeText,
   resolveInstagramMediaSource,
@@ -55,12 +56,22 @@ export const importRecipeFromText = async (
   text: string,
   instructions?: string | null,
   signal?: AbortSignal,
+  observer?: InferenceObserver,
 ): Promise<ExtractResult> =>
   extractOrThrow(
     [{ type: "text", text: trimForModel(text) }],
     instructions,
     signal,
+    observer,
   );
+
+export type InferenceObserver = {
+  onInferenceStart(): Promise<void> | void;
+  onInferenceUsage(
+    model: string,
+    usage: LanguageModelUsage,
+  ): Promise<void> | void;
+};
 
 export const importRecipeFromImages = async (
   images: Array<{ data: string; mimeType: string }>,
@@ -81,9 +92,15 @@ const extractOrThrow = async (
   parts: ExtractInput["parts"],
   instructions?: string | null,
   signal?: AbortSignal,
+  observer?: InferenceObserver,
 ): Promise<ExtractResult> => {
   try {
-    return await extractRecipe({ parts, instructions, abortSignal: signal });
+    return await extractRecipe({
+      parts,
+      instructions,
+      abortSignal: signal,
+      observer,
+    });
   } catch (error) {
     if (signal?.aborted) throw error;
     if (error instanceof ImportRecipeError) throw error;

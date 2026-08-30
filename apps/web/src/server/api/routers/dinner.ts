@@ -18,9 +18,9 @@ import {
 } from "~/server/api/trpc";
 import {
   importRecipeFromImages,
-  importRecipeFromText,
   importRecipeFromUrl,
 } from "~/server/recipes/importRecipe";
+import { importTrackedRecipe } from "~/server/recipes/tracked-recipe-import";
 import { acquireYouTubeVideoTitle } from "~/server/recipes/youtube";
 import { planDinnerMerge } from "~/server/merge-dinners";
 import { type PrismaClient } from "@planeatrepeat/db";
@@ -470,11 +470,12 @@ export const dinnerRouter = createTRPCRouter({
     .input(z.object({ text: z.string().trim().min(1) }))
     .mutation(async ({ ctx, input, signal }) => {
       try {
-        const instructions = await householdImportInstructions(
-          ctx.db,
-          ctx.householdId,
-        );
-        return await importRecipeFromText(input.text, instructions, signal);
+        return await importTrackedRecipe(ctx.db, {
+          source: { type: "TEXT", text: input.text },
+          householdId: ctx.householdId,
+          userId: ctx.auth.userId,
+          signal,
+        });
       } catch (error) {
         throw toImportTRPCError(error);
       }
