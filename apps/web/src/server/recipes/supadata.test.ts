@@ -2,12 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ImportRecipeError } from "@planeatrepeat/shared";
 
-import { createSupadataYouTubeAdapter as createProductionAdapter } from "./supadata";
-
-type AdapterOptions = Parameters<typeof createProductionAdapter>[0];
-
-const createSupadataYouTubeAdapter = (options: AdapterOptions) =>
-  createProductionAdapter({ minimumRequestIntervalMs: 0, ...options });
+import { createSupadataYouTubeAdapter } from "./supadata";
 
 const requestUrl = (input: string | URL | Request) =>
   new URL(
@@ -100,20 +95,20 @@ void test("Supadata acquires native YouTube captions and metadata", async () => 
   ]);
 });
 
-void test("Supadata completes the transcript request before starting metadata", async () => {
+void test("Supadata starts YouTube transcript and metadata requests concurrently", async () => {
   const videoId = "BoFkDmTm2uc";
   const requestPaths: string[] = [];
-  let releaseTranscript: (() => void) | undefined;
-  const transcriptReleased = new Promise<void>((resolve) => {
-    releaseTranscript = resolve;
+  let releaseRequests: (() => void) | undefined;
+  const requestsReleased = new Promise<void>((resolve) => {
+    releaseRequests = resolve;
   });
   const adapter = createSupadataYouTubeAdapter({
     apiKey: "test-key",
     fetch: (async (input: string | URL | Request) => {
       const url = requestUrl(input);
       requestPaths.push(url.pathname);
+      await requestsReleased;
       if (url.pathname === "/v1/transcript") {
-        await transcriptReleased;
         return Response.json({
           content: "Transcript",
           lang: "en",
@@ -133,47 +128,11 @@ void test("Supadata completes the transcript request before starting metadata", 
 
   const acquisition = adapter.acquire(videoId, new AbortController().signal);
   await new Promise<void>((resolve) => setImmediate(resolve));
-  assert.deepEqual(requestPaths, ["/v1/transcript"]);
+  assert.deepEqual(requestPaths, ["/v1/transcript", "/v1/metadata"]);
 
-  releaseTranscript?.();
+  releaseRequests?.();
   await acquisition;
   assert.deepEqual(requestPaths, ["/v1/transcript", "/v1/metadata"]);
-});
-
-void test("Supadata spaces request starts for the free-tier rate limit", async () => {
-  const videoId = "BoFkDmTm2uc";
-  const requestStartedAt: number[] = [];
-  const adapter = createProductionAdapter({
-    apiKey: "test-key",
-    fetch: ((input: string | URL | Request) => {
-      const url = requestUrl(input);
-      requestStartedAt.push(Date.now());
-      if (url.pathname === "/v1/transcript") {
-        return Promise.resolve(
-          Response.json({
-            content: "Transcript",
-            lang: "en",
-            availableLangs: ["en"],
-          }),
-        );
-      }
-      return Promise.resolve(
-        Response.json({
-          platform: "youtube",
-          type: "video",
-          id: videoId,
-          title: "Title",
-          description: "Description",
-        }),
-      );
-    }) as typeof fetch,
-    diagnostics: { info: () => undefined, warn: () => undefined },
-  });
-
-  await adapter.acquire(videoId, new AbortController().signal);
-
-  assert.equal(requestStartedAt.length, 2);
-  assert.ok(requestStartedAt[1]! - requestStartedAt[0]! >= 1_500);
 });
 
 void test("Supadata returns metadata when native captions are unavailable", async () => {

@@ -37,7 +37,7 @@ export const importErrorMessages: Record<ImportRecipeErrorCode, string> = {
   FETCH_FAILED:
     "We couldn't open that link. Double-check the URL, or paste the recipe text below.",
   IMPORT_LIMIT_REACHED:
-    "We've hit the recipe import limit. Please let Aslak know that we need to upgrade the Supadata plan.",
+    "We've hit the recipe import limit. Try again later, or let Aslak know if it keeps happening.",
   SITE_BLOCKED:
     "This site blocks automated requests, so we couldn't read it. Paste the recipe text below and we'll structure it for you.",
   PAGE_UNREADABLE:
