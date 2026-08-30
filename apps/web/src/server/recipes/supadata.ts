@@ -12,7 +12,6 @@ import {
 
 const SUPADATA_API_BASE_URL = "https://api.supadata.ai/v1";
 const MAX_SUPADATA_RESPONSE_BYTES = 1_048_576;
-const MINIMUM_REQUEST_INTERVAL_MS = 1_500;
 
 const transcriptSchema = z.object({
   content: z.string(),
@@ -82,7 +81,6 @@ type SupadataYouTubeAdapterOptions = {
   apiKey?: string;
   fetch: typeof fetch;
   diagnostics?: SupadataDiagnostics;
-  minimumRequestIntervalMs?: number;
   pollIntervalMs?: number;
   spendObserver?: SupadataSpendObserver;
 };
@@ -121,7 +119,6 @@ export const createSupadataYouTubeAdapter = ({
   apiKey,
   fetch: fetchImplementation,
   diagnostics = console,
-  minimumRequestIntervalMs = MINIMUM_REQUEST_INTERVAL_MS,
   pollIntervalMs = 1_000,
   spendObserver,
 }: SupadataYouTubeAdapterOptions) => ({
@@ -147,25 +144,24 @@ export const createSupadataYouTubeAdapter = ({
         apiKey,
         fetchImplementation,
         diagnostics,
-        minimumRequestIntervalMs,
         signal,
         spendObserver,
       });
 
-      const transcriptResponse = await request("transcript", transcriptUrl);
-      const transcript = await transcriptFromResponse(
-        transcriptResponse,
-        request,
-        signal,
-        pollIntervalMs,
-        spendObserver,
-      );
-      const metadataResponse = await request("metadata", metadataUrl);
-      const metadata = await metadataFromResponse(
-        metadataResponse,
-        videoId,
-        spendObserver,
-      );
+      const [transcriptResponse, metadataResponse] = await Promise.all([
+        request("transcript", transcriptUrl),
+        request("metadata", metadataUrl),
+      ]);
+      const [transcript, metadata] = await Promise.all([
+        transcriptFromResponse(
+          transcriptResponse,
+          request,
+          signal,
+          pollIntervalMs,
+          spendObserver,
+        ),
+        metadataFromResponse(metadataResponse, videoId, spendObserver),
+      ]);
 
       return {
         title: metadata.title ?? "",
@@ -200,7 +196,6 @@ export const createSupadataInstagramAdapter = ({
   apiKey,
   fetch: fetchImplementation,
   diagnostics = console,
-  minimumRequestIntervalMs = MINIMUM_REQUEST_INTERVAL_MS,
   pollIntervalMs = 1_000,
   spendObserver,
 }: SupadataInstagramAdapterOptions) => ({
@@ -226,7 +221,6 @@ export const createSupadataInstagramAdapter = ({
         apiKey,
         fetchImplementation,
         diagnostics,
-        minimumRequestIntervalMs,
         signal,
         spendObserver,
       });
@@ -361,34 +355,21 @@ const warnInstagramEvidenceFailure = (
       : { billableRequests: failure.billableRequests }),
   });
 
-const createSupadataRequester = ({
-  apiKey,
-  fetchImplementation,
-  diagnostics,
-  minimumRequestIntervalMs,
-  signal,
-  spendObserver,
-}: {
-  apiKey: string;
-  fetchImplementation: typeof fetch;
-  diagnostics: SupadataDiagnostics;
-  minimumRequestIntervalMs: number;
-  signal: AbortSignal;
-  spendObserver?: SupadataSpendObserver;
-}) => {
-  let previousRequestStartedAt: number | undefined;
-
-  return async (
-    operation: SupadataOperation,
-    url: URL,
-  ): Promise<SupadataResponse> => {
-    if (previousRequestStartedAt !== undefined) {
-      const elapsedMs = Date.now() - previousRequestStartedAt;
-      const delayMs = minimumRequestIntervalMs - elapsedMs;
-      if (delayMs > 0) await waitForPoll(delayMs, signal);
-    }
-    previousRequestStartedAt = Date.now();
-
+const createSupadataRequester =
+  ({
+    apiKey,
+    fetchImplementation,
+    diagnostics,
+    signal,
+    spendObserver,
+  }: {
+    apiKey: string;
+    fetchImplementation: typeof fetch;
+    diagnostics: SupadataDiagnostics;
+    signal: AbortSignal;
+    spendObserver?: SupadataSpendObserver;
+  }) =>
+  async (operation: SupadataOperation, url: URL): Promise<SupadataResponse> => {
     if (operation !== "transcript-job" && spendObserver) {
       await spendObserver.onOperationStarted();
     }
@@ -423,7 +404,6 @@ const createSupadataRequester = ({
       creditsSettled: knownCredits !== null,
     };
   };
-};
 
 const transcriptFromResponse = async (
   response: SupadataResponse,

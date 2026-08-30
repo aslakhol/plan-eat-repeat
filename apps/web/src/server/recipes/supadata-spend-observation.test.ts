@@ -129,7 +129,6 @@ void test("native transcript, HTTP 206, and metadata completions settle fixed cr
     const videoId = `video-${transcriptStatus}`;
     const adapter = createSupadataYouTubeAdapter({
       apiKey: "test-key",
-      minimumRequestIntervalMs: 0,
       spendObserver: observer,
       diagnostics: silentDiagnostics,
       fetch: ((input: string | URL | Request) => {
@@ -161,7 +160,7 @@ void test("native transcript, HTTP 206, and metadata completions settle fixed cr
     });
 
     await adapter.acquire(videoId, new AbortController().signal);
-    assert.deepEqual(events, ["started", 1, "started", 1]);
+    assert.deepEqual(events, ["started", "started", 1, 1]);
   }
 });
 
@@ -171,7 +170,6 @@ void test("transcript job polling is free and settles the original operation on 
   let pollCount = 0;
   const adapter = createSupadataYouTubeAdapter({
     apiKey: "test-key",
-    minimumRequestIntervalMs: 0,
     pollIntervalMs: 0,
     spendObserver: observer,
     diagnostics: silentDiagnostics,
@@ -209,14 +207,13 @@ void test("transcript job polling is free and settles the original operation on 
 
   await adapter.acquire(videoId, new AbortController().signal);
   assert.equal(pollCount, 2);
-  assert.deepEqual(events, ["started", 1, "started", 1]);
+  assert.deepEqual(events, ["started", "started", 1, 1]);
 });
 
 void test("YouTube preserves a known transcript charge when metadata later fails", async () => {
   const { events, observer } = spendLog();
   const adapter = createSupadataYouTubeAdapter({
     apiKey: "test-key",
-    minimumRequestIntervalMs: 0,
     spendObserver: observer,
     diagnostics: silentDiagnostics,
     fetch: ((input: string | URL | Request) => {
@@ -236,7 +233,7 @@ void test("YouTube preserves a known transcript charge when metadata later fails
   await assert.rejects(
     adapter.acquire("partial-youtube", new AbortController().signal),
   );
-  assert.deepEqual(events, ["started", 1, "started"]);
+  assert.deepEqual(events, ["started", "started", 1]);
 });
 
 void test("Instagram preserves a known metadata charge when its transcript later fails", async () => {
@@ -244,7 +241,6 @@ void test("Instagram preserves a known metadata charge when its transcript later
   const mediaId = "partial-instagram";
   const adapter = createSupadataInstagramAdapter({
     apiKey: "test-key",
-    minimumRequestIntervalMs: 0,
     spendObserver: observer,
     diagnostics: silentDiagnostics,
     fetch: ((input: string | URL | Request) => {

@@ -2,12 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ImportRecipeError } from "@planeatrepeat/shared";
 
-import { createSupadataInstagramAdapter as createProductionAdapter } from "./supadata";
-
-type AdapterOptions = Parameters<typeof createProductionAdapter>[0];
-
-const createSupadataInstagramAdapter = (options: AdapterOptions) =>
-  createProductionAdapter({ minimumRequestIntervalMs: 0, ...options });
+import { createSupadataInstagramAdapter } from "./supadata";
 
 const requestUrl = (input: string | URL | Request) =>
   new URL(
@@ -133,23 +128,15 @@ void test("Supadata receives a canonical URL for plural Instagram reels links", 
   ]);
 });
 
-void test("Supadata leaves enough time between Instagram requests for the provider rate limit", async () => {
+void test("Supadata starts an Instagram transcript as soon as video metadata completes", async () => {
   const mediaId = "DOybkebkcaw";
-  let previousRequestAt: number | null = null;
-  const adapter = createProductionAdapter({
+  const requestPaths: string[] = [];
+  const adapter = createSupadataInstagramAdapter({
     apiKey: "test-key",
     fetch: ((input: string | URL | Request) => {
       const request = requestUrl(input);
-      const requestAt = Date.now();
-      const interval =
-        previousRequestAt === null ? null : requestAt - previousRequestAt;
-      previousRequestAt = requestAt;
+      requestPaths.push(request.pathname);
 
-      if (interval !== null && interval < 1_400) {
-        return Promise.resolve(
-          Response.json({ error: "limit-exceeded" }, { status: 429 }),
-        );
-      }
       if (request.pathname === "/v1/metadata") {
         return Promise.resolve(
           Response.json({
@@ -179,6 +166,7 @@ void test("Supadata leaves enough time between Instagram requests for the provid
   );
 
   assert.equal(evidence.transcript, "Boil the pasta.");
+  assert.deepEqual(requestPaths, ["/v1/metadata", "/v1/transcript"]);
 });
 
 for (const type of ["image", "carousel", "post"] as const) {

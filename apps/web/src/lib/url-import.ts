@@ -138,7 +138,7 @@ export const urlImportErrorCopy = (
     case "IMPORT_LIMIT_REACHED":
       return {
         title: "Recipe import limit reached",
-        body: "We've hit the recipe import limit. Please let Aslak know that we need to upgrade the Supadata plan.",
+        body: "We've hit the recipe import limit. Try again later, or let Aslak know if it keeps happening.",
       };
     case "SITE_BLOCKED":
       return {

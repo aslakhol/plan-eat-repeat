@@ -9,7 +9,7 @@ Checked 2026-08-26. This plan replaces the production YouTube transcript chain w
 - Use direct `fetch` calls, not `@supadata/js`. The SDK has no `AbortSignal` or fetch injection, discards `x-billable-requests`, does not validate responses at runtime, treats billed HTTP 206 as a successful Fetch response, and has a job-result type that conflicts with the current OpenAPI contract. [Official SDK client](https://github.com/supadata-ai/js/blob/fe330d7aec34694c547b4744ca04ddb92ee3e828/src/client.ts#L15-L95), [official SDK types](https://github.com/supadata-ai/js/blob/fe330d7aec34694c547b4744ca04ddb92ee3e828/src/types.ts#L44-L73)
 - Use the current universal endpoints, `GET /v1/transcript` and `GET /v1/metadata`. Do not use the handoff's `/v1/youtube/video` reference because Supadata now marks it deprecated. [Transcript guide](https://docs.supadata.ai/get-transcript), [metadata guide](https://docs.supadata.ai/get-metadata), [deprecated endpoint](https://docs.supadata.ai/api-reference/endpoint/youtube/video-get)
 - Always send `mode=native` and `text=true`. Never rely on Supadata's default `auto` mode. `native` costs one credit even when no caption is available; `auto` may start AI transcription at two credits per video minute. [Transcript modes and pricing](https://docs.supadata.ai/get-transcript#pricing)
-- Request the transcript first, then metadata. Start Supadata requests at least one second apart so the importer works on the free plan's one-request-per-second limit. A normal captioned import costs two credits and stays within one acquisition deadline. A 206 caption miss still proceeds with Supadata metadata because a video description may contain the full written recipe. [Current plan limits](https://supadata.ai/pricing)
+- Request the transcript and metadata concurrently under the Pro plan's ten-request-per-second limit. A normal captioned import costs two credits and stays within one acquisition deadline. A 206 caption miss still proceeds with Supadata metadata because a video description may contain the full written recipe. [Current plan limits](https://supadata.ai/pricing)
 - Leave `dinner.youtubeVideoTitle` on YouTube oEmbed. It is a five-second, best-effort editor preview, costs no Supadata credit, and is not used by `importFromUrl`. The actual import must fetch its own Supadata metadata and must succeed or fail independently of the preview.
 - Keep ordinary recipe-page acquisition unchanged. Issue #198 remains separate.
 
@@ -47,7 +47,7 @@ If keeping the production export easy to test requires a factory, expose `create
 2. Request `GET https://api.supadata.ai/v1/transcript` with encoded `url`, `mode=native`, and `text=true` query parameters.
 3. Request `GET https://api.supadata.ai/v1/metadata` with the same encoded `url`.
 4. Send `x-api-key` on both requests. Do not put the key in a query parameter, client bundle, log field, error message, or response.
-5. Run the calls under one 20-second `AbortSignal`. Request the transcript first and finish any transcript-job polling before requesting metadata. Start every Supadata request, including job polls, at least one second after the previous request started. Compose the deadline with the caller's signal. If the caller cancels, propagate cancellation. If the local deadline expires, return the normal acquisition failure. Supadata has no cancellation endpoint and warns that a timed-out call may still consume credits. [Latency contract](https://docs.supadata.ai/get-transcript#latency), [current plan limits](https://supadata.ai/pricing)
+5. Run the transcript and metadata calls concurrently under one 20-second `AbortSignal`. Poll transcript jobs once per second within that same deadline. Compose the deadline with the caller's signal. If the caller cancels, propagate cancellation. If the local deadline expires, return the normal acquisition failure. Supadata has no cancellation endpoint and warns that a timed-out call may still consume credits. [Latency contract](https://docs.supadata.ai/get-transcript#latency), [current plan limits](https://supadata.ai/pricing)
 6. Do not retry metered requests automatically. Supadata does not document idempotency or retry billing. Polling a returned job is not a retry.
 7. If the transcript call returns 202, poll `GET /v1/transcript/{jobId}` once per second within the same 20-second deadline. Accept `queued` and `active`, normalize the current OpenAPI top-level completed result and the official SDK's nested `result` shape, and fail on `failed`, malformed data, or deadline expiry. Do not add persistent jobs for this native-only release. Polling is free. [Job flow](https://docs.supadata.ai/get-transcript#getting-job-results)
 8. Validate unknown JSON with Zod before reading it. A transcript success requires string `content`, non-empty string `lang`, and an array of non-empty provider language strings. Do not enforce a two-letter language regex because Supadata publishes values such as `zh-TW`.
@@ -82,19 +82,19 @@ Supadata does not promise whether `native` distinguishes creator captions from Y
 
 Add one provider-neutral `IMPORT_LIMIT_REACHED` code to the shared import contract. Keep every other tRPC and client error unchanged.
 
-| Condition | `ImportRecipeError` result | User behavior |
-| --- | --- | --- |
-| Caller cancels | Propagate the cancellation | The abandoned request does not show an import error. |
-| Missing local key | `FETCH_FAILED` | Video importing is temporarily unavailable; server diagnostics say `configuration` without logging a key. |
-| 400 invalid request | `FETCH_FAILED` | Treat as an adapter or upstream contract failure and log the sanitized provider code. |
-| 401 invalid or expired key | `FETCH_FAILED` | Treat as an operational configuration failure. |
-| 402 plan restriction | `FETCH_FAILED` | Treat as an operational plan failure. |
-| 403 restricted video or 404 missing/private video | `FETCH_FAILED` | Tell the user that the video may be unavailable. Preserve status only in diagnostics. |
-| 429 rate or credit limit | `IMPORT_LIMIT_REACHED` | Ask the user to tell Aslak that the Supadata plan needs upgrading. Diagnostics retain `limit-exceeded`; the provider response cannot distinguish quota from rate limit. |
-| 5xx, network error, timeout, failed job, invalid JSON/schema, or oversized body | `FETCH_FAILED` | Treat as temporary provider acquisition failure. |
-| 206 or empty transcript, with no description | `NO_RECIPE_FOUND` | Use the existing video-specific no-recipe guidance. |
-| 206 or empty transcript, with a description | Continue to extraction | A written recipe may still import. If it is not a Recipe, extraction returns `NO_RECIPE_FOUND`. |
-| Valid evidence but model call fails | `EXTRACTION_FAILED` | Keep current behavior. |
+| Condition                                                                       | `ImportRecipeError` result | User behavior                                                                                                                                                            |
+| ------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Caller cancels                                                                  | Propagate the cancellation | The abandoned request does not show an import error.                                                                                                                     |
+| Missing local key                                                               | `FETCH_FAILED`             | Video importing is temporarily unavailable; server diagnostics say `configuration` without logging a key.                                                                |
+| 400 invalid request                                                             | `FETCH_FAILED`             | Treat as an adapter or upstream contract failure and log the sanitized provider code.                                                                                    |
+| 401 invalid or expired key                                                      | `FETCH_FAILED`             | Treat as an operational configuration failure.                                                                                                                           |
+| 402 plan restriction                                                            | `FETCH_FAILED`             | Treat as an operational plan failure.                                                                                                                                    |
+| 403 restricted video or 404 missing/private video                               | `FETCH_FAILED`             | Tell the user that the video may be unavailable. Preserve status only in diagnostics.                                                                                    |
+| 429 rate or credit limit                                                        | `IMPORT_LIMIT_REACHED`     | Ask the user to retry later or tell Aslak if the problem continues. Diagnostics retain `limit-exceeded`; the provider response cannot distinguish quota from rate limit. |
+| 5xx, network error, timeout, failed job, invalid JSON/schema, or oversized body | `FETCH_FAILED`             | Treat as temporary provider acquisition failure.                                                                                                                         |
+| 206 or empty transcript, with no description                                    | `NO_RECIPE_FOUND`          | Use the existing video-specific no-recipe guidance.                                                                                                                      |
+| 206 or empty transcript, with a description                                     | Continue to extraction     | A written recipe may still import. If it is not a Recipe, extraction returns `NO_RECIPE_FOUND`.                                                                          |
+| Valid evidence but model call fails                                             | `EXTRACTION_FAILED`        | Keep current behavior.                                                                                                                                                   |
 
 `SITE_BLOCKED` and `PAGE_UNREADABLE` remain page-import outcomes and are not emitted by the Supadata path.
 
@@ -104,7 +104,7 @@ Update the web's video-specific `FETCH_FAILED` copy in `apps/web/src/lib/url-imp
 >
 > The video may be unavailable, or video importing may be temporarily unavailable. Try again later.
 
-Use this shared web and mobile copy for `IMPORT_LIMIT_REACHED`: "We've hit the video import limit. Please let Aslak know that we need to upgrade the Supadata plan."
+Use this shared web and mobile copy for `IMPORT_LIMIT_REACHED`: "We've hit the recipe import limit. Try again later, or let Aslak know if it keeps happening."
 
 Keep `YOUTUBE_NO_RECIPE_FOUND_MESSAGE`, which accurately covers the captionless and no-written-recipe case.
 
@@ -126,7 +126,7 @@ Keep `YOUTUBE_NO_RECIPE_FOUND_MESSAGE`, which accurately covers the captionless 
 All tests use injected in-memory fetch or source adapters. None calls Supadata or YouTube.
 
 - A successful 200 transcript and metadata pair asserts the exact endpoints, encoded URL, `x-api-key`, `mode=native`, `text=true`, absence of `lang`, normalized title/description/transcript, and captured billable-request headers.
-- Request-order tests prove that metadata does not start before the transcript finishes and that Supadata request starts remain at least one second apart under the production defaults.
+- Request-order tests prove that YouTube metadata and transcript requests start concurrently. Instagram tests prove that transcript acquisition starts immediately after video metadata identifies the media type.
 - A 202 transcript test covers queued, active, and completed polling. Cover both officially published completed-result shapes. Separate tests cover `failed` and deadline expiry.
 - A language test accepts `zh-TW`, uses the returned language, and does not infer the requested language.
 - Metadata tests accept nullable title and description, reject a non-YouTube platform, reject a non-video type, and reject a mismatched video ID.
@@ -166,7 +166,7 @@ pnpm build
 
 ## Acceptance criteria
 
-- A YouTube recipe import makes sequential Supadata native-transcript and metadata requests at no more than one request per second and uses no legacy YouTube acquisition code.
+- A YouTube recipe import makes concurrent Supadata native-transcript and metadata requests and uses no legacy YouTube acquisition code.
 - The public import and tRPC interfaces remain unchanged.
 - No execution path can request Supadata-generated transcripts.
 - Captionless videos use a Supadata description when it contains a Recipe and otherwise return the existing no-recipe outcome.
