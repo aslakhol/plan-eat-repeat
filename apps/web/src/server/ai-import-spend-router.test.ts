@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import { mock, test } from "node:test";
 
 import { TRPCError } from "@trpc/server";
+import type { AiImportSource } from "@planeatrepeat/db";
 
 const { loadEnvConfig } = createRequire(import.meta.url)(
   "@next/env",
@@ -25,34 +26,33 @@ const createCaller = ({
   userId,
   allowlist = "system-admin",
   environment = "Development",
-  textAttemptSummary = {
-    attempts: 0,
-    estimatedAiImportCostUsd: null,
-    collectionStartedOn: null,
-  },
+  sourceSummaries = [],
 }: {
   userId: string | null;
   allowlist?: string | null;
   environment?: "Production" | "Preview" | "Development";
-  textAttemptSummary?: {
+  sourceSummaries?: Array<{
+    source: AiImportSource;
     attempts: number;
     estimatedAiImportCostUsd: number | null;
     collectionStartedOn: Date | null;
-  };
+  }>;
 }): AiImportSpendCaller =>
   aiImportSpendRouter.createCaller({
     auth: { userId },
     db: {
       aiImportAttempt: {
-        aggregate: () =>
-          Promise.resolve({
-            _count: { _all: textAttemptSummary.attempts },
-            _sum: {
-              estimatedAiImportCostUsd:
-                textAttemptSummary.estimatedAiImportCostUsd,
-            },
-            _min: { startedAt: textAttemptSummary.collectionStartedOn },
-          }),
+        groupBy: () =>
+          Promise.resolve(
+            sourceSummaries.map((summary) => ({
+              source: summary.source,
+              _count: { _all: summary.attempts },
+              _sum: {
+                estimatedAiImportCostUsd: summary.estimatedAiImportCostUsd,
+              },
+              _min: { startedAt: summary.collectionStartedOn },
+            })),
+          ),
       },
     },
     systemAdminUserIds: parseSystemAdminUserIds(allowlist),
@@ -74,9 +74,16 @@ void test("an allowlisted System Admin without a Household receives the empty sp
       supadata: "https://dash.supadata.ai/billing",
     },
     collectionStartedOn: null,
-    textAttemptSummary: {
+    attemptSummary: {
       attempts: 0,
       estimatedAiImportCostUsd: 0,
+      sources: [
+        { source: "TEXT", attempts: 0, estimatedAiImportCostUsd: 0 },
+        { source: "PHOTO", attempts: 0, estimatedAiImportCostUsd: 0 },
+        { source: "YOUTUBE", attempts: 0, estimatedAiImportCostUsd: 0 },
+        { source: "INSTAGRAM", attempts: 0, estimatedAiImportCostUsd: 0 },
+        { source: "LINK", attempts: 0, estimatedAiImportCostUsd: 0 },
+      ],
     },
     last24Hours: {
       aiImportCostUsd: 0,
@@ -118,20 +125,44 @@ void test("an allowlisted System Admin without a Household receives the empty sp
   });
 });
 
-void test("the report exposes the recorded Text attempt summary", async () => {
+void test("the report exposes all five recorded Import Sources", async () => {
   const collectionStartedOn = new Date("2026-08-30T08:00:00.000Z");
   const projection = await createCaller({
     userId: "system-admin",
-    textAttemptSummary: {
-      attempts: 3,
-      estimatedAiImportCostUsd: 0.0123456789,
-      collectionStartedOn,
-    },
+    sourceSummaries: [
+      {
+        source: "YOUTUBE",
+        attempts: 2,
+        estimatedAiImportCostUsd: 0.01,
+        collectionStartedOn: new Date("2026-08-30T09:00:00.000Z"),
+      },
+      {
+        source: "PHOTO",
+        attempts: 1,
+        estimatedAiImportCostUsd: 0.0023456789,
+        collectionStartedOn,
+      },
+    ],
   }).dashboard(dashboardInput);
 
-  assert.deepEqual(projection.textAttemptSummary, {
+  assert.deepEqual(projection.attemptSummary, {
     attempts: 3,
     estimatedAiImportCostUsd: 0.0123456789,
+    sources: [
+      { source: "TEXT", attempts: 0, estimatedAiImportCostUsd: 0 },
+      {
+        source: "PHOTO",
+        attempts: 1,
+        estimatedAiImportCostUsd: 0.0023456789,
+      },
+      {
+        source: "YOUTUBE",
+        attempts: 2,
+        estimatedAiImportCostUsd: 0.01,
+      },
+      { source: "INSTAGRAM", attempts: 0, estimatedAiImportCostUsd: 0 },
+      { source: "LINK", attempts: 0, estimatedAiImportCostUsd: 0 },
+    ],
   });
   assert.equal(projection.collectionStartedOn, collectionStartedOn);
 });

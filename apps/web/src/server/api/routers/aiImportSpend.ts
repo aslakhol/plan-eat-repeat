@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { AiImportSource } from "@planeatrepeat/db";
 
 import {
   AI_IMPORT_SPEND_PERIOD_KEYS,
@@ -16,25 +17,60 @@ const dashboardInput = z.object({
   chartOffset: z.number().int().nonnegative(),
 });
 
+const IMPORT_SOURCE_ORDER = [
+  "TEXT",
+  "PHOTO",
+  "YOUTUBE",
+  "INSTAGRAM",
+  "LINK",
+] as const satisfies ReadonlyArray<AiImportSource>;
+
 export const aiImportSpendRouter = createTRPCRouter({
   dashboard: systemAdminProcedure
     .input(dashboardInput)
     .query(async ({ ctx, input }) => {
-      const textAttempts = await ctx.db.aiImportAttempt.aggregate({
-        where: { source: "TEXT" },
+      const attemptsBySource = await ctx.db.aiImportAttempt.groupBy({
+        by: ["source"],
         _count: { _all: true },
         _sum: { estimatedAiImportCostUsd: true },
         _min: { startedAt: true },
       });
+      const sourceSummaries = IMPORT_SOURCE_ORDER.map((source) => {
+        const attempts = attemptsBySource.find(
+          (summary) => summary.source === source,
+        );
+        return {
+          source,
+          attempts: attempts?._count._all ?? 0,
+          estimatedAiImportCostUsd:
+            attempts?._sum.estimatedAiImportCostUsd ?? 0,
+        };
+      });
+      const collectionStartedOn = attemptsBySource.reduce<Date | null>(
+        (earliest, summary) => {
+          const startedAt = summary._min.startedAt;
+          if (!startedAt || (earliest && earliest <= startedAt)) {
+            return earliest;
+          }
+          return startedAt;
+        },
+        null,
+      );
 
       return {
         environment: ctx.deploymentEnvironment,
         billingLinks: AI_IMPORT_SPEND_BILLING_LINKS,
-        collectionStartedOn: textAttempts._min.startedAt,
-        textAttemptSummary: {
-          attempts: textAttempts._count._all,
-          estimatedAiImportCostUsd:
-            textAttempts._sum.estimatedAiImportCostUsd ?? 0,
+        collectionStartedOn,
+        attemptSummary: {
+          attempts: sourceSummaries.reduce(
+            (total, summary) => total + summary.attempts,
+            0,
+          ),
+          estimatedAiImportCostUsd: sourceSummaries.reduce(
+            (total, summary) => total + summary.estimatedAiImportCostUsd,
+            0,
+          ),
+          sources: sourceSummaries,
         },
         last24Hours: {
           aiImportCostUsd: 0,

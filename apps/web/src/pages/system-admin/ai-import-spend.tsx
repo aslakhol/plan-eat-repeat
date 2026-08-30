@@ -75,7 +75,7 @@ const Dashboard = ({
           {projection.environment}
         </p>
       </div>
-      {projection.textAttemptSummary.attempts === 0 && (
+      {projection.attemptSummary.attempts === 0 && (
         <PeriodControl
           selectedPeriod={selectedPeriod}
           onPeriodChange={onPeriodChange}
@@ -83,7 +83,7 @@ const Dashboard = ({
       )}
     </header>
 
-    {projection.textAttemptSummary.attempts === 0 && (
+    {projection.attemptSummary.attempts === 0 && (
       <section
         aria-label="Spend overview"
         className="grid gap-5 lg:grid-cols-[1.15fr_1fr]"
@@ -93,9 +93,9 @@ const Dashboard = ({
       </section>
     )}
 
-    <TextAttemptSummaryCard projection={projection} />
+    <AttemptSummaryCard projection={projection} />
 
-    {projection.textAttemptSummary.attempts === 0 && (
+    {projection.attemptSummary.attempts === 0 && (
       <>
         <EmptyReportCard title="Daily spend" />
         <EmptyReportCard title="Households" />
@@ -143,7 +143,7 @@ const Dashboard = ({
   </>
 );
 
-const TextAttemptSummaryCard = ({
+const AttemptSummaryCard = ({
   projection,
 }: {
   projection: DashboardProjection;
@@ -157,13 +157,18 @@ const TextAttemptSummaryCard = ({
     <CardContent className="grid gap-5 border-t px-5 py-5 sm:grid-cols-3 sm:px-7">
       <HeroMetric
         label="AI Import Attempts"
-        value={String(projection.textAttemptSummary.attempts)}
-        detail="Import Source: Text"
+        value={String(projection.attemptSummary.attempts)}
+        detail={projection.attemptSummary.sources
+          .map(
+            ({ source, attempts }) =>
+              `${importSourceLabel(source)} ${attempts}`,
+          )
+          .join(" · ")}
       />
       <HeroMetric
         label="AI Import Cost"
         value={formatRecordedUsd(
-          projection.textAttemptSummary.estimatedAiImportCostUsd,
+          projection.attemptSummary.estimatedAiImportCostUsd,
         )}
         detail="estimated inference total"
       />
@@ -175,6 +180,17 @@ const TextAttemptSummaryCard = ({
     </CardContent>
   </Card>
 );
+
+const importSourceLabel = (
+  source: DashboardProjection["attemptSummary"]["sources"][number]["source"],
+) =>
+  ({
+    TEXT: "Text",
+    PHOTO: "Photo",
+    YOUTUBE: "YouTube",
+    INSTAGRAM: "Instagram",
+    LINK: "Link",
+  })[source];
 
 const PeriodControl = ({
   selectedPeriod,
