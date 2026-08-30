@@ -1,3 +1,7 @@
+---
+status: superseded by ADR-0012
+---
+
 # Keep AI import cost history in the application
 
 Plan Eat Repeat stores one provider-neutral AI Import Attempt for every requested import and fixes its estimated AI Import Cost at the time of the attempt. The application database owns this history because only the application can attribute an attempt to a Household, initiating User, source, and product outcome; provider reports and analytics services may supplement the records but are not the source of truth. Provider-specific pricing stays behind a small provider-and-model adapter so changing model providers does not require replacing the history or operator reporting.

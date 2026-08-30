@@ -47,9 +47,25 @@ Unsaved Dinner editor content produced from an import source. It changes the Coo
 **AI Import Attempt**:
 A Household member's request to produce an Import Draft from an import source. It may succeed, fail, or be cancelled, and remains distinct from any Dinner later saved from the draft.
 
+**AI Import Spend**:
+The provider charges attributable to an AI Import Attempt. It consists of AI Import Cost and Supadata Credit Spend, which remain separate measures and are never converted into one another.
+_Avoid_: Import cost, combined cost
+
 **AI Import Cost**:
-The estimated model provider charge attributable to AI inference during an AI Import Attempt. It belongs to the Household and may also be attributed to the initiating User; it excludes the ordinary infrastructure cost of running Plan Eat Repeat.
+The estimated model provider charge attributable to AI inference during an AI Import Attempt. It belongs to the Household and may also be attributed to the initiating Household member; it excludes the ordinary infrastructure cost of running Plan Eat Repeat.
 _Avoid_: Token cost, infrastructure cost
+
+**Supadata Credit Spend**:
+The Supadata credits attributable to acquisition work during an AI Import Attempt. It remains denominated in credits and is not part of AI Import Cost.
+_Avoid_: Supadata cost, scraping cost
+
+**Import Source**:
+The kind of input submitted for an AI Import Attempt: YouTube, Instagram, Link, Text, or Photo.
+_Avoid_: Import type
+
+**System Admin**:
+A trusted Plan Eat Repeat operator who may inspect AI Import Spend across Households. This role is distinct from a Household administrator.
+_Avoid_: Admin, Household admin, super admin
 
 **Link**:
 The optional HTTP(S) URL associated with a Dinner. It often identifies the source of a Recipe, but may point somewhere else chosen by the Household.
