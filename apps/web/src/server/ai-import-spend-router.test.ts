@@ -49,6 +49,7 @@ const createCaller = ({
       user: { firstName: string | null; lastName: string | null };
     } | null;
     inferenceState: AiImportInferenceState;
+    inferenceStartedAt?: Date | null;
     estimatedAiImportCostUsd: number | null;
     supadataCredits: number;
     supadataOperationsStarted: number;
@@ -67,6 +68,7 @@ const createCaller = ({
           return Promise.resolve(
             attempts.map((attempt) => ({
               membershipAttributionKey: "member-a",
+              inferenceStartedAt: null,
               household: {
                 name: "Current Household",
                 _count: { Members: 1 },
@@ -324,6 +326,7 @@ void test("the projection comes from one narrow query bounded by its captured cu
           },
         },
         inferenceState: true,
+        inferenceStartedAt: true,
         estimatedAiImportCostUsd: true,
         supadataOperationsStarted: true,
         supadataCredits: true,

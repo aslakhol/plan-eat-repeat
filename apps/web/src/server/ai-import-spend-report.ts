@@ -10,6 +10,7 @@ import {
 
 const OSLO_TIME_ZONE = "Europe/Oslo";
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
+const PENDING_STALE_AFTER_MILLISECONDS = 5 * 60 * 1000;
 const HISTORY_WINDOW_DAYS = 60;
 const HISTORY_STEP_DAYS = 30;
 
@@ -47,6 +48,7 @@ export type AiImportSpendReportAttempt = {
     };
   } | null;
   inferenceState: AiImportInferenceState;
+  inferenceStartedAt: Date | null;
   estimatedAiImportCostUsd: number | null;
   supadataOperationsStarted: number;
   supadataCredits: number;
@@ -126,6 +128,7 @@ export const buildAiImportSpendReport = ({
 }) => {
   const reportAttempts = attempts
     .filter((attempt) => attempt.startedAt <= now)
+    .map((attempt) => withEffectiveInferenceState(attempt, now))
     .toSorted(
       (left, right) => left.startedAt.getTime() - right.startedAt.getTime(),
     );
@@ -161,6 +164,24 @@ export const buildAiImportSpendReport = ({
       today: osloDate(now),
       requestedChartOffset: chartOffset,
     }),
+  };
+};
+
+const withEffectiveInferenceState = (
+  attempt: AiImportSpendReportAttempt,
+  now: Date,
+): AiImportSpendReportAttempt => {
+  if (
+    attempt.inferenceState !== "PENDING" ||
+    attempt.startedAt.getTime() >=
+      now.getTime() - PENDING_STALE_AFTER_MILLISECONDS
+  ) {
+    return attempt;
+  }
+
+  return {
+    ...attempt,
+    inferenceState: attempt.inferenceStartedAt ? "UNKNOWN" : "NOT_INCURRED",
   };
 };
 

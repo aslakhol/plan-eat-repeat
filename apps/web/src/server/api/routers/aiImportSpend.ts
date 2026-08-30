@@ -40,6 +40,7 @@ export const aiImportSpendRouter = createTRPCRouter({
               },
             },
             inferenceState: true,
+            inferenceStartedAt: true,
             estimatedAiImportCostUsd: true,
             supadataOperationsStarted: true,
             supadataCredits: true,

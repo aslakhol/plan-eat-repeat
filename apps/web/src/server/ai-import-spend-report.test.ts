@@ -23,6 +23,7 @@ const attempt = (
     user: { firstName: "Ada", lastName: "Lovelace" },
   },
   inferenceState: "ESTIMATED",
+  inferenceStartedAt: null,
   estimatedAiImportCostUsd: 0.1,
   supadataOperationsStarted: 0,
   supadataCredits: 0,
@@ -168,7 +169,7 @@ void test("period totals use the chosen denominators and retain unknown counts",
         supadataUnknownOperationCount: 1,
       }),
       attempt({
-        startedAt: new Date("2026-08-27T08:00:00.000Z"),
+        startedAt: new Date("2026-08-30T11:58:00.000Z"),
         inferenceState: "PENDING",
         estimatedAiImportCostUsd: null,
       }),
@@ -192,6 +193,54 @@ void test("period totals use the chosen denominators and retain unknown counts",
     averageAiImportCostUsd: 0.1,
     averageSupadataCredits: 1,
   });
+});
+
+void test("stale pending attempts become effective no-charge or unknown without changing stored state", () => {
+  const now = new Date("2026-08-30T12:00:00.000Z");
+  const staleBeforeInference = attempt({
+    startedAt: new Date("2026-08-30T11:54:59.999Z"),
+    inferenceState: "PENDING",
+    estimatedAiImportCostUsd: null,
+  });
+  const staleAfterInference = attempt({
+    source: "PHOTO",
+    startedAt: new Date("2026-08-30T11:00:00.000Z"),
+    inferenceState: "PENDING",
+    inferenceStartedAt: new Date("2026-08-30T11:01:00.000Z"),
+    estimatedAiImportCostUsd: null,
+  });
+
+  const report = buildAiImportSpendReport({
+    now,
+    period: "7",
+    chartOffset: 0,
+    currentHouseholdCount: 1,
+    attempts: [
+      staleBeforeInference,
+      staleAfterInference,
+      attempt({
+        startedAt: new Date("2026-08-30T11:55:00.000Z"),
+        inferenceState: "PENDING",
+        estimatedAiImportCostUsd: null,
+      }),
+      attempt({
+        startedAt: new Date("2026-08-30T11:59:00.000Z"),
+        inferenceState: "PENDING",
+        estimatedAiImportCostUsd: null,
+      }),
+    ],
+  });
+
+  assert.equal(report.period.noChargeAttempts, 1);
+  assert.equal(report.period.unknownInferenceAttempts, 1);
+  assert.equal(report.period.pendingInferenceAttempts, 2);
+  assert.equal(
+    report.importSources.find((source) => source.source === "PHOTO")
+      ?.unknownInferenceAttempts,
+    1,
+  );
+  assert.equal(staleBeforeInference.inferenceState, "PENDING");
+  assert.equal(staleAfterInference.inferenceState, "PENDING");
 });
 
 void test("Import Source summaries reconcile recorded period spend across every source", () => {
