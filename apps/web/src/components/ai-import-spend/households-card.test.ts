@@ -87,6 +87,7 @@ const props = {
   periodLabel: "7 days",
   period: { aiImportCostUsd: 2, supadataCredits: 20 },
   households,
+  hasRecordedAttempts: true,
 };
 
 void test("Households renders accessible rankings, retained attribution, and exact-denominator share bars", () => {
@@ -115,7 +116,35 @@ void test("Households renders accessible rankings, retained attribution, and exa
   assert.doesNotMatch(html, /data-share-fill="member-credits-member-grace"/);
   assert.match(html, /aria-label="0\.5% of period inference spend"/);
   assert.match(html, /grid-cols-3[^"]*lg:contents/);
+  assert.match(html, /grid-cols-3[^"]*lg:contents[^"]*col-span-1/);
+  assert.match(html, /flex flex-col gap-1 lg:col-span-1 col-span-1/);
   assert.match(html, /lg:grid-cols-\[20px_minmax\(0,1\.5fr\)/);
+});
+
+void test("the first live Household starts expanded when retained history ranks first", () => {
+  const retainedHistory = {
+    ...households[2]!,
+    estimatedAiImportCostUsd: 3,
+  };
+  const html = renderToStaticMarkup(
+    createElement(HouseholdsCard, {
+      ...props,
+      period: { aiImportCostUsd: 4, supadataCredits: 20 },
+      households: [retainedHistory, households[0]!],
+    }),
+  );
+
+  assert.ok(
+    html.indexOf("Household unavailable") < html.indexOf("Alpha Household"),
+  );
+  assert.match(
+    html,
+    /data-household-row="household-alpha"[^>]*aria-expanded="true"/,
+  );
+  assert.match(
+    html,
+    /data-household-row="household-deleted"[^>]*aria-expanded="false"/,
+  );
 });
 
 void test("Household ranking changes row order without changing measures and expansion stays exclusive", async () => {
@@ -198,4 +227,17 @@ void test("Households shows the selected-period empty state", () => {
 
   assert.match(html, /No AI Import Attempts in this period/);
   assert.doesNotMatch(html, /data-household-ranking=/);
+});
+
+void test("Households preserves the collection empty state before the first attempt", () => {
+  const html = renderToStaticMarkup(
+    createElement(HouseholdsCard, {
+      ...props,
+      households: [],
+      hasRecordedAttempts: false,
+    }),
+  );
+
+  assert.match(html, /No AI Import Attempts yet/);
+  assert.match(html, /Data starts with the first AI Import Attempt\./);
 });

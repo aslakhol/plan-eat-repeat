@@ -121,6 +121,7 @@ const Dashboard = ({
       periodLabel={projection.period.label}
       period={projection.period}
       households={projection.households}
+      hasRecordedAttempts={projection.attemptSummary.attempts > 0}
     />
 
     <ImportSourcesCard

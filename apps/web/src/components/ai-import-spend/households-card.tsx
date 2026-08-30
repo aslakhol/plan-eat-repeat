@@ -7,23 +7,23 @@ import {
 } from "~/lib/ai-import-spend";
 import { cn } from "~/lib/utils";
 
-export type SpendMember = {
-  key: string;
-  name: string;
-  available: boolean;
+type SpendMetrics = {
   attempts: number;
   estimatedAiImportCostUsd: number;
   supadataCredits: number;
 };
 
-export type SpendHousehold = {
+export type SpendMember = SpendMetrics & {
+  key: string;
+  name: string;
+  available: boolean;
+};
+
+export type SpendHousehold = SpendMetrics & {
   key: string;
   name: string;
   available: boolean;
   currentMemberCount: number | null;
-  attempts: number;
-  estimatedAiImportCostUsd: number;
-  supadataCredits: number;
   members: ReadonlyArray<SpendMember>;
 };
 
@@ -33,25 +33,27 @@ export const HouseholdsCard = ({
   periodLabel,
   period,
   households,
+  hasRecordedAttempts,
 }: {
   periodLabel: string;
   period: { aiImportCostUsd: number; supadataCredits: number };
   households: ReadonlyArray<SpendHousehold>;
+  hasRecordedAttempts: boolean;
 }) => {
   const [ranking, setRanking] = useState<Ranking>("inference");
   const rankedHouseholds = useMemo(
     () => rankHouseholds(households, ranking),
     [households, ranking],
   );
-  const [expandedKey, setExpandedKey] = useState<string | null>(
-    () => rankHouseholds(households, "inference")[0]?.key ?? null,
+  const [expandedKey, setExpandedKey] = useState<string | null>(() =>
+    firstAvailableHouseholdKey(rankHouseholds(households, "inference")),
   );
 
   useEffect(() => {
     setExpandedKey((currentKey) =>
       households.some((household) => household.key === currentKey)
         ? currentKey
-        : (rankedHouseholds[0]?.key ?? null),
+        : firstAvailableHouseholdKey(rankedHouseholds),
     );
   }, [households, rankedHouseholds]);
 
@@ -76,10 +78,14 @@ export const HouseholdsCard = ({
         {households.length === 0 ? (
           <div className="border-t py-11 text-center">
             <p className="font-serif text-[17px]">
-              No AI Import Attempts in this period
+              {hasRecordedAttempts
+                ? "No AI Import Attempts in this period"
+                : "No AI Import Attempts yet"}
             </p>
             <p className="text-muted-foreground mt-1 text-sm">
-              Choose another period to inspect earlier activity.
+              {hasRecordedAttempts
+                ? "Choose another period to inspect earlier activity."
+                : "Data starts with the first AI Import Attempt."}
             </p>
           </div>
         ) : (
@@ -141,16 +147,12 @@ export const HouseholdsCard = ({
                       inferenceDenominator={period.aiImportCostUsd}
                       creditsValue={household.supadataCredits}
                       creditsDenominator={period.supadataCredits}
-                      floor={1}
+                      minimumVisiblePercentage={1}
                       size="household"
                       inferenceLabel="period inference spend"
                       creditsLabel="period Supadata credits"
                     />
-                    <MetricCells
-                      attempts={household.attempts}
-                      inference={household.estimatedAiImportCostUsd}
-                      credits={household.supadataCredits}
-                    />
+                    <MetricCells metrics={household} />
                   </button>
                   {expanded && (
                     <div
@@ -189,17 +191,12 @@ export const HouseholdsCard = ({
                             }
                             creditsValue={member.supadataCredits}
                             creditsDenominator={household.supadataCredits}
-                            floor={2}
+                            minimumVisiblePercentage={2}
                             size="member"
                             inferenceLabel={`${household.name} inference spend`}
                             creditsLabel={`${household.name} Supadata credits`}
                           />
-                          <MetricCells
-                            attempts={member.attempts}
-                            inference={member.estimatedAiImportCostUsd}
-                            credits={member.supadataCredits}
-                            member
-                          />
+                          <MetricCells metrics={member} compact />
                         </div>
                       ))}
                     </div>
@@ -255,7 +252,7 @@ const ShareBars = ({
   inferenceDenominator,
   creditsValue,
   creditsDenominator,
-  floor,
+  minimumVisiblePercentage,
   size,
   inferenceLabel,
   creditsLabel,
@@ -265,17 +262,22 @@ const ShareBars = ({
   inferenceDenominator: number;
   creditsValue: number;
   creditsDenominator: number;
-  floor: number;
+  minimumVisiblePercentage: number;
   size: "household" | "member";
   inferenceLabel: string;
   creditsLabel: string;
 }) => (
-  <span className="col-span-2 flex flex-col gap-1 lg:col-span-1">
+  <span
+    className={cn(
+      "flex flex-col gap-1 lg:col-span-1",
+      size === "household" ? "col-span-2" : "col-span-1",
+    )}
+  >
     <ShareBar
       dataId={`${size}-inference-${id.replace(`${size}-`, "")}`}
       value={inferenceValue}
       denominator={inferenceDenominator}
-      floor={floor}
+      minimumVisiblePercentage={minimumVisiblePercentage}
       label={inferenceLabel}
       className={size === "household" ? "h-[7px]" : "h-[5px]"}
       fillClassName={
@@ -286,7 +288,7 @@ const ShareBars = ({
       dataId={`${size}-credits-${id.replace(`${size}-`, "")}`}
       value={creditsValue}
       denominator={creditsDenominator}
-      floor={floor}
+      minimumVisiblePercentage={minimumVisiblePercentage}
       label={creditsLabel}
       className={size === "household" ? "h-[7px]" : "h-[5px]"}
       fillClassName={
@@ -300,7 +302,7 @@ const ShareBar = ({
   dataId,
   value,
   denominator,
-  floor,
+  minimumVisiblePercentage,
   label,
   className,
   fillClassName,
@@ -308,13 +310,14 @@ const ShareBar = ({
   dataId: string;
   value: number;
   denominator: number;
-  floor: number;
+  minimumVisiblePercentage: number;
   label: string;
   className: string;
   fillClassName: string;
 }) => {
   const exactShare = denominator > 0 ? (value / denominator) * 100 : 0;
-  const renderedShare = value > 0 ? Math.max(floor, exactShare) : 0;
+  const renderedShare =
+    value > 0 ? Math.max(minimumVisiblePercentage, exactShare) : 0;
 
   return (
     <span
@@ -337,27 +340,28 @@ const ShareBar = ({
 };
 
 const MetricCells = ({
-  attempts,
-  inference,
-  credits,
-  member = false,
+  metrics,
+  compact = false,
 }: {
-  attempts: number;
-  inference: number;
-  credits: number;
-  member?: boolean;
+  metrics: SpendMetrics;
+  compact?: boolean;
 }) => (
-  <span className="col-span-2 grid grid-cols-3 gap-3 lg:contents">
-    <Metric label="Attempts" value={String(attempts)} muted />
+  <span
+    className={cn(
+      "grid grid-cols-3 gap-3 lg:contents",
+      compact ? "col-span-1" : "col-span-2",
+    )}
+  >
+    <Metric label="Attempts" value={String(metrics.attempts)} muted />
     <Metric
       label="Inference"
-      value={formatAiImportSpendUsd(inference)}
-      compact={member}
+      value={formatAiImportSpendUsd(metrics.estimatedAiImportCostUsd)}
+      compact={compact}
     />
     <Metric
       label="Credits"
-      value={formatAiImportSpendCredits(credits)}
-      compact={member}
+      value={formatAiImportSpendCredits(metrics.supadataCredits)}
+      compact={compact}
       credits
     />
   </span>
@@ -423,3 +427,10 @@ const memberInitials = (member: SpendMember) => {
 };
 
 const formatPercentage = (percentage: number) => `${percentage.toFixed(1)}%`;
+
+const firstAvailableHouseholdKey = (
+  households: ReadonlyArray<SpendHousehold>,
+) =>
+  households.find((household) => household.available)?.key ??
+  households[0]?.key ??
+  null;
