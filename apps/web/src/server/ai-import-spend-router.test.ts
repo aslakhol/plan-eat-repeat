@@ -30,6 +30,8 @@ const createCaller = ({
   environment = "Development",
   attempts = [],
   onReportQuery,
+  currentHouseholdCount = 0,
+  onHouseholdCount,
 }: {
   userId: string | null;
   allowlist?: string | null;
@@ -38,6 +40,14 @@ const createCaller = ({
     source: AiImportSource;
     startedAt: Date;
     householdAttributionKey: string;
+    membershipAttributionKey?: string;
+    household?: {
+      name: string;
+      _count: { Members: number };
+    } | null;
+    membership?: {
+      user: { firstName: string | null; lastName: string | null };
+    } | null;
     inferenceState: AiImportInferenceState;
     estimatedAiImportCostUsd: number | null;
     supadataCredits: number;
@@ -45,6 +55,8 @@ const createCaller = ({
     supadataUnknownOperationCount: number;
   }>;
   onReportQuery?: (query: unknown) => void;
+  currentHouseholdCount?: number;
+  onHouseholdCount?: () => void;
 }): AiImportSpendCaller =>
   aiImportSpendRouter.createCaller({
     auth: { userId },
@@ -52,7 +64,25 @@ const createCaller = ({
       aiImportAttempt: {
         findMany: (query: unknown) => {
           onReportQuery?.(query);
-          return Promise.resolve(attempts);
+          return Promise.resolve(
+            attempts.map((attempt) => ({
+              membershipAttributionKey: "member-a",
+              household: {
+                name: "Current Household",
+                _count: { Members: 1 },
+              },
+              membership: {
+                user: { firstName: "Ada", lastName: null },
+              },
+              ...attempt,
+            })),
+          );
+        },
+      },
+      household: {
+        count: () => {
+          onHouseholdCount?.();
+          return Promise.resolve(currentHouseholdCount);
         },
       },
     },
@@ -241,12 +271,17 @@ void test("the report summarizes known Supadata credits and unresolved operation
 
 void test("the projection comes from one narrow query bounded by its captured current time", async () => {
   const queries: unknown[] = [];
+  let householdCountQueries = 0;
   const projection = await createCaller({
     userId: "system-admin",
     onReportQuery: (query) => queries.push(query),
+    onHouseholdCount: () => {
+      householdCountQueries += 1;
+    },
   }).dashboard(dashboardInput);
 
   assert.equal(queries.length, 1);
+  assert.equal(householdCountQueries, 1);
   assert.deepEqual(Object.keys(projection).sort(), [
     "attemptSummary",
     "billingLinks",
@@ -276,6 +311,18 @@ void test("the projection comes from one narrow query bounded by its captured cu
         source: true,
         startedAt: true,
         householdAttributionKey: true,
+        membershipAttributionKey: true,
+        household: {
+          select: {
+            name: true,
+            _count: { select: { Members: true } },
+          },
+        },
+        membership: {
+          select: {
+            user: { select: { firstName: true, lastName: true } },
+          },
+        },
         inferenceState: true,
         estimatedAiImportCostUsd: true,
         supadataOperationsStarted: true,

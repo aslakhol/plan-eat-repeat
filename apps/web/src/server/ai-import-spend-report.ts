@@ -35,6 +35,17 @@ export type AiImportSpendReportAttempt = {
   source: AiImportSource;
   startedAt: Date;
   householdAttributionKey: string;
+  membershipAttributionKey: string;
+  household: {
+    name: string;
+    _count: { Members: number };
+  } | null;
+  membership: {
+    user: {
+      firstName: string | null;
+      lastName: string | null;
+    };
+  } | null;
   inferenceState: AiImportInferenceState;
   estimatedAiImportCostUsd: number | null;
   supadataOperationsStarted: number;
@@ -105,11 +116,13 @@ export const buildAiImportSpendReport = ({
   period,
   chartOffset,
   now,
+  currentHouseholdCount,
 }: {
   attempts: ReadonlyArray<AiImportSpendReportAttempt>;
   period: AiImportSpendPeriod;
   chartOffset: number;
   now: Date;
+  currentHouseholdCount: number;
 }) => {
   const reportAttempts = attempts
     .filter((attempt) => attempt.startedAt <= now)
@@ -125,7 +138,8 @@ export const buildAiImportSpendReport = ({
   const periodAttempts = reportAttempts.filter(
     (attempt) => attempt.startedAt >= selectedPeriod.startsAt,
   );
-  const representedHouseholds = distinctHouseholds(reportAttempts).size;
+  const representedHouseholds =
+    currentHouseholdCount + distinctUnavailableHouseholds(reportAttempts).size;
   const importSources = summarizeImportSources(periodAttempts);
 
   return {
@@ -138,6 +152,7 @@ export const buildAiImportSpendReport = ({
       representedHouseholds,
       importSources,
     ),
+    households: summarizeHouseholds(periodAttempts),
     importSources,
     dailyWindow: buildDailyWindow({
       attempts: periodAttempts,
@@ -147,6 +162,54 @@ export const buildAiImportSpendReport = ({
       requestedChartOffset: chartOffset,
     }),
   };
+};
+
+const summarizeHouseholds = (
+  attempts: ReadonlyArray<AiImportSpendReportAttempt>,
+) => {
+  const attemptsByHousehold = groupBy(
+    attempts,
+    (attempt) => attempt.householdAttributionKey,
+  );
+
+  return Array.from(attemptsByHousehold, ([key, householdAttempts]) => {
+    const liveHousehold = householdAttempts.find(
+      (attempt) => attempt.household !== null,
+    )?.household;
+    const attemptsByMember = groupBy(
+      householdAttempts,
+      (attempt) => attempt.membershipAttributionKey,
+    );
+
+    return {
+      key,
+      name: liveHousehold?.name ?? "Household unavailable",
+      available: Boolean(liveHousehold),
+      currentMemberCount: liveHousehold?._count.Members ?? null,
+      attempts: householdAttempts.length,
+      estimatedAiImportCostUsd: aiImportCost(householdAttempts),
+      supadataCredits: supadataCredits(householdAttempts),
+      members: Array.from(attemptsByMember, ([memberKey, memberAttempts]) => {
+        const liveMembership = memberAttempts.find(
+          (attempt) => attempt.membership !== null,
+        )?.membership;
+
+        return {
+          key: memberKey,
+          name: liveMembership
+            ? memberDisplayName(liveMembership.user)
+            : "Member unavailable",
+          available: Boolean(liveMembership),
+          attempts: memberAttempts.length,
+          estimatedAiImportCostUsd: aiImportCost(memberAttempts),
+          supadataCredits: supadataCredits(memberAttempts),
+        };
+      }).toSorted(
+        (left, right) =>
+          right.estimatedAiImportCostUsd - left.estimatedAiImportCostUsd,
+      ),
+    };
+  });
 };
 
 const summarizeImportSources = (
@@ -394,6 +457,41 @@ const usedSupadata = (attempt: AiImportSpendReportAttempt) =>
 const distinctHouseholds = (
   attempts: ReadonlyArray<AiImportSpendReportAttempt>,
 ) => new Set(attempts.map((attempt) => attempt.householdAttributionKey));
+
+const distinctUnavailableHouseholds = (
+  attempts: ReadonlyArray<AiImportSpendReportAttempt>,
+) =>
+  new Set(
+    attempts
+      .filter((attempt) => attempt.household === null)
+      .map((attempt) => attempt.householdAttributionKey),
+  );
+
+const memberDisplayName = ({
+  firstName,
+  lastName,
+}: {
+  firstName: string | null;
+  lastName: string | null;
+}) =>
+  [firstName, lastName]
+    .map((name) => name?.trim())
+    .filter((name): name is string => Boolean(name))
+    .join(" ") || "Member";
+
+const groupBy = <Value, Key>(
+  values: ReadonlyArray<Value>,
+  keyFor: (value: Value) => Key,
+) => {
+  const groups = new Map<Key, Value[]>();
+  for (const value of values) {
+    const key = keyFor(value);
+    const group = groups.get(key) ?? [];
+    group.push(value);
+    groups.set(key, group);
+  }
+  return groups;
+};
 
 const groupAttemptsByOsloDate = (
   attempts: ReadonlyArray<AiImportSpendReportAttempt>,

@@ -19,32 +19,47 @@ export const aiImportSpendRouter = createTRPCRouter({
     .input(dashboardInput)
     .query(async ({ ctx, input }) => {
       const now = ctx.reportNow();
-      const attempts = await ctx.db.aiImportAttempt.findMany({
-        where: { startedAt: { lte: now } },
-        orderBy: { startedAt: "asc" },
-        select: {
-          source: true,
-          startedAt: true,
-          householdAttributionKey: true,
-          inferenceState: true,
-          estimatedAiImportCostUsd: true,
-          supadataOperationsStarted: true,
-          supadataCredits: true,
-          supadataUnknownOperationCount: true,
-        },
-      });
+      const [attempts, currentHouseholdCount] = await Promise.all([
+        ctx.db.aiImportAttempt.findMany({
+          where: { startedAt: { lte: now } },
+          orderBy: { startedAt: "asc" },
+          select: {
+            source: true,
+            startedAt: true,
+            householdAttributionKey: true,
+            membershipAttributionKey: true,
+            household: {
+              select: {
+                name: true,
+                _count: { select: { Members: true } },
+              },
+            },
+            membership: {
+              select: {
+                user: { select: { firstName: true, lastName: true } },
+              },
+            },
+            inferenceState: true,
+            estimatedAiImportCostUsd: true,
+            supadataOperationsStarted: true,
+            supadataCredits: true,
+            supadataUnknownOperationCount: true,
+          },
+        }),
+        ctx.db.household.count(),
+      ]);
       const report = buildAiImportSpendReport({
         attempts,
         period: input.period,
         chartOffset: input.chartOffset,
         now,
+        currentHouseholdCount,
       });
 
       return {
         environment: ctx.deploymentEnvironment,
         billingLinks: AI_IMPORT_SPEND_BILLING_LINKS,
         ...report,
-        households: [],
       };
     }),
 });

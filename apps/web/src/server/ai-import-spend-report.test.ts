@@ -14,6 +14,14 @@ const attempt = (
 ): AiImportSpendReportAttempt => ({
   source: "TEXT",
   householdAttributionKey: "household-a",
+  membershipAttributionKey: "member-a",
+  household: {
+    name: "Current Household A",
+    _count: { Members: 1 },
+  },
+  membership: {
+    user: { firstName: "Ada", lastName: "Lovelace" },
+  },
   inferenceState: "ESTIMATED",
   estimatedAiImportCostUsd: 0.1,
   supadataOperationsStarted: 0,
@@ -41,20 +49,14 @@ void test("calendar periods use Oslo dates including today", () => {
   const now = new Date("2026-03-29T22:30:00.000Z");
 
   assert.equal(getAiImportSpendPeriod("7", now, null).startDate, "2026-03-24");
-  assert.equal(
-    getAiImportSpendPeriod("30", now, null).startDate,
-    "2026-03-01",
-  );
+  assert.equal(getAiImportSpendPeriod("30", now, null).startDate, "2026-03-01");
   assert.equal(
     getAiImportSpendPeriod("month", now, null).startDate,
     "2026-03-01",
   );
   assert.equal(
-    getAiImportSpendPeriod(
-      "all",
-      now,
-      new Date("2026-01-12T23:30:00.000Z"),
-    ).startDate,
+    getAiImportSpendPeriod("all", now, new Date("2026-01-12T23:30:00.000Z"))
+      .startDate,
     "2026-01-13",
   );
 });
@@ -65,6 +67,7 @@ void test("the projection separates adjacent rolling 24-hour windows", () => {
     now,
     period: "7",
     chartOffset: 0,
+    currentHouseholdCount: 1,
     attempts: [
       attempt({
         startedAt: new Date("2026-03-29T12:00:00.000Z"),
@@ -104,6 +107,7 @@ void test("daily averages start with collection and include later zero-spend day
     now: new Date("2026-04-04T10:00:00.000Z"),
     period: "7",
     chartOffset: 0,
+    currentHouseholdCount: 1,
     attempts: [
       attempt({
         startedAt: new Date("2026-04-01T10:00:00.000Z"),
@@ -145,6 +149,7 @@ void test("period totals use the chosen denominators and retain unknown counts",
     now: new Date("2026-08-30T12:00:00.000Z"),
     period: "7",
     chartOffset: 0,
+    currentHouseholdCount: 2,
     attempts: [
       attempt({ startedAt: new Date("2026-08-30T08:00:00.000Z") }),
       attempt({
@@ -194,6 +199,7 @@ void test("Import Source summaries reconcile recorded period spend across every 
     now: new Date("2026-08-30T12:00:00.000Z"),
     period: "7",
     chartOffset: 0,
+    currentHouseholdCount: 1,
     attempts: [
       attempt({
         source: "TEXT",
@@ -317,6 +323,113 @@ void test("Import Source summaries reconcile recorded period spend across every 
   );
 });
 
+void test("Household attribution uses live names while retaining unavailable groups and represented members", () => {
+  const now = new Date("2026-08-30T12:00:00.000Z");
+  const currentHousehold = {
+    name: "The Renamed Household",
+    _count: { Members: 3 },
+  };
+  const report = buildAiImportSpendReport({
+    now,
+    period: "7",
+    chartOffset: 0,
+    currentHouseholdCount: 3,
+    attempts: [
+      attempt({
+        startedAt: new Date("2026-08-30T10:00:00.000Z"),
+        household: currentHousehold,
+        membership: {
+          user: { firstName: "Ada", lastName: "Lovelace" },
+        },
+        estimatedAiImportCostUsd: 0.6,
+        supadataOperationsStarted: 1,
+        supadataCredits: 3,
+      }),
+      attempt({
+        startedAt: new Date("2026-08-29T10:00:00.000Z"),
+        household: currentHousehold,
+        membership: null,
+        membershipAttributionKey: "removed-member",
+        estimatedAiImportCostUsd: 0.4,
+        supadataOperationsStarted: 1,
+        supadataCredits: 1,
+      }),
+      attempt({
+        startedAt: new Date("2026-08-28T10:00:00.000Z"),
+        householdAttributionKey: "deleted-household",
+        household: null,
+        membershipAttributionKey: "deleted-member",
+        membership: null,
+        estimatedAiImportCostUsd: 0.2,
+      }),
+      attempt({
+        startedAt: new Date("2026-08-01T10:00:00.000Z"),
+        household: currentHousehold,
+        membershipAttributionKey: "member-outside-period",
+        membership: {
+          user: { firstName: "Outside", lastName: "Period" },
+        },
+      }),
+    ],
+  });
+
+  assert.equal(report.period.activeHouseholds, 2);
+  assert.equal(report.period.representedHouseholds, 4);
+  assert.deepEqual(
+    report.households.toSorted((left, right) =>
+      right.key.localeCompare(left.key),
+    ),
+    [
+      {
+        key: "household-a",
+        name: "The Renamed Household",
+        available: true,
+        currentMemberCount: 3,
+        attempts: 2,
+        estimatedAiImportCostUsd: 1,
+        supadataCredits: 4,
+        members: [
+          {
+            key: "member-a",
+            name: "Ada Lovelace",
+            available: true,
+            attempts: 1,
+            estimatedAiImportCostUsd: 0.6,
+            supadataCredits: 3,
+          },
+          {
+            key: "removed-member",
+            name: "Member unavailable",
+            available: false,
+            attempts: 1,
+            estimatedAiImportCostUsd: 0.4,
+            supadataCredits: 1,
+          },
+        ],
+      },
+      {
+        key: "deleted-household",
+        name: "Household unavailable",
+        available: false,
+        currentMemberCount: null,
+        attempts: 1,
+        estimatedAiImportCostUsd: 0.2,
+        supadataCredits: 0,
+        members: [
+          {
+            key: "deleted-member",
+            name: "Member unavailable",
+            available: false,
+            attempts: 1,
+            estimatedAiImportCostUsd: 0.2,
+            supadataCredits: 0,
+          },
+        ],
+      },
+    ],
+  );
+});
+
 void test("All time history pages backward in 30-day steps with at most 60 visible dates", () => {
   const attempts = [
     attempt({ startedAt: new Date("2026-01-01T11:00:00.000Z") }),
@@ -327,18 +440,21 @@ void test("All time history pages backward in 30-day steps with at most 60 visib
     now,
     period: "all",
     chartOffset: 0,
+    currentHouseholdCount: 1,
     attempts,
   }).dailyWindow;
   const older = buildAiImportSpendReport({
     now,
     period: "all",
     chartOffset: 1,
+    currentHouseholdCount: 1,
     attempts,
   }).dailyWindow;
   const oldest = buildAiImportSpendReport({
     now,
     period: "all",
     chartOffset: 99,
+    currentHouseholdCount: 1,
     attempts,
   }).dailyWindow;
 
@@ -357,6 +473,7 @@ void test("an empty report keeps zero summaries and has no chart dates", () => {
     now: new Date("2026-08-30T12:00:00.000Z"),
     period: "all",
     chartOffset: 4,
+    currentHouseholdCount: 0,
     attempts: [],
   });
 

@@ -64,6 +64,27 @@ void test("AI Import Attempt keeps anonymous attribution after live records are 
       membership.aiImportSpendAttributionKey,
     );
 
+    const laterHousehold = await db.household.create({
+      data: {
+        name: `Later AI Import Attempt ${marker}`,
+        slug: `later-ai-import-attempt-${marker}`,
+        Members: { create: { userId, role: "MEMBER" } },
+      },
+      include: { Members: true },
+    });
+    const laterMembership = laterHousehold.Members[0];
+    assert.ok(laterMembership);
+    assert.notEqual(
+      laterMembership.aiImportSpendAttributionKey,
+      membership.aiImportSpendAttributionKey,
+    );
+    const retainedAttempt = await db.aiImportAttempt.findUniqueOrThrow({
+      where: { id: attempt.id },
+      include: { membership: true },
+    });
+    assert.equal(retainedAttempt.membership, null);
+    await db.household.delete({ where: { id: laterHousehold.id } });
+
     await db.household.delete({ where: { id: household.id } });
     const afterHouseholdDeletion = await db.aiImportAttempt.findUniqueOrThrow({
       where: { id: attempt.id },
@@ -78,7 +99,14 @@ void test("AI Import Attempt keeps anonymous attribution after live records are 
       await db.aiImportAttempt.deleteMany({ where: { id: attemptId } });
     }
     await db.household.deleteMany({
-      where: { slug: `ai-import-attempt-${marker}` },
+      where: {
+        slug: {
+          in: [
+            `ai-import-attempt-${marker}`,
+            `later-ai-import-attempt-${marker}`,
+          ],
+        },
+      },
     });
     await db.user.deleteMany({ where: { id: userId } });
     await db.$disconnect();
