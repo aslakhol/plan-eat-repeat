@@ -3,7 +3,6 @@ import type {
   AiImportSource,
   PrismaClient,
 } from "@planeatrepeat/db";
-import type { LanguageModelUsage } from "ai";
 
 import { estimateAiImportCostUsd } from "./ai-import-inference";
 import { importRecipeFromText, type InferenceObserver } from "./importRecipe";
@@ -51,12 +50,12 @@ type TrackedRecipeImportInput = {
 
 type TrackedRecipeImporterDependencies<Result> = {
   persistence: AiImportTrackingPersistence;
-  extractFromText(input: {
+  extractFromText: (input: {
     text: string;
     instructions: string | null;
     signal?: AbortSignal;
     observer: InferenceObserver;
-  }): Promise<Result>;
+  }) => Promise<Result>;
   now?: () => Date;
   warn?: (operation: string) => void;
 };

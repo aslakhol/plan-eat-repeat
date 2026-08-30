@@ -43,17 +43,17 @@ const testHarness = (options: TestHarnessOptions = {}) => {
   };
 
   const persistence: AiImportTrackingPersistence = {
-    async findAttribution() {
+    findAttribution() {
       actions.push("find-attribution");
       fail("find-attribution");
-      return {
+      return Promise.resolve({
         householdId: "household-1",
         membershipId: 7,
         householdAttributionKey: "household-key",
         membershipAttributionKey: "membership-key",
-      };
+      });
     },
-    async createAttempt(input) {
+    createAttempt(input) {
       actions.push("create-attempt");
       fail("create-attempt");
       assert.deepEqual(input, {
@@ -64,13 +64,13 @@ const testHarness = (options: TestHarnessOptions = {}) => {
         householdAttributionKey: "household-key",
         membershipAttributionKey: "membership-key",
       });
-      return "attempt-1";
+      return Promise.resolve("attempt-1");
     },
     async loadInstructions() {
       actions.push("load-instructions");
       return options.loadInstructions?.() ?? "Use Norwegian";
     },
-    async updateAttempt(_attemptId, changes) {
+    updateAttempt(_attemptId, changes) {
       const operation = changes.finishedAt
         ? "finish-attempt"
         : changes.inferenceStartedAt
@@ -79,6 +79,7 @@ const testHarness = (options: TestHarnessOptions = {}) => {
       actions.push(operation);
       fail(operation);
       updates.push(changes);
+      return Promise.resolve();
     },
   };
 
