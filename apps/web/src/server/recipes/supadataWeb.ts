@@ -1,8 +1,12 @@
 import { z } from "zod";
 import { ImportRecipeError } from "@planeatrepeat/shared";
 
-const SUPADATA_WEB_SCRAPE_URL =
-  "https://api.supadata.ai/v1/web/scrape";
+import {
+  creditsFromSupadataBillingHeader,
+  type SupadataSpendObserver,
+} from "./supadata-spend";
+
+const SUPADATA_WEB_SCRAPE_URL = "https://api.supadata.ai/v1/web/scrape";
 const WEB_SCRAPE_TIMEOUT_MS = 60_000;
 const MAX_SUPADATA_RESPONSE_BYTES = 1_048_576;
 
@@ -26,6 +30,7 @@ type SupadataWebAdapterOptions = {
   apiKey?: string;
   fetch: typeof fetch;
   diagnostics?: SupadataDiagnostics;
+  spendObserver?: SupadataSpendObserver;
 };
 
 type SupadataFailureCategory =
@@ -50,6 +55,7 @@ export const createSupadataWebAdapter = ({
   apiKey,
   fetch: fetchImplementation,
   diagnostics = console,
+  spendObserver,
 }: SupadataWebAdapterOptions) => ({
   scrape: async (pageUrl: string, signal: AbortSignal): Promise<string> => {
     if (!apiKey?.trim()) {
@@ -66,6 +72,7 @@ export const createSupadataWebAdapter = ({
     try {
       let response: Response;
       try {
+        await spendObserver?.onOperationStarted();
         response = await fetchImplementation(requestUrl, {
           headers: { "x-api-key": apiKey },
           signal,
@@ -76,6 +83,10 @@ export const createSupadataWebAdapter = ({
       }
 
       const billableRequests = response.headers.get("x-billable-requests");
+      const knownCredits = creditsFromSupadataBillingHeader(billableRequests);
+      if (knownCredits !== null) {
+        await spendObserver?.onCreditsKnown(knownCredits);
+      }
       diagnostics.info("Supadata request completed", {
         operation: "web-scrape",
         status: response.status,
@@ -104,6 +115,9 @@ export const createSupadataWebAdapter = ({
           billableRequests,
         );
       }
+      if (knownCredits === null) {
+        await spendObserver?.onCreditsKnown(1);
+      }
       return parsed.data.content;
     } catch (error) {
       if (signal.aborted) throw error;
@@ -115,9 +129,7 @@ export const createSupadataWebAdapter = ({
         operation: "web-scrape",
         category: failure.category,
         ...(failure.status === undefined ? {} : { status: failure.status }),
-        ...(failure.providerCode
-          ? { providerCode: failure.providerCode }
-          : {}),
+        ...(failure.providerCode ? { providerCode: failure.providerCode } : {}),
         ...(failure.billableRequests === undefined
           ? {}
           : { billableRequests: failure.billableRequests }),
