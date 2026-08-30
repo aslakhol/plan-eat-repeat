@@ -3,9 +3,18 @@ import type {
   AiImportSource,
   PrismaClient,
 } from "@planeatrepeat/db";
+import {
+  isInstagramMediaUrl,
+  youtubeVideoIdFromUrl,
+} from "@planeatrepeat/shared";
 
 import { estimateAiImportCostUsd } from "./ai-import-inference";
-import { importRecipeFromText, type InferenceObserver } from "./importRecipe";
+import {
+  importRecipeFromImages,
+  importRecipeFromText,
+  importRecipeFromUrl,
+  type InferenceObserver,
+} from "./importRecipe";
 
 export type { InferenceObserver };
 
@@ -41,17 +50,33 @@ export type AiImportTrackingPersistence = {
   ): Promise<void>;
 };
 
+export type TrackedRecipeImportSource =
+  | { type: "TEXT"; text: string }
+  | {
+      type: "PHOTO";
+      images: ReadonlyArray<{ data: string; mimeType: string }>;
+    }
+  | { type: "URL"; url: string };
+
 type TrackedRecipeImportInput = {
-  source: { type: "TEXT"; text: string };
+  source: TrackedRecipeImportSource;
   householdId: string;
   userId: string;
   signal?: AbortSignal;
 };
 
+export const classifyAiImportSource = (
+  source: TrackedRecipeImportSource,
+): AiImportSource => {
+  if (source.type !== "URL") return source.type;
+  if (youtubeVideoIdFromUrl(source.url)) return "YOUTUBE";
+  return isInstagramMediaUrl(source.url) ? "INSTAGRAM" : "LINK";
+};
+
 type TrackedRecipeImporterDependencies<Result> = {
   persistence: AiImportTrackingPersistence;
-  extractFromText: (input: {
-    text: string;
+  executeImport: (input: {
+    source: TrackedRecipeImportSource;
     instructions: string | null;
     signal?: AbortSignal;
     observer: InferenceObserver;
@@ -62,7 +87,7 @@ type TrackedRecipeImporterDependencies<Result> = {
 
 export const createTrackedRecipeImporter = <Result>({
   persistence,
-  extractFromText,
+  executeImport,
   now = () => new Date(),
   warn = (operation) => console.warn(`[AI Import Spend] ${operation} failed`),
 }: TrackedRecipeImporterDependencies<Result>) => {
@@ -85,7 +110,7 @@ export const createTrackedRecipeImporter = <Result>({
       try {
         attemptId = await persistence.createAttempt({
           ...attribution,
-          source: input.source.type,
+          source: classifyAiImportSource(input.source),
           startedAt: now(),
         });
       } catch {
@@ -127,8 +152,8 @@ export const createTrackedRecipeImporter = <Result>({
       const instructions = await persistence.loadInstructions(
         input.householdId,
       );
-      return await extractFromText({
-        text: input.source.text,
+      return await executeImport({
+        source: input.source,
         instructions,
         signal: input.signal,
         observer,
@@ -193,6 +218,29 @@ export const importTrackedRecipe = (
 ) =>
   createTrackedRecipeImporter({
     persistence: prismaAiImportTrackingPersistence(db),
-    extractFromText: ({ text, instructions, signal, observer }) =>
-      importRecipeFromText(text, instructions, signal, observer),
+    executeImport: ({ source, instructions, signal, observer }) => {
+      switch (source.type) {
+        case "TEXT":
+          return importRecipeFromText(
+            source.text,
+            instructions,
+            signal,
+            observer,
+          );
+        case "PHOTO":
+          return importRecipeFromImages(
+            source.images,
+            instructions,
+            signal,
+            observer,
+          );
+        case "URL":
+          return importRecipeFromUrl(
+            source.url,
+            instructions,
+            signal,
+            observer,
+          );
+      }
+    },
   })(input);

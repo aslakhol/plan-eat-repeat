@@ -136,9 +136,104 @@ void test("an accepted Text mutation records exactly one priced attempt", () =>
     assert.ok(attempts[0]?.inferenceStartedAt);
   }));
 
+void test("an accepted Photo mutation records exactly one priced attempt", () =>
+  withFixture(async ({ caller, db, householdId }) => {
+    const result = await caller.importFromImages({
+      images: [{ data: "aGVsbG8=", mimeType: "image/jpeg" }],
+    });
+    assert.equal(result.name, "Tomato soup");
+
+    const attempts = await db.aiImportAttempt.findMany({
+      where: { householdId },
+    });
+    assert.equal(attempts.length, 1);
+    assert.equal(attempts[0]?.source, "PHOTO");
+    assert.equal(attempts[0]?.inferenceState, "ESTIMATED");
+    assert.ok(attempts[0]?.finishedAt);
+  }));
+
+void test("an accepted Link mutation records one attempt and preserves its source URL", () =>
+  withFixture(async ({ caller, db, householdId }) => {
+    const sourceUrl = "https://example.com/tomato-soup";
+    const fetchMock = mock.method(globalThis, "fetch", async () =>
+      Promise.resolve(
+        new Response(
+          `<html><head><script type="application/ld+json">${JSON.stringify({
+            "@type": "Recipe",
+            name: "Tomato soup",
+            recipeIngredient: ["Tomatoes"],
+            recipeInstructions: ["Simmer"],
+          })}</script></head><body></body></html>`,
+          { headers: { "content-type": "text/html" } },
+        ),
+      ),
+    );
+
+    try {
+      const result = await caller.importFromUrl({ url: sourceUrl });
+      assert.equal(result.name, "Tomato soup");
+      assert.equal(result.sourceUrl, sourceUrl);
+    } finally {
+      fetchMock.mock.restore();
+    }
+
+    const attempts = await db.aiImportAttempt.findMany({
+      where: { householdId },
+    });
+    assert.equal(attempts.length, 1);
+    assert.equal(attempts[0]?.source, "LINK");
+    assert.equal(attempts[0]?.inferenceState, "ESTIMATED");
+  }));
+
+for (const { name, url, source } of [
+  {
+    name: "YouTube",
+    url: "https://www.youtube.com/watch?v=BoFkDmTm2uc",
+    source: "YOUTUBE",
+  },
+  {
+    name: "Instagram",
+    url: "https://www.instagram.com/reel/DOybkebkcaw/",
+    source: "INSTAGRAM",
+  },
+] as const) {
+  void test(`${name} acquisition failure retains its submitted Import Source`, () =>
+    withFixture(async ({ caller, db, householdId }) => {
+      const fetchMock = mock.method(globalThis, "fetch", async () =>
+        Promise.resolve(
+          Response.json(
+            { error: "provider-unavailable" },
+            { status: 503 },
+          ),
+        ),
+      );
+
+      try {
+        await assert.rejects(caller.importFromUrl({ url }));
+      } finally {
+        fetchMock.mock.restore();
+      }
+
+      const attempts = await db.aiImportAttempt.findMany({
+        where: { householdId },
+      });
+      assert.equal(attempts.length, 1);
+      assert.equal(attempts[0]?.source, source);
+      assert.equal(attempts[0]?.inferenceState, "NOT_INCURRED");
+      assert.ok(attempts[0]?.finishedAt);
+    }));
+}
+
 void test("invalid Text input creates no AI Import Attempt", () =>
   withFixture(async ({ caller, db, householdId }) => {
     await assert.rejects(caller.importFromText({ text: "   " }));
+    assert.equal(await db.aiImportAttempt.count({ where: { householdId } }), 0);
+  }));
+
+void test("invalid Photo and URL input creates no AI Import Attempt", () =>
+  withFixture(async ({ caller, db, householdId }) => {
+    await assert.rejects(caller.importFromImages({ images: [] }));
+    await assert.rejects(caller.importFromUrl({ url: "not a URL" }));
     assert.equal(await db.aiImportAttempt.count({ where: { householdId } }), 0);
   }));
 

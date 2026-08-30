@@ -31,6 +31,7 @@ export const importRecipeFromUrl = async (
   url: string,
   instructions?: string | null,
   signal?: AbortSignal,
+  observer?: InferenceObserver,
 ): Promise<ExtractResult> => {
   const videoId = youtubeVideoIdFromUrl(url);
   const instagramSource = videoId
@@ -49,6 +50,7 @@ export const importRecipeFromUrl = async (
     [{ type: "text", text: trimForModel(source) }],
     instructions,
     signal,
+    observer,
   );
 };
 
@@ -74,9 +76,10 @@ export type InferenceObserver = {
 };
 
 export const importRecipeFromImages = async (
-  images: Array<{ data: string; mimeType: string }>,
+  images: ReadonlyArray<{ data: string; mimeType: string }>,
   instructions?: string | null,
   signal?: AbortSignal,
+  observer?: InferenceObserver,
 ): Promise<ExtractResult> =>
   extractOrThrow(
     images.map((image) => ({
@@ -86,6 +89,7 @@ export const importRecipeFromImages = async (
     })),
     instructions,
     signal,
+    observer,
   );
 
 const extractOrThrow = async (

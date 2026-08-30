@@ -8,6 +8,7 @@ import {
   type AiImportAttemptChanges,
   type AiImportTrackingPersistence,
   type InferenceObserver,
+  type TrackedRecipeImportSource,
 } from "./tracked-recipe-import";
 
 const pricedUsage: LanguageModelUsage = {
@@ -26,13 +27,18 @@ const pricedUsage: LanguageModelUsage = {
 };
 
 type TestHarnessOptions = {
-  extract?: (observer: InferenceObserver) => Promise<{ name: string }>;
+  execute?: (
+    source: TrackedRecipeImportSource,
+    observer: InferenceObserver,
+  ) => Promise<{ name: string }>;
   failOperations?: ReadonlySet<string>;
   loadInstructions?: () => Promise<string | null>;
 };
 
 const testHarness = (options: TestHarnessOptions = {}) => {
   const actions: string[] = [];
+  const createdSources: string[] = [];
+  const executedSources: TrackedRecipeImportSource[] = [];
   const updates: AiImportAttemptChanges[] = [];
   const warnings: string[] = [];
   const failOperations = options.failOperations ?? new Set<string>();
@@ -56,14 +62,12 @@ const testHarness = (options: TestHarnessOptions = {}) => {
     createAttempt(input) {
       actions.push("create-attempt");
       fail("create-attempt");
-      assert.deepEqual(input, {
-        source: "TEXT",
-        startedAt: new Date("2026-08-30T08:00:00.000Z"),
-        householdId: "household-1",
-        membershipId: 7,
-        householdAttributionKey: "household-key",
-        membershipAttributionKey: "membership-key",
-      });
+      createdSources.push(input.source);
+      assert.equal(input.startedAt.toISOString(), "2026-08-30T08:00:00.000Z");
+      assert.equal(input.householdId, "household-1");
+      assert.equal(input.membershipId, 7);
+      assert.equal(input.householdAttributionKey, "household-key");
+      assert.equal(input.membershipAttributionKey, "membership-key");
       return Promise.resolve("attempt-1");
     },
     async loadInstructions() {
@@ -83,22 +87,34 @@ const testHarness = (options: TestHarnessOptions = {}) => {
     },
   };
 
-  const extractFromText = async (input: { observer: InferenceObserver }) => {
+  const executeImport = async (execution: {
+    source: TrackedRecipeImportSource;
+    observer: InferenceObserver;
+  }) => {
     actions.push("extract");
+    executedSources.push(execution.source);
     return (
-      options.extract?.(input.observer) ?? Promise.resolve({ name: "Soup" })
+      options.execute?.(execution.source, execution.observer) ??
+      Promise.resolve({ name: "Soup" })
     );
   };
 
   let tick = 0;
   const importer = createTrackedRecipeImporter({
     persistence,
-    extractFromText,
+    executeImport,
     now: () => new Date(Date.UTC(2026, 7, 30, 8, 0, tick++)),
     warn: (operation) => warnings.push(operation),
   });
 
-  return { actions, importer, updates, warnings };
+  return {
+    actions,
+    createdSources,
+    executedSources,
+    importer,
+    updates,
+    warnings,
+  };
 };
 
 const input = {
@@ -107,9 +123,50 @@ const input = {
   userId: "user-1",
 };
 
+const expandedSources = [
+  {
+    name: "Photo",
+    source: {
+      type: "PHOTO" as const,
+      images: [{ data: "aGVsbG8=", mimeType: "image/jpeg" }],
+    },
+    attemptSource: "PHOTO",
+  },
+  {
+    name: "YouTube",
+    source: {
+      type: "URL" as const,
+      url: "https://www.youtube.com/watch?v=BoFkDmTm2uc",
+    },
+    attemptSource: "YOUTUBE",
+  },
+  {
+    name: "Instagram",
+    source: {
+      type: "URL" as const,
+      url: "https://www.instagram.com/reel/DOybkebkcaw/",
+    },
+    attemptSource: "INSTAGRAM",
+  },
+  {
+    name: "Link",
+    source: {
+      type: "URL" as const,
+      url: "https://example.com/recipes/tomato-soup",
+    },
+    attemptSource: "LINK",
+  },
+] as const;
+
+const inputFor = (source: TrackedRecipeImportSource) => ({
+  source,
+  householdId: "household-1",
+  userId: "user-1",
+});
+
 void test("a Text import records one priced attempt around provider work", async () => {
   const harness = testHarness({
-    extract: async (observer) => {
+    execute: async (_source, observer) => {
       await observer.onInferenceStart();
       harness.actions.push("provider-call");
       await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
@@ -142,6 +199,92 @@ void test("a Text import records one priced attempt around provider work", async
   ]);
 });
 
+for (const { name, source, attemptSource } of expandedSources) {
+  void test(`a successful ${name} import records one priced attempt`, async () => {
+    const harness = testHarness({
+      execute: async (_source, observer) => {
+        await observer.onInferenceStart();
+        await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
+        return { name: "Soup" };
+      },
+    });
+
+    assert.deepEqual(await harness.importer(inputFor(source)), {
+      name: "Soup",
+    });
+    assert.deepEqual(harness.createdSources, [attemptSource]);
+    assert.deepEqual(harness.executedSources, [source]);
+    assert.equal(harness.updates.at(-1)?.inferenceState, "ESTIMATED");
+  });
+
+  void test(`${name} acquisition failure finishes before inference as not incurred`, async () => {
+    const acquisitionFailure = new Error("acquisition failed");
+    const harness = testHarness({
+      execute: () => Promise.reject(acquisitionFailure),
+    });
+
+    await assert.rejects(
+      harness.importer(inputFor(source)),
+      (error) => error === acquisitionFailure,
+    );
+    assert.deepEqual(harness.createdSources, [attemptSource]);
+    assert.equal(harness.updates.at(-1)?.inferenceState, "NOT_INCURRED");
+  });
+
+  void test(`${name} provider failure after inference starts finishes as unknown`, async () => {
+    const providerFailure = new Error("provider disconnected");
+    const harness = testHarness({
+      execute: async (_source, observer) => {
+        await observer.onInferenceStart();
+        throw providerFailure;
+      },
+    });
+
+    await assert.rejects(
+      harness.importer(inputFor(source)),
+      (error) => error === providerFailure,
+    );
+    assert.equal(harness.updates.at(-1)?.inferenceState, "UNKNOWN");
+  });
+
+  void test(`${name} parsing failure retains captured inference spend`, async () => {
+    const parsingFailure = new Error("invalid structured output");
+    const harness = testHarness({
+      execute: async (_source, observer) => {
+        await observer.onInferenceStart();
+        await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
+        throw parsingFailure;
+      },
+    });
+
+    await assert.rejects(
+      harness.importer(inputFor(source)),
+      (error) => error === parsingFailure,
+    );
+    assert.equal(harness.updates.at(-1)?.inferenceState, "ESTIMATED");
+  });
+
+  void test(`${name} cancellation finishes the attempt and preserves the cancellation`, async () => {
+    const cancellation = new DOMException(
+      "The operation was aborted",
+      "AbortError",
+    );
+    const harness = testHarness({
+      execute: async (_source, observer) => {
+        await observer.onInferenceStart();
+        throw cancellation;
+      },
+    });
+
+    await assert.rejects(
+      harness.importer(inputFor(source)),
+      (error) => error === cancellation,
+    );
+    assert.ok(harness.updates.at(-1)?.finishedAt);
+    assert.equal(harness.updates.at(-1)?.inferenceState, "UNKNOWN");
+  });
+}
+
 void test("an attempt that fails before inference is finished as not incurred", async () => {
   const failure = new Error("instruction lookup failed");
   const harness = testHarness({
@@ -161,7 +304,7 @@ void test("an attempt that fails before inference is finished as not incurred", 
 void test("provider work without usable usage is finished as unknown", async () => {
   const providerFailure = new Error("provider disconnected");
   const harness = testHarness({
-    extract: async (observer) => {
+    execute: async (_source, observer) => {
       await observer.onInferenceStart();
       throw providerFailure;
     },
@@ -181,7 +324,7 @@ void test("provider work without usable usage is finished as unknown", async () 
 void test("usage remains estimated when later output parsing fails", async () => {
   const parsingFailure = new Error("invalid structured output");
   const harness = testHarness({
-    extract: async (observer) => {
+    execute: async (_source, observer) => {
       await observer.onInferenceStart();
       await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
       throw parsingFailure;
@@ -205,7 +348,7 @@ void test("telemetry persistence failures do not change the import result", asyn
   ]) {
     const harness = testHarness({
       failOperations: new Set([failedOperation]),
-      extract: async (observer) => {
+      execute: async (_source, observer) => {
         await observer.onInferenceStart();
         await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
         return { name: "Soup" };
@@ -221,7 +364,7 @@ void test("telemetry persistence failures preserve cancellation", async () => {
   const cancellation = new Error("cancelled");
   const harness = testHarness({
     failOperations: new Set(["start-inference", "finish-attempt"]),
-    extract: async (observer) => {
+    execute: async (_source, observer) => {
       await observer.onInferenceStart();
       throw cancellation;
     },
