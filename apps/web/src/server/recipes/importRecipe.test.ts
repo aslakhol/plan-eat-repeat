@@ -104,13 +104,9 @@ void test("blocked pages fall back to one Supadata web scrape", async () => {
     return Promise.reject(new Error(`Unexpected request to ${url.origin}`));
   }) as typeof fetch;
 
-  await importRecipeFromUrl(
-    "https://example.com/tomato-soup",
-    undefined,
-    undefined,
-    undefined,
-    spend.observer,
-  );
+  await importRecipeFromUrl("https://example.com/tomato-soup", {
+    supadataObserver: spend.observer,
+  });
 
   assert.equal(extractedText, markdown);
   assert.deepEqual(
@@ -194,13 +190,9 @@ void test("a successfully read non-recipe does not call Supadata", async () => {
   }) as typeof fetch;
 
   await assert.rejects(
-    importRecipeFromUrl(
-      "https://example.com/train-journey",
-      undefined,
-      undefined,
-      undefined,
-      spend.observer,
-    ),
+    importRecipeFromUrl("https://example.com/train-journey", {
+      supadataObserver: spend.observer,
+    }),
     (error: unknown) =>
       error instanceof Error &&
       "code" in error &&
@@ -288,11 +280,9 @@ void test("caller cancellation stops an in-flight Supadata fallback", async () =
     },
   ) as typeof fetch;
 
-  const importing = importRecipeFromUrl(
-    "https://example.com/cancelled",
-    undefined,
-    controller.signal,
-  );
+  const importing = importRecipeFromUrl("https://example.com/cancelled", {
+    signal: controller.signal,
+  });
   await new Promise<void>((resolve) => setImmediate(resolve));
   controller.abort(cancellation);
 
@@ -327,6 +317,7 @@ void test("Supadata Markdown is capped before recipe extraction", async () => {
 
 void test("URL imports preserve structured and visible Recipe evidence", async () => {
   extractedText = "";
+  const spend = spendLog();
   const requests: URL[] = [];
   const jsonLd = {
     "@context": "https://schema.org",
@@ -368,7 +359,9 @@ void test("URL imports preserve structured and visible Recipe evidence", async (
     );
   }) as typeof fetch;
 
-  await importRecipeFromUrl("https://example.com/soup");
+  await importRecipeFromUrl("https://example.com/soup", {
+    supadataObserver: spend.observer,
+  });
 
   assert.match(extractedText, /"recipeIngredient":"chicken, stock"/);
   assert.match(extractedText, /9 dl chicken stock/);
@@ -377,6 +370,7 @@ void test("URL imports preserve structured and visible Recipe evidence", async (
     requests.map(({ hostname }) => hostname),
     ["example.com"],
   );
+  assert.deepEqual(spend.events, []);
 });
 
 void test("URL imports bound structured and visible evidence independently", async () => {

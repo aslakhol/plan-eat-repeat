@@ -29,12 +29,21 @@ const USER_AGENT =
 type JsonLdObject = Record<string, unknown>;
 type ParsedDocument = ReturnType<typeof parseHTML>["document"];
 
+export type RecipeImportOptions = {
+  instructions?: string | null;
+  signal?: AbortSignal;
+  inferenceObserver?: InferenceObserver;
+  supadataObserver?: SupadataSpendObserver;
+};
+
 export const importRecipeFromUrl = async (
   url: string,
-  instructions?: string | null,
-  signal?: AbortSignal,
-  observer?: InferenceObserver,
-  supadataObserver?: SupadataSpendObserver,
+  {
+    instructions,
+    signal,
+    inferenceObserver,
+    supadataObserver,
+  }: RecipeImportOptions = {},
 ): Promise<ExtractResult> => {
   const videoId = youtubeVideoIdFromUrl(url);
   const instagramSource = videoId
@@ -54,21 +63,19 @@ export const importRecipeFromUrl = async (
     [{ type: "text", text: trimForModel(source) }],
     instructions,
     signal,
-    observer,
+    inferenceObserver,
   );
 };
 
 export const importRecipeFromText = async (
   text: string,
-  instructions?: string | null,
-  signal?: AbortSignal,
-  observer?: InferenceObserver,
+  { instructions, signal, inferenceObserver }: RecipeImportOptions = {},
 ): Promise<ExtractResult> =>
   extractOrThrow(
     [{ type: "text", text: trimForModel(text) }],
     instructions,
     signal,
-    observer,
+    inferenceObserver,
   );
 
 export type InferenceObserver = {
@@ -83,9 +90,7 @@ export type RecipeImportImage = { data: string; mimeType: string };
 
 export const importRecipeFromImages = async (
   images: ReadonlyArray<RecipeImportImage>,
-  instructions?: string | null,
-  signal?: AbortSignal,
-  observer?: InferenceObserver,
+  { instructions, signal, inferenceObserver }: RecipeImportOptions = {},
 ): Promise<ExtractResult> =>
   extractOrThrow(
     images.map((image) => ({
@@ -95,7 +100,7 @@ export const importRecipeFromImages = async (
     })),
     instructions,
     signal,
-    observer,
+    inferenceObserver,
   );
 
 const extractOrThrow = async (

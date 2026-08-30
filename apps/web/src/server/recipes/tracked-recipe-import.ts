@@ -277,27 +277,24 @@ export const importTrackedRecipe = (
     }) => {
       switch (request.type) {
         case "TEXT":
-          return importRecipeFromText(
-            request.text,
+          return importRecipeFromText(request.text, {
             instructions,
             signal,
-            observer,
-          );
+            inferenceObserver: observer,
+          });
         case "PHOTO":
-          return importRecipeFromImages(
-            request.images,
+          return importRecipeFromImages(request.images, {
             instructions,
             signal,
-            observer,
-          );
+            inferenceObserver: observer,
+          });
         case "URL":
-          return importRecipeFromUrl(
-            request.url,
+          return importRecipeFromUrl(request.url, {
             instructions,
             signal,
-            observer,
+            inferenceObserver: observer,
             supadataObserver,
-          );
+          });
       }
     },
   })(input);
