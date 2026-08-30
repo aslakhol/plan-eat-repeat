@@ -75,25 +75,33 @@ const Dashboard = ({
           {projection.environment}
         </p>
       </div>
-      <PeriodControl
-        selectedPeriod={selectedPeriod}
-        onPeriodChange={onPeriodChange}
-      />
+      {projection.textAttemptSummary.attempts === 0 && (
+        <PeriodControl
+          selectedPeriod={selectedPeriod}
+          onPeriodChange={onPeriodChange}
+        />
+      )}
     </header>
 
-    <section
-      aria-label="Spend overview"
-      className="grid gap-5 lg:grid-cols-[1.15fr_1fr]"
-    >
-      <Last24HoursCard projection={projection} />
-      <SummaryCard projection={projection} />
-    </section>
+    {projection.textAttemptSummary.attempts === 0 && (
+      <section
+        aria-label="Spend overview"
+        className="grid gap-5 lg:grid-cols-[1.15fr_1fr]"
+      >
+        <Last24HoursCard projection={projection} />
+        <SummaryCard projection={projection} />
+      </section>
+    )}
 
     <TextAttemptSummaryCard projection={projection} />
 
-    <EmptyReportCard title="Daily spend" />
-    <EmptyReportCard title="Households" />
-    <EmptySourcesCard periodLabel={projection.period.label} />
+    {projection.textAttemptSummary.attempts === 0 && (
+      <>
+        <EmptyReportCard title="Daily spend" />
+        <EmptyReportCard title="Households" />
+        <EmptySourcesCard periodLabel={projection.period.label} />
+      </>
+    )}
 
     <section aria-label="Provider billing" className="flex flex-wrap gap-2.5">
       <Button variant="outline" size="sm" asChild>
@@ -143,27 +151,26 @@ const TextAttemptSummaryCard = ({
   <Card>
     <CardHeader className="px-5 pb-4 pt-6 sm:px-7">
       <CardTitle className="font-serif text-lg font-normal">
-        Text attempt collection
+        AI Import Attempts
       </CardTitle>
     </CardHeader>
     <CardContent className="grid gap-5 border-t px-5 py-5 sm:grid-cols-3 sm:px-7">
       <HeroMetric
         label="AI Import Attempts"
         value={String(projection.textAttemptSummary.attempts)}
-        detail="Text"
+        detail="Import Source: Text"
       />
       <HeroMetric
-        label="Estimated inference spend"
-        value={formatUsd(
+        label="AI Import Cost"
+        value={formatRecordedUsd(
           projection.textAttemptSummary.estimatedAiImportCostUsd,
-          4,
         )}
-        detail="unrounded total"
+        detail="estimated inference total"
       />
       <HeroMetric
         label="Collection started"
         value={formatCollectionDate(projection.collectionStartedOn)}
-        detail="first recorded Text attempt"
+        detail="first recorded AI Import Attempt"
       />
     </CardContent>
   </Card>
@@ -426,6 +433,9 @@ const formatUsd = (amount: number, fractionDigits = 2) =>
   "$" + amount.toFixed(fractionDigits);
 
 const formatCredits = (credits: number) => credits.toLocaleString() + " cr";
+
+const formatRecordedUsd = (amount: number) =>
+  amount === 0 ? formatUsd(amount) : formatUsd(amount, 6);
 
 const formatCollectionDate = (date: Date | null) =>
   date
