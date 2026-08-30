@@ -25,14 +25,36 @@ const createCaller = ({
   userId,
   allowlist = "system-admin",
   environment = "Development",
+  textAttemptSummary = {
+    attempts: 0,
+    estimatedAiImportCostUsd: null,
+    collectionStartedOn: null,
+  },
 }: {
   userId: string | null;
   allowlist?: string | null;
   environment?: "Production" | "Preview" | "Development";
+  textAttemptSummary?: {
+    attempts: number;
+    estimatedAiImportCostUsd: number | null;
+    collectionStartedOn: Date | null;
+  };
 }): AiImportSpendCaller =>
   aiImportSpendRouter.createCaller({
     auth: { userId },
-    db: {},
+    db: {
+      aiImportAttempt: {
+        aggregate: () =>
+          Promise.resolve({
+            _count: { _all: textAttemptSummary.attempts },
+            _sum: {
+              estimatedAiImportCostUsd:
+                textAttemptSummary.estimatedAiImportCostUsd,
+            },
+            _min: { startedAt: textAttemptSummary.collectionStartedOn },
+          }),
+      },
+    },
     systemAdminUserIds: parseSystemAdminUserIds(allowlist),
     deploymentEnvironment: environment,
   } as unknown as Parameters<typeof aiImportSpendRouter.createCaller>[0]);
@@ -52,6 +74,10 @@ void test("an allowlisted System Admin without a Household receives the empty sp
       supadata: "https://dash.supadata.ai/billing",
     },
     collectionStartedOn: null,
+    textAttemptSummary: {
+      attempts: 0,
+      estimatedAiImportCostUsd: 0,
+    },
     last24Hours: {
       aiImportCostUsd: 0,
       supadataCredits: 0,
@@ -92,12 +118,26 @@ void test("an allowlisted System Admin without a Household receives the empty sp
   });
 });
 
+void test("the report exposes the recorded Text attempt summary", async () => {
+  const collectionStartedOn = new Date("2026-08-30T08:00:00.000Z");
+  const projection = await createCaller({
+    userId: "system-admin",
+    textAttemptSummary: {
+      attempts: 3,
+      estimatedAiImportCostUsd: 0.0123456789,
+      collectionStartedOn,
+    },
+  }).dashboard(dashboardInput);
+
+  assert.deepEqual(projection.textAttemptSummary, {
+    attempts: 3,
+    estimatedAiImportCostUsd: 0.0123456789,
+  });
+  assert.equal(projection.collectionStartedOn, collectionStartedOn);
+});
+
 void test("the reporting query returns each deployment environment label", async () => {
-  for (const environment of [
-    "Production",
-    "Preview",
-    "Development",
-  ] as const) {
+  for (const environment of ["Production", "Preview", "Development"] as const) {
     const projection = await createCaller({
       userId: "system-admin",
       environment,

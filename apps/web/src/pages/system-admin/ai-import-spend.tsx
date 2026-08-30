@@ -4,12 +4,7 @@ import type { GetServerSideProps } from "next";
 import Head from "next/head";
 
 import { Button } from "~/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Skeleton } from "~/components/ui/skeleton";
 import { env } from "~/env";
 import {
@@ -39,7 +34,7 @@ export default function AiImportSpendPage() {
         <title>AI import spend | Plan Eat Repeat</title>
         <meta name="robots" content="noindex,nofollow" />
       </Head>
-      <div className="min-h-screen bg-background px-4 pb-16 pt-8 text-foreground sm:px-8 lg:px-10 lg:pt-12">
+      <div className="bg-background text-foreground min-h-screen px-4 pb-16 pt-8 sm:px-8 lg:px-10 lg:pt-12">
         <main
           className="mx-auto flex w-full max-w-[1080px] flex-col gap-7"
           aria-busy={dashboardQuery.isPending}
@@ -73,8 +68,10 @@ const Dashboard = ({
   <>
     <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
       <div>
-        <h1 className="font-serif text-[30px] leading-[1.1]">AI import spend</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="font-serif text-[30px] leading-[1.1]">
+          AI import spend
+        </h1>
+        <p className="text-muted-foreground mt-1 text-sm">
           {projection.environment}
         </p>
       </div>
@@ -91,6 +88,8 @@ const Dashboard = ({
       <Last24HoursCard projection={projection} />
       <SummaryCard projection={projection} />
     </section>
+
+    <TextAttemptSummaryCard projection={projection} />
 
     <EmptyReportCard title="Daily spend" />
     <EmptyReportCard title="Households" />
@@ -117,7 +116,7 @@ const Dashboard = ({
       </Button>
     </section>
 
-    <footer className="space-y-2 text-xs leading-5 text-muted-foreground">
+    <footer className="text-muted-foreground space-y-2 text-xs leading-5">
       <p className="flex gap-2">
         <span aria-hidden="true">ⓘ</span>
         <span>
@@ -136,6 +135,40 @@ const Dashboard = ({
   </>
 );
 
+const TextAttemptSummaryCard = ({
+  projection,
+}: {
+  projection: DashboardProjection;
+}) => (
+  <Card>
+    <CardHeader className="px-5 pb-4 pt-6 sm:px-7">
+      <CardTitle className="font-serif text-lg font-normal">
+        Text attempt collection
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="grid gap-5 border-t px-5 py-5 sm:grid-cols-3 sm:px-7">
+      <HeroMetric
+        label="AI Import Attempts"
+        value={String(projection.textAttemptSummary.attempts)}
+        detail="Text"
+      />
+      <HeroMetric
+        label="Estimated inference spend"
+        value={formatUsd(
+          projection.textAttemptSummary.estimatedAiImportCostUsd,
+          4,
+        )}
+        detail="unrounded total"
+      />
+      <HeroMetric
+        label="Collection started"
+        value={formatCollectionDate(projection.collectionStartedOn)}
+        detail="first recorded Text attempt"
+      />
+    </CardContent>
+  </Card>
+);
+
 const PeriodControl = ({
   selectedPeriod,
   onPeriodChange,
@@ -144,11 +177,11 @@ const PeriodControl = ({
   onPeriodChange: (period: AiImportSpendPeriod) => void;
 }) => (
   <div className="flex-none">
-    <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+    <p className="text-muted-foreground mb-1.5 text-xs font-semibold uppercase tracking-[0.06em]">
       Period
     </p>
     <div
-      className="inline-flex max-w-full overflow-x-auto rounded-[11px] border bg-secondary p-[3px]"
+      className="bg-secondary inline-flex max-w-full overflow-x-auto rounded-[11px] border p-[3px]"
       role="group"
       aria-label="Reporting period"
     >
@@ -158,7 +191,7 @@ const PeriodControl = ({
           type="button"
           aria-pressed={selectedPeriod === key}
           className={cn(
-            "shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+            "text-muted-foreground focus-visible:ring-ring shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
             selectedPeriod === key &&
               "bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.06)]",
           )}
@@ -178,7 +211,7 @@ const Last24HoursCard = ({
 }) => (
   <Card>
     <CardContent className="p-5 sm:p-7">
-      <p className="text-[13px] font-semibold text-muted-foreground">
+      <p className="text-muted-foreground text-[13px] font-semibold">
         Last 24 hours
       </p>
       <div className="mt-5 grid grid-cols-2">
@@ -193,7 +226,7 @@ const Last24HoursCard = ({
           showDivider
         />
       </div>
-      <p className="mt-4 text-[13px] text-muted-foreground">
+      <p className="text-muted-foreground mt-4 text-[13px]">
         Previous 24 hours:{" "}
         {formatUsd(projection.last24Hours.previousAiImportCostUsd)} ·{" "}
         {formatCredits(projection.last24Hours.previousSupadataCredits)}
@@ -236,11 +269,7 @@ const Last24HoursCard = ({
   </Card>
 );
 
-const SummaryCard = ({
-  projection,
-}: {
-  projection: DashboardProjection;
-}) => {
+const SummaryCard = ({ projection }: { projection: DashboardProjection }) => {
   const tiles = [
     {
       label: "Inference spend",
@@ -288,7 +317,7 @@ const SummaryCard = ({
       <CardContent className="grid grid-cols-2 gap-x-5 gap-y-7 p-5 sm:p-7">
         {tiles.map((tile) => (
           <div key={tile.label}>
-            <p className="text-xs font-semibold text-muted-foreground">
+            <p className="text-muted-foreground text-xs font-semibold">
               {tile.label}
             </p>
             <p
@@ -299,7 +328,7 @@ const SummaryCard = ({
             >
               {tile.value}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">{tile.note}</p>
+            <p className="text-muted-foreground mt-1 text-xs">{tile.note}</p>
           </div>
         ))}
       </CardContent>
@@ -327,7 +356,7 @@ const SpendFigure = ({
     >
       {value}
     </p>
-    <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+    <p className="text-muted-foreground mt-2 text-[11px] font-semibold uppercase tracking-[0.06em]">
       {label}
     </p>
   </div>
@@ -343,7 +372,7 @@ const HeroMetric = ({
   detail: string;
 }) => (
   <div>
-    <p className="whitespace-nowrap text-[11px] text-muted-foreground">
+    <p className="text-muted-foreground whitespace-nowrap text-[11px]">
       {label}
     </p>
     <p className="mt-0.5 text-[17px] font-semibold">{value}</p>
@@ -358,7 +387,7 @@ const EmptyReportCard = ({ title }: { title: string }) => (
     </CardHeader>
     <CardContent className="border-t px-5 py-11 text-center sm:px-7">
       <p className="font-serif text-[17px]">No AI Import Attempts yet</p>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <p className="text-muted-foreground mt-1 text-sm">
         Data starts with the first AI Import Attempt.
       </p>
     </CardContent>
@@ -371,7 +400,7 @@ const EmptySourcesCard = ({ periodLabel }: { periodLabel: string }) => (
       <CardTitle className="font-serif text-lg font-normal">
         Import sources
       </CardTitle>
-      <p className="text-[13px] text-muted-foreground">{periodLabel}</p>
+      <p className="text-muted-foreground text-[13px]">{periodLabel}</p>
     </CardHeader>
     <CardContent className="border-t px-5 py-11 text-center sm:px-7">
       <p className="font-serif text-[17px]">
@@ -397,6 +426,16 @@ const formatUsd = (amount: number, fractionDigits = 2) =>
   "$" + amount.toFixed(fractionDigits);
 
 const formatCredits = (credits: number) => credits.toLocaleString() + " cr";
+
+const formatCollectionDate = (date: Date | null) =>
+  date
+    ? new Intl.DateTimeFormat("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        timeZone: "Europe/Oslo",
+      }).format(date)
+    : "Not started";
 
 export const getServerSideProps = (({ req }) => {
   const { userId } = getAuth(req);
