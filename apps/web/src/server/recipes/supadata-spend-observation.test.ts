@@ -39,6 +39,15 @@ const successfulWebResponse = (headers?: HeadersInit) =>
     { headers },
   );
 
+const requestUrl = (input: string | URL | Request) =>
+  new URL(
+    typeof input === "string"
+      ? input
+      : input instanceof URL
+        ? input.href
+        : input.url,
+  );
+
 void test("a valid billing header settles a metered operation before response parsing", async () => {
   const { events, observer } = spendLog();
   const adapter = createSupadataWebAdapter({
@@ -99,7 +108,7 @@ void test("provider, transport, and cancelled requests without billing data rema
         if (failure === "cancelled") controller.abort();
         return Promise.reject(
           failure === "cancelled"
-            ? controller.signal.reason
+            ? new DOMException("The operation was aborted", "AbortError")
             : new Error("transport failed"),
         );
       }) as typeof fetch,
@@ -124,7 +133,7 @@ void test("native transcript, HTTP 206, and metadata completions settle fixed cr
       spendObserver: observer,
       diagnostics: silentDiagnostics,
       fetch: ((input: string | URL | Request) => {
-        const url = new URL(input instanceof URL ? input.href : String(input));
+        const url = requestUrl(input);
         if (url.pathname === "/v1/transcript") {
           return Promise.resolve(
             transcriptStatus === 206
@@ -167,7 +176,7 @@ void test("transcript job polling is free and settles the original operation on 
     spendObserver: observer,
     diagnostics: silentDiagnostics,
     fetch: ((input: string | URL | Request) => {
-      const url = new URL(input instanceof URL ? input.href : String(input));
+      const url = requestUrl(input);
       if (url.pathname === "/v1/transcript") {
         return Promise.resolve(
           Response.json({ jobId: "job-1" }, { status: 202 }),
@@ -211,7 +220,7 @@ void test("YouTube preserves a known transcript charge when metadata later fails
     spendObserver: observer,
     diagnostics: silentDiagnostics,
     fetch: ((input: string | URL | Request) => {
-      const url = new URL(input instanceof URL ? input.href : String(input));
+      const url = requestUrl(input);
       return Promise.resolve(
         url.pathname === "/v1/transcript"
           ? Response.json({
@@ -239,7 +248,7 @@ void test("Instagram preserves a known metadata charge when its transcript later
     spendObserver: observer,
     diagnostics: silentDiagnostics,
     fetch: ((input: string | URL | Request) => {
-      const url = new URL(input instanceof URL ? input.href : String(input));
+      const url = requestUrl(input);
       return Promise.resolve(
         url.pathname === "/v1/metadata"
           ? Response.json({

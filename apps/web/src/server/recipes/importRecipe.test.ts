@@ -275,6 +275,9 @@ void test("caller cancellation stops an in-flight Supadata fallback", async () =
         return Promise.resolve(new Response("Blocked", { status: 403 }));
       }
       scrapeStarted = true;
+      if (init?.signal?.aborted) {
+        return Promise.reject(abortReason(init.signal));
+      }
       return new Promise<Response>((_resolve, reject) => {
         init?.signal?.addEventListener(
           "abort",
