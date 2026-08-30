@@ -55,10 +55,9 @@ void test("AI Import Attempt keeps anonymous attribution after live records are 
     assert.equal(attempt.supadataUnknownOperationCount, 0);
 
     await db.membership.delete({ where: { id: membership.id } });
-    const afterMembershipDeletion =
-      await db.aiImportAttempt.findUniqueOrThrow({
-        where: { id: attempt.id },
-      });
+    const afterMembershipDeletion = await db.aiImportAttempt.findUniqueOrThrow({
+      where: { id: attempt.id },
+    });
     assert.equal(afterMembershipDeletion.membershipId, null);
     assert.equal(
       afterMembershipDeletion.membershipAttributionKey,
@@ -122,14 +121,31 @@ void test("Supadata attempt counters support atomic observation updates", async 
         supadataUnknownOperationCount: { increment: 1 },
       },
     });
-    const observed = await db.aiImportAttempt.update({
-      where: { id: attempt.id },
+    await db.aiImportAttempt.updateMany({
+      where: {
+        id: attempt.id,
+        supadataUnknownOperationCount: { gt: 0 },
+      },
       data: {
         supadataCredits: { increment: 1 },
         supadataUnknownOperationCount: { decrement: 1 },
       },
     });
+    const duplicateSettlement = await db.aiImportAttempt.updateMany({
+      where: {
+        id: attempt.id,
+        supadataUnknownOperationCount: { gt: 0 },
+      },
+      data: {
+        supadataCredits: { increment: 1 },
+        supadataUnknownOperationCount: { decrement: 1 },
+      },
+    });
+    const observed = await db.aiImportAttempt.findUniqueOrThrow({
+      where: { id: attempt.id },
+    });
 
+    assert.equal(duplicateSettlement.count, 0);
     assert.equal(observed.supadataOperationsStarted, 1);
     assert.equal(observed.supadataCredits, 1);
     assert.equal(observed.supadataUnknownOperationCount, 0);

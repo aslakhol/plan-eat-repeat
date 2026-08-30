@@ -16,6 +16,7 @@ import {
   type InferenceObserver,
   type RecipeImportImage,
 } from "./importRecipe";
+import type { SupadataSpendObserver } from "./supadata-spend";
 
 export type { InferenceObserver };
 
@@ -49,6 +50,8 @@ export type AiImportTrackingPersistence = {
     attemptId: string,
     changes: AiImportAttemptChanges,
   ): Promise<void>;
+  startSupadataOperation(attemptId: string): Promise<void>;
+  settleSupadataOperation(attemptId: string, credits: number): Promise<void>;
 };
 
 export type TrackedRecipeImportRequest =
@@ -86,6 +89,7 @@ type TrackedRecipeImporterDependencies<Result> = {
     instructions: string | null;
     signal?: AbortSignal;
     observer: InferenceObserver;
+    supadataObserver: SupadataSpendObserver;
   }) => Promise<Result>;
   now?: () => Date;
   warn?: (operation: string) => void;
@@ -153,6 +157,24 @@ export const createTrackedRecipeImporter = <Result>({
         });
       },
     };
+    const supadataObserver: SupadataSpendObserver = {
+      onOperationStarted: async () => {
+        if (!attemptId) return;
+        try {
+          await persistence.startSupadataOperation(attemptId);
+        } catch {
+          warn("start-supadata-operation");
+        }
+      },
+      onCreditsKnown: async (credits) => {
+        if (!attemptId) return;
+        try {
+          await persistence.settleSupadataOperation(attemptId, credits);
+        } catch {
+          warn("settle-supadata-operation");
+        }
+      },
+    };
 
     try {
       const instructions = await persistence.loadInstructions(
@@ -163,6 +185,7 @@ export const createTrackedRecipeImporter = <Result>({
         instructions,
         signal: input.signal,
         observer,
+        supadataObserver,
       });
     } finally {
       await updateAttempt("finish-attempt", {
@@ -216,6 +239,27 @@ const prismaAiImportTrackingPersistence = (
       data: changes,
     });
   },
+  async startSupadataOperation(attemptId) {
+    await db.aiImportAttempt.update({
+      where: { id: attemptId },
+      data: {
+        supadataOperationsStarted: { increment: 1 },
+        supadataUnknownOperationCount: { increment: 1 },
+      },
+    });
+  },
+  async settleSupadataOperation(attemptId, credits) {
+    await db.aiImportAttempt.updateMany({
+      where: {
+        id: attemptId,
+        supadataUnknownOperationCount: { gt: 0 },
+      },
+      data: {
+        supadataCredits: { increment: credits },
+        supadataUnknownOperationCount: { decrement: 1 },
+      },
+    });
+  },
 });
 
 export const importTrackedRecipe = (
@@ -224,7 +268,13 @@ export const importTrackedRecipe = (
 ) =>
   createTrackedRecipeImporter({
     persistence: prismaAiImportTrackingPersistence(db),
-    executeImport: ({ request, instructions, signal, observer }) => {
+    executeImport: ({
+      request,
+      instructions,
+      signal,
+      observer,
+      supadataObserver,
+    }) => {
       switch (request.type) {
         case "TEXT":
           return importRecipeFromText(
@@ -246,6 +296,7 @@ export const importTrackedRecipe = (
             instructions,
             signal,
             observer,
+            supadataObserver,
           );
       }
     },

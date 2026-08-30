@@ -11,6 +11,7 @@ import {
   type InferenceObserver,
   type TrackedRecipeImportRequest,
 } from "./tracked-recipe-import";
+import type { SupadataSpendObserver } from "./supadata-spend";
 
 const pricedUsage: LanguageModelUsage = {
   inputTokens: 1_000,
@@ -31,6 +32,7 @@ type TestHarnessOptions = {
   execute?: (
     request: TrackedRecipeImportRequest,
     observer: InferenceObserver,
+    supadataObserver: SupadataSpendObserver,
   ) => Promise<{ name: string }>;
   failOperations?: ReadonlySet<string>;
   loadInstructions?: () => Promise<string | null>;
@@ -86,17 +88,31 @@ const testHarness = (options: TestHarnessOptions = {}) => {
       updates.push(changes);
       return Promise.resolve();
     },
+    startSupadataOperation() {
+      actions.push("start-supadata-operation");
+      fail("start-supadata-operation");
+      return Promise.resolve();
+    },
+    settleSupadataOperation(_attemptId, credits) {
+      actions.push(`settle-supadata-operation:${credits}`);
+      fail("settle-supadata-operation");
+      return Promise.resolve();
+    },
   };
 
   const executeImport = async (execution: {
     request: TrackedRecipeImportRequest;
     observer: InferenceObserver;
+    supadataObserver: SupadataSpendObserver;
   }) => {
     actions.push("extract");
     executedRequests.push(execution.request);
     return (
-      options.execute?.(execution.request, execution.observer) ??
-      Promise.resolve({ name: "Soup" })
+      options.execute?.(
+        execution.request,
+        execution.observer,
+        execution.supadataObserver,
+      ) ?? Promise.resolve({ name: "Soup" })
     );
   };
 
@@ -376,4 +392,99 @@ void test("telemetry persistence failures preserve cancellation", async () => {
     (error) => error === cancellation,
   );
   assert.deepEqual(harness.warnings, ["start-inference", "finish-attempt"]);
+});
+
+void test("partial Supadata acquisition records each operation before later failure", async () => {
+  const acquisitionFailure = new Error("metadata failed");
+  const harness = testHarness({
+    execute: async (_request, _observer, supadataObserver) => {
+      await supadataObserver.onOperationStarted();
+      harness.actions.push("transcript-request");
+      await supadataObserver.onCreditsKnown(1);
+      await supadataObserver.onOperationStarted();
+      harness.actions.push("metadata-request");
+      throw acquisitionFailure;
+    },
+  });
+
+  await assert.rejects(
+    harness.importer(
+      inputFor({
+        type: "URL",
+        url: "https://www.youtube.com/watch?v=BoFkDmTm2uc",
+      }),
+    ),
+    (error) => error === acquisitionFailure,
+  );
+  assert.deepEqual(harness.actions, [
+    "find-attribution",
+    "create-attempt",
+    "load-instructions",
+    "extract",
+    "start-supadata-operation",
+    "transcript-request",
+    "settle-supadata-operation:1",
+    "start-supadata-operation",
+    "metadata-request",
+    "finish-attempt",
+  ]);
+});
+
+void test("cancellation leaves an in-flight Supadata operation unknown", async () => {
+  const controller = new AbortController();
+  const harness = testHarness({
+    execute: async (_request, _observer, supadataObserver) => {
+      await supadataObserver.onOperationStarted();
+      controller.abort();
+      throw controller.signal.reason;
+    },
+  });
+
+  await assert.rejects(
+    harness.importer({ ...input, signal: controller.signal }),
+    (error) => error === controller.signal.reason,
+  );
+  assert.equal(
+    harness.actions.filter((action) => action === "start-supadata-operation")
+      .length,
+    1,
+  );
+  assert.equal(
+    harness.actions.some((action) =>
+      action.startsWith("settle-supadata-operation"),
+    ),
+    false,
+  );
+});
+
+void test("a direct Link import records no Supadata operation", async () => {
+  const harness = testHarness();
+
+  await harness.importer(
+    inputFor({ type: "URL", url: "https://example.com/recipe" }),
+  );
+
+  assert.equal(
+    harness.actions.some((action) => action.includes("supadata-operation")),
+    false,
+  );
+});
+
+void test("Supadata telemetry failures do not change import results", async () => {
+  for (const failedOperation of [
+    "start-supadata-operation",
+    "settle-supadata-operation",
+  ]) {
+    const harness = testHarness({
+      failOperations: new Set([failedOperation]),
+      execute: async (_request, _observer, supadataObserver) => {
+        await supadataObserver.onOperationStarted();
+        await supadataObserver.onCreditsKnown(2);
+        return { name: "Soup" };
+      },
+    });
+
+    assert.deepEqual(await harness.importer(input), { name: "Soup" });
+    assert.deepEqual(harness.warnings, [failedOperation]);
+  }
 });

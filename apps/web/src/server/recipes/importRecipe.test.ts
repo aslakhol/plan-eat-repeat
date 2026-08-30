@@ -43,6 +43,21 @@ mock.module(new URL("../ai/extractRecipe.ts", import.meta.url).href, {
 
 const { importRecipeFromUrl } = await import("./importRecipe");
 
+const spendLog = () => {
+  const events: Array<string | number> = [];
+  return {
+    events,
+    observer: {
+      onOperationStarted: () => {
+        events.push("started");
+      },
+      onCreditsKnown: (credits: number) => {
+        events.push(credits);
+      },
+    },
+  };
+};
+
 const requestUrl = (input: string | URL | Request) =>
   new URL(
     typeof input === "string"
@@ -59,6 +74,7 @@ const abortReason = (signal?: AbortSignal | null) =>
 
 void test("blocked pages fall back to one Supadata web scrape", async () => {
   extractedText = "";
+  const spend = spendLog();
   const requests: URL[] = [];
   const markdown = [
     "# Tomato soup",
@@ -88,7 +104,13 @@ void test("blocked pages fall back to one Supadata web scrape", async () => {
     return Promise.reject(new Error(`Unexpected request to ${url.origin}`));
   }) as typeof fetch;
 
-  await importRecipeFromUrl("https://example.com/tomato-soup");
+  await importRecipeFromUrl(
+    "https://example.com/tomato-soup",
+    undefined,
+    undefined,
+    undefined,
+    spend.observer,
+  );
 
   assert.equal(extractedText, markdown);
   assert.deepEqual(
@@ -99,6 +121,7 @@ void test("blocked pages fall back to one Supadata web scrape", async () => {
     requests[1]?.searchParams.get("url"),
     "https://example.com/tomato-soup",
   );
+  assert.deepEqual(spend.events, ["started", 1]);
 });
 
 for (const failure of [
@@ -150,6 +173,7 @@ for (const failure of [
 
 void test("a successfully read non-recipe does not call Supadata", async () => {
   extractedText = "";
+  const spend = spendLog();
   const requests: URL[] = [];
   const prose = "This is a travel article about a long train journey. ".repeat(
     12,
@@ -170,7 +194,13 @@ void test("a successfully read non-recipe does not call Supadata", async () => {
   }) as typeof fetch;
 
   await assert.rejects(
-    importRecipeFromUrl("https://example.com/train-journey"),
+    importRecipeFromUrl(
+      "https://example.com/train-journey",
+      undefined,
+      undefined,
+      undefined,
+      spend.observer,
+    ),
     (error: unknown) =>
       error instanceof Error &&
       "code" in error &&
@@ -181,6 +211,7 @@ void test("a successfully read non-recipe does not call Supadata", async () => {
     ["example.com"],
   );
   assert.equal(extractedText, "");
+  assert.deepEqual(spend.events, []);
 });
 
 void test("a Supadata limit replaces the original page failure", async () => {

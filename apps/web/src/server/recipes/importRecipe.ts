@@ -18,6 +18,8 @@ import {
 import { scrapeRecipeTextWithSupadata } from "~/server/recipes/supadataWeb";
 import { acquireYouTubeRecipeText } from "~/server/recipes/youtube";
 
+import type { SupadataSpendObserver } from "./supadata-spend";
+
 const FETCH_TIMEOUT_MS = 12_000;
 const MIN_READABLE_TEXT_LENGTH = 400;
 const MAX_TEXT_LENGTH = 40_000;
@@ -32,20 +34,22 @@ export const importRecipeFromUrl = async (
   instructions?: string | null,
   signal?: AbortSignal,
   observer?: InferenceObserver,
+  supadataObserver?: SupadataSpendObserver,
 ): Promise<ExtractResult> => {
   const videoId = youtubeVideoIdFromUrl(url);
   const instagramSource = videoId
     ? null
     : await resolveInstagramMediaSource(url, signal);
   const source = videoId
-    ? await acquireYouTubeRecipeText(videoId, signal)
+    ? await acquireYouTubeRecipeText(videoId, signal, supadataObserver)
     : instagramSource
       ? await acquireInstagramRecipeText(
           instagramSource.mediaUrl,
           instagramSource.mediaId,
           signal,
+          supadataObserver,
         )
-      : await acquireRecipeTextFromUrl(url, signal);
+      : await acquireRecipeTextFromUrl(url, signal, supadataObserver);
   return extractOrThrow(
     [{ type: "text", text: trimForModel(source) }],
     instructions,
@@ -117,6 +121,7 @@ const extractOrThrow = async (
 const acquireRecipeTextFromUrl = async (
   url: string,
   signal?: AbortSignal,
+  supadataObserver?: SupadataSpendObserver,
 ): Promise<string> => {
   try {
     const html = await fetchHtml(url, signal);
@@ -124,7 +129,11 @@ const acquireRecipeTextFromUrl = async (
   } catch (error) {
     if (isSupadataFallbackEligible(error)) {
       try {
-        return await scrapeRecipeTextWithSupadata(url, signal);
+        return await scrapeRecipeTextWithSupadata(
+          url,
+          signal,
+          supadataObserver,
+        );
       } catch (fallbackError) {
         if (signal?.aborted) throw fallbackError;
         if (

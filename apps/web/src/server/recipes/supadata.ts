@@ -389,8 +389,8 @@ const createSupadataRequester = ({
     }
     previousRequestStartedAt = Date.now();
 
-    if (operation !== "transcript-job") {
-      await spendObserver?.onOperationStarted();
+    if (operation !== "transcript-job" && spendObserver) {
+      await spendObserver.onOperationStarted();
     }
 
     let response: Response;
@@ -408,8 +408,8 @@ const createSupadataRequester = ({
       operation === "transcript-job"
         ? null
         : creditsFromSupadataBillingHeader(billableRequests);
-    if (knownCredits !== null) {
-      await spendObserver?.onCreditsKnown(knownCredits);
+    if (knownCredits !== null && spendObserver) {
+      await spendObserver.onCreditsKnown(knownCredits);
     }
     diagnostics.info("Supadata request completed", {
       operation,
@@ -580,7 +580,7 @@ const settleFixedCredits = async (
 ) => {
   if (response.creditsSettled) return;
   response.creditsSettled = true;
-  await spendObserver?.onCreditsKnown(credits);
+  if (spendObserver) await spendObserver.onCreditsKnown(credits);
 };
 
 const parseProviderResponse = <Output>(

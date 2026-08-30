@@ -9,6 +9,7 @@ import {
   createSupadataInstagramAdapter,
   type SupadataInstagramEvidence,
 } from "./supadata";
+import type { SupadataSpendObserver } from "./supadata-spend";
 
 const ACQUISITION_TIMEOUT_MS = 120_000;
 const SHARE_RESOLUTION_TIMEOUT_MS = 10_000;
@@ -148,11 +149,13 @@ export const acquireInstagramRecipeText = async (
   mediaUrl: string,
   mediaId: string,
   requestSignal?: AbortSignal,
+  spendObserver?: SupadataSpendObserver,
 ) => {
   const { env } = await import("~/env");
   const adapter = createSupadataInstagramAdapter({
     apiKey: env.SUPADATA_API_KEY,
     fetch,
+    spendObserver,
   });
   return createInstagramRecipeTextAcquirer(adapter)(
     mediaUrl,

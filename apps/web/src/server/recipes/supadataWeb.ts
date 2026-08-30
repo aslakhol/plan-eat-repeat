@@ -72,7 +72,7 @@ export const createSupadataWebAdapter = ({
     try {
       let response: Response;
       try {
-        await spendObserver?.onOperationStarted();
+        if (spendObserver) await spendObserver.onOperationStarted();
         response = await fetchImplementation(requestUrl, {
           headers: { "x-api-key": apiKey },
           signal,
@@ -84,8 +84,8 @@ export const createSupadataWebAdapter = ({
 
       const billableRequests = response.headers.get("x-billable-requests");
       const knownCredits = creditsFromSupadataBillingHeader(billableRequests);
-      if (knownCredits !== null) {
-        await spendObserver?.onCreditsKnown(knownCredits);
+      if (knownCredits !== null && spendObserver) {
+        await spendObserver.onCreditsKnown(knownCredits);
       }
       diagnostics.info("Supadata request completed", {
         operation: "web-scrape",
@@ -115,8 +115,8 @@ export const createSupadataWebAdapter = ({
           billableRequests,
         );
       }
-      if (knownCredits === null) {
-        await spendObserver?.onCreditsKnown(1);
+      if (knownCredits === null && spendObserver) {
+        await spendObserver.onCreditsKnown(1);
       }
       return parsed.data.content;
     } catch (error) {
@@ -204,6 +204,7 @@ const readJsonBody = async (
 export const scrapeRecipeTextWithSupadata = async (
   pageUrl: string,
   requestSignal?: AbortSignal,
+  spendObserver?: SupadataSpendObserver,
 ) => {
   const timeoutSignal = AbortSignal.timeout(WEB_SCRAPE_TIMEOUT_MS);
   const signal = requestSignal
@@ -213,6 +214,7 @@ export const scrapeRecipeTextWithSupadata = async (
   const adapter = createSupadataWebAdapter({
     apiKey: env.SUPADATA_API_KEY,
     fetch,
+    spendObserver,
   });
   return adapter.scrape(pageUrl, signal);
 };
