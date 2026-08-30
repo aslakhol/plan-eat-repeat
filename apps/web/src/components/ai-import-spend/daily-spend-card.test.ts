@@ -26,6 +26,12 @@ void test("daily spend renders independent axes and keyboard-readable day detail
             supadataCredits: 10,
             attempts: 4,
           },
+          {
+            date: "2026-08-31",
+            aiImportCostUsd: 0.1,
+            supadataCredits: 0.1,
+            attempts: 1,
+          },
         ],
       },
       onShowOlder: () => undefined,
@@ -43,6 +49,14 @@ void test("daily spend renders independent axes and keyboard-readable day detail
   );
   assert.match(html, /height:145px;background-color:hsl\(18 70% 62%\)/);
   assert.match(html, /height:145px;background-color:hsl\(150 16% 42%\)/);
+  assert.equal(
+    (html.match(/data-tooltip-placement="inside"/g) ?? []).length,
+    2,
+  );
+  assert.match(
+    html,
+    /style="bottom:[0-9.]+px"[^>]*data-tooltip-placement="above"/,
+  );
   assert.match(html, />Daily values</);
   assert.match(html, /Show older daily spend/);
   assert.match(html, /Show newer daily spend/);

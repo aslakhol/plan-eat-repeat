@@ -91,7 +91,7 @@ export const ImportSourcesCard = ({
             <div className="grid grid-cols-1 gap-7 lg:grid-cols-3">
               {MEASURES.map((measure) => (
                 <SourcePie
-                  key={measure.key}
+                  key={`${periodLabel}-${measure.key}`}
                   measure={measure.key}
                   caption={measure.caption}
                   format={measure.format}

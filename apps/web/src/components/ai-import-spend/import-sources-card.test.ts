@@ -235,11 +235,33 @@ void test("Import Source details open from focus and toggle from touch", async (
     /20\.0%/,
   );
   act(() => {
-    youtubeLegend.dispatchEvent(
-      new window.Event("touchend", { bubbles: true, cancelable: true }),
+    root.render(
+      createElement(ImportSourcesCard, {
+        periodLabel: "30 days",
+        period: {
+          attempts: 15,
+          aiImportCostUsd: 0.9,
+          supadataCredits: 9,
+        },
+        importSources,
+      }),
     );
   });
   assert.equal(document.querySelector('[role="tooltip"]'), null);
+
+  const rerenderedYoutubeLegend = document.querySelector(
+    '[data-legend="attempts"] [data-legend-item="YOUTUBE"]',
+  );
+  assert.ok(rerenderedYoutubeLegend);
+  act(() => {
+    rerenderedYoutubeLegend.dispatchEvent(
+      new window.Event("touchend", { bubbles: true, cancelable: true }),
+    );
+  });
+  assert.match(
+    document.querySelector('[role="tooltip"]')?.textContent ?? "",
+    /20\.0%/,
+  );
 
   act(() => root.unmount());
 });

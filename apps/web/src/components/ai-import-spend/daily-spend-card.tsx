@@ -149,6 +149,15 @@ const DailySpendPlot = ({ days }: { days: AiImportSpendDay[] }) => {
           <div className="flex h-[172px] items-end border-b">
             {days.map((day, index) => {
               const dayLabel = describeDay(day);
+              const inferenceHeight = barHeight(
+                day.aiImportCostUsd,
+                maximumAiImportCost,
+              );
+              const creditsHeight = barHeight(
+                day.supadataCredits,
+                maximumSupadataCredits,
+              );
+              const tallestBarHeight = Math.max(inferenceHeight, creditsHeight);
               const showDateLabel =
                 days.length <= 14 ||
                 index % labelStride === 0 ||
@@ -165,10 +174,7 @@ const DailySpendPlot = ({ days }: { days: AiImportSpendDay[] }) => {
                   <span
                     className="w-[calc(50%-1px)] max-w-[20px] rounded-t-[4px] transition-colors duration-100 group-hover:bg-[hsl(18_75%_45%)] group-focus:bg-[hsl(18_75%_45%)]"
                     style={{
-                      height: barHeight(
-                        day.aiImportCostUsd,
-                        maximumAiImportCost,
-                      ),
+                      height: inferenceHeight,
                       backgroundColor: "hsl(18 70% 62%)",
                     }}
                     aria-hidden="true"
@@ -176,10 +182,7 @@ const DailySpendPlot = ({ days }: { days: AiImportSpendDay[] }) => {
                   <span
                     className="w-[calc(50%-1px)] max-w-[20px] rounded-t-[4px] transition-colors duration-100 group-hover:bg-[hsl(150_22%_28%)] group-focus:bg-[hsl(150_22%_28%)]"
                     style={{
-                      height: barHeight(
-                        day.supadataCredits,
-                        maximumSupadataCredits,
-                      ),
+                      height: creditsHeight,
                       backgroundColor: "hsl(150 16% 42%)",
                     }}
                     aria-hidden="true"
@@ -189,7 +192,7 @@ const DailySpendPlot = ({ days }: { days: AiImportSpendDay[] }) => {
                       {formatAxisDate(day.date, days.length)}
                     </span>
                   )}
-                  <DayTooltip day={day} />
+                  <DayTooltip day={day} tallestBarHeight={tallestBarHeight} />
                 </button>
               );
             })}
@@ -223,25 +226,37 @@ const Axis = ({
   </div>
 );
 
-const DayTooltip = ({ day }: { day: AiImportSpendDay }) => (
-  <span
-    className="pointer-events-none absolute left-1/2 top-1 z-30 hidden w-max max-w-[180px] -translate-x-1/2 rounded-[9px] bg-[hsl(24_12%_14%)] px-3 py-2 text-left text-[hsl(40_25%_96%)] shadow-[0_6px_18px_rgba(40,25,15,.22)] group-hover:block group-focus:block"
-    aria-hidden="true"
-  >
-    <span className="block text-xs font-semibold">
-      {formatLongDate(day.date)}
+const DayTooltip = ({
+  day,
+  tallestBarHeight,
+}: {
+  day: AiImportSpendDay;
+  tallestBarHeight: number;
+}) => {
+  const insidePlot = tallestBarHeight > 96;
+
+  return (
+    <span
+      className={`pointer-events-none absolute left-1/2 z-30 hidden w-max max-w-[180px] -translate-x-1/2 rounded-[9px] bg-[hsl(24_12%_14%)] px-3 py-2 text-left text-[hsl(40_25%_96%)] shadow-[0_6px_18px_rgba(40,25,15,.22)] group-hover:block group-focus:block ${insidePlot ? "top-1" : ""}`}
+      style={insidePlot ? undefined : { bottom: tallestBarHeight + 34 }}
+      data-tooltip-placement={insidePlot ? "inside" : "above"}
+      aria-hidden="true"
+    >
+      <span className="block text-xs font-semibold">
+        {formatLongDate(day.date)}
+      </span>
+      <span className="mt-1 block text-xs">
+        {formatAiImportSpendUsd(day.aiImportCostUsd)} inference
+      </span>
+      <span className="block text-xs">
+        {formatAiImportSpendCredits(day.supadataCredits)} Supadata
+      </span>
+      <span className="mt-1 block text-[11px] text-[hsl(35_12%_70%)]">
+        {day.attempts} AI Import {day.attempts === 1 ? "Attempt" : "Attempts"}
+      </span>
     </span>
-    <span className="mt-1 block text-xs">
-      {formatAiImportSpendUsd(day.aiImportCostUsd)} inference
-    </span>
-    <span className="block text-xs">
-      {formatAiImportSpendCredits(day.supadataCredits)} Supadata
-    </span>
-    <span className="mt-1 block text-[11px] text-[hsl(35_12%_70%)]">
-      {day.attempts} AI Import {day.attempts === 1 ? "Attempt" : "Attempts"}
-    </span>
-  </span>
-);
+  );
+};
 
 const DailyValues = ({ days }: { days: AiImportSpendDay[] }) => (
   <details className="mt-4 text-sm">
