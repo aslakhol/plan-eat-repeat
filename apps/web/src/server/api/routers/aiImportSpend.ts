@@ -2,7 +2,12 @@ import { z } from "zod";
 
 import { AI_IMPORT_SPEND_PERIOD_KEYS } from "~/lib/ai-import-spend";
 import { buildAiImportSpendReport } from "~/server/ai-import-spend-report";
-import { createTRPCRouter, systemAdminProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  sessionProcedure,
+  systemAdminProcedure,
+} from "~/server/api/trpc";
+import { isSystemAdminUser } from "~/server/system-admin";
 
 export const AI_IMPORT_SPEND_BILLING_LINKS = {
   anthropic: "https://console.anthropic.com/settings/billing",
@@ -15,6 +20,9 @@ const dashboardInput = z.object({
 });
 
 export const aiImportSpendRouter = createTRPCRouter({
+  access: sessionProcedure.query(({ ctx }) => ({
+    isSystemAdmin: isSystemAdminUser(ctx.auth.userId, ctx.systemAdminUserIds),
+  })),
   dashboard: systemAdminProcedure
     .input(dashboardInput)
     .query(async ({ ctx, input }) => {
