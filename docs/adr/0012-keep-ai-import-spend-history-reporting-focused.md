@@ -1,0 +1,3 @@
+# Keep AI import spend history reporting-focused
+
+Plan Eat Repeat keeps application-owned AI Import Spend history because provider reports cannot attribute spend to a Household, initiating member, or Import Source. It stores one AI Import Attempt record with the attribution, source, timestamps, fixed-at-capture inference estimate, and incrementally captured Supadata credit counters needed by the spend dashboard. It deliberately does not retain product outcome, model identity, token usage, provider request identifiers, or raw provider usage; this trades retrospective cost auditing and future outcome or model analysis for a smaller record and simpler reporting, and accepts that any later analysis starts when its required fields are added.
