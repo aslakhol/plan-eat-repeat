@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+import {
+  AI_IMPORT_SPEND_PERIOD_KEYS,
+  AI_IMPORT_SPEND_PERIOD_LABELS,
+} from "~/lib/ai-import-spend";
 import { createTRPCRouter, systemAdminProcedure } from "~/server/api/trpc";
 
 export const AI_IMPORT_SPEND_BILLING_LINKS = {
@@ -8,16 +12,9 @@ export const AI_IMPORT_SPEND_BILLING_LINKS = {
 } as const;
 
 const dashboardInput = z.object({
-  period: z.enum(["7", "30", "month", "all"]),
+  period: z.enum(AI_IMPORT_SPEND_PERIOD_KEYS),
   chartOffset: z.number().int().nonnegative(),
 });
-
-const periodLabels = {
-  "7": "7 days",
-  "30": "30 days",
-  month: "This month",
-  all: "All time",
-} as const;
 
 export const aiImportSpendRouter = createTRPCRouter({
   dashboard: systemAdminProcedure
@@ -42,7 +39,7 @@ export const aiImportSpendRouter = createTRPCRouter({
       },
       period: {
         key: input.period,
-        label: periodLabels[input.period],
+        label: AI_IMPORT_SPEND_PERIOD_LABELS[input.period],
         aiImportCostUsd: 0,
         supadataCredits: 0,
         attempts: 0,

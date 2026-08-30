@@ -12,7 +12,7 @@ const householdOptionalRoutes = [
 const isPublicRoute = createRouteMatcher(["/", ...householdOptionalRoutes]);
 const shouldNotRedirect = createRouteMatcher([
   "/settings",
-  "/admin/ai-import-spend",
+  "/system-admin/ai-import-spend",
   ...householdOptionalRoutes,
 ]);
 

@@ -10,7 +10,13 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import { Skeleton } from "~/components/ui/skeleton";
 import { env } from "~/env";
+import {
+  AI_IMPORT_SPEND_PERIOD_KEYS,
+  AI_IMPORT_SPEND_PERIOD_LABELS,
+  type AiImportSpendPeriod,
+} from "~/lib/ai-import-spend";
 import { cn } from "~/lib/utils";
 import {
   isSystemAdminUser,
@@ -18,18 +24,10 @@ import {
 } from "~/server/system-admin";
 import { api, type RouterOutputs } from "~/utils/api";
 
-type Period = "7" | "30" | "month" | "all";
 type DashboardProjection = RouterOutputs["aiImportSpend"]["dashboard"];
 
-const periods: ReadonlyArray<{ key: Period; label: string }> = [
-  { key: "7", label: "7 days" },
-  { key: "30", label: "30 days" },
-  { key: "month", label: "This month" },
-  { key: "all", label: "All time" },
-];
-
 export default function AiImportSpendPage() {
-  const [period, setPeriod] = useState<Period>("7");
+  const [period, setPeriod] = useState<AiImportSpendPeriod>("7");
   const dashboardQuery = api.aiImportSpend.dashboard.useQuery({
     period,
     chartOffset: 0,
@@ -69,8 +67,8 @@ const Dashboard = ({
   onPeriodChange,
 }: {
   projection: DashboardProjection;
-  selectedPeriod: Period;
-  onPeriodChange: (period: Period) => void;
+  selectedPeriod: AiImportSpendPeriod;
+  onPeriodChange: (period: AiImportSpendPeriod) => void;
 }) => (
   <>
     <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
@@ -142,8 +140,8 @@ const PeriodControl = ({
   selectedPeriod,
   onPeriodChange,
 }: {
-  selectedPeriod: Period;
-  onPeriodChange: (period: Period) => void;
+  selectedPeriod: AiImportSpendPeriod;
+  onPeriodChange: (period: AiImportSpendPeriod) => void;
 }) => (
   <div className="flex-none">
     <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
@@ -154,7 +152,7 @@ const PeriodControl = ({
       role="group"
       aria-label="Reporting period"
     >
-      {periods.map(({ key, label }) => (
+      {AI_IMPORT_SPEND_PERIOD_KEYS.map((key) => (
         <button
           key={key}
           type="button"
@@ -166,7 +164,7 @@ const PeriodControl = ({
           )}
           onClick={() => onPeriodChange(key)}
         >
-          {label}
+          {AI_IMPORT_SPEND_PERIOD_LABELS[key]}
         </button>
       ))}
     </div>
@@ -191,8 +189,8 @@ const Last24HoursCard = ({
         <SpendFigure
           value={formatCredits(projection.last24Hours.supadataCredits)}
           label="Supadata credits"
-          credits
-          divided
+          creditTone
+          showDivider
         />
       </div>
       <p className="mt-4 text-[13px] text-muted-foreground">
@@ -312,19 +310,19 @@ const SummaryCard = ({
 const SpendFigure = ({
   value,
   label,
-  credits = false,
-  divided = false,
+  creditTone = false,
+  showDivider = false,
 }: {
   value: string;
   label: string;
-  credits?: boolean;
-  divided?: boolean;
+  creditTone?: boolean;
+  showDivider?: boolean;
 }) => (
-  <div className={cn(divided && "border-l pl-5 sm:pl-7")}>
+  <div className={cn(showDivider && "border-l pl-5 sm:pl-7")}>
     <p
       className={cn(
         "font-serif text-4xl leading-none sm:text-[44px]",
-        credits && "text-[hsl(150_18%_30%)]",
+        creditTone && "text-[hsl(150_18%_30%)]",
       )}
     >
       {value}
@@ -385,12 +383,12 @@ const EmptySourcesCard = ({ periodLabel }: { periodLabel: string }) => (
 
 const DashboardLoading = () => (
   <div className="space-y-5" role="status">
-    <div className="h-16 animate-pulse rounded-lg bg-muted" />
+    <Skeleton className="h-16 rounded-lg" />
     <div className="grid gap-5 lg:grid-cols-2">
-      <div className="h-72 animate-pulse rounded-lg bg-muted" />
-      <div className="h-72 animate-pulse rounded-lg bg-muted" />
+      <Skeleton className="h-72 rounded-lg" />
+      <Skeleton className="h-72 rounded-lg" />
     </div>
-    <div className="h-48 animate-pulse rounded-lg bg-muted" />
+    <Skeleton className="h-48 rounded-lg" />
     <span className="sr-only">Loading AI import spend</span>
   </div>
 );
