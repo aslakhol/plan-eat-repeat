@@ -75,8 +75,10 @@ export type InferenceObserver = {
   ): Promise<void> | void;
 };
 
+export type RecipeImportImage = { data: string; mimeType: string };
+
 export const importRecipeFromImages = async (
-  images: ReadonlyArray<{ data: string; mimeType: string }>,
+  images: ReadonlyArray<RecipeImportImage>,
   instructions?: string | null,
   signal?: AbortSignal,
   observer?: InferenceObserver,

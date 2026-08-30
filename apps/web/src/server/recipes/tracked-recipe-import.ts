@@ -14,6 +14,7 @@ import {
   importRecipeFromText,
   importRecipeFromUrl,
   type InferenceObserver,
+  type RecipeImportImage,
 } from "./importRecipe";
 
 export type { InferenceObserver };
@@ -50,33 +51,38 @@ export type AiImportTrackingPersistence = {
   ): Promise<void>;
 };
 
-export type TrackedRecipeImportSource =
+export type TrackedRecipeImportRequest =
   | { type: "TEXT"; text: string }
   | {
       type: "PHOTO";
-      images: ReadonlyArray<{ data: string; mimeType: string }>;
+      images: ReadonlyArray<RecipeImportImage>;
     }
   | { type: "URL"; url: string };
 
 type TrackedRecipeImportInput = {
-  source: TrackedRecipeImportSource;
+  request: TrackedRecipeImportRequest;
   householdId: string;
   userId: string;
   signal?: AbortSignal;
 };
 
+const DIRECT_IMPORT_SOURCES = {
+  TEXT: "TEXT",
+  PHOTO: "PHOTO",
+} as const satisfies Record<"TEXT" | "PHOTO", AiImportSource>;
+
 export const classifyAiImportSource = (
-  source: TrackedRecipeImportSource,
+  request: TrackedRecipeImportRequest,
 ): AiImportSource => {
-  if (source.type !== "URL") return source.type;
-  if (youtubeVideoIdFromUrl(source.url)) return "YOUTUBE";
-  return isInstagramMediaUrl(source.url) ? "INSTAGRAM" : "LINK";
+  if (request.type !== "URL") return DIRECT_IMPORT_SOURCES[request.type];
+  if (youtubeVideoIdFromUrl(request.url)) return "YOUTUBE";
+  return isInstagramMediaUrl(request.url) ? "INSTAGRAM" : "LINK";
 };
 
 type TrackedRecipeImporterDependencies<Result> = {
   persistence: AiImportTrackingPersistence;
   executeImport: (input: {
-    source: TrackedRecipeImportSource;
+    request: TrackedRecipeImportRequest;
     instructions: string | null;
     signal?: AbortSignal;
     observer: InferenceObserver;
@@ -110,7 +116,7 @@ export const createTrackedRecipeImporter = <Result>({
       try {
         attemptId = await persistence.createAttempt({
           ...attribution,
-          source: classifyAiImportSource(input.source),
+          source: classifyAiImportSource(input.request),
           startedAt: now(),
         });
       } catch {
@@ -153,7 +159,7 @@ export const createTrackedRecipeImporter = <Result>({
         input.householdId,
       );
       return await executeImport({
-        source: input.source,
+        request: input.request,
         instructions,
         signal: input.signal,
         observer,
@@ -218,25 +224,25 @@ export const importTrackedRecipe = (
 ) =>
   createTrackedRecipeImporter({
     persistence: prismaAiImportTrackingPersistence(db),
-    executeImport: ({ source, instructions, signal, observer }) => {
-      switch (source.type) {
+    executeImport: ({ request, instructions, signal, observer }) => {
+      switch (request.type) {
         case "TEXT":
           return importRecipeFromText(
-            source.text,
+            request.text,
             instructions,
             signal,
             observer,
           );
         case "PHOTO":
           return importRecipeFromImages(
-            source.images,
+            request.images,
             instructions,
             signal,
             observer,
           );
         case "URL":
           return importRecipeFromUrl(
-            source.url,
+            request.url,
             instructions,
             signal,
             observer,

@@ -426,7 +426,7 @@ export const dinnerRouter = createTRPCRouter({
     .mutation(async ({ ctx, input, signal }) => {
       try {
         const draft = await importTrackedRecipe(ctx.db, {
-          source: { type: "URL", url: input.url },
+          request: { type: "URL", url: input.url },
           householdId: ctx.householdId,
           userId: ctx.auth.userId,
           signal,
@@ -453,7 +453,7 @@ export const dinnerRouter = createTRPCRouter({
     .mutation(async ({ ctx, input, signal }) => {
       try {
         return await importTrackedRecipe(ctx.db, {
-          source: { type: "TEXT", text: input.text },
+          request: { type: "TEXT", text: input.text },
           householdId: ctx.householdId,
           userId: ctx.auth.userId,
           signal,
@@ -468,7 +468,7 @@ export const dinnerRouter = createTRPCRouter({
     .mutation(async ({ ctx, input, signal }) => {
       try {
         return await importTrackedRecipe(ctx.db, {
-          source: { type: "PHOTO", images: input.images },
+          request: { type: "PHOTO", images: input.images },
           householdId: ctx.householdId,
           userId: ctx.auth.userId,
           signal,

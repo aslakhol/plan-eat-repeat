@@ -6,39 +6,39 @@ import { classifyAiImportSource } from "./tracked-recipe-import";
 void test("tracked inputs are classified before recipe acquisition", () => {
   const cases = [
     {
-      input: { type: "TEXT" as const, text: "A soup recipe" },
+      request: { type: "TEXT" as const, text: "A soup recipe" },
       expected: "TEXT",
     },
     {
-      input: {
+      request: {
         type: "PHOTO" as const,
         images: [{ data: "aGVsbG8=", mimeType: "image/jpeg" }],
       },
       expected: "PHOTO",
     },
     {
-      input: {
+      request: {
         type: "URL" as const,
         url: "https://www.youtube.com/watch?v=BoFkDmTm2uc",
       },
       expected: "YOUTUBE",
     },
     {
-      input: {
+      request: {
         type: "URL" as const,
         url: "https://www.instagram.com/reel/DOybkebkcaw/",
       },
       expected: "INSTAGRAM",
     },
     {
-      input: {
+      request: {
         type: "URL" as const,
         url: "https://www.instagram.com/share/reel/BAAabcdefghijklmnopqrstu/",
       },
       expected: "INSTAGRAM",
     },
     {
-      input: {
+      request: {
         type: "URL" as const,
         url: "https://example.com/recipes/tomato-soup",
       },
@@ -46,7 +46,7 @@ void test("tracked inputs are classified before recipe acquisition", () => {
     },
   ] as const;
 
-  for (const { input, expected } of cases) {
-    assert.equal(classifyAiImportSource(input), expected);
+  for (const { request, expected } of cases) {
+    assert.equal(classifyAiImportSource(request), expected);
   }
 });

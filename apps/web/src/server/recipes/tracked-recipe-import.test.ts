@@ -2,13 +2,14 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { LanguageModelUsage } from "ai";
+import type { AiImportSource } from "@planeatrepeat/db";
 
 import {
   createTrackedRecipeImporter,
   type AiImportAttemptChanges,
   type AiImportTrackingPersistence,
   type InferenceObserver,
-  type TrackedRecipeImportSource,
+  type TrackedRecipeImportRequest,
 } from "./tracked-recipe-import";
 
 const pricedUsage: LanguageModelUsage = {
@@ -28,7 +29,7 @@ const pricedUsage: LanguageModelUsage = {
 
 type TestHarnessOptions = {
   execute?: (
-    source: TrackedRecipeImportSource,
+    request: TrackedRecipeImportRequest,
     observer: InferenceObserver,
   ) => Promise<{ name: string }>;
   failOperations?: ReadonlySet<string>;
@@ -37,8 +38,8 @@ type TestHarnessOptions = {
 
 const testHarness = (options: TestHarnessOptions = {}) => {
   const actions: string[] = [];
-  const createdSources: string[] = [];
-  const executedSources: TrackedRecipeImportSource[] = [];
+  const createdSources: AiImportSource[] = [];
+  const executedRequests: TrackedRecipeImportRequest[] = [];
   const updates: AiImportAttemptChanges[] = [];
   const warnings: string[] = [];
   const failOperations = options.failOperations ?? new Set<string>();
@@ -88,13 +89,13 @@ const testHarness = (options: TestHarnessOptions = {}) => {
   };
 
   const executeImport = async (execution: {
-    source: TrackedRecipeImportSource;
+    request: TrackedRecipeImportRequest;
     observer: InferenceObserver;
   }) => {
     actions.push("extract");
-    executedSources.push(execution.source);
+    executedRequests.push(execution.request);
     return (
-      options.execute?.(execution.source, execution.observer) ??
+      options.execute?.(execution.request, execution.observer) ??
       Promise.resolve({ name: "Soup" })
     );
   };
@@ -110,7 +111,7 @@ const testHarness = (options: TestHarnessOptions = {}) => {
   return {
     actions,
     createdSources,
-    executedSources,
+    executedRequests,
     importer,
     updates,
     warnings,
@@ -118,15 +119,15 @@ const testHarness = (options: TestHarnessOptions = {}) => {
 };
 
 const input = {
-  source: { type: "TEXT" as const, text: "A soup recipe" },
+  request: { type: "TEXT" as const, text: "A soup recipe" },
   householdId: "household-1",
   userId: "user-1",
 };
 
-const expandedSources = [
+const expandedRequests = [
   {
     name: "Photo",
-    source: {
+    request: {
       type: "PHOTO" as const,
       images: [{ data: "aGVsbG8=", mimeType: "image/jpeg" }],
     },
@@ -134,7 +135,7 @@ const expandedSources = [
   },
   {
     name: "YouTube",
-    source: {
+    request: {
       type: "URL" as const,
       url: "https://www.youtube.com/watch?v=BoFkDmTm2uc",
     },
@@ -142,7 +143,7 @@ const expandedSources = [
   },
   {
     name: "Instagram",
-    source: {
+    request: {
       type: "URL" as const,
       url: "https://www.instagram.com/reel/DOybkebkcaw/",
     },
@@ -150,7 +151,7 @@ const expandedSources = [
   },
   {
     name: "Link",
-    source: {
+    request: {
       type: "URL" as const,
       url: "https://example.com/recipes/tomato-soup",
     },
@@ -158,15 +159,15 @@ const expandedSources = [
   },
 ] as const;
 
-const inputFor = (source: TrackedRecipeImportSource) => ({
-  source,
+const inputFor = (request: TrackedRecipeImportRequest) => ({
+  request,
   householdId: "household-1",
   userId: "user-1",
 });
 
 void test("a Text import records one priced attempt around provider work", async () => {
   const harness = testHarness({
-    execute: async (_source, observer) => {
+    execute: async (_request, observer) => {
       await observer.onInferenceStart();
       harness.actions.push("provider-call");
       await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
@@ -199,21 +200,21 @@ void test("a Text import records one priced attempt around provider work", async
   ]);
 });
 
-for (const { name, source, attemptSource } of expandedSources) {
+for (const { name, request, attemptSource } of expandedRequests) {
   void test(`a successful ${name} import records one priced attempt`, async () => {
     const harness = testHarness({
-      execute: async (_source, observer) => {
+      execute: async (_request, observer) => {
         await observer.onInferenceStart();
         await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
         return { name: "Soup" };
       },
     });
 
-    assert.deepEqual(await harness.importer(inputFor(source)), {
+    assert.deepEqual(await harness.importer(inputFor(request)), {
       name: "Soup",
     });
     assert.deepEqual(harness.createdSources, [attemptSource]);
-    assert.deepEqual(harness.executedSources, [source]);
+    assert.deepEqual(harness.executedRequests, [request]);
     assert.equal(harness.updates.at(-1)?.inferenceState, "ESTIMATED");
   });
 
@@ -224,7 +225,7 @@ for (const { name, source, attemptSource } of expandedSources) {
     });
 
     await assert.rejects(
-      harness.importer(inputFor(source)),
+      harness.importer(inputFor(request)),
       (error) => error === acquisitionFailure,
     );
     assert.deepEqual(harness.createdSources, [attemptSource]);
@@ -234,14 +235,14 @@ for (const { name, source, attemptSource } of expandedSources) {
   void test(`${name} provider failure after inference starts finishes as unknown`, async () => {
     const providerFailure = new Error("provider disconnected");
     const harness = testHarness({
-      execute: async (_source, observer) => {
+      execute: async (_request, observer) => {
         await observer.onInferenceStart();
         throw providerFailure;
       },
     });
 
     await assert.rejects(
-      harness.importer(inputFor(source)),
+      harness.importer(inputFor(request)),
       (error) => error === providerFailure,
     );
     assert.equal(harness.updates.at(-1)?.inferenceState, "UNKNOWN");
@@ -250,7 +251,7 @@ for (const { name, source, attemptSource } of expandedSources) {
   void test(`${name} parsing failure retains captured inference spend`, async () => {
     const parsingFailure = new Error("invalid structured output");
     const harness = testHarness({
-      execute: async (_source, observer) => {
+      execute: async (_request, observer) => {
         await observer.onInferenceStart();
         await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
         throw parsingFailure;
@@ -258,7 +259,7 @@ for (const { name, source, attemptSource } of expandedSources) {
     });
 
     await assert.rejects(
-      harness.importer(inputFor(source)),
+      harness.importer(inputFor(request)),
       (error) => error === parsingFailure,
     );
     assert.equal(harness.updates.at(-1)?.inferenceState, "ESTIMATED");
@@ -270,14 +271,14 @@ for (const { name, source, attemptSource } of expandedSources) {
       "AbortError",
     );
     const harness = testHarness({
-      execute: async (_source, observer) => {
+      execute: async (_request, observer) => {
         await observer.onInferenceStart();
         throw cancellation;
       },
     });
 
     await assert.rejects(
-      harness.importer(inputFor(source)),
+      harness.importer(inputFor(request)),
       (error) => error === cancellation,
     );
     assert.ok(harness.updates.at(-1)?.finishedAt);
@@ -304,7 +305,7 @@ void test("an attempt that fails before inference is finished as not incurred", 
 void test("provider work without usable usage is finished as unknown", async () => {
   const providerFailure = new Error("provider disconnected");
   const harness = testHarness({
-    execute: async (_source, observer) => {
+    execute: async (_request, observer) => {
       await observer.onInferenceStart();
       throw providerFailure;
     },
@@ -324,7 +325,7 @@ void test("provider work without usable usage is finished as unknown", async () 
 void test("usage remains estimated when later output parsing fails", async () => {
   const parsingFailure = new Error("invalid structured output");
   const harness = testHarness({
-    execute: async (_source, observer) => {
+    execute: async (_request, observer) => {
       await observer.onInferenceStart();
       await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
       throw parsingFailure;
@@ -348,7 +349,7 @@ void test("telemetry persistence failures do not change the import result", asyn
   ]) {
     const harness = testHarness({
       failOperations: new Set([failedOperation]),
-      execute: async (_source, observer) => {
+      execute: async (_request, observer) => {
         await observer.onInferenceStart();
         await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
         return { name: "Soup" };
@@ -364,7 +365,7 @@ void test("telemetry persistence failures preserve cancellation", async () => {
   const cancellation = new Error("cancelled");
   const harness = testHarness({
     failOperations: new Set(["start-inference", "finish-attempt"]),
-    execute: async (_source, observer) => {
+    execute: async (_request, observer) => {
       await observer.onInferenceStart();
       throw cancellation;
     },
