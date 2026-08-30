@@ -5,7 +5,7 @@ import { mock, test } from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { DashboardProjection } from "./ai-import-spend";
+import type { DashboardProjection } from "../../pages/system-admin/ai-import-spend";
 
 const { loadEnvConfig } = createRequire(import.meta.url)(
   "@next/env",
@@ -19,7 +19,7 @@ mock.module("@clerk/nextjs/server", {
 });
 
 const { Dashboard, DASHBOARD_QUERY_OPTIONS } =
-  await import("./ai-import-spend");
+  await import("../../pages/system-admin/ai-import-spend");
 
 const emptyProjection = {
   environment: "Development" as const,
