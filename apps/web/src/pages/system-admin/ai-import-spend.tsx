@@ -3,6 +3,7 @@ import { getAuth } from "@clerk/nextjs/server";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
 
+import { DailySpendCard } from "~/components/ai-import-spend/daily-spend-card";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Skeleton } from "~/components/ui/skeleton";
@@ -23,10 +24,18 @@ type DashboardProjection = RouterOutputs["aiImportSpend"]["dashboard"];
 
 export default function AiImportSpendPage() {
   const [period, setPeriod] = useState<AiImportSpendPeriod>("7");
-  const dashboardQuery = api.aiImportSpend.dashboard.useQuery({
-    period,
-    chartOffset: 0,
-  });
+  const [chartOffset, setChartOffset] = useState(0);
+  const dashboardQuery = api.aiImportSpend.dashboard.useQuery(
+    { period, chartOffset },
+    {
+      refetchOnWindowFocus: true,
+      refetchInterval: false,
+    },
+  );
+  const changePeriod = (nextPeriod: AiImportSpendPeriod) => {
+    setPeriod(nextPeriod);
+    setChartOffset(0);
+  };
 
   return (
     <>
@@ -43,7 +52,11 @@ export default function AiImportSpendPage() {
             <Dashboard
               projection={dashboardQuery.data}
               selectedPeriod={period}
-              onPeriodChange={setPeriod}
+              onPeriodChange={changePeriod}
+              onShowOlder={() => setChartOffset((offset) => offset + 1)}
+              onShowNewer={() =>
+                setChartOffset((offset) => Math.max(0, offset - 1))
+              }
             />
           ) : (
             <DashboardLoading />
@@ -60,10 +73,14 @@ const Dashboard = ({
   projection,
   selectedPeriod,
   onPeriodChange,
+  onShowOlder,
+  onShowNewer,
 }: {
   projection: DashboardProjection;
   selectedPeriod: AiImportSpendPeriod;
   onPeriodChange: (period: AiImportSpendPeriod) => void;
+  onShowOlder: () => void;
+  onShowNewer: () => void;
 }) => (
   <>
     <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
@@ -75,29 +92,29 @@ const Dashboard = ({
           {projection.environment}
         </p>
       </div>
-      {projection.attemptSummary.attempts === 0 && (
-        <PeriodControl
-          selectedPeriod={selectedPeriod}
-          onPeriodChange={onPeriodChange}
-        />
-      )}
+      <PeriodControl
+        selectedPeriod={selectedPeriod}
+        onPeriodChange={onPeriodChange}
+      />
     </header>
 
-    {projection.attemptSummary.attempts === 0 && (
-      <section
-        aria-label="Spend overview"
-        className="grid gap-5 lg:grid-cols-[1.15fr_1fr]"
-      >
-        <Last24HoursCard projection={projection} />
-        <SummaryCard projection={projection} />
-      </section>
-    )}
+    <section
+      aria-label="Spend overview"
+      className="grid gap-5 lg:grid-cols-[1.15fr_1fr]"
+    >
+      <Last24HoursCard projection={projection} />
+      <SummaryCard projection={projection} />
+    </section>
 
-    <AttemptSummaryCard projection={projection} />
+    <DailySpendCard
+      periodLabel={projection.period.label}
+      dailyWindow={projection.dailyWindow}
+      onShowOlder={onShowOlder}
+      onShowNewer={onShowNewer}
+    />
 
     {projection.attemptSummary.attempts === 0 && (
       <>
-        <EmptyReportCard title="Daily spend" />
         <EmptyReportCard title="Households" />
         <EmptySourcesCard periodLabel={projection.period.label} />
       </>
@@ -128,8 +145,8 @@ const Dashboard = ({
       <p className="flex gap-2">
         <span aria-hidden="true">ⓘ</span>
         <span>
-          Inference cost is an estimate · collection starts with the first AI
-          Import Attempt
+          Inference cost is an estimate · collecting since{" "}
+          {formatCollectionDate(projection.collectionStartedOn)}
         </span>
       </p>
       <p className="flex gap-2">
@@ -142,60 +159,6 @@ const Dashboard = ({
     </footer>
   </>
 );
-
-const AttemptSummaryCard = ({
-  projection,
-}: {
-  projection: DashboardProjection;
-}) => (
-  <Card>
-    <CardHeader className="px-5 pb-4 pt-6 sm:px-7">
-      <CardTitle className="font-serif text-lg font-normal">
-        AI Import Attempts
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="grid gap-5 border-t px-5 py-5 sm:grid-cols-2 sm:px-7 lg:grid-cols-4">
-      <HeroMetric
-        label="AI Import Attempts"
-        value={String(projection.attemptSummary.attempts)}
-        detail={projection.attemptSummary.sources
-          .map(
-            ({ source, attempts }) =>
-              `${importSourceLabel(source)} ${attempts}`,
-          )
-          .join(" · ")}
-      />
-      <HeroMetric
-        label="AI Import Cost"
-        value={formatRecordedUsd(
-          projection.attemptSummary.estimatedAiImportCostUsd,
-        )}
-        detail="estimated inference total"
-      />
-      <HeroMetric
-        label="Supadata Credit Spend"
-        value={formatCredits(projection.attemptSummary.supadataCredits)}
-        detail={`${projection.attemptSummary.supadataOperationsStarted} operations used · ${projection.attemptSummary.supadataUnknownOperationCount} unknown`}
-      />
-      <HeroMetric
-        label="Collection started"
-        value={formatCollectionDate(projection.collectionStartedOn)}
-        detail="first recorded AI Import Attempt"
-      />
-    </CardContent>
-  </Card>
-);
-
-const importSourceLabel = (
-  source: DashboardProjection["attemptSummary"]["sources"][number]["source"],
-) =>
-  ({
-    TEXT: "Text",
-    PHOTO: "Photo",
-    YOUTUBE: "YouTube",
-    INSTAGRAM: "Instagram",
-    LINK: "Link",
-  })[source];
 
 const PeriodControl = ({
   selectedPeriod,
@@ -307,7 +270,11 @@ const SummaryCard = ({ projection }: { projection: DashboardProjection }) => {
     {
       label: "Supadata credits",
       value: formatCredits(projection.period.supadataCredits),
-      note: projection.period.label,
+      note:
+        projection.period.label +
+        " · " +
+        projection.period.supadataUnknownOperationCount +
+        " unknown operations",
       credits: true,
     },
     {
@@ -329,6 +296,8 @@ const SummaryCard = ({ projection }: { projection: DashboardProjection }) => {
       note:
         projection.period.noChargeAttempts +
         " no charge · " +
+        projection.period.pendingInferenceAttempts +
+        " pending · " +
         projection.period.unknownInferenceAttempts +
         " unknown",
     },
@@ -454,9 +423,6 @@ const formatUsd = (amount: number, fractionDigits = 2) =>
   "$" + amount.toFixed(fractionDigits);
 
 const formatCredits = (credits: number) => credits.toLocaleString() + " cr";
-
-const formatRecordedUsd = (amount: number) =>
-  amount === 0 ? formatUsd(amount) : formatUsd(amount, 6);
 
 const formatCollectionDate = (date: Date | null) =>
   date
