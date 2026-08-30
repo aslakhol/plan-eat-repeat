@@ -34,6 +34,7 @@ type CreateContextOptions = {
   auth: Awaited<ReturnType<typeof getAuth>>;
   systemAdminUserIds?: ReadonlySet<string>;
   deploymentEnvironment?: ReturnType<typeof getDeploymentEnvironment>;
+  reportNow?: () => Date;
 };
 
 /**
@@ -56,6 +57,7 @@ const createInnerTRPCContext = (_opts: CreateContextOptions) => {
     deploymentEnvironment:
       _opts.deploymentEnvironment ??
       getDeploymentEnvironment(env.VERCEL_ENV, env.NODE_ENV),
+    reportNow: _opts.reportNow ?? (() => new Date()),
   };
 };
 

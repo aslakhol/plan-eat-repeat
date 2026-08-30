@@ -3,7 +3,10 @@ import { createRequire } from "node:module";
 import { mock, test } from "node:test";
 
 import { TRPCError } from "@trpc/server";
-import type { AiImportSource } from "@planeatrepeat/db";
+import type {
+  AiImportInferenceState,
+  AiImportSource,
+} from "@planeatrepeat/db";
 
 const { loadEnvConfig } = createRequire(import.meta.url)(
   "@next/env",
@@ -22,49 +25,43 @@ const { parseSystemAdminUserIds } = await import("./system-admin");
 
 type AiImportSpendCaller = ReturnType<typeof aiImportSpendRouter.createCaller>;
 
+const REPORT_NOW = new Date("2026-08-30T12:00:00.000Z");
+
 const createCaller = ({
   userId,
   allowlist = "system-admin",
   environment = "Development",
-  sourceSummaries = [],
+  attempts = [],
+  onReportQuery,
 }: {
   userId: string | null;
   allowlist?: string | null;
   environment?: "Production" | "Preview" | "Development";
-  sourceSummaries?: Array<{
+  attempts?: Array<{
     source: AiImportSource;
-    attempts: number;
+    startedAt: Date;
+    householdAttributionKey: string;
+    inferenceState: AiImportInferenceState;
     estimatedAiImportCostUsd: number | null;
-    supadataCredits?: number | null;
-    supadataOperationsStarted?: number | null;
-    supadataUnknownOperationCount?: number | null;
-    collectionStartedOn: Date | null;
+    supadataCredits: number;
+    supadataOperationsStarted: number;
+    supadataUnknownOperationCount: number;
   }>;
+  onReportQuery?: (query: unknown) => void;
 }): AiImportSpendCaller =>
   aiImportSpendRouter.createCaller({
     auth: { userId },
     db: {
       aiImportAttempt: {
-        groupBy: () =>
-          Promise.resolve(
-            sourceSummaries.map((summary) => ({
-              source: summary.source,
-              _count: { _all: summary.attempts },
-              _sum: {
-                estimatedAiImportCostUsd: summary.estimatedAiImportCostUsd,
-                supadataCredits: summary.supadataCredits ?? 0,
-                supadataOperationsStarted:
-                  summary.supadataOperationsStarted ?? 0,
-                supadataUnknownOperationCount:
-                  summary.supadataUnknownOperationCount ?? 0,
-              },
-              _min: { startedAt: summary.collectionStartedOn },
-            })),
-          ),
+        findMany: (query: unknown) => {
+          onReportQuery?.(query);
+          return Promise.resolve(attempts);
+        },
       },
     },
     systemAdminUserIds: parseSystemAdminUserIds(allowlist),
     deploymentEnvironment: environment,
+    reportNow: () => REPORT_NOW,
   } as unknown as Parameters<typeof aiImportSpendRouter.createCaller>[0]);
 
 const dashboardInput = { period: "7" as const, chartOffset: 0 };
@@ -123,6 +120,7 @@ void test("an allowlisted System Admin without a Household receives the empty sp
       noChargeAttempts: 0,
       pendingInferenceAttempts: 0,
       unknownInferenceAttempts: 0,
+      supadataUnknownOperationCount: 0,
       averageAiImportCostUsd: 0,
       averageSupadataCredits: 0,
     },
@@ -137,21 +135,39 @@ void test("an allowlisted System Admin without a Household receives the empty sp
 });
 
 void test("the report exposes all five recorded Import Sources", async () => {
-  const collectionStartedOn = new Date("2026-08-30T08:00:00.000Z");
+  const collectionStartedOn = new Date("2026-08-30T03:00:00.000Z");
   const projection = await createCaller({
     userId: "system-admin",
-    sourceSummaries: [
-      {
-        source: "YOUTUBE",
-        attempts: 2,
-        estimatedAiImportCostUsd: 0.01,
-        collectionStartedOn: new Date("2026-08-30T09:00:00.000Z"),
-      },
+    attempts: [
       {
         source: "PHOTO",
-        attempts: 1,
+        startedAt: collectionStartedOn,
+        householdAttributionKey: "household-a",
+        inferenceState: "ESTIMATED",
         estimatedAiImportCostUsd: 0.0023456789,
-        collectionStartedOn,
+        supadataCredits: 0,
+        supadataOperationsStarted: 0,
+        supadataUnknownOperationCount: 0,
+      },
+      {
+        source: "YOUTUBE",
+        startedAt: new Date("2026-08-30T04:00:00.000Z"),
+        householdAttributionKey: "household-a",
+        inferenceState: "ESTIMATED",
+        estimatedAiImportCostUsd: 0.004,
+        supadataCredits: 0,
+        supadataOperationsStarted: 0,
+        supadataUnknownOperationCount: 0,
+      },
+      {
+        source: "YOUTUBE",
+        startedAt: new Date("2026-08-30T05:00:00.000Z"),
+        householdAttributionKey: "household-b",
+        inferenceState: "ESTIMATED",
+        estimatedAiImportCostUsd: 0.006,
+        supadataCredits: 0,
+        supadataOperationsStarted: 0,
+        supadataUnknownOperationCount: 0,
       },
     ],
   }).dashboard(dashboardInput);
@@ -184,24 +200,26 @@ void test("the report exposes all five recorded Import Sources", async () => {
 void test("the report summarizes known Supadata credits and unresolved operations", async () => {
   const projection = await createCaller({
     userId: "system-admin",
-    sourceSummaries: [
+    attempts: [
       {
         source: "YOUTUBE",
-        attempts: 2,
+        startedAt: new Date("2026-08-30T03:00:00.000Z"),
+        householdAttributionKey: "household-a",
+        inferenceState: "ESTIMATED",
         estimatedAiImportCostUsd: 0.01,
         supadataCredits: 3,
         supadataOperationsStarted: 4,
         supadataUnknownOperationCount: 1,
-        collectionStartedOn: new Date("2026-08-30T08:00:00.000Z"),
       },
       {
         source: "LINK",
-        attempts: 2,
+        startedAt: new Date("2026-08-30T04:00:00.000Z"),
+        householdAttributionKey: "household-b",
+        inferenceState: "ESTIMATED",
         estimatedAiImportCostUsd: 0.005,
         supadataCredits: 1,
         supadataOperationsStarted: 2,
         supadataUnknownOperationCount: 1,
-        collectionStartedOn: new Date("2026-08-30T09:00:00.000Z"),
       },
     ],
   }).dashboard(dashboardInput);
@@ -209,6 +227,53 @@ void test("the report summarizes known Supadata credits and unresolved operation
   assert.equal(projection.attemptSummary.supadataCredits, 4);
   assert.equal(projection.attemptSummary.supadataOperationsStarted, 6);
   assert.equal(projection.attemptSummary.supadataUnknownOperationCount, 2);
+});
+
+void test("the projection comes from one narrow query bounded by its captured current time", async () => {
+  const queries: unknown[] = [];
+  const projection = await createCaller({
+    userId: "system-admin",
+    onReportQuery: (query) => queries.push(query),
+  }).dashboard(dashboardInput);
+
+  assert.equal(queries.length, 1);
+  assert.deepEqual(Object.keys(projection).sort(), [
+    "attemptSummary",
+    "billingLinks",
+    "collectionStartedOn",
+    "dailyWindow",
+    "environment",
+    "households",
+    "importSources",
+    "last24Hours",
+    "period",
+  ]);
+  const query = queries[0] as {
+    where: { startedAt: { lte: unknown } };
+    orderBy: unknown;
+    select: unknown;
+  };
+  assert.equal(query.where.startedAt.lte, REPORT_NOW);
+  assert.deepEqual(
+    {
+      ...query,
+      where: { startedAt: { lte: "captured current time" } },
+    },
+    {
+      where: { startedAt: { lte: "captured current time" } },
+      orderBy: { startedAt: "asc" },
+      select: {
+        source: true,
+        startedAt: true,
+        householdAttributionKey: true,
+        inferenceState: true,
+        estimatedAiImportCostUsd: true,
+        supadataOperationsStarted: true,
+        supadataCredits: true,
+        supadataUnknownOperationCount: true,
+      },
+    },
+  );
 });
 
 void test("the reporting query returns each deployment environment label", async () => {
