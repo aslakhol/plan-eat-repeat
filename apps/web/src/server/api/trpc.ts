@@ -15,6 +15,12 @@ import { ZodError } from "zod";
 import { ImportRecipeError } from "@planeatrepeat/shared";
 
 import { db } from "~/server/db";
+import { env } from "~/env";
+import {
+  getDeploymentEnvironment,
+  isSystemAdminUser,
+  parseSystemAdminUserIds,
+} from "~/server/system-admin";
 
 /**
  * 1. CONTEXT
@@ -26,6 +32,8 @@ import { db } from "~/server/db";
 
 type CreateContextOptions = {
   auth: Awaited<ReturnType<typeof getAuth>>;
+  systemAdminUserIds?: ReadonlySet<string>;
+  deploymentEnvironment?: ReturnType<typeof getDeploymentEnvironment>;
 };
 
 /**
@@ -42,6 +50,12 @@ const createInnerTRPCContext = (_opts: CreateContextOptions) => {
   return {
     db,
     auth: _opts.auth,
+    systemAdminUserIds:
+      _opts.systemAdminUserIds ??
+      parseSystemAdminUserIds(env.SYSTEM_ADMIN_CLERK_USER_IDS),
+    deploymentEnvironment:
+      _opts.deploymentEnvironment ??
+      getDeploymentEnvironment(env.VERCEL_ENV, env.NODE_ENV),
   };
 };
 
@@ -145,6 +159,13 @@ const hasAuthenticatedSession = t.middleware(async ({ next, ctx }) => {
   return next({ ctx: { auth: ctx.auth } });
 });
 
+const isSystemAdmin = t.middleware(async ({ next, ctx }) => {
+  if (!isSystemAdminUser(ctx.auth.userId, ctx.systemAdminUserIds)) {
+    throw new TRPCError({ code: "FORBIDDEN" });
+  }
+  return next({ ctx: { auth: ctx.auth } });
+});
+
 const isAuthedAndHasHousehold = t.middleware(async ({ next, ctx }) => {
   if (!ctx.auth.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -186,6 +207,7 @@ export const createTRPCRouter = t.router;
  */
 export const publicProcedure = t.procedure.use(hasHouseholdOrUndefined);
 export const sessionProcedure = t.procedure.use(hasAuthenticatedSession);
+export const systemAdminProcedure = t.procedure.use(isSystemAdmin);
 export const protectedProcedure = t.procedure.use(isAuthed);
 export const protectedProcedureWithHousehold = t.procedure.use(
   isAuthedAndHasHousehold,
