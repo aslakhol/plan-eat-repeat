@@ -45,7 +45,6 @@ export const aiImportSpendRouter = createTRPCRouter({
         billingLinks: AI_IMPORT_SPEND_BILLING_LINKS,
         ...report,
         households: [],
-        importSources: [],
       };
     }),
 });

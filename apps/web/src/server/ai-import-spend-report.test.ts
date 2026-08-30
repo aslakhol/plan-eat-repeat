@@ -189,6 +189,134 @@ void test("period totals use the chosen denominators and retain unknown counts",
   });
 });
 
+void test("Import Source summaries reconcile recorded period spend across every source", () => {
+  const report = buildAiImportSpendReport({
+    now: new Date("2026-08-30T12:00:00.000Z"),
+    period: "7",
+    chartOffset: 0,
+    attempts: [
+      attempt({
+        source: "TEXT",
+        startedAt: new Date("2026-08-30T11:00:00.000Z"),
+        estimatedAiImportCostUsd: 0.2,
+      }),
+      attempt({
+        source: "PHOTO",
+        startedAt: new Date("2026-08-30T10:00:00.000Z"),
+        inferenceState: "UNKNOWN",
+        estimatedAiImportCostUsd: null,
+      }),
+      attempt({
+        source: "YOUTUBE",
+        startedAt: new Date("2026-08-30T09:00:00.000Z"),
+        estimatedAiImportCostUsd: 0.3,
+        supadataOperationsStarted: 2,
+        supadataCredits: 3,
+      }),
+      attempt({
+        source: "YOUTUBE",
+        startedAt: new Date("2026-08-30T08:00:00.000Z"),
+        estimatedAiImportCostUsd: 0.5,
+        supadataOperationsStarted: 1,
+        supadataUnknownOperationCount: 1,
+      }),
+      attempt({
+        source: "INSTAGRAM",
+        startedAt: new Date("2026-08-30T07:00:00.000Z"),
+        inferenceState: "NOT_INCURRED",
+        estimatedAiImportCostUsd: null,
+        supadataOperationsStarted: 1,
+        supadataCredits: 2,
+      }),
+      attempt({
+        source: "LINK",
+        startedAt: new Date("2026-08-30T06:00:00.000Z"),
+        estimatedAiImportCostUsd: 0.1,
+        supadataOperationsStarted: 1,
+        supadataCredits: 0,
+        supadataUnknownOperationCount: 1,
+      }),
+    ],
+  });
+
+  assert.deepEqual(report.importSources, [
+    {
+      source: "YOUTUBE",
+      attempts: 2,
+      pricedAttempts: 2,
+      estimatedAiImportCostUsd: 0.8,
+      unknownInferenceAttempts: 0,
+      supadataOperationsStarted: 3,
+      supadataCredits: 3,
+      supadataUnknownOperationCount: 1,
+      averageAiImportCostUsd: 0.4,
+      averageSupadataCredits: 1.5,
+    },
+    {
+      source: "INSTAGRAM",
+      attempts: 1,
+      pricedAttempts: 0,
+      estimatedAiImportCostUsd: 0,
+      unknownInferenceAttempts: 0,
+      supadataOperationsStarted: 1,
+      supadataCredits: 2,
+      supadataUnknownOperationCount: 0,
+      averageAiImportCostUsd: 0,
+      averageSupadataCredits: 2,
+    },
+    {
+      source: "LINK",
+      attempts: 1,
+      pricedAttempts: 1,
+      estimatedAiImportCostUsd: 0.1,
+      unknownInferenceAttempts: 0,
+      supadataOperationsStarted: 1,
+      supadataCredits: 0,
+      supadataUnknownOperationCount: 1,
+      averageAiImportCostUsd: 0.1,
+      averageSupadataCredits: 0,
+    },
+    {
+      source: "TEXT",
+      attempts: 1,
+      pricedAttempts: 1,
+      estimatedAiImportCostUsd: 0.2,
+      unknownInferenceAttempts: 0,
+      supadataOperationsStarted: 0,
+      supadataCredits: 0,
+      supadataUnknownOperationCount: 0,
+      averageAiImportCostUsd: 0.2,
+      averageSupadataCredits: 0,
+    },
+    {
+      source: "PHOTO",
+      attempts: 1,
+      pricedAttempts: 0,
+      estimatedAiImportCostUsd: 0,
+      unknownInferenceAttempts: 1,
+      supadataOperationsStarted: 0,
+      supadataCredits: 0,
+      supadataUnknownOperationCount: 0,
+      averageAiImportCostUsd: 0,
+      averageSupadataCredits: 0,
+    },
+  ]);
+  assert.equal(
+    report.importSources.reduce(
+      (total, source) => total + source.estimatedAiImportCostUsd,
+      0,
+    ),
+    report.period.aiImportCostUsd,
+  );
+  assert.equal(
+    report.importSources.reduce(
+      (total, source) => total + source.supadataCredits,
+      0,
+    ),
+    report.period.supadataCredits,
+  );
+});
+
 void test("All time history pages backward in 30-day steps with at most 60 visible dates", () => {
   const attempts = [
     attempt({ startedAt: new Date("2026-01-01T11:00:00.000Z") }),

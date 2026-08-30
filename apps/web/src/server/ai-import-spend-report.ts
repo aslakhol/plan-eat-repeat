@@ -49,6 +49,14 @@ const IMPORT_SOURCE_ORDER = [
   "LINK",
 ] as const satisfies ReadonlyArray<AiImportSource>;
 
+const IMPORT_SOURCE_DISPLAY_ORDER = [
+  "YOUTUBE",
+  "INSTAGRAM",
+  "LINK",
+  "TEXT",
+  "PHOTO",
+] as const satisfies ReadonlyArray<AiImportSource>;
+
 export const osloDate = (instant: Date): OsloDate => {
   const parts = dateParts(osloDateFormatter, instant);
   return `${parts.year}-${parts.month}-${parts.day}` as OsloDate;
@@ -125,12 +133,19 @@ export const buildAiImportSpendReport = ({
     (attempt) => attempt.startedAt >= selectedPeriod.startsAt,
   );
   const representedHouseholds = distinctHouseholds(reportAttempts).size;
+  const importSources = summarizeImportSources(periodAttempts);
 
   return {
     collectionStartedOn,
     attemptSummary: summarizeAllAttempts(reportAttempts),
     last24Hours: summarizeLast24Hours(reportAttempts, now, collectionStartedOn),
-    period: summarizePeriod(periodAttempts, period, representedHouseholds),
+    period: summarizePeriod(
+      periodAttempts,
+      period,
+      representedHouseholds,
+      importSources,
+    ),
+    importSources,
     dailyWindow: buildDailyWindow({
       attempts: periodAttempts,
       period,
@@ -140,6 +155,47 @@ export const buildAiImportSpendReport = ({
     }),
   };
 };
+
+const summarizeImportSources = (
+  attempts: ReadonlyArray<AiImportSpendReportAttempt>,
+) =>
+  IMPORT_SOURCE_DISPLAY_ORDER.map((source) => {
+    const sourceAttempts = attempts.filter(
+      (attempt) => attempt.source === source,
+    );
+    const pricedAttempts = sourceAttempts.filter(
+      (attempt) => attempt.inferenceState === "ESTIMATED",
+    );
+    const estimatedAiImportCostUsd = aiImportCost(sourceAttempts);
+    const recordedSupadataCredits = supadataCredits(sourceAttempts);
+
+    return {
+      source,
+      attempts: sourceAttempts.length,
+      pricedAttempts: pricedAttempts.length,
+      estimatedAiImportCostUsd,
+      unknownInferenceAttempts: sourceAttempts.filter(
+        (attempt) => attempt.inferenceState === "UNKNOWN",
+      ).length,
+      supadataOperationsStarted: sum(
+        sourceAttempts.map((attempt) => attempt.supadataOperationsStarted),
+      ),
+      supadataCredits: recordedSupadataCredits,
+      supadataUnknownOperationCount: sum(
+        sourceAttempts.map(
+          (attempt) => attempt.supadataUnknownOperationCount,
+        ),
+      ),
+      averageAiImportCostUsd:
+        pricedAttempts.length === 0
+          ? 0
+          : estimatedAiImportCostUsd / pricedAttempts.length,
+      averageSupadataCredits:
+        sourceAttempts.length === 0
+          ? 0
+          : recordedSupadataCredits / sourceAttempts.length,
+    };
+  });
 
 const summarizeAllAttempts = (
   attempts: ReadonlyArray<AiImportSpendReportAttempt>,
@@ -222,12 +278,17 @@ const summarizePeriod = (
   attempts: ReadonlyArray<AiImportSpendReportAttempt>,
   period: AiImportSpendPeriod,
   representedHouseholds: number,
+  importSources: ReturnType<typeof summarizeImportSources>,
 ) => {
   const pricedAttempts = attempts.filter(
     (attempt) => attempt.inferenceState === "ESTIMATED",
   );
-  const knownAiImportCost = aiImportCost(attempts);
-  const knownSupadataCredits = supadataCredits(attempts);
+  const knownAiImportCost = sum(
+    importSources.map((source) => source.estimatedAiImportCostUsd),
+  );
+  const knownSupadataCredits = sum(
+    importSources.map((source) => source.supadataCredits),
+  );
 
   return {
     key: period,
