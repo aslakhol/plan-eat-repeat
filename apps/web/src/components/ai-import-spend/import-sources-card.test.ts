@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { parseHTML } from "linkedom";
 
 import { ImportSourcesCard } from "./import-sources-card";
 
@@ -162,4 +163,83 @@ void test("Import Sources replaces zero pies with the period empty state", () =>
   assert.match(html, /No import attempts in this period\./);
   assert.match(html, /This month/);
   assert.doesNotMatch(html, /data-pie-chart=/);
+});
+
+void test("Import Source details open from focus and toggle from touch", async () => {
+  const { document, window } = parseHTML(
+    "<!doctype html><html><body><div id=app></div></body></html>",
+  );
+  Object.assign(globalThis, {
+    document,
+    window,
+    Node: window.Node,
+    Element: window.Element,
+    HTMLElement: window.HTMLElement,
+    SVGElement: window.SVGElement,
+    Event: window.Event,
+    IS_REACT_ACT_ENVIRONMENT: true,
+  });
+  const { createRoot } = await import("react-dom/client");
+  const { act } = await import("react");
+  const container = document.querySelector("#app");
+  assert.ok(container);
+  const root = createRoot(container);
+
+  act(() => {
+    root.render(
+      createElement(ImportSourcesCard, {
+        periodLabel: "7 days",
+        period: {
+          attempts: 15,
+          aiImportCostUsd: 0.9,
+          supadataCredits: 9,
+        },
+        importSources,
+      }),
+    );
+  });
+
+  const youtubeSlice = document.querySelector(
+    '[data-measure="attempts"] [data-pie-slice="YOUTUBE"]',
+  );
+  assert.ok(youtubeSlice);
+  act(() => {
+    youtubeSlice.dispatchEvent(new window.Event("focusin", { bubbles: true }));
+  });
+  assert.match(
+    document.querySelector('[role="tooltip"]')?.textContent ?? "",
+    /YouTube/,
+  );
+
+  const escape = new window.Event("keydown", {
+    bubbles: true,
+    cancelable: true,
+  });
+  Object.defineProperty(escape, "key", { value: "Escape" });
+  act(() => {
+    youtubeSlice.dispatchEvent(escape);
+  });
+  assert.equal(document.querySelector('[role="tooltip"]'), null);
+
+  const youtubeLegend = document.querySelector(
+    '[data-legend="attempts"] [data-legend-item="YOUTUBE"]',
+  );
+  assert.ok(youtubeLegend);
+  act(() => {
+    youtubeLegend.dispatchEvent(
+      new window.Event("touchend", { bubbles: true, cancelable: true }),
+    );
+  });
+  assert.match(
+    document.querySelector('[role="tooltip"]')?.textContent ?? "",
+    /20\.0%/,
+  );
+  act(() => {
+    youtubeLegend.dispatchEvent(
+      new window.Event("touchend", { bubbles: true, cancelable: true }),
+    );
+  });
+  assert.equal(document.querySelector('[role="tooltip"]'), null);
+
+  act(() => root.unmount());
 });

@@ -2,6 +2,7 @@ import type { AiImportInferenceState, AiImportSource } from "@planeatrepeat/db";
 
 import {
   AI_IMPORT_SPEND_PERIOD_LABELS,
+  AI_IMPORT_SPEND_SOURCES,
   type AiImportSpendDay,
   type AiImportSpendPeriod,
   type OsloDate,
@@ -47,14 +48,6 @@ const IMPORT_SOURCE_ORDER = [
   "YOUTUBE",
   "INSTAGRAM",
   "LINK",
-] as const satisfies ReadonlyArray<AiImportSource>;
-
-const IMPORT_SOURCE_DISPLAY_ORDER = [
-  "YOUTUBE",
-  "INSTAGRAM",
-  "LINK",
-  "TEXT",
-  "PHOTO",
 ] as const satisfies ReadonlyArray<AiImportSource>;
 
 export const osloDate = (instant: Date): OsloDate => {
@@ -159,7 +152,7 @@ export const buildAiImportSpendReport = ({
 const summarizeImportSources = (
   attempts: ReadonlyArray<AiImportSpendReportAttempt>,
 ) =>
-  IMPORT_SOURCE_DISPLAY_ORDER.map((source) => {
+  AI_IMPORT_SPEND_SOURCES.map(({ source }) => {
     const sourceAttempts = attempts.filter(
       (attempt) => attempt.source === source,
     );
@@ -182,9 +175,7 @@ const summarizeImportSources = (
       ),
       supadataCredits: recordedSupadataCredits,
       supadataUnknownOperationCount: sum(
-        sourceAttempts.map(
-          (attempt) => attempt.supadataUnknownOperationCount,
-        ),
+        sourceAttempts.map((attempt) => attempt.supadataUnknownOperationCount),
       ),
       averageAiImportCostUsd:
         pricedAttempts.length === 0

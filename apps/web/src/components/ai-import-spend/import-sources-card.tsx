@@ -2,24 +2,21 @@ import React, { useId, useState, type KeyboardEvent } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import {
+  AI_IMPORT_SPEND_SOURCES,
   formatAiImportSpendCredits,
   formatAiImportSpendUsd,
+  type AiImportSpendSource,
 } from "~/lib/ai-import-spend";
 
-const SOURCE_PRESENTATION = {
-  YOUTUBE: { label: "YouTube", color: "hsl(18 72% 56%)" },
-  INSTAGRAM: { label: "Instagram", color: "hsl(6 48% 63%)" },
-  LINK: { label: "Link", color: "hsl(32 42% 68%)" },
-  TEXT: { label: "Text", color: "hsl(42 28% 79%)" },
-  PHOTO: { label: "Photo", color: "hsl(150 14% 62%)" },
-} as const;
-
-type ImportSource = keyof typeof SOURCE_PRESENTATION;
-
-const SOURCE_ORDER = Object.keys(SOURCE_PRESENTATION) as ImportSource[];
+const SOURCE_PRESENTATION = Object.fromEntries(
+  AI_IMPORT_SPEND_SOURCES.map(({ source, ...presentation }) => [
+    source,
+    presentation,
+  ]),
+) as Record<AiImportSpendSource, { label: string; color: string }>;
 
 export type ImportSourceSummary = {
-  source: ImportSource;
+  source: AiImportSpendSource;
   attempts: number;
   pricedAttempts: number;
   estimatedAiImportCostUsd: number;
@@ -73,10 +70,6 @@ export const ImportSourcesCard = ({
   };
   importSources: ReadonlyArray<ImportSourceSummary>;
 }) => {
-  const orderedSources = SOURCE_ORDER.map((source) =>
-    importSources.find((summary) => summary.source === source),
-  ).filter((summary): summary is ImportSourceSummary => Boolean(summary));
-
   return (
     <Card>
       <CardHeader className="flex-row items-baseline justify-between space-y-0 px-5 pb-[22px] pt-6 sm:px-7">
@@ -104,11 +97,11 @@ export const ImportSourcesCard = ({
                   format={measure.format}
                   total={measureTotal(measure.key, period)}
                   totalTone={measure.totalTone}
-                  sources={orderedSources}
+                  sources={importSources}
                 />
               ))}
             </div>
-            <SourceAverages sources={orderedSources} />
+            <SourceAverages sources={importSources} />
           </>
         )}
       </CardContent>
@@ -132,7 +125,9 @@ const SourcePie = ({
   sources: ReadonlyArray<ImportSourceSummary>;
 }) => {
   const titleId = useId();
-  const [activeSource, setActiveSource] = useState<ImportSource | null>(null);
+  const [activeSource, setActiveSource] = useState<AiImportSpendSource | null>(
+    null,
+  );
   const nonZeroSources = sources.filter((source) => source[measure] > 0);
   const legendSources = nonZeroSources.toSorted(
     (left, right) => right.attempts - left.attempts,
@@ -141,6 +136,17 @@ const SourcePie = ({
     (source) => source.source === activeSource,
   );
   let accumulatedValue = 0;
+  const interactionProps = (source: AiImportSpendSource) => ({
+    onMouseEnter: () => setActiveSource(source),
+    onMouseLeave: () => setActiveSource(null),
+    onFocus: () => setActiveSource(source),
+    onBlur: () => setActiveSource(null),
+    onClick: () => setActiveSource(source),
+    onTouchEnd: (event: React.TouchEvent) => {
+      event.preventDefault();
+      setActiveSource((active) => (active === source ? null : source));
+    },
+  });
 
   return (
     <section className="flex min-w-0 flex-col gap-3.5" data-measure={measure}>
@@ -184,11 +190,7 @@ const SourcePie = ({
                   role="button"
                   tabIndex={0}
                   className="focus-visible:outline-none focus-visible:brightness-90"
-                  onMouseEnter={() => setActiveSource(source.source)}
-                  onMouseLeave={() => setActiveSource(null)}
-                  onFocus={() => setActiveSource(source.source)}
-                  onBlur={() => setActiveSource(null)}
-                  onClick={() => setActiveSource(source.source)}
+                  {...interactionProps(source.source)}
                   onKeyDown={(event) =>
                     activatePieSlice(event, source.source, setActiveSource)
                   }
@@ -229,11 +231,7 @@ const SourcePie = ({
                   className="focus-visible:ring-ring flex items-center gap-1.5 whitespace-nowrap rounded-sm text-xs focus-visible:outline-none focus-visible:ring-2"
                   data-legend-item={source.source}
                   aria-label={description}
-                  onMouseEnter={() => setActiveSource(source.source)}
-                  onMouseLeave={() => setActiveSource(null)}
-                  onFocus={() => setActiveSource(source.source)}
-                  onBlur={() => setActiveSource(null)}
-                  onClick={() => setActiveSource(source.source)}
+                  {...interactionProps(source.source)}
                   onKeyDown={(event) =>
                     activateLegendItem(event, setActiveSource)
                   }
@@ -311,7 +309,7 @@ const SourceSwatch = ({
   source,
   size = "ordinary",
 }: {
-  source: ImportSource;
+  source: AiImportSpendSource;
   size?: "ordinary" | "small";
 }) => (
   <span
@@ -323,21 +321,24 @@ const SourceSwatch = ({
 
 const activatePieSlice = (
   event: KeyboardEvent<SVGPathElement>,
-  source: ImportSource,
-  setActiveSource: (source: ImportSource | null) => void,
+  source: AiImportSpendSource,
+  setActiveSource: (source: AiImportSpendSource | null) => void,
 ) => {
   if (event.key === "Enter" || event.key === " ") {
     event.preventDefault();
     setActiveSource(source);
   } else if (event.key === "Escape") {
     setActiveSource(null);
-    event.currentTarget.blur();
+    const target = event.currentTarget as SVGPathElement & {
+      blur?: () => void;
+    };
+    target.blur?.();
   }
 };
 
 const activateLegendItem = (
   event: KeyboardEvent<HTMLButtonElement>,
-  setActiveSource: (source: ImportSource | null) => void,
+  setActiveSource: (source: AiImportSpendSource | null) => void,
 ) => {
   if (event.key === "Escape") {
     setActiveSource(null);

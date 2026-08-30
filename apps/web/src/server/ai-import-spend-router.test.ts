@@ -3,10 +3,7 @@ import { createRequire } from "node:module";
 import { mock, test } from "node:test";
 
 import { TRPCError } from "@trpc/server";
-import type {
-  AiImportInferenceState,
-  AiImportSource,
-} from "@planeatrepeat/db";
+import type { AiImportInferenceState, AiImportSource } from "@planeatrepeat/db";
 
 const { loadEnvConfig } = createRequire(import.meta.url)(
   "@next/env",
@@ -130,9 +127,9 @@ void test("an allowlisted System Admin without a Household receives the empty sp
       maximumChartOffset: 0,
     },
     households: [],
-    importSources: [
-      {
-        source: "YOUTUBE",
+    importSources: ["YOUTUBE", "INSTAGRAM", "LINK", "TEXT", "PHOTO"].map(
+      (source) => ({
+        source,
         attempts: 0,
         pricedAttempts: 0,
         estimatedAiImportCostUsd: 0,
@@ -142,56 +139,8 @@ void test("an allowlisted System Admin without a Household receives the empty sp
         supadataUnknownOperationCount: 0,
         averageAiImportCostUsd: 0,
         averageSupadataCredits: 0,
-      },
-      {
-        source: "INSTAGRAM",
-        attempts: 0,
-        pricedAttempts: 0,
-        estimatedAiImportCostUsd: 0,
-        unknownInferenceAttempts: 0,
-        supadataOperationsStarted: 0,
-        supadataCredits: 0,
-        supadataUnknownOperationCount: 0,
-        averageAiImportCostUsd: 0,
-        averageSupadataCredits: 0,
-      },
-      {
-        source: "LINK",
-        attempts: 0,
-        pricedAttempts: 0,
-        estimatedAiImportCostUsd: 0,
-        unknownInferenceAttempts: 0,
-        supadataOperationsStarted: 0,
-        supadataCredits: 0,
-        supadataUnknownOperationCount: 0,
-        averageAiImportCostUsd: 0,
-        averageSupadataCredits: 0,
-      },
-      {
-        source: "TEXT",
-        attempts: 0,
-        pricedAttempts: 0,
-        estimatedAiImportCostUsd: 0,
-        unknownInferenceAttempts: 0,
-        supadataOperationsStarted: 0,
-        supadataCredits: 0,
-        supadataUnknownOperationCount: 0,
-        averageAiImportCostUsd: 0,
-        averageSupadataCredits: 0,
-      },
-      {
-        source: "PHOTO",
-        attempts: 0,
-        pricedAttempts: 0,
-        estimatedAiImportCostUsd: 0,
-        unknownInferenceAttempts: 0,
-        supadataOperationsStarted: 0,
-        supadataCredits: 0,
-        supadataUnknownOperationCount: 0,
-        averageAiImportCostUsd: 0,
-        averageSupadataCredits: 0,
-      },
-    ],
+      }),
+    ),
   });
 });
 
