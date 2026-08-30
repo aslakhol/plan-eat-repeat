@@ -1,11 +1,10 @@
-import type {
-  AiImportInferenceState,
-  AiImportSource,
-} from "@planeatrepeat/db";
+import type { AiImportInferenceState, AiImportSource } from "@planeatrepeat/db";
 
 import {
   AI_IMPORT_SPEND_PERIOD_LABELS,
+  type AiImportSpendDay,
   type AiImportSpendPeriod,
+  type OsloDate,
 } from "~/lib/ai-import-spend";
 
 const OSLO_TIME_ZONE = "Europe/Oslo";
@@ -31,8 +30,6 @@ const osloDateTimeFormatter = new Intl.DateTimeFormat("en-CA", {
   hourCycle: "h23",
 });
 
-export type OsloDate = `${number}-${number}-${number}`;
-
 export type AiImportSpendReportAttempt = {
   source: AiImportSource;
   startedAt: Date;
@@ -42,13 +39,6 @@ export type AiImportSpendReportAttempt = {
   supadataOperationsStarted: number;
   supadataCredits: number;
   supadataUnknownOperationCount: number;
-};
-
-export type AiImportSpendDay = {
-  date: OsloDate;
-  aiImportCostUsd: number;
-  supadataCredits: number;
-  attempts: number;
 };
 
 const IMPORT_SOURCE_ORDER = [
@@ -106,7 +96,6 @@ export const getAiImportSpendPeriod = (
   return {
     startDate,
     startsAt: osloDayStartsAt(startDate),
-    endsAt: now,
   };
 };
 
@@ -122,8 +111,10 @@ export const buildAiImportSpendReport = ({
   now: Date;
 }) => {
   const reportAttempts = attempts
-    .filter((item) => item.startedAt <= now)
-    .toSorted((left, right) => left.startedAt.getTime() - right.startedAt.getTime());
+    .filter((attempt) => attempt.startedAt <= now)
+    .toSorted(
+      (left, right) => left.startedAt.getTime() - right.startedAt.getTime(),
+    );
   const collectionStartedOn = reportAttempts[0]?.startedAt ?? null;
   const selectedPeriod = getAiImportSpendPeriod(
     period,
@@ -131,7 +122,7 @@ export const buildAiImportSpendReport = ({
     collectionStartedOn,
   );
   const periodAttempts = reportAttempts.filter(
-    (item) => item.startedAt >= selectedPeriod.startsAt,
+    (attempt) => attempt.startedAt >= selectedPeriod.startsAt,
   );
   const representedHouseholds = distinctHouseholds(reportAttempts).size;
 
@@ -139,11 +130,7 @@ export const buildAiImportSpendReport = ({
     collectionStartedOn,
     attemptSummary: summarizeAllAttempts(reportAttempts),
     last24Hours: summarizeLast24Hours(reportAttempts, now, collectionStartedOn),
-    period: summarizePeriod(
-      periodAttempts,
-      period,
-      representedHouseholds,
-    ),
+    period: summarizePeriod(periodAttempts, period, representedHouseholds),
     dailyWindow: buildDailyWindow({
       attempts: periodAttempts,
       period,
@@ -158,7 +145,9 @@ const summarizeAllAttempts = (
   attempts: ReadonlyArray<AiImportSpendReportAttempt>,
 ) => {
   const sources = IMPORT_SOURCE_ORDER.map((source) => {
-    const sourceAttempts = attempts.filter((attempt) => attempt.source === source);
+    const sourceAttempts = attempts.filter(
+      (attempt) => attempt.source === source,
+    );
     return {
       source,
       attempts: sourceAttempts.length,
@@ -200,11 +189,9 @@ const summarizeLast24Hours = (
       attempt.startedAt < recentStartsAt,
   );
   const completedDays = completedAverageDays(now, collectionStartedOn);
+  const attemptsByDate = groupAttemptsByOsloDate(attempts);
   const completedDayTotals = completedDays.map((date) =>
-    summarizeDay(
-      date,
-      attempts.filter((attempt) => osloDate(attempt.startedAt) === date),
-    ),
+    summarizeDay(date, attemptsByDate.get(date) ?? []),
   );
 
   return {
@@ -265,7 +252,9 @@ const summarizePeriod = (
       attempts.map((attempt) => attempt.supadataUnknownOperationCount),
     ),
     averageAiImportCostUsd:
-      pricedAttempts.length === 0 ? 0 : knownAiImportCost / pricedAttempts.length,
+      pricedAttempts.length === 0
+        ? 0
+        : knownAiImportCost / pricedAttempts.length,
     averageSupadataCredits:
       attempts.length === 0 ? 0 : knownSupadataCredits / attempts.length,
   };
@@ -297,19 +286,15 @@ const buildDailyWindow = ({
         )
       : 0;
   const chartOffset =
-    period === "all"
-      ? Math.min(requestedChartOffset, maximumChartOffset)
-      : 0;
+    period === "all" ? Math.min(requestedChartOffset, maximumChartOffset) : 0;
   const windowEndsAt = dates.length - chartOffset * HISTORY_STEP_DAYS;
   const windowStartsAt = Math.max(0, windowEndsAt - HISTORY_WINDOW_DAYS);
   const windowDates = dates.slice(windowStartsAt, windowEndsAt);
+  const attemptsByDate = groupAttemptsByOsloDate(attempts);
 
   return {
     days: windowDates.map((date) =>
-      summarizeDay(
-        date,
-        attempts.filter((attempt) => osloDate(attempt.startedAt) === date),
-      ),
+      summarizeDay(date, attemptsByDate.get(date) ?? []),
     ),
     chartOffset,
     maximumChartOffset,
@@ -338,7 +323,9 @@ const completedAverageDays = (
 
   const earliestIncludedDate = addCalendarDays(yesterday, -29);
   return calendarDates(
-    collectionDate > earliestIncludedDate ? collectionDate : earliestIncludedDate,
+    collectionDate > earliestIncludedDate
+      ? collectionDate
+      : earliestIncludedDate,
     yesterday,
   );
 };
@@ -346,9 +333,8 @@ const completedAverageDays = (
 const aiImportCost = (attempts: ReadonlyArray<AiImportSpendReportAttempt>) =>
   sum(attempts.map((attempt) => attempt.estimatedAiImportCostUsd ?? 0));
 
-const supadataCredits = (
-  attempts: ReadonlyArray<AiImportSpendReportAttempt>,
-) => sum(attempts.map((attempt) => attempt.supadataCredits));
+const supadataCredits = (attempts: ReadonlyArray<AiImportSpendReportAttempt>) =>
+  sum(attempts.map((attempt) => attempt.supadataCredits));
 
 const usedSupadata = (attempt: AiImportSpendReportAttempt) =>
   attempt.supadataOperationsStarted > 0;
@@ -356,6 +342,19 @@ const usedSupadata = (attempt: AiImportSpendReportAttempt) =>
 const distinctHouseholds = (
   attempts: ReadonlyArray<AiImportSpendReportAttempt>,
 ) => new Set(attempts.map((attempt) => attempt.householdAttributionKey));
+
+const groupAttemptsByOsloDate = (
+  attempts: ReadonlyArray<AiImportSpendReportAttempt>,
+) => {
+  const attemptsByDate = new Map<OsloDate, AiImportSpendReportAttempt[]>();
+  for (const attempt of attempts) {
+    const date = osloDate(attempt.startedAt);
+    const dateAttempts = attemptsByDate.get(date) ?? [];
+    dateAttempts.push(attempt);
+    attemptsByDate.set(date, dateAttempts);
+  }
+  return attemptsByDate;
+};
 
 const mean = (values: ReadonlyArray<number>) =>
   values.length === 0 ? 0 : sum(values) / values.length;
@@ -384,7 +383,9 @@ const calendarDates = (start: OsloDate, end: OsloDate): OsloDate[] => {
 const addCalendarDays = (date: OsloDate, numberOfDays: number): OsloDate => {
   const { year, month, day } = parseDate(date);
   const result = new Date(Date.UTC(year, month - 1, day + numberOfDays));
-  return `${result.getUTCFullYear()}-${String(result.getUTCMonth() + 1).padStart(
+  return `${result.getUTCFullYear()}-${String(
+    result.getUTCMonth() + 1,
+  ).padStart(
     2,
     "0",
   )}-${String(result.getUTCDate()).padStart(2, "0")}` as OsloDate;

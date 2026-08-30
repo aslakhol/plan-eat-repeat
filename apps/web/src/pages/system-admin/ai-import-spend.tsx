@@ -11,6 +11,8 @@ import { env } from "~/env";
 import {
   AI_IMPORT_SPEND_PERIOD_KEYS,
   AI_IMPORT_SPEND_PERIOD_LABELS,
+  formatAiImportSpendCredits,
+  formatAiImportSpendUsd,
   type AiImportSpendPeriod,
 } from "~/lib/ai-import-spend";
 import { cn } from "~/lib/utils";
@@ -207,11 +209,13 @@ const Last24HoursCard = ({
       </p>
       <div className="mt-5 grid grid-cols-2">
         <SpendFigure
-          value={formatUsd(projection.last24Hours.aiImportCostUsd)}
+          value={formatAiImportSpendUsd(projection.last24Hours.aiImportCostUsd)}
           label="Inference"
         />
         <SpendFigure
-          value={formatCredits(projection.last24Hours.supadataCredits)}
+          value={formatAiImportSpendCredits(
+            projection.last24Hours.supadataCredits,
+          )}
           label="Supadata credits"
           creditTone
           showDivider
@@ -219,15 +223,22 @@ const Last24HoursCard = ({
       </div>
       <p className="text-muted-foreground mt-4 text-[13px]">
         Previous 24 hours:{" "}
-        {formatUsd(projection.last24Hours.previousAiImportCostUsd)} ·{" "}
-        {formatCredits(projection.last24Hours.previousSupadataCredits)}
+        {formatAiImportSpendUsd(projection.last24Hours.previousAiImportCostUsd)}{" "}
+        ·{" "}
+        {formatAiImportSpendCredits(
+          projection.last24Hours.previousSupadataCredits,
+        )}
       </p>
       <div className="mt-5 grid grid-cols-2 gap-4 border-t pt-4 sm:grid-cols-4">
         <HeroMetric
           label="Mean daily"
-          value={formatUsd(projection.last24Hours.meanDailyAiImportCostUsd)}
+          value={formatAiImportSpendUsd(
+            projection.last24Hours.meanDailyAiImportCostUsd,
+          )}
           detail={
-            formatCredits(projection.last24Hours.meanDailySupadataCredits) +
+            formatAiImportSpendCredits(
+              projection.last24Hours.meanDailySupadataCredits,
+            ) +
             " · " +
             projection.last24Hours.completedDaysInAverage +
             "d"
@@ -235,9 +246,13 @@ const Last24HoursCard = ({
         />
         <HeroMetric
           label="Median daily"
-          value={formatUsd(projection.last24Hours.medianDailyAiImportCostUsd)}
+          value={formatAiImportSpendUsd(
+            projection.last24Hours.medianDailyAiImportCostUsd,
+          )}
           detail={
-            formatCredits(projection.last24Hours.medianDailySupadataCredits) +
+            formatAiImportSpendCredits(
+              projection.last24Hours.medianDailySupadataCredits,
+            ) +
             " · " +
             projection.last24Hours.completedDaysInAverage +
             "d"
@@ -264,12 +279,12 @@ const SummaryCard = ({ projection }: { projection: DashboardProjection }) => {
   const tiles = [
     {
       label: "Inference spend",
-      value: formatUsd(projection.period.aiImportCostUsd),
+      value: formatAiImportSpendUsd(projection.period.aiImportCostUsd),
       note: projection.period.label,
     },
     {
       label: "Supadata credits",
-      value: formatCredits(projection.period.supadataCredits),
+      value: formatAiImportSpendCredits(projection.period.supadataCredits),
       note:
         projection.period.label +
         " · " +
@@ -292,7 +307,10 @@ const SummaryCard = ({ projection }: { projection: DashboardProjection }) => {
     },
     {
       label: "Avg inference / priced attempt",
-      value: formatUsd(projection.period.averageAiImportCostUsd, 3),
+      value: formatAiImportSpendUsd(
+        projection.period.averageAiImportCostUsd,
+        3,
+      ),
       note:
         projection.period.noChargeAttempts +
         " no charge · " +
@@ -303,7 +321,9 @@ const SummaryCard = ({ projection }: { projection: DashboardProjection }) => {
     },
     {
       label: "Avg credits / attempt",
-      value: formatCredits(projection.period.averageSupadataCredits),
+      value: formatAiImportSpendCredits(
+        projection.period.averageSupadataCredits,
+      ),
       note: "across all " + projection.period.attempts + " attempts",
       credits: true,
     },
@@ -418,11 +438,6 @@ const DashboardLoading = () => (
     <span className="sr-only">Loading AI import spend</span>
   </div>
 );
-
-const formatUsd = (amount: number, fractionDigits = 2) =>
-  "$" + amount.toFixed(fractionDigits);
-
-const formatCredits = (credits: number) => credits.toLocaleString() + " cr";
 
 const formatCollectionDate = (date: Date | null) =>
   date

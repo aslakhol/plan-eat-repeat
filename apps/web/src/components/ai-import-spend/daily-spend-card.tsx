@@ -2,16 +2,14 @@ import React from "react";
 
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-
-type DailySpendDay = {
-  date: string;
-  aiImportCostUsd: number;
-  supadataCredits: number;
-  attempts: number;
-};
+import {
+  formatAiImportSpendCredits,
+  formatAiImportSpendUsd,
+  type AiImportSpendDay,
+} from "~/lib/ai-import-spend";
 
 export type DailySpendWindow = {
-  days: DailySpendDay[];
+  days: AiImportSpendDay[];
   chartOffset: number;
   maximumChartOffset: number;
 };
@@ -55,9 +53,7 @@ export const DailySpendCard = ({
             <p className="font-serif text-[17px]">
               No AI Import Attempts in this period
             </p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              {periodLabel}
-            </p>
+            <p className="text-muted-foreground mt-1 text-sm">{periodLabel}</p>
           </div>
         ) : (
           <>
@@ -97,7 +93,7 @@ const HistoryPager = ({
   onShowOlder,
   onShowNewer,
 }: {
-  days: DailySpendDay[];
+  days: AiImportSpendDay[];
   chartOffset: number;
   maximumChartOffset: number;
   onShowOlder: () => void;
@@ -132,7 +128,7 @@ const HistoryPager = ({
   </div>
 );
 
-const DailySpendPlot = ({ days }: { days: DailySpendDay[] }) => {
+const DailySpendPlot = ({ days }: { days: AiImportSpendDay[] }) => {
   const maximumAiImportCost = Math.max(
     ...days.map((day) => day.aiImportCostUsd),
   );
@@ -143,13 +139,11 @@ const DailySpendPlot = ({ days }: { days: DailySpendDay[] }) => {
 
   return (
     <div className="overflow-x-auto pb-2">
-      <div
-        className={days.length > 20 ? "min-w-[640px]" : "min-w-[420px]"}
-      >
+      <div className={days.length > 20 ? "min-w-[640px]" : "min-w-[420px]"}>
         <div className="grid grid-cols-[46px_minmax(0,1fr)_48px] gap-2">
           <Axis
             label="Inference axis"
-            maximum={formatUsd(maximumAiImportCost)}
+            maximum={formatAiImportSpendUsd(maximumAiImportCost)}
             tone="text-[hsl(18_40%_42%)]"
           />
           <div className="flex h-[172px] items-end border-b">
@@ -164,14 +158,17 @@ const DailySpendPlot = ({ days }: { days: DailySpendDay[] }) => {
                 <button
                   key={day.date}
                   type="button"
-                  className="group focus-visible:ring-ring relative flex h-full min-w-0 flex-1 items-end justify-center gap-px px-px pb-[26px] focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2"
+                  className="focus-visible:ring-ring group relative flex h-full min-w-0 flex-1 items-end justify-center gap-px px-px pb-[26px] focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2"
                   aria-label={dayLabel}
                   title={dayLabel}
                 >
                   <span
                     className="w-[calc(50%-1px)] max-w-[20px] rounded-t-[4px] transition-colors duration-100 group-hover:bg-[hsl(18_75%_45%)] group-focus:bg-[hsl(18_75%_45%)]"
                     style={{
-                      height: barHeight(day.aiImportCostUsd, maximumAiImportCost),
+                      height: barHeight(
+                        day.aiImportCostUsd,
+                        maximumAiImportCost,
+                      ),
                       backgroundColor: "hsl(18 70% 62%)",
                     }}
                     aria-hidden="true"
@@ -199,7 +196,7 @@ const DailySpendPlot = ({ days }: { days: DailySpendDay[] }) => {
           </div>
           <Axis
             label="Supadata axis"
-            maximum={formatCredits(maximumSupadataCredits)}
+            maximum={formatAiImportSpendCredits(maximumSupadataCredits)}
             tone="text-[hsl(150_16%_34%)]"
           />
         </div>
@@ -226,17 +223,19 @@ const Axis = ({
   </div>
 );
 
-const DayTooltip = ({ day }: { day: DailySpendDay }) => (
+const DayTooltip = ({ day }: { day: AiImportSpendDay }) => (
   <span
     className="pointer-events-none absolute left-1/2 top-1 z-30 hidden w-max max-w-[180px] -translate-x-1/2 rounded-[9px] bg-[hsl(24_12%_14%)] px-3 py-2 text-left text-[hsl(40_25%_96%)] shadow-[0_6px_18px_rgba(40,25,15,.22)] group-hover:block group-focus:block"
     aria-hidden="true"
   >
-    <span className="block text-xs font-semibold">{formatLongDate(day.date)}</span>
+    <span className="block text-xs font-semibold">
+      {formatLongDate(day.date)}
+    </span>
     <span className="mt-1 block text-xs">
-      {formatUsd(day.aiImportCostUsd)} inference
+      {formatAiImportSpendUsd(day.aiImportCostUsd)} inference
     </span>
     <span className="block text-xs">
-      {formatCredits(day.supadataCredits)} Supadata
+      {formatAiImportSpendCredits(day.supadataCredits)} Supadata
     </span>
     <span className="mt-1 block text-[11px] text-[hsl(35_12%_70%)]">
       {day.attempts} AI Import {day.attempts === 1 ? "Attempt" : "Attempts"}
@@ -244,7 +243,7 @@ const DayTooltip = ({ day }: { day: DailySpendDay }) => (
   </span>
 );
 
-const DailyValues = ({ days }: { days: DailySpendDay[] }) => (
+const DailyValues = ({ days }: { days: AiImportSpendDay[] }) => (
   <details className="mt-4 text-sm">
     <summary className="text-muted-foreground focus-visible:ring-ring w-fit cursor-pointer rounded-sm text-xs font-semibold focus-visible:outline-none focus-visible:ring-2">
       Daily values
@@ -260,10 +259,10 @@ const DailyValues = ({ days }: { days: DailySpendDay[] }) => (
 const barHeight = (value: number, maximum: number) =>
   value === 0 || maximum === 0 ? 0 : Math.max(2, (value / maximum) * 145);
 
-const describeDay = (day: DailySpendDay) =>
-  `${formatLongDate(day.date)}: ${formatUsd(day.aiImportCostUsd)} inference, ${formatCredits(day.supadataCredits)} Supadata, ${day.attempts} AI Import ${day.attempts === 1 ? "Attempt" : "Attempts"}`;
+const describeDay = (day: AiImportSpendDay) =>
+  `${formatLongDate(day.date)}: ${formatAiImportSpendUsd(day.aiImportCostUsd)} inference, ${formatAiImportSpendCredits(day.supadataCredits)} Supadata, ${day.attempts} AI Import ${day.attempts === 1 ? "Attempt" : "Attempts"}`;
 
-const formatRange = (days: DailySpendDay[]) => {
+const formatRange = (days: AiImportSpendDay[]) => {
   const firstDay = days[0];
   const lastDay = days.at(-1);
   return firstDay && lastDay
@@ -295,7 +294,3 @@ const dateFormatter = (options: Intl.DateTimeFormatOptions) =>
   });
 
 const dateAtNoon = (date: string) => new Date(`${date}T12:00:00.000Z`);
-
-const formatUsd = (amount: number) => `$${amount.toFixed(2)}`;
-
-const formatCredits = (credits: number) => `${credits.toLocaleString()} cr`;
