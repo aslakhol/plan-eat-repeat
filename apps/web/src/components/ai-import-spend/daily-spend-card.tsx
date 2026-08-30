@@ -51,7 +51,7 @@ export const DailySpendCard = ({
         {days.length === 0 ? (
           <div className="py-7 text-center">
             <p className="font-serif text-[17px]">
-              No AI Import Attempts in this period
+              No import attempts in this period.
             </p>
             <p className="text-muted-foreground mt-1 text-sm">{periodLabel}</p>
           </div>

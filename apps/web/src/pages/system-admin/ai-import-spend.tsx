@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from "react";
+import React, { useState, type ReactElement } from "react";
 import { getAuth } from "@clerk/nextjs/server";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
@@ -24,17 +24,19 @@ import {
 } from "~/server/system-admin";
 import { api, type RouterOutputs } from "~/utils/api";
 
-type DashboardProjection = RouterOutputs["aiImportSpend"]["dashboard"];
+export type DashboardProjection = RouterOutputs["aiImportSpend"]["dashboard"];
+
+export const DASHBOARD_QUERY_OPTIONS = {
+  refetchOnWindowFocus: true,
+  refetchInterval: false,
+} as const;
 
 export default function AiImportSpendPage() {
   const [period, setPeriod] = useState<AiImportSpendPeriod>("7");
   const [chartOffset, setChartOffset] = useState(0);
   const dashboardQuery = api.aiImportSpend.dashboard.useQuery(
     { period, chartOffset },
-    {
-      refetchOnWindowFocus: true,
-      refetchInterval: false,
-    },
+    DASHBOARD_QUERY_OPTIONS,
   );
   const changePeriod = (nextPeriod: AiImportSpendPeriod) => {
     setPeriod(nextPeriod);
@@ -73,7 +75,7 @@ export default function AiImportSpendPage() {
 
 AiImportSpendPage.getLayout = (page: ReactElement) => page;
 
-const Dashboard = ({
+export const Dashboard = ({
   projection,
   selectedPeriod,
   onPeriodChange,
@@ -162,8 +164,24 @@ const Dashboard = ({
       <p className="flex gap-2">
         <span aria-hidden="true">ⓘ</span>
         <span>
-          Supadata credits are counted as spent and never converted to USD.
-          Remaining allowance is not exposed by the API, so it is not shown.
+          Supadata credits are recorded as spent and never converted to USD;
+          remaining allowance is not shown.
+        </span>
+      </p>
+      <p className="flex gap-2">
+        <span aria-hidden="true">ⓘ</span>
+        <span>
+          Unknown charges add no amount to totals ·{" "}
+          {formatCount(
+            projection.period.unknownInferenceAttempts,
+            "inference attempt",
+          )}{" "}
+          ·{" "}
+          {formatCount(
+            projection.period.supadataUnknownOperationCount,
+            "Supadata operation",
+          )}{" "}
+          in {projection.period.label}
         </span>
       </p>
     </footer>
@@ -426,6 +444,9 @@ const formatCollectionDate = (date: Date | null) =>
         timeZone: "Europe/Oslo",
       }).format(date)
     : "Not started";
+
+const formatCount = (count: number, singular: string) =>
+  `${count} ${singular}${count === 1 ? "" : "s"}`;
 
 export const getServerSideProps = (({ req }) => {
   const { userId } = getAuth(req);

@@ -91,6 +91,6 @@ void test("daily spend replaces an empty plot with the period no-data message", 
     }),
   );
 
-  assert.match(html, /No AI Import Attempts in this period/);
+  assert.match(html, /No import attempts in this period\./);
   assert.doesNotMatch(html, /Inference axis/);
 });
