@@ -4,6 +4,7 @@ import {
   createSupadataYouTubeAdapter,
   type SupadataYouTubeEvidence,
 } from "./supadata";
+import type { SupadataSpendObserver } from "./supadata-spend";
 
 const ACQUISITION_TIMEOUT_MS = 20_000;
 const MAX_YOUTUBE_EVIDENCE_LENGTH = 40_000;
@@ -76,11 +77,13 @@ export const createYouTubeRecipeTextAcquirer = (
 export const acquireYouTubeRecipeText = async (
   videoId: string,
   requestSignal?: AbortSignal,
+  spendObserver?: SupadataSpendObserver,
 ) => {
   const { env } = await import("~/env");
   const adapter = createSupadataYouTubeAdapter({
     apiKey: env.SUPADATA_API_KEY,
     fetch,
+    spendObserver,
   });
   return createYouTubeRecipeTextAcquirer(adapter)(videoId, requestSignal);
 };

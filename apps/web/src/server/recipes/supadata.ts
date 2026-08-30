@@ -5,6 +5,11 @@ import {
   instagramMediaIdFromUrl,
 } from "@planeatrepeat/shared";
 
+import {
+  creditsFromSupadataBillingHeader,
+  type SupadataSpendObserver,
+} from "./supadata-spend";
+
 const SUPADATA_API_BASE_URL = "https://api.supadata.ai/v1";
 const MAX_SUPADATA_RESPONSE_BYTES = 1_048_576;
 const MINIMUM_REQUEST_INTERVAL_MS = 1_500;
@@ -79,6 +84,7 @@ type SupadataYouTubeAdapterOptions = {
   diagnostics?: SupadataDiagnostics;
   minimumRequestIntervalMs?: number;
   pollIntervalMs?: number;
+  spendObserver?: SupadataSpendObserver;
 };
 
 type SupadataInstagramAdapterOptions = SupadataYouTubeAdapterOptions;
@@ -87,6 +93,7 @@ type SupadataResponse = {
   status: number;
   body: unknown;
   billableRequests: string | null;
+  creditsSettled: boolean;
 };
 
 type SupadataOperation = "metadata" | "transcript" | "transcript-job";
@@ -116,6 +123,7 @@ export const createSupadataYouTubeAdapter = ({
   diagnostics = console,
   minimumRequestIntervalMs = MINIMUM_REQUEST_INTERVAL_MS,
   pollIntervalMs = 1_000,
+  spendObserver,
 }: SupadataYouTubeAdapterOptions) => ({
   acquire: async (
     videoId: string,
@@ -141,6 +149,7 @@ export const createSupadataYouTubeAdapter = ({
         diagnostics,
         minimumRequestIntervalMs,
         signal,
+        spendObserver,
       });
 
       const transcriptResponse = await request("transcript", transcriptUrl);
@@ -149,9 +158,14 @@ export const createSupadataYouTubeAdapter = ({
         request,
         signal,
         pollIntervalMs,
+        spendObserver,
       );
       const metadataResponse = await request("metadata", metadataUrl);
-      const metadata = metadataFromResponse(metadataResponse, videoId);
+      const metadata = await metadataFromResponse(
+        metadataResponse,
+        videoId,
+        spendObserver,
+      );
 
       return {
         title: metadata.title ?? "",
@@ -188,6 +202,7 @@ export const createSupadataInstagramAdapter = ({
   diagnostics = console,
   minimumRequestIntervalMs = MINIMUM_REQUEST_INTERVAL_MS,
   pollIntervalMs = 1_000,
+  spendObserver,
 }: SupadataInstagramAdapterOptions) => ({
   acquire: async (
     mediaUrl: string,
@@ -213,6 +228,7 @@ export const createSupadataInstagramAdapter = ({
         diagnostics,
         minimumRequestIntervalMs,
         signal,
+        spendObserver,
       });
       let metadata: z.infer<typeof instagramMetadataSchema> | null = null;
       let metadataFailure: SupadataFailure | null = null;
@@ -222,9 +238,10 @@ export const createSupadataInstagramAdapter = ({
           "metadata",
           supadataUrl("metadata", providerMediaUrl),
         );
-        metadata = instagramMetadataFromResponse(
+        metadata = await instagramMetadataFromResponse(
           metadataResponse,
           expectedMediaId,
+          spendObserver,
         );
       } catch (error) {
         if (signal.aborted) throw error;
@@ -253,6 +270,7 @@ export const createSupadataInstagramAdapter = ({
             request,
             signal,
             pollIntervalMs,
+            spendObserver,
           );
         } catch (error) {
           if (signal.aborted) throw error;
@@ -349,12 +367,14 @@ const createSupadataRequester = ({
   diagnostics,
   minimumRequestIntervalMs,
   signal,
+  spendObserver,
 }: {
   apiKey: string;
   fetchImplementation: typeof fetch;
   diagnostics: SupadataDiagnostics;
   minimumRequestIntervalMs: number;
   signal: AbortSignal;
+  spendObserver?: SupadataSpendObserver;
 }) => {
   let previousRequestStartedAt: number | undefined;
 
@@ -369,6 +389,10 @@ const createSupadataRequester = ({
     }
     previousRequestStartedAt = Date.now();
 
+    if (operation !== "transcript-job" && spendObserver) {
+      await spendObserver.onOperationStarted();
+    }
+
     let response: Response;
     try {
       response = await fetchImplementation(url, {
@@ -380,6 +404,13 @@ const createSupadataRequester = ({
       throw new SupadataFailure("transport", operation);
     }
     const billableRequests = response.headers.get("x-billable-requests");
+    const knownCredits =
+      operation === "transcript-job"
+        ? null
+        : creditsFromSupadataBillingHeader(billableRequests);
+    if (knownCredits !== null && spendObserver) {
+      await spendObserver.onCreditsKnown(knownCredits);
+    }
     diagnostics.info("Supadata request completed", {
       operation,
       status: response.status,
@@ -389,6 +420,7 @@ const createSupadataRequester = ({
       status: response.status,
       body: await readJsonBody(response, operation, billableRequests),
       billableRequests,
+      creditsSettled: knownCredits !== null,
     };
   };
 };
@@ -401,9 +433,16 @@ const transcriptFromResponse = async (
   ) => Promise<SupadataResponse>,
   signal: AbortSignal,
   pollIntervalMs: number,
+  spendObserver?: SupadataSpendObserver,
 ) => {
   if (response.status === 200) {
-    return parseProviderResponse(transcriptSchema, response, "transcript");
+    const transcript = parseProviderResponse(
+      transcriptSchema,
+      response,
+      "transcript",
+    );
+    await settleFixedCredits(response, spendObserver, 1);
+    return transcript;
   }
   if (response.status === 202) {
     const { jobId } = parseProviderResponse(
@@ -411,10 +450,18 @@ const transcriptFromResponse = async (
       response,
       "transcript",
     );
-    return pollTranscriptJob(jobId, request, signal, pollIntervalMs);
+    const transcript = await pollTranscriptJob(
+      jobId,
+      request,
+      signal,
+      pollIntervalMs,
+    );
+    await settleFixedCredits(response, spendObserver, 1);
+    return transcript;
   }
   if (response.status === 206) {
     parseProviderResponse(transcriptUnavailableSchema, response, "transcript");
+    await settleFixedCredits(response, spendObserver, 1);
     return null;
   }
   throw providerFailure("transcript", response);
@@ -485,6 +532,7 @@ const waitForPoll = (delayMs: number, signal: AbortSignal) =>
 const metadataFromResponse = (
   response: SupadataResponse,
   expectedVideoId: string,
+  spendObserver?: SupadataSpendObserver,
 ) => {
   if (response.status === 200) {
     const metadata = parseProviderResponse(
@@ -495,7 +543,7 @@ const metadataFromResponse = (
     if (metadata.id !== expectedVideoId) {
       throw invalidResponse("metadata", response);
     }
-    return metadata;
+    return settleFixedCredits(response, spendObserver, 1).then(() => metadata);
   }
   throw providerFailure("metadata", response);
 };
@@ -503,6 +551,7 @@ const metadataFromResponse = (
 const instagramMetadataFromResponse = (
   response: SupadataResponse,
   expectedMediaId: string,
+  spendObserver?: SupadataSpendObserver,
 ) => {
   if (response.status === 200) {
     const metadata = parseProviderResponse(
@@ -519,9 +568,19 @@ const instagramMetadataFromResponse = (
     ) {
       throw invalidResponse("metadata", response);
     }
-    return metadata;
+    return settleFixedCredits(response, spendObserver, 1).then(() => metadata);
   }
   throw providerFailure("metadata", response);
+};
+
+const settleFixedCredits = async (
+  response: SupadataResponse,
+  spendObserver: SupadataSpendObserver | undefined,
+  credits: number,
+) => {
+  if (response.creditsSettled) return;
+  response.creditsSettled = true;
+  if (spendObserver) await spendObserver.onCreditsKnown(credits);
 };
 
 const parseProviderResponse = <Output>(

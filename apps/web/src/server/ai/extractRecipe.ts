@@ -9,6 +9,7 @@ import {
 } from "@planeatrepeat/shared";
 
 import { env } from "~/env";
+import type { InferenceObserver } from "~/server/recipes/importRecipe";
 
 export type ExtractResult = { name: string; recipe: RecipeInput };
 
@@ -19,6 +20,7 @@ export type ExtractInput = {
   >;
   instructions?: string | null;
   abortSignal?: AbortSignal;
+  observer?: InferenceObserver;
 };
 
 const extractRecipeSchema = z.object({
@@ -81,6 +83,9 @@ export const extractRecipe = async (
   const result = await generateText({
     model: anthropic(env.AI_EXTRACT_MODEL),
     abortSignal: input.abortSignal,
+    onStepStart: () => input.observer?.onInferenceStart(),
+    onStepEnd: ({ model, usage }) =>
+      input.observer?.onInferenceUsage(model.modelId, usage),
     output: Output.object({
       schema: extractRecipeSchema,
       name: "ExtractedRecipe",

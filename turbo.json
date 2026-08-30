@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["SYSTEM_ADMIN_CLERK_USER_IDS", "VERCEL_ENV"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

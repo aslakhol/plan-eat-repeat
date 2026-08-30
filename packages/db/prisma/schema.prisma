@@ -98,24 +98,28 @@ model User {
 }
 
 model Household {
-    id                 String       @id @default(cuid())
-    name               String
-    slug               String       @unique
-    publicSlug         String?      @unique
-    importInstructions String?
-    createdAt          DateTime     @default(now())
-    updatedAt          DateTime     @updatedAt
-    Dinners            Dinner[]
-    Members            Membership[]
-    Invite             Invite[]
+    id                          String            @id @default(cuid())
+    name                        String
+    slug                        String            @unique
+    publicSlug                  String?           @unique
+    importInstructions          String?
+    aiImportSpendAttributionKey String            @unique @default(uuid())
+    createdAt                   DateTime          @default(now())
+    updatedAt                   DateTime          @updatedAt
+    Dinners                     Dinner[]
+    Members                     Membership[]
+    Invite                      Invite[]
+    AiImportAttempts            AiImportAttempt[]
 }
 
 model Membership {
-    id          Int       @id @default(autoincrement())
-    household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
-    householdId String
-    user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId      String    @unique
+    id                          Int               @id @default(autoincrement())
+    household                   Household         @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    householdId                 String
+    user                        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId                      String            @unique
+    aiImportSpendAttributionKey String            @unique @default(uuid())
+    AiImportAttempts            AiImportAttempt[]
 
     role      MembershipRole
     createdAt DateTime       @default(now())
@@ -127,6 +131,44 @@ model Membership {
 enum MembershipRole {
     ADMIN
     MEMBER
+}
+
+model AiImportAttempt {
+    id                            String                 @id @default(cuid())
+    source                        AiImportSource
+    startedAt                     DateTime               @default(now())
+    finishedAt                    DateTime?
+    household                     Household?             @relation(fields: [householdId], references: [id], onDelete: SetNull)
+    householdId                   String?
+    membership                    Membership?            @relation(fields: [membershipId], references: [id], onDelete: SetNull)
+    membershipId                  Int?
+    householdAttributionKey       String
+    membershipAttributionKey      String
+    inferenceState                AiImportInferenceState @default(PENDING)
+    inferenceStartedAt            DateTime?
+    estimatedAiImportCostUsd      Float?
+    supadataOperationsStarted     Int                    @default(0)
+    supadataCredits               Int                    @default(0)
+    supadataUnknownOperationCount Int                    @default(0)
+
+    @@index([startedAt])
+    @@index([householdAttributionKey, startedAt])
+    @@index([membershipAttributionKey, startedAt])
+}
+
+enum AiImportSource {
+    YOUTUBE
+    INSTAGRAM
+    LINK
+    TEXT
+    PHOTO
+}
+
+enum AiImportInferenceState {
+    PENDING
+    NOT_INCURRED
+    ESTIMATED
+    UNKNOWN
 }
 
 model Invite {

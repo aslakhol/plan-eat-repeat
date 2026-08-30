@@ -16,11 +16,7 @@ import {
   protectedProcedureWithHousehold,
   sessionProcedure,
 } from "~/server/api/trpc";
-import {
-  importRecipeFromImages,
-  importRecipeFromText,
-  importRecipeFromUrl,
-} from "~/server/recipes/importRecipe";
+import { importTrackedRecipe } from "~/server/recipes/tracked-recipe-import";
 import { acquireYouTubeVideoTitle } from "~/server/recipes/youtube";
 import { planDinnerMerge } from "~/server/merge-dinners";
 import { type PrismaClient } from "@planeatrepeat/db";
@@ -45,17 +41,6 @@ import {
   createDinnerInputSchema,
   editDinnerInputSchema,
 } from "~/server/dinner-input";
-
-const householdImportInstructions = async (
-  db: PrismaClient,
-  householdId: string,
-) => {
-  const household = await db.household.findUniqueOrThrow({
-    where: { id: householdId },
-    select: { importInstructions: true },
-  });
-  return household.importInstructions;
-};
 
 const householdDinnersWithTags = (db: PrismaClient, householdId: string) =>
   db.dinner.findMany({
@@ -440,15 +425,12 @@ export const dinnerRouter = createTRPCRouter({
     .input(z.object({ url: z.string().url() }))
     .mutation(async ({ ctx, input, signal }) => {
       try {
-        const instructions = await householdImportInstructions(
-          ctx.db,
-          ctx.householdId,
-        );
-        const draft = await importRecipeFromUrl(
-          input.url,
-          instructions,
+        const draft = await importTrackedRecipe(ctx.db, {
+          request: { type: "URL", url: input.url },
+          householdId: ctx.householdId,
+          userId: ctx.auth.userId,
           signal,
-        );
+        });
         return {
           ...draft,
           sourceUrl: input.url,
@@ -470,11 +452,12 @@ export const dinnerRouter = createTRPCRouter({
     .input(z.object({ text: z.string().trim().min(1) }))
     .mutation(async ({ ctx, input, signal }) => {
       try {
-        const instructions = await householdImportInstructions(
-          ctx.db,
-          ctx.householdId,
-        );
-        return await importRecipeFromText(input.text, instructions, signal);
+        return await importTrackedRecipe(ctx.db, {
+          request: { type: "TEXT", text: input.text },
+          householdId: ctx.householdId,
+          userId: ctx.auth.userId,
+          signal,
+        });
       } catch (error) {
         throw toImportTRPCError(error);
       }
@@ -484,11 +467,12 @@ export const dinnerRouter = createTRPCRouter({
     .input(z.object({ images: imageImportSchema }))
     .mutation(async ({ ctx, input, signal }) => {
       try {
-        const instructions = await householdImportInstructions(
-          ctx.db,
-          ctx.householdId,
-        );
-        return await importRecipeFromImages(input.images, instructions, signal);
+        return await importTrackedRecipe(ctx.db, {
+          request: { type: "PHOTO", images: input.images },
+          householdId: ctx.householdId,
+          userId: ctx.auth.userId,
+          signal,
+        });
       } catch (error) {
         throw toImportTRPCError(error);
       }

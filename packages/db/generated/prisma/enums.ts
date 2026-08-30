@@ -15,3 +15,24 @@ export const MembershipRole = {
 } as const
 
 export type MembershipRole = (typeof MembershipRole)[keyof typeof MembershipRole]
+
+
+export const AiImportSource = {
+  YOUTUBE: 'YOUTUBE',
+  INSTAGRAM: 'INSTAGRAM',
+  LINK: 'LINK',
+  TEXT: 'TEXT',
+  PHOTO: 'PHOTO'
+} as const
+
+export type AiImportSource = (typeof AiImportSource)[keyof typeof AiImportSource]
+
+
+export const AiImportInferenceState = {
+  PENDING: 'PENDING',
+  NOT_INCURRED: 'NOT_INCURRED',
+  ESTIMATED: 'ESTIMATED',
+  UNKNOWN: 'UNKNOWN'
+} as const
+
+export type AiImportInferenceState = (typeof AiImportInferenceState)[keyof typeof AiImportInferenceState]

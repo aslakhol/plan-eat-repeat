@@ -246,6 +246,40 @@ export type EnumMembershipRoleWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumMembershipRoleFilter<$PrismaModel>
 }
 
+export type EnumAiImportSourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiImportSource | Prisma.EnumAiImportSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.AiImportSource[] | Prisma.ListEnumAiImportSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiImportSource[] | Prisma.ListEnumAiImportSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiImportSourceFilter<$PrismaModel> | $Enums.AiImportSource
+}
+
+export type EnumAiImportInferenceStateFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiImportInferenceState | Prisma.EnumAiImportInferenceStateFieldRefInput<$PrismaModel>
+  in?: $Enums.AiImportInferenceState[] | Prisma.ListEnumAiImportInferenceStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiImportInferenceState[] | Prisma.ListEnumAiImportInferenceStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiImportInferenceStateFilter<$PrismaModel> | $Enums.AiImportInferenceState
+}
+
+export type EnumAiImportSourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiImportSource | Prisma.EnumAiImportSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.AiImportSource[] | Prisma.ListEnumAiImportSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiImportSource[] | Prisma.ListEnumAiImportSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiImportSourceWithAggregatesFilter<$PrismaModel> | $Enums.AiImportSource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumAiImportSourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumAiImportSourceFilter<$PrismaModel>
+}
+
+export type EnumAiImportInferenceStateWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiImportInferenceState | Prisma.EnumAiImportInferenceStateFieldRefInput<$PrismaModel>
+  in?: $Enums.AiImportInferenceState[] | Prisma.ListEnumAiImportInferenceStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiImportInferenceState[] | Prisma.ListEnumAiImportInferenceStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiImportInferenceStateWithAggregatesFilter<$PrismaModel> | $Enums.AiImportInferenceState
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumAiImportInferenceStateFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumAiImportInferenceStateFilter<$PrismaModel>
+}
+
 export type NestedIntFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel>
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
@@ -478,6 +512,40 @@ export type NestedEnumMembershipRoleWithAggregatesFilter<$PrismaModel = never> =
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumMembershipRoleFilter<$PrismaModel>
   _max?: Prisma.NestedEnumMembershipRoleFilter<$PrismaModel>
+}
+
+export type NestedEnumAiImportSourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiImportSource | Prisma.EnumAiImportSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.AiImportSource[] | Prisma.ListEnumAiImportSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiImportSource[] | Prisma.ListEnumAiImportSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiImportSourceFilter<$PrismaModel> | $Enums.AiImportSource
+}
+
+export type NestedEnumAiImportInferenceStateFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiImportInferenceState | Prisma.EnumAiImportInferenceStateFieldRefInput<$PrismaModel>
+  in?: $Enums.AiImportInferenceState[] | Prisma.ListEnumAiImportInferenceStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiImportInferenceState[] | Prisma.ListEnumAiImportInferenceStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiImportInferenceStateFilter<$PrismaModel> | $Enums.AiImportInferenceState
+}
+
+export type NestedEnumAiImportSourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiImportSource | Prisma.EnumAiImportSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.AiImportSource[] | Prisma.ListEnumAiImportSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiImportSource[] | Prisma.ListEnumAiImportSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiImportSourceWithAggregatesFilter<$PrismaModel> | $Enums.AiImportSource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumAiImportSourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumAiImportSourceFilter<$PrismaModel>
+}
+
+export type NestedEnumAiImportInferenceStateWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiImportInferenceState | Prisma.EnumAiImportInferenceStateFieldRefInput<$PrismaModel>
+  in?: $Enums.AiImportInferenceState[] | Prisma.ListEnumAiImportInferenceStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiImportInferenceState[] | Prisma.ListEnumAiImportInferenceStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiImportInferenceStateWithAggregatesFilter<$PrismaModel> | $Enums.AiImportInferenceState
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumAiImportInferenceStateFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumAiImportInferenceStateFilter<$PrismaModel>
 }
 
 

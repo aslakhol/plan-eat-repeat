@@ -60,6 +60,7 @@ export const ModelName = {
   User: 'User',
   Household: 'Household',
   Membership: 'Membership',
+  AiImportAttempt: 'AiImportAttempt',
   Invite: 'Invite'
 } as const
 
@@ -164,6 +165,7 @@ export const HouseholdScalarFieldEnum = {
   slug: 'slug',
   publicSlug: 'publicSlug',
   importInstructions: 'importInstructions',
+  aiImportSpendAttributionKey: 'aiImportSpendAttributionKey',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -175,12 +177,33 @@ export const MembershipScalarFieldEnum = {
   id: 'id',
   householdId: 'householdId',
   userId: 'userId',
+  aiImportSpendAttributionKey: 'aiImportSpendAttributionKey',
   role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type MembershipScalarFieldEnum = (typeof MembershipScalarFieldEnum)[keyof typeof MembershipScalarFieldEnum]
+
+
+export const AiImportAttemptScalarFieldEnum = {
+  id: 'id',
+  source: 'source',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  householdId: 'householdId',
+  membershipId: 'membershipId',
+  householdAttributionKey: 'householdAttributionKey',
+  membershipAttributionKey: 'membershipAttributionKey',
+  inferenceState: 'inferenceState',
+  inferenceStartedAt: 'inferenceStartedAt',
+  estimatedAiImportCostUsd: 'estimatedAiImportCostUsd',
+  supadataOperationsStarted: 'supadataOperationsStarted',
+  supadataCredits: 'supadataCredits',
+  supadataUnknownOperationCount: 'supadataUnknownOperationCount'
+} as const
+
+export type AiImportAttemptScalarFieldEnum = (typeof AiImportAttemptScalarFieldEnum)[keyof typeof AiImportAttemptScalarFieldEnum]
 
 
 export const InviteScalarFieldEnum = {

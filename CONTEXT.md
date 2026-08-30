@@ -44,6 +44,13 @@ _Avoid_: Personal favourite, favorite
 **Import Draft**:
 Unsaved Dinner editor content produced from an import source. It changes the Cookbook only when the user saves it; cancelling discards it.
 
+**AI Import Attempt**:
+A Household member's request to produce an Import Draft from an import source. It may succeed, fail, or be cancelled, and remains distinct from any Dinner later saved from the draft.
+
+**AI Import Cost**:
+The estimated model provider charge attributable to AI inference during an AI Import Attempt. It belongs to the Household and may also be attributed to the initiating User; it excludes the ordinary infrastructure cost of running Plan Eat Repeat.
+_Avoid_: Token cost, infrastructure cost
+
 **Link**:
 The optional HTTP(S) URL associated with a Dinner. It often identifies the source of a Recipe, but may point somewhere else chosen by the Household.
 _Avoid_: Source Link, Recipe link

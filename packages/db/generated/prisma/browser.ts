@@ -63,6 +63,11 @@ export type Household = Prisma.HouseholdModel
  */
 export type Membership = Prisma.MembershipModel
 /**
+ * Model AiImportAttempt
+ * 
+ */
+export type AiImportAttempt = Prisma.AiImportAttemptModel
+/**
  * Model Invite
  * 
  */

@@ -38,6 +38,7 @@ export type MembershipMinAggregateOutputType = {
   id: number | null
   householdId: string | null
   userId: string | null
+  aiImportSpendAttributionKey: string | null
   role: $Enums.MembershipRole | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -47,6 +48,7 @@ export type MembershipMaxAggregateOutputType = {
   id: number | null
   householdId: string | null
   userId: string | null
+  aiImportSpendAttributionKey: string | null
   role: $Enums.MembershipRole | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -56,6 +58,7 @@ export type MembershipCountAggregateOutputType = {
   id: number
   householdId: number
   userId: number
+  aiImportSpendAttributionKey: number
   role: number
   createdAt: number
   updatedAt: number
@@ -75,6 +78,7 @@ export type MembershipMinAggregateInputType = {
   id?: true
   householdId?: true
   userId?: true
+  aiImportSpendAttributionKey?: true
   role?: true
   createdAt?: true
   updatedAt?: true
@@ -84,6 +88,7 @@ export type MembershipMaxAggregateInputType = {
   id?: true
   householdId?: true
   userId?: true
+  aiImportSpendAttributionKey?: true
   role?: true
   createdAt?: true
   updatedAt?: true
@@ -93,6 +98,7 @@ export type MembershipCountAggregateInputType = {
   id?: true
   householdId?: true
   userId?: true
+  aiImportSpendAttributionKey?: true
   role?: true
   createdAt?: true
   updatedAt?: true
@@ -189,6 +195,7 @@ export type MembershipGroupByOutputType = {
   id: number
   householdId: string
   userId: string
+  aiImportSpendAttributionKey: string
   role: $Enums.MembershipRole
   createdAt: Date
   updatedAt: Date
@@ -221,27 +228,32 @@ export type MembershipWhereInput = {
   id?: Prisma.IntFilter<"Membership"> | number
   householdId?: Prisma.StringFilter<"Membership"> | string
   userId?: Prisma.StringFilter<"Membership"> | string
+  aiImportSpendAttributionKey?: Prisma.StringFilter<"Membership"> | string
   role?: Prisma.EnumMembershipRoleFilter<"Membership"> | $Enums.MembershipRole
   createdAt?: Prisma.DateTimeFilter<"Membership"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Membership"> | Date | string
   household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  AiImportAttempts?: Prisma.AiImportAttemptListRelationFilter
 }
 
 export type MembershipOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  aiImportSpendAttributionKey?: Prisma.SortOrder
   role?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   household?: Prisma.HouseholdOrderByWithRelationInput
   user?: Prisma.UserOrderByWithRelationInput
+  AiImportAttempts?: Prisma.AiImportAttemptOrderByRelationAggregateInput
 }
 
 export type MembershipWhereUniqueInput = Prisma.AtLeast<{
   id?: number
   userId?: string
+  aiImportSpendAttributionKey?: string
   householdId_userId?: Prisma.MembershipHouseholdIdUserIdCompoundUniqueInput
   AND?: Prisma.MembershipWhereInput | Prisma.MembershipWhereInput[]
   OR?: Prisma.MembershipWhereInput[]
@@ -252,12 +264,14 @@ export type MembershipWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"Membership"> | Date | string
   household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-}, "id" | "userId" | "householdId_userId">
+  AiImportAttempts?: Prisma.AiImportAttemptListRelationFilter
+}, "id" | "userId" | "aiImportSpendAttributionKey" | "householdId_userId">
 
 export type MembershipOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  aiImportSpendAttributionKey?: Prisma.SortOrder
   role?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -275,55 +289,66 @@ export type MembershipScalarWhereWithAggregatesInput = {
   id?: Prisma.IntWithAggregatesFilter<"Membership"> | number
   householdId?: Prisma.StringWithAggregatesFilter<"Membership"> | string
   userId?: Prisma.StringWithAggregatesFilter<"Membership"> | string
+  aiImportSpendAttributionKey?: Prisma.StringWithAggregatesFilter<"Membership"> | string
   role?: Prisma.EnumMembershipRoleWithAggregatesFilter<"Membership"> | $Enums.MembershipRole
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Membership"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Membership"> | Date | string
 }
 
 export type MembershipCreateInput = {
+  aiImportSpendAttributionKey?: string
   role: $Enums.MembershipRole
   createdAt?: Date | string
   updatedAt?: Date | string
   household: Prisma.HouseholdCreateNestedOneWithoutMembersInput
   user: Prisma.UserCreateNestedOneWithoutMembershipsInput
+  AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutMembershipInput
 }
 
 export type MembershipUncheckedCreateInput = {
   id?: number
   householdId: string
   userId: string
+  aiImportSpendAttributionKey?: string
   role: $Enums.MembershipRole
   createdAt?: Date | string
   updatedAt?: Date | string
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutMembershipInput
 }
 
 export type MembershipUpdateInput = {
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   household?: Prisma.HouseholdUpdateOneRequiredWithoutMembersNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutMembershipsNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutMembershipNestedInput
 }
 
 export type MembershipUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutMembershipNestedInput
 }
 
 export type MembershipCreateManyInput = {
   id?: number
   householdId: string
   userId: string
+  aiImportSpendAttributionKey?: string
   role: $Enums.MembershipRole
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type MembershipUpdateManyMutationInput = {
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -333,6 +358,7 @@ export type MembershipUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -357,6 +383,7 @@ export type MembershipCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  aiImportSpendAttributionKey?: Prisma.SortOrder
   role?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -370,6 +397,7 @@ export type MembershipMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  aiImportSpendAttributionKey?: Prisma.SortOrder
   role?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -379,6 +407,7 @@ export type MembershipMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
+  aiImportSpendAttributionKey?: Prisma.SortOrder
   role?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -386,6 +415,11 @@ export type MembershipMinOrderByAggregateInput = {
 
 export type MembershipSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
+}
+
+export type MembershipNullableScalarRelationFilter = {
+  is?: Prisma.MembershipWhereInput | null
+  isNot?: Prisma.MembershipWhereInput | null
 }
 
 export type MembershipCreateNestedManyWithoutUserInput = {
@@ -476,19 +510,39 @@ export type EnumMembershipRoleFieldUpdateOperationsInput = {
   set?: $Enums.MembershipRole
 }
 
+export type MembershipCreateNestedOneWithoutAiImportAttemptsInput = {
+  create?: Prisma.XOR<Prisma.MembershipCreateWithoutAiImportAttemptsInput, Prisma.MembershipUncheckedCreateWithoutAiImportAttemptsInput>
+  connectOrCreate?: Prisma.MembershipCreateOrConnectWithoutAiImportAttemptsInput
+  connect?: Prisma.MembershipWhereUniqueInput
+}
+
+export type MembershipUpdateOneWithoutAiImportAttemptsNestedInput = {
+  create?: Prisma.XOR<Prisma.MembershipCreateWithoutAiImportAttemptsInput, Prisma.MembershipUncheckedCreateWithoutAiImportAttemptsInput>
+  connectOrCreate?: Prisma.MembershipCreateOrConnectWithoutAiImportAttemptsInput
+  upsert?: Prisma.MembershipUpsertWithoutAiImportAttemptsInput
+  disconnect?: Prisma.MembershipWhereInput | boolean
+  delete?: Prisma.MembershipWhereInput | boolean
+  connect?: Prisma.MembershipWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.MembershipUpdateToOneWithWhereWithoutAiImportAttemptsInput, Prisma.MembershipUpdateWithoutAiImportAttemptsInput>, Prisma.MembershipUncheckedUpdateWithoutAiImportAttemptsInput>
+}
+
 export type MembershipCreateWithoutUserInput = {
+  aiImportSpendAttributionKey?: string
   role: $Enums.MembershipRole
   createdAt?: Date | string
   updatedAt?: Date | string
   household: Prisma.HouseholdCreateNestedOneWithoutMembersInput
+  AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutMembershipInput
 }
 
 export type MembershipUncheckedCreateWithoutUserInput = {
   id?: number
   householdId: string
+  aiImportSpendAttributionKey?: string
   role: $Enums.MembershipRole
   createdAt?: Date | string
   updatedAt?: Date | string
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutMembershipInput
 }
 
 export type MembershipCreateOrConnectWithoutUserInput = {
@@ -524,24 +578,29 @@ export type MembershipScalarWhereInput = {
   id?: Prisma.IntFilter<"Membership"> | number
   householdId?: Prisma.StringFilter<"Membership"> | string
   userId?: Prisma.StringFilter<"Membership"> | string
+  aiImportSpendAttributionKey?: Prisma.StringFilter<"Membership"> | string
   role?: Prisma.EnumMembershipRoleFilter<"Membership"> | $Enums.MembershipRole
   createdAt?: Prisma.DateTimeFilter<"Membership"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Membership"> | Date | string
 }
 
 export type MembershipCreateWithoutHouseholdInput = {
+  aiImportSpendAttributionKey?: string
   role: $Enums.MembershipRole
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutMembershipsInput
+  AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutMembershipInput
 }
 
 export type MembershipUncheckedCreateWithoutHouseholdInput = {
   id?: number
   userId: string
+  aiImportSpendAttributionKey?: string
   role: $Enums.MembershipRole
   createdAt?: Date | string
   updatedAt?: Date | string
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutMembershipInput
 }
 
 export type MembershipCreateOrConnectWithoutHouseholdInput = {
@@ -570,32 +629,92 @@ export type MembershipUpdateManyWithWhereWithoutHouseholdInput = {
   data: Prisma.XOR<Prisma.MembershipUpdateManyMutationInput, Prisma.MembershipUncheckedUpdateManyWithoutHouseholdInput>
 }
 
+export type MembershipCreateWithoutAiImportAttemptsInput = {
+  aiImportSpendAttributionKey?: string
+  role: $Enums.MembershipRole
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  household: Prisma.HouseholdCreateNestedOneWithoutMembersInput
+  user: Prisma.UserCreateNestedOneWithoutMembershipsInput
+}
+
+export type MembershipUncheckedCreateWithoutAiImportAttemptsInput = {
+  id?: number
+  householdId: string
+  userId: string
+  aiImportSpendAttributionKey?: string
+  role: $Enums.MembershipRole
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type MembershipCreateOrConnectWithoutAiImportAttemptsInput = {
+  where: Prisma.MembershipWhereUniqueInput
+  create: Prisma.XOR<Prisma.MembershipCreateWithoutAiImportAttemptsInput, Prisma.MembershipUncheckedCreateWithoutAiImportAttemptsInput>
+}
+
+export type MembershipUpsertWithoutAiImportAttemptsInput = {
+  update: Prisma.XOR<Prisma.MembershipUpdateWithoutAiImportAttemptsInput, Prisma.MembershipUncheckedUpdateWithoutAiImportAttemptsInput>
+  create: Prisma.XOR<Prisma.MembershipCreateWithoutAiImportAttemptsInput, Prisma.MembershipUncheckedCreateWithoutAiImportAttemptsInput>
+  where?: Prisma.MembershipWhereInput
+}
+
+export type MembershipUpdateToOneWithWhereWithoutAiImportAttemptsInput = {
+  where?: Prisma.MembershipWhereInput
+  data: Prisma.XOR<Prisma.MembershipUpdateWithoutAiImportAttemptsInput, Prisma.MembershipUncheckedUpdateWithoutAiImportAttemptsInput>
+}
+
+export type MembershipUpdateWithoutAiImportAttemptsInput = {
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  household?: Prisma.HouseholdUpdateOneRequiredWithoutMembersNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutMembershipsNestedInput
+}
+
+export type MembershipUncheckedUpdateWithoutAiImportAttemptsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  householdId?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type MembershipCreateManyUserInput = {
   id?: number
   householdId: string
+  aiImportSpendAttributionKey?: string
   role: $Enums.MembershipRole
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type MembershipUpdateWithoutUserInput = {
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   household?: Prisma.HouseholdUpdateOneRequiredWithoutMembersNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutMembershipNestedInput
 }
 
 export type MembershipUncheckedUpdateWithoutUserInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutMembershipNestedInput
 }
 
 export type MembershipUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -604,51 +723,90 @@ export type MembershipUncheckedUpdateManyWithoutUserInput = {
 export type MembershipCreateManyHouseholdInput = {
   id?: number
   userId: string
+  aiImportSpendAttributionKey?: string
   role: $Enums.MembershipRole
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type MembershipUpdateWithoutHouseholdInput = {
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutMembershipsNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutMembershipNestedInput
 }
 
 export type MembershipUncheckedUpdateWithoutHouseholdInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutMembershipNestedInput
 }
 
 export type MembershipUncheckedUpdateManyWithoutHouseholdInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.StringFieldUpdateOperationsInput | string
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumMembershipRoleFieldUpdateOperationsInput | $Enums.MembershipRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
+
+/**
+ * Count Type MembershipCountOutputType
+ */
+
+export type MembershipCountOutputType = {
+  AiImportAttempts: number
+}
+
+export type MembershipCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  AiImportAttempts?: boolean | MembershipCountOutputTypeCountAiImportAttemptsArgs
+}
+
+/**
+ * MembershipCountOutputType without action
+ */
+export type MembershipCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MembershipCountOutputType
+   */
+  select?: Prisma.MembershipCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * MembershipCountOutputType without action
+ */
+export type MembershipCountOutputTypeCountAiImportAttemptsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AiImportAttemptWhereInput
+}
 
 
 export type MembershipSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   householdId?: boolean
   userId?: boolean
+  aiImportSpendAttributionKey?: boolean
   role?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  AiImportAttempts?: boolean | Prisma.Membership$AiImportAttemptsArgs<ExtArgs>
+  _count?: boolean | Prisma.MembershipCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["membership"]>
 
 export type MembershipSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   householdId?: boolean
   userId?: boolean
+  aiImportSpendAttributionKey?: boolean
   role?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -660,6 +818,7 @@ export type MembershipSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   id?: boolean
   householdId?: boolean
   userId?: boolean
+  aiImportSpendAttributionKey?: boolean
   role?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -671,15 +830,18 @@ export type MembershipSelectScalar = {
   id?: boolean
   householdId?: boolean
   userId?: boolean
+  aiImportSpendAttributionKey?: boolean
   role?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type MembershipOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "householdId" | "userId" | "role" | "createdAt" | "updatedAt", ExtArgs["result"]["membership"]>
+export type MembershipOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "householdId" | "userId" | "aiImportSpendAttributionKey" | "role" | "createdAt" | "updatedAt", ExtArgs["result"]["membership"]>
 export type MembershipInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  AiImportAttempts?: boolean | Prisma.Membership$AiImportAttemptsArgs<ExtArgs>
+  _count?: boolean | Prisma.MembershipCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type MembershipIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
@@ -695,11 +857,13 @@ export type $MembershipPayload<ExtArgs extends runtime.Types.Extensions.Internal
   objects: {
     household: Prisma.$HouseholdPayload<ExtArgs>
     user: Prisma.$UserPayload<ExtArgs>
+    AiImportAttempts: Prisma.$AiImportAttemptPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
     householdId: string
     userId: string
+    aiImportSpendAttributionKey: string
     role: $Enums.MembershipRole
     createdAt: Date
     updatedAt: Date
@@ -1099,6 +1263,7 @@ export interface Prisma__MembershipClient<T, Null = never, ExtArgs extends runti
   readonly [Symbol.toStringTag]: "PrismaPromise"
   household<T extends Prisma.HouseholdDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.HouseholdDefaultArgs<ExtArgs>>): Prisma.Prisma__HouseholdClient<runtime.Types.Result.GetResult<Prisma.$HouseholdPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  AiImportAttempts<T extends Prisma.Membership$AiImportAttemptsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Membership$AiImportAttemptsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AiImportAttemptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1131,6 +1296,7 @@ export interface MembershipFieldRefs {
   readonly id: Prisma.FieldRef<"Membership", 'Int'>
   readonly householdId: Prisma.FieldRef<"Membership", 'String'>
   readonly userId: Prisma.FieldRef<"Membership", 'String'>
+  readonly aiImportSpendAttributionKey: Prisma.FieldRef<"Membership", 'String'>
   readonly role: Prisma.FieldRef<"Membership", 'MembershipRole'>
   readonly createdAt: Prisma.FieldRef<"Membership", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Membership", 'DateTime'>
@@ -1527,6 +1693,30 @@ export type MembershipDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * Limit how many Memberships to delete.
    */
   limit?: number
+}
+
+/**
+ * Membership.AiImportAttempts
+ */
+export type Membership$AiImportAttemptsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AiImportAttempt
+   */
+  select?: Prisma.AiImportAttemptSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AiImportAttempt
+   */
+  omit?: Prisma.AiImportAttemptOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AiImportAttemptInclude<ExtArgs> | null
+  where?: Prisma.AiImportAttemptWhereInput
+  orderBy?: Prisma.AiImportAttemptOrderByWithRelationInput | Prisma.AiImportAttemptOrderByWithRelationInput[]
+  cursor?: Prisma.AiImportAttemptWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AiImportAttemptScalarFieldEnum | Prisma.AiImportAttemptScalarFieldEnum[]
 }
 
 /**

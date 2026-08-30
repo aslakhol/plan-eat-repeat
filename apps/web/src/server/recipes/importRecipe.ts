@@ -10,12 +10,15 @@ import {
   type ExtractInput,
   type ExtractResult,
 } from "~/server/ai/extractRecipe";
+import type { LanguageModelUsage } from "ai";
 import {
   acquireInstagramRecipeText,
   resolveInstagramMediaSource,
 } from "~/server/recipes/instagram";
 import { scrapeRecipeTextWithSupadata } from "~/server/recipes/supadataWeb";
 import { acquireYouTubeRecipeText } from "~/server/recipes/youtube";
+
+import type { SupadataSpendObserver } from "./supadata-spend";
 
 const FETCH_TIMEOUT_MS = 12_000;
 const MIN_READABLE_TEXT_LENGTH = 400;
@@ -26,46 +29,68 @@ const USER_AGENT =
 type JsonLdObject = Record<string, unknown>;
 type ParsedDocument = ReturnType<typeof parseHTML>["document"];
 
+export type RecipeImportOptions = {
+  instructions?: string | null;
+  signal?: AbortSignal;
+  inferenceObserver?: InferenceObserver;
+  supadataObserver?: SupadataSpendObserver;
+};
+
 export const importRecipeFromUrl = async (
   url: string,
-  instructions?: string | null,
-  signal?: AbortSignal,
+  {
+    instructions,
+    signal,
+    inferenceObserver,
+    supadataObserver,
+  }: RecipeImportOptions = {},
 ): Promise<ExtractResult> => {
   const videoId = youtubeVideoIdFromUrl(url);
   const instagramSource = videoId
     ? null
     : await resolveInstagramMediaSource(url, signal);
   const source = videoId
-    ? await acquireYouTubeRecipeText(videoId, signal)
+    ? await acquireYouTubeRecipeText(videoId, signal, supadataObserver)
     : instagramSource
       ? await acquireInstagramRecipeText(
           instagramSource.mediaUrl,
           instagramSource.mediaId,
           signal,
+          supadataObserver,
         )
-      : await acquireRecipeTextFromUrl(url, signal);
+      : await acquireRecipeTextFromUrl(url, signal, supadataObserver);
   return extractOrThrow(
     [{ type: "text", text: trimForModel(source) }],
     instructions,
     signal,
+    inferenceObserver,
   );
 };
 
 export const importRecipeFromText = async (
   text: string,
-  instructions?: string | null,
-  signal?: AbortSignal,
+  { instructions, signal, inferenceObserver }: RecipeImportOptions = {},
 ): Promise<ExtractResult> =>
   extractOrThrow(
     [{ type: "text", text: trimForModel(text) }],
     instructions,
     signal,
+    inferenceObserver,
   );
 
+export type InferenceObserver = {
+  onInferenceStart(): Promise<void> | void;
+  onInferenceUsage(
+    model: string,
+    usage: LanguageModelUsage,
+  ): Promise<void> | void;
+};
+
+export type RecipeImportImage = { data: string; mimeType: string };
+
 export const importRecipeFromImages = async (
-  images: Array<{ data: string; mimeType: string }>,
-  instructions?: string | null,
-  signal?: AbortSignal,
+  images: ReadonlyArray<RecipeImportImage>,
+  { instructions, signal, inferenceObserver }: RecipeImportOptions = {},
 ): Promise<ExtractResult> =>
   extractOrThrow(
     images.map((image) => ({
@@ -75,15 +100,22 @@ export const importRecipeFromImages = async (
     })),
     instructions,
     signal,
+    inferenceObserver,
   );
 
 const extractOrThrow = async (
   parts: ExtractInput["parts"],
   instructions?: string | null,
   signal?: AbortSignal,
+  observer?: InferenceObserver,
 ): Promise<ExtractResult> => {
   try {
-    return await extractRecipe({ parts, instructions, abortSignal: signal });
+    return await extractRecipe({
+      parts,
+      instructions,
+      abortSignal: signal,
+      observer,
+    });
   } catch (error) {
     if (signal?.aborted) throw error;
     if (error instanceof ImportRecipeError) throw error;
@@ -94,6 +126,7 @@ const extractOrThrow = async (
 const acquireRecipeTextFromUrl = async (
   url: string,
   signal?: AbortSignal,
+  supadataObserver?: SupadataSpendObserver,
 ): Promise<string> => {
   try {
     const html = await fetchHtml(url, signal);
@@ -101,7 +134,11 @@ const acquireRecipeTextFromUrl = async (
   } catch (error) {
     if (isSupadataFallbackEligible(error)) {
       try {
-        return await scrapeRecipeTextWithSupadata(url, signal);
+        return await scrapeRecipeTextWithSupadata(
+          url,
+          signal,
+          supadataObserver,
+        );
       } catch (fallbackError) {
         if (signal?.aborted) throw fallbackError;
         if (

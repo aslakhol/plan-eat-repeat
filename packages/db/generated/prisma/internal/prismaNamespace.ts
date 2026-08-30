@@ -393,6 +393,7 @@ export const ModelName = {
   User: 'User',
   Household: 'Household',
   Membership: 'Membership',
+  AiImportAttempt: 'AiImportAttempt',
   Invite: 'Invite'
 } as const
 
@@ -409,7 +410,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "dinner" | "recipePart" | "recipeIngredient" | "recipeStep" | "tag" | "plan" | "user" | "household" | "membership" | "invite"
+    modelProps: "dinner" | "recipePart" | "recipeIngredient" | "recipeStep" | "tag" | "plan" | "user" | "household" | "membership" | "aiImportAttempt" | "invite"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1079,6 +1080,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    AiImportAttempt: {
+      payload: Prisma.$AiImportAttemptPayload<ExtArgs>
+      fields: Prisma.AiImportAttemptFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AiImportAttemptFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiImportAttemptPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AiImportAttemptFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiImportAttemptPayload>
+        }
+        findFirst: {
+          args: Prisma.AiImportAttemptFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiImportAttemptPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AiImportAttemptFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiImportAttemptPayload>
+        }
+        findMany: {
+          args: Prisma.AiImportAttemptFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiImportAttemptPayload>[]
+        }
+        create: {
+          args: Prisma.AiImportAttemptCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiImportAttemptPayload>
+        }
+        createMany: {
+          args: Prisma.AiImportAttemptCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AiImportAttemptCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiImportAttemptPayload>[]
+        }
+        delete: {
+          args: Prisma.AiImportAttemptDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiImportAttemptPayload>
+        }
+        update: {
+          args: Prisma.AiImportAttemptUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiImportAttemptPayload>
+        }
+        deleteMany: {
+          args: Prisma.AiImportAttemptDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AiImportAttemptUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AiImportAttemptUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiImportAttemptPayload>[]
+        }
+        upsert: {
+          args: Prisma.AiImportAttemptUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiImportAttemptPayload>
+        }
+        aggregate: {
+          args: Prisma.AiImportAttemptAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAiImportAttempt>
+        }
+        groupBy: {
+          args: Prisma.AiImportAttemptGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AiImportAttemptGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AiImportAttemptCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AiImportAttemptCountAggregateOutputType> | number
+        }
+      }
+    }
     Invite: {
       payload: Prisma.$InvitePayload<ExtArgs>
       fields: Prisma.InviteFieldRefs
@@ -1277,6 +1352,7 @@ export const HouseholdScalarFieldEnum = {
   slug: 'slug',
   publicSlug: 'publicSlug',
   importInstructions: 'importInstructions',
+  aiImportSpendAttributionKey: 'aiImportSpendAttributionKey',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1288,12 +1364,33 @@ export const MembershipScalarFieldEnum = {
   id: 'id',
   householdId: 'householdId',
   userId: 'userId',
+  aiImportSpendAttributionKey: 'aiImportSpendAttributionKey',
   role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type MembershipScalarFieldEnum = (typeof MembershipScalarFieldEnum)[keyof typeof MembershipScalarFieldEnum]
+
+
+export const AiImportAttemptScalarFieldEnum = {
+  id: 'id',
+  source: 'source',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  householdId: 'householdId',
+  membershipId: 'membershipId',
+  householdAttributionKey: 'householdAttributionKey',
+  membershipAttributionKey: 'membershipAttributionKey',
+  inferenceState: 'inferenceState',
+  inferenceStartedAt: 'inferenceStartedAt',
+  estimatedAiImportCostUsd: 'estimatedAiImportCostUsd',
+  supadataOperationsStarted: 'supadataOperationsStarted',
+  supadataCredits: 'supadataCredits',
+  supadataUnknownOperationCount: 'supadataUnknownOperationCount'
+} as const
+
+export type AiImportAttemptScalarFieldEnum = (typeof AiImportAttemptScalarFieldEnum)[keyof typeof AiImportAttemptScalarFieldEnum]
 
 
 export const InviteScalarFieldEnum = {
@@ -1413,6 +1510,34 @@ export type EnumMembershipRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$P
 export type ListEnumMembershipRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MembershipRole[]'>
     
 
+
+/**
+ * Reference to a field of type 'AiImportSource'
+ */
+export type EnumAiImportSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiImportSource'>
+    
+
+
+/**
+ * Reference to a field of type 'AiImportSource[]'
+ */
+export type ListEnumAiImportSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiImportSource[]'>
+    
+
+
+/**
+ * Reference to a field of type 'AiImportInferenceState'
+ */
+export type EnumAiImportInferenceStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiImportInferenceState'>
+    
+
+
+/**
+ * Reference to a field of type 'AiImportInferenceState[]'
+ */
+export type ListEnumAiImportInferenceStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiImportInferenceState[]'>
+    
+
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */
@@ -1517,6 +1642,7 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   household?: Prisma.HouseholdOmit
   membership?: Prisma.MembershipOmit
+  aiImportAttempt?: Prisma.AiImportAttemptOmit
   invite?: Prisma.InviteOmit
 }
 
