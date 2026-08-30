@@ -18,12 +18,12 @@ Run this matrix after the migration and application deploy for issue #154. The d
 | Signed-in User outside the allowlist | 404 page; direct query returns `FORBIDDEN` | Query pass in automated test; page smoke requires a signed-in session |
 | Household `ADMIN` outside the allowlist | Same denial as any other non-System Admin | Pass in reporting-query test |
 | Missing allowlist | Every reporting query is denied | Pass in reporting-query test |
-| Focus returns to the dashboard | One refetch occurs; no interval polling starts | Query options and rendered test pass |
-| Desktop Dashboard v2 layout | Handoff hierarchy, measures, controls, charts, and colors | Pass at 1200 x 900 in browser |
-| Narrow layout | No page overflow; controls, values, rankings, and chart details remain usable | Pass at 320 x 700 in browser |
+| Focus returns to the dashboard | One refetch occurs; no interval polling starts | Pass in rendered and Playwright tests |
+| Desktop Dashboard v2 layout | Handoff hierarchy, measures, controls, charts, and colors | Pass at 1200 x 900 in Playwright and manual browser QA |
+| Narrow layout | No page overflow; controls, values, rankings, and chart details remain usable | Pass at 320 x 700 in Playwright and manual browser QA |
 | Empty and unknown data | Zero hero/summary values; no empty axes or pies; unknown counts disclosed without `>` totals | Pass at 320 x 700 in browser |
-| Period and history controls | All periods work; All time pages by 30 days; changing period resets to the latest window | Pass in browser |
-| Household and source controls | Both rankings, exclusive expansion, retained attribution, keyboard chart details, and clickable pie details work | Pass in browser |
+| Period and history controls | All periods work; All time pages by 30 days; changing period resets to the latest window | Pass in Playwright and manual browser QA |
+| Household and source controls | Both rankings, exclusive expansion, retained attribution, keyboard chart details, and clickable pie details work | Pass in Playwright and manual browser QA |
 
 ## Import-attempt checks after deployment
 
@@ -48,6 +48,7 @@ Live provider smoke was not run locally because this checkout has no authorized 
 ## Local verification record
 
 - Web unit and database integration suite: 261 passed.
+- Dashboard Playwright regression: 1 passed.
 - `pnpm lint`: passed.
 - `pnpm typecheck`: passed for all workspaces.
 - `pnpm build`: passed. Next emitted existing dependency and prerender connection warnings, but produced the System Admin route as a dynamic server-rendered page.
