@@ -350,6 +350,8 @@ void test("an attempt that fails before inference is finished as not incurred", 
 });
 
 void test("an attempt deadline stops provider work and still finishes tracking", async () => {
+  const controller = new AbortController();
+  const cancellation = new Error("cancelled after deadline");
   const harness = testHarness({
     timeoutMs: 5,
     execute: (_request, _observer, _supadataObserver, signal) =>
@@ -363,9 +365,11 @@ void test("an attempt deadline stops provider work and still finishes tracking",
           "abort",
           () => {
             clearTimeout(deadlineGuard);
+            const firstAbortReason: unknown = signal.reason;
+            controller.abort(cancellation);
             reject(
-              signal.reason instanceof Error
-                ? signal.reason
+              firstAbortReason instanceof Error
+                ? firstAbortReason
                 : new Error("AI Import Attempt timed out"),
             );
           },
@@ -375,7 +379,7 @@ void test("an attempt deadline stops provider work and still finishes tracking",
   });
 
   await assert.rejects(
-    harness.importer(input),
+    harness.importer({ ...input, signal: controller.signal }),
     (error: unknown) =>
       error instanceof ImportRecipeError && error.code === "IMPORT_TIMED_OUT",
   );
@@ -387,13 +391,14 @@ void test("caller cancellation wins over the attempt deadline", async () => {
   const controller = new AbortController();
   const cancellation = new Error("cancelled by user");
   const harness = testHarness({
-    timeoutMs: 60_000,
-    execute: (_request, _observer, _supadataObserver, signal) => {
-      assert.ok(signal);
-      controller.abort(cancellation);
-      assert.equal(signal.reason, cancellation);
-      return Promise.reject(cancellation);
-    },
+    timeoutMs: 5,
+    execute: (_request, _observer, _supadataObserver, signal) =>
+      new Promise((_resolve, reject) => {
+        assert.ok(signal);
+        controller.abort(cancellation);
+        assert.equal(signal.reason, cancellation);
+        setTimeout(() => reject(cancellation), 10);
+      }),
   });
 
   await assert.rejects(

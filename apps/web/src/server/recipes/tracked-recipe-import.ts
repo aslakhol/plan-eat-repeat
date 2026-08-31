@@ -233,7 +233,7 @@ export const createTrackedRecipeImporter = <Result>({
         supadataObserver,
       });
     } catch (error) {
-      if (timeoutSignal.aborted && !input.signal?.aborted) {
+      if (timeoutSignal.aborted && signal.reason === timeoutSignal.reason) {
         throw new ImportRecipeError("IMPORT_TIMED_OUT");
       }
       throw error;
