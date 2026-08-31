@@ -154,6 +154,17 @@ void test("photo and text errors promise to retain their submitted input", () =>
     title: "Couldn't finish the recipe",
     body: "Something went wrong while structuring it. Your text is still here.",
   });
+  assert.deepEqual(importErrorCopy("IMPORT_TIMED_OUT", "photos"), {
+    title: "The import took too long",
+    body: "Try again, or enter the recipe another way. Your selected photos are still here.",
+  });
+  assert.deepEqual(
+    urlImportErrorCopy("IMPORT_TIMED_OUT", "https://example.com/recipe"),
+    {
+      title: "The import took too long",
+      body: "Try again, or paste the recipe text instead. Your link is still here.",
+    },
+  );
 });
 
 void test("source URLs ignore presentation and common tracking differences", () => {

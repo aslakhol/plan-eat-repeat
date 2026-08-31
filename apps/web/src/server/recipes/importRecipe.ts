@@ -20,7 +20,7 @@ import { acquireYouTubeRecipeText } from "~/server/recipes/youtube";
 
 import type { SupadataSpendObserver } from "./supadata-spend";
 
-const FETCH_TIMEOUT_MS = 12_000;
+const DIRECT_FETCH_FALLBACK_AFTER_MS = 20_000;
 const MIN_READABLE_TEXT_LENGTH = 400;
 const MAX_TEXT_LENGTH = 40_000;
 const USER_AGENT =
@@ -226,7 +226,7 @@ const fetchHtml = async (url: string, signal?: AbortSignal) => {
   try {
     const response = await timedFetch(
       url,
-      FETCH_TIMEOUT_MS,
+      DIRECT_FETCH_FALLBACK_AFTER_MS,
       {
         Accept:
           "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",

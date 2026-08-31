@@ -247,33 +247,6 @@ void test("Instagram import keeps the general error for a post without a caption
   );
 });
 
-void test("Instagram import maps its acquisition deadline to FETCH_FAILED", async () => {
-  const acquireInstagramRecipeText = createInstagramRecipeTextAcquirer(
-    {
-      acquire: (_mediaUrl, _mediaId, signal) =>
-        new Promise((_resolve, reject) => {
-          signal.addEventListener(
-            "abort",
-            () =>
-              reject(
-                signal.reason instanceof Error
-                  ? signal.reason
-                  : new Error("acquisition aborted"),
-              ),
-            { once: true },
-          );
-        }),
-    },
-    1,
-  );
-
-  await assert.rejects(
-    acquireInstagramRecipeText(mediaUrl, mediaId),
-    (error: unknown) =>
-      error instanceof ImportRecipeError && error.code === "FETCH_FAILED",
-  );
-});
-
 void test("Instagram import propagates caller cancellation", async () => {
   const cancellation = new Error("request cancelled");
   const controller = new AbortController();

@@ -6,7 +6,6 @@ import {
 } from "./supadata";
 import type { SupadataSpendObserver } from "./supadata-spend";
 
-const ACQUISITION_TIMEOUT_MS = 20_000;
 const MAX_YOUTUBE_EVIDENCE_LENGTH = 40_000;
 const MAX_TITLE_LENGTH = 500;
 const MAX_DESCRIPTION_LENGTH = 8_000;
@@ -48,15 +47,10 @@ export const acquireYouTubeVideoTitle = async (
   }
 };
 
-export const createYouTubeRecipeTextAcquirer = (
-  adapter: YouTubeSourceAdapter,
-  acquisitionTimeoutMs = ACQUISITION_TIMEOUT_MS,
-) =>
+export const createYouTubeRecipeTextAcquirer =
+  (adapter: YouTubeSourceAdapter) =>
   async (videoId: string, requestSignal?: AbortSignal): Promise<string> => {
-    const timeoutSignal = AbortSignal.timeout(acquisitionTimeoutMs);
-    const signal = requestSignal
-      ? AbortSignal.any([requestSignal, timeoutSignal])
-      : timeoutSignal;
+    const signal = requestSignal ?? new AbortController().signal;
 
     try {
       const evidence = await adapter.acquire(videoId, signal);

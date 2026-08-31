@@ -95,33 +95,6 @@ void test("YouTube import preserves a description-only recipe", async () => {
   assert.match(text, /Caption transcript:\n$/);
 });
 
-void test("YouTube import maps its acquisition deadline to FETCH_FAILED", async () => {
-  const acquireYouTubeRecipeText = createYouTubeRecipeTextAcquirer(
-    {
-      acquire: (_videoId, signal) =>
-        new Promise((_resolve, reject) => {
-          signal.addEventListener(
-            "abort",
-            () =>
-              reject(
-                signal.reason instanceof Error
-                  ? signal.reason
-                  : new Error("acquisition aborted"),
-              ),
-            { once: true },
-          );
-        }),
-    },
-    1,
-  );
-
-  await assert.rejects(
-    acquireYouTubeRecipeText("BoFkDmTm2uc"),
-    (error: unknown) =>
-      error instanceof ImportRecipeError && error.code === "FETCH_FAILED",
-  );
-});
-
 void test("YouTube import propagates caller cancellation", async () => {
   const cancellation = new Error("request cancelled");
   const controller = new AbortController();
@@ -163,7 +136,10 @@ void test("YouTube title preview remains an independent oEmbed request", async (
   }) as typeof fetch;
 
   try {
-    assert.equal(await acquireYouTubeVideoTitle("BoFkDmTm2uc"), "Preview title");
+    assert.equal(
+      await acquireYouTubeVideoTitle("BoFkDmTm2uc"),
+      "Preview title",
+    );
     assert.equal(requests.length, 1);
     assert.equal(requests[0]?.hostname, "www.youtube.com");
     assert.equal(requests[0]?.pathname, "/oembed");
