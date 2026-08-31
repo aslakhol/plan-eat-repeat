@@ -135,6 +135,23 @@ void test("Supadata starts YouTube transcript and metadata requests concurrently
   assert.deepEqual(requestPaths, ["/v1/transcript", "/v1/metadata"]);
 });
 
+void test("Supadata observes concurrent YouTube response failures", async () => {
+  const adapter = createSupadataYouTubeAdapter({
+    apiKey: "test-key",
+    fetch: (() =>
+      Promise.resolve(
+        Response.json({ error: "provider-unavailable" }, { status: 503 }),
+      )) as typeof fetch,
+    diagnostics: { info: () => undefined, warn: () => undefined },
+  });
+
+  await assert.rejects(
+    adapter.acquire("BoFkDmTm2uc", new AbortController().signal),
+    (error: unknown) =>
+      error instanceof ImportRecipeError && error.code === "FETCH_FAILED",
+  );
+});
+
 void test("Supadata returns metadata when native captions are unavailable", async () => {
   const videoId = "YdFjuglEAds";
   const requestedModes: string[] = [];
