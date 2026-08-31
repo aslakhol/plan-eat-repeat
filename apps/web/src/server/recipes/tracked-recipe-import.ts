@@ -4,6 +4,7 @@ import type {
   PrismaClient,
 } from "@planeatrepeat/db";
 import {
+  ImportRecipeError,
   isInstagramMediaUrl,
   youtubeVideoIdFromUrl,
 } from "@planeatrepeat/shared";
@@ -108,16 +109,24 @@ type TrackedRecipeImporterDependencies<Result> = {
     supadataObserver: SupadataSpendObserver;
   }) => Promise<Result>;
   now?: () => Date;
+  timeoutMs?: number;
   warn?: (operation: string) => void;
 };
+
+const AI_IMPORT_TIMEOUT_MS = 150_000;
 
 export const createTrackedRecipeImporter = <Result>({
   persistence,
   executeImport,
   now = () => new Date(),
+  timeoutMs = AI_IMPORT_TIMEOUT_MS,
   warn = (operation) => console.warn(`[AI Import Spend] ${operation} failed`),
 }: TrackedRecipeImporterDependencies<Result>) => {
   return async (input: TrackedRecipeImportInput): Promise<Result> => {
+    const timeoutSignal = AbortSignal.timeout(timeoutMs);
+    const signal = input.signal
+      ? AbortSignal.any([input.signal, timeoutSignal])
+      : timeoutSignal;
     let attemptId: string | null = null;
     let inferenceState: AiImportInferenceState = "NOT_INCURRED";
     let estimatedAiImportCostUsd: number | null = null;
@@ -219,10 +228,15 @@ export const createTrackedRecipeImporter = <Result>({
       return await executeImport({
         request: input.request,
         instructions,
-        signal: input.signal,
+        signal,
         observer,
         supadataObserver,
       });
+    } catch (error) {
+      if (timeoutSignal.aborted && signal.reason === timeoutSignal.reason) {
+        throw new ImportRecipeError("IMPORT_TIMED_OUT");
+      }
+      throw error;
     } finally {
       await updateAttempt("finish-attempt", {
         finishedAt: now(),

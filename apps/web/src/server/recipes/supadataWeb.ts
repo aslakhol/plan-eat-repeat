@@ -7,7 +7,6 @@ import {
 } from "./supadata-spend";
 
 const SUPADATA_WEB_SCRAPE_URL = "https://api.supadata.ai/v1/web/scrape";
-const WEB_SCRAPE_TIMEOUT_MS = 60_000;
 const MAX_SUPADATA_RESPONSE_BYTES = 1_048_576;
 
 const webScrapeSchema = z.object({
@@ -206,10 +205,7 @@ export const scrapeRecipeTextWithSupadata = async (
   requestSignal?: AbortSignal,
   spendObserver?: SupadataSpendObserver,
 ) => {
-  const timeoutSignal = AbortSignal.timeout(WEB_SCRAPE_TIMEOUT_MS);
-  const signal = requestSignal
-    ? AbortSignal.any([requestSignal, timeoutSignal])
-    : timeoutSignal;
+  const signal = requestSignal ?? new AbortController().signal;
   const { env } = await import("~/env");
   const adapter = createSupadataWebAdapter({
     apiKey: env.SUPADATA_API_KEY,

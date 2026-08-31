@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import type { LanguageModelUsage } from "ai";
 import type { AiImportSource } from "@planeatrepeat/db";
+import { ImportRecipeError } from "@planeatrepeat/shared";
 
 import {
   createTrackedRecipeImporter,
@@ -44,9 +45,11 @@ type TestHarnessOptions = {
     request: TrackedRecipeImportRequest,
     observer: InferenceObserver,
     supadataObserver: SupadataSpendObserver,
+    signal?: AbortSignal,
   ) => Promise<{ name: string }>;
   failOperations?: ReadonlySet<string>;
   loadInstructions?: () => Promise<string | null>;
+  timeoutMs?: number;
 };
 
 const testHarness = (options: TestHarnessOptions = {}) => {
@@ -113,6 +116,7 @@ const testHarness = (options: TestHarnessOptions = {}) => {
 
   const executeImport = async (execution: {
     request: TrackedRecipeImportRequest;
+    signal?: AbortSignal;
     observer: InferenceObserver;
     supadataObserver: SupadataSpendObserver;
   }) => {
@@ -123,6 +127,7 @@ const testHarness = (options: TestHarnessOptions = {}) => {
         execution.request,
         execution.observer,
         execution.supadataObserver,
+        execution.signal,
       ) ?? Promise.resolve({ name: "Soup" })
     );
   };
@@ -132,6 +137,7 @@ const testHarness = (options: TestHarnessOptions = {}) => {
     persistence,
     executeImport,
     now: () => new Date(Date.UTC(2026, 7, 30, 8, 0, tick++)),
+    timeoutMs: options.timeoutMs,
     warn: (operation) => warnings.push(operation),
   });
 
@@ -341,6 +347,65 @@ void test("an attempt that fails before inference is finished as not incurred", 
       estimatedAiImportCostUsd: null,
     },
   ]);
+});
+
+void test("an attempt deadline stops provider work and still finishes tracking", async () => {
+  const controller = new AbortController();
+  const cancellation = new Error("cancelled after deadline");
+  const harness = testHarness({
+    timeoutMs: 5,
+    execute: (_request, _observer, _supadataObserver, signal) =>
+      new Promise((_resolve, reject) => {
+        assert.ok(signal);
+        const deadlineGuard = setTimeout(
+          () => reject(new Error("AI Import Attempt deadline did not fire")),
+          100,
+        );
+        signal.addEventListener(
+          "abort",
+          () => {
+            clearTimeout(deadlineGuard);
+            const firstAbortReason: unknown = signal.reason;
+            controller.abort(cancellation);
+            reject(
+              firstAbortReason instanceof Error
+                ? firstAbortReason
+                : new Error("AI Import Attempt timed out"),
+            );
+          },
+          { once: true },
+        );
+      }),
+  });
+
+  await assert.rejects(
+    harness.importer({ ...input, signal: controller.signal }),
+    (error: unknown) =>
+      error instanceof ImportRecipeError && error.code === "IMPORT_TIMED_OUT",
+  );
+  assert.ok(harness.updates.at(-1)?.finishedAt);
+  assert.equal(harness.updates.at(-1)?.inferenceState, "NOT_INCURRED");
+});
+
+void test("caller cancellation wins over the attempt deadline", async () => {
+  const controller = new AbortController();
+  const cancellation = new Error("cancelled by user");
+  const harness = testHarness({
+    timeoutMs: 5,
+    execute: (_request, _observer, _supadataObserver, signal) =>
+      new Promise((_resolve, reject) => {
+        assert.ok(signal);
+        controller.abort(cancellation);
+        assert.equal(signal.reason, cancellation);
+        setTimeout(() => reject(cancellation), 10);
+      }),
+  });
+
+  await assert.rejects(
+    harness.importer({ ...input, signal: controller.signal }),
+    (error: unknown) => error === cancellation,
+  );
+  assert.ok(harness.updates.at(-1)?.finishedAt);
 });
 
 void test("provider work without usable usage is finished as unknown", async () => {

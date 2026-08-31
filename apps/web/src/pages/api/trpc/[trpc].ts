@@ -11,7 +11,7 @@ export const config = {
       sizeLimit: "4.5mb",
     },
   },
-  maxDuration: 60,
+  maxDuration: 180,
 };
 
 // Create the tRPC handler

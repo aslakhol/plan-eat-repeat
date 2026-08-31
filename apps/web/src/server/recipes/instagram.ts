@@ -11,8 +11,6 @@ import {
 } from "./supadata";
 import type { SupadataSpendObserver } from "./supadata-spend";
 
-const ACQUISITION_TIMEOUT_MS = 120_000;
-const SHARE_RESOLUTION_TIMEOUT_MS = 10_000;
 const MAX_SHARE_REDIRECTS = 3;
 const MAX_INSTAGRAM_EVIDENCE_LENGTH = 40_000;
 const MAX_TITLE_LENGTH = 500;
@@ -43,10 +41,7 @@ const mediaSourceFromDirectUrl = (
 const redirectStatuses = new Set([301, 302, 303, 307, 308]);
 
 export const createInstagramMediaSourceResolver =
-  (
-    fetchImplementation: typeof fetch,
-    resolutionTimeoutMs = SHARE_RESOLUTION_TIMEOUT_MS,
-  ) =>
+  (fetchImplementation: typeof fetch) =>
   async (
     value: string,
     requestSignal?: AbortSignal,
@@ -57,10 +52,6 @@ export const createInstagramMediaSourceResolver =
     const shareUrl = canonicalInstagramShareUrl(value);
     if (!shareUrl) return null;
 
-    const timeoutSignal = AbortSignal.timeout(resolutionTimeoutMs);
-    const signal = requestSignal
-      ? AbortSignal.any([requestSignal, timeoutSignal])
-      : timeoutSignal;
     let currentUrl = shareUrl;
 
     try {
@@ -76,7 +67,7 @@ export const createInstagramMediaSourceResolver =
               "Mozilla/5.0 (compatible; PlanEatRepeatRecipeImport/1.0)",
           },
           redirect: "manual",
-          signal,
+          signal: requestSignal,
         });
         if (!redirectStatuses.has(response.status)) {
           throw new ImportRecipeError("FETCH_FAILED");
@@ -111,19 +102,13 @@ export const resolveInstagramMediaSource = (
 ) => createInstagramMediaSourceResolver(fetch)(value, requestSignal);
 
 export const createInstagramRecipeTextAcquirer =
-  (
-    adapter: InstagramSourceAdapter,
-    acquisitionTimeoutMs = ACQUISITION_TIMEOUT_MS,
-  ) =>
+  (adapter: InstagramSourceAdapter) =>
   async (
     mediaUrl: string,
     mediaId: string,
     requestSignal?: AbortSignal,
   ): Promise<string> => {
-    const timeoutSignal = AbortSignal.timeout(acquisitionTimeoutMs);
-    const signal = requestSignal
-      ? AbortSignal.any([requestSignal, timeoutSignal])
-      : timeoutSignal;
+    const signal = requestSignal ?? new AbortController().signal;
 
     try {
       const evidence = await adapter.acquire(mediaUrl, mediaId, signal);

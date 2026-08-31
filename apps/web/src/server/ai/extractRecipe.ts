@@ -83,6 +83,7 @@ export const extractRecipe = async (
   const result = await generateText({
     model: anthropic(env.AI_EXTRACT_MODEL),
     abortSignal: input.abortSignal,
+    maxRetries: 2,
     onStepStart: ({ provider, modelId }) =>
       input.observer?.onInferenceStart({
         providerId: provider,

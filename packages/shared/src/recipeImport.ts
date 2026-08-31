@@ -6,6 +6,7 @@ export const importRecipeErrorCodes = [
   "TRANSCRIPT_UNAVAILABLE",
   "NO_RECIPE_FOUND",
   "EXTRACTION_FAILED",
+  "IMPORT_TIMED_OUT",
 ] as const;
 
 export type ImportRecipeErrorCode = (typeof importRecipeErrorCodes)[number];
@@ -48,6 +49,8 @@ export const importErrorMessages: Record<ImportRecipeErrorCode, string> = {
     "We couldn't find a recipe in that source. If there is one, paste the text below.",
   EXTRACTION_FAILED:
     "We couldn't turn that source into a recipe. Try pasting the recipe text below.",
+  IMPORT_TIMED_OUT:
+    "This import took longer than expected. Try again, or paste the recipe text below.",
 };
 
 export const YOUTUBE_NO_RECIPE_FOUND_MESSAGE =

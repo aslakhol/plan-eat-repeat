@@ -169,6 +169,11 @@ export const urlImportErrorCopy = (
         title: "Couldn't finish the recipe",
         body: "Something went wrong while structuring it. Your link is still here.",
       };
+    case "IMPORT_TIMED_OUT":
+      return {
+        title: "The import took too long",
+        body: "Try again, or paste the recipe text instead. Your link is still here.",
+      };
   }
 };
 
@@ -190,6 +195,12 @@ const retainedInputErrorCopy = (
     return {
       title: "Couldn't find a recipe",
       body: `${inputName === "photos" ? "These photos don't" : "This text doesn't"} seem to contain a readable recipe. ${retainedInput}`,
+    };
+  }
+  if (code === "IMPORT_TIMED_OUT") {
+    return {
+      title: "The import took too long",
+      body: `Try again, or enter the recipe another way. ${retainedInput}`,
     };
   }
   return {
