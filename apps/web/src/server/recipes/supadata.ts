@@ -509,7 +509,7 @@ const waitForPoll = (delayMs: number, signal: AbortSignal) =>
     signal.addEventListener("abort", onAbort, { once: true });
   });
 
-const metadataFromResponse = (
+const metadataFromResponse = async (
   response: SupadataResponse,
   expectedVideoId: string,
   spendObserver?: SupadataSpendObserver,
@@ -523,7 +523,8 @@ const metadataFromResponse = (
     if (metadata.id !== expectedVideoId) {
       throw invalidResponse("metadata", response);
     }
-    return settleFixedCredits(response, spendObserver, 1).then(() => metadata);
+    await settleFixedCredits(response, spendObserver, 1);
+    return metadata;
   }
   throw providerFailure("metadata", response);
 };
