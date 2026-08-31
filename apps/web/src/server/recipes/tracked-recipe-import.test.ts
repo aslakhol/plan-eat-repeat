@@ -28,6 +28,17 @@ const pricedUsage: LanguageModelUsage = {
   totalTokens: 1_200,
 };
 
+const modelIdentity = {
+  providerId: "anthropic.messages",
+  requestedModelId: "claude-opus-4-8",
+} as const;
+
+const inferenceUsage = {
+  ...modelIdentity,
+  responseModelId: "claude-opus-4-8-20260805",
+  usage: pricedUsage,
+} as const;
+
 type TestHarnessOptions = {
   execute?: (
     request: TrackedRecipeImportRequest,
@@ -184,9 +195,9 @@ const inputFor = (request: TrackedRecipeImportRequest) => ({
 void test("a Text import records one priced attempt around provider work", async () => {
   const harness = testHarness({
     execute: async (_request, observer) => {
-      await observer.onInferenceStart();
+      await observer.onInferenceStart(modelIdentity);
       harness.actions.push("provider-call");
-      await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
+      await observer.onInferenceUsage(inferenceUsage);
       return { name: "Soup" };
     },
   });
@@ -203,14 +214,28 @@ void test("a Text import records one priced attempt around provider work", async
     "finish-attempt",
   ]);
   assert.deepEqual(harness.updates, [
-    { inferenceStartedAt: new Date("2026-08-30T08:00:01.000Z") },
+    {
+      inferenceStartedAt: new Date("2026-08-30T08:00:01.000Z"),
+      providerId: "anthropic.messages",
+      requestedModelId: "claude-opus-4-8",
+    },
     {
       inferenceState: "ESTIMATED",
+      providerId: "anthropic.messages",
+      requestedModelId: "claude-opus-4-8",
+      responseModelId: "claude-opus-4-8-20260805",
+      totalInputTokens: 1_000,
+      totalOutputTokens: 200,
       estimatedAiImportCostUsd: 0.01,
     },
     {
       finishedAt: new Date("2026-08-30T08:00:02.000Z"),
       inferenceState: "ESTIMATED",
+      providerId: "anthropic.messages",
+      requestedModelId: "claude-opus-4-8",
+      responseModelId: "claude-opus-4-8-20260805",
+      totalInputTokens: 1_000,
+      totalOutputTokens: 200,
       estimatedAiImportCostUsd: 0.01,
     },
   ]);
@@ -220,8 +245,8 @@ for (const { name, request, attemptSource } of expandedRequests) {
   void test(`a successful ${name} import records one priced attempt`, async () => {
     const harness = testHarness({
       execute: async (_request, observer) => {
-        await observer.onInferenceStart();
-        await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
+        await observer.onInferenceStart(modelIdentity);
+        await observer.onInferenceUsage(inferenceUsage);
         return { name: "Soup" };
       },
     });
@@ -252,7 +277,7 @@ for (const { name, request, attemptSource } of expandedRequests) {
     const providerFailure = new Error("provider disconnected");
     const harness = testHarness({
       execute: async (_request, observer) => {
-        await observer.onInferenceStart();
+        await observer.onInferenceStart(modelIdentity);
         throw providerFailure;
       },
     });
@@ -268,8 +293,8 @@ for (const { name, request, attemptSource } of expandedRequests) {
     const parsingFailure = new Error("invalid structured output");
     const harness = testHarness({
       execute: async (_request, observer) => {
-        await observer.onInferenceStart();
-        await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
+        await observer.onInferenceStart(modelIdentity);
+        await observer.onInferenceUsage(inferenceUsage);
         throw parsingFailure;
       },
     });
@@ -288,7 +313,7 @@ for (const { name, request, attemptSource } of expandedRequests) {
     );
     const harness = testHarness({
       execute: async (_request, observer) => {
-        await observer.onInferenceStart();
+        await observer.onInferenceStart(modelIdentity);
         throw cancellation;
       },
     });
@@ -322,7 +347,7 @@ void test("provider work without usable usage is finished as unknown", async () 
   const providerFailure = new Error("provider disconnected");
   const harness = testHarness({
     execute: async (_request, observer) => {
-      await observer.onInferenceStart();
+      await observer.onInferenceStart(modelIdentity);
       throw providerFailure;
     },
   });
@@ -334,6 +359,8 @@ void test("provider work without usable usage is finished as unknown", async () 
   assert.deepEqual(harness.updates.at(-1), {
     finishedAt: new Date("2026-08-30T08:00:02.000Z"),
     inferenceState: "UNKNOWN",
+    providerId: "anthropic.messages",
+    requestedModelId: "claude-opus-4-8",
     estimatedAiImportCostUsd: null,
   });
 });
@@ -342,8 +369,8 @@ void test("usage remains estimated when later output parsing fails", async () =>
   const parsingFailure = new Error("invalid structured output");
   const harness = testHarness({
     execute: async (_request, observer) => {
-      await observer.onInferenceStart();
-      await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
+      await observer.onInferenceStart(modelIdentity);
+      await observer.onInferenceUsage(inferenceUsage);
       throw parsingFailure;
     },
   });
@@ -366,8 +393,8 @@ void test("telemetry persistence failures do not change the import result", asyn
     const harness = testHarness({
       failOperations: new Set([failedOperation]),
       execute: async (_request, observer) => {
-        await observer.onInferenceStart();
-        await observer.onInferenceUsage("claude-opus-4-8", pricedUsage);
+        await observer.onInferenceStart(modelIdentity);
+        await observer.onInferenceUsage(inferenceUsage);
         return { name: "Soup" };
       },
     });
@@ -382,7 +409,7 @@ void test("telemetry persistence failures preserve cancellation", async () => {
   const harness = testHarness({
     failOperations: new Set(["start-inference", "finish-attempt"]),
     execute: async (_request, observer) => {
-      await observer.onInferenceStart();
+      await observer.onInferenceStart(modelIdentity);
       throw cancellation;
     },
   });

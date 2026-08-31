@@ -55,6 +55,9 @@ _Avoid_: Import cost, combined cost
 The estimated model provider charge attributable to AI inference during an AI Import Attempt. It belongs to the Household and may also be attributed to the initiating Household member; it excludes the ordinary infrastructure cost of running Plan Eat Repeat.
 _Avoid_: Token cost, infrastructure cost
 
+**AI Import Inference Usage**:
+The provider, requested and response model identifiers, and total input and output tokens reported for an AI Import Attempt. It records model use whether or not the attempt produces an Import Draft and does not describe product outcome.
+
 **Supadata Credit Spend**:
 The Supadata credits attributable to acquisition work during an AI Import Attempt. It remains denominated in credits and is not part of AI Import Cost.
 _Avoid_: Supadata cost, scraping cost

@@ -4,11 +4,11 @@ Plan Eat Repeat pays for two independent resources when a Household member reque
 
 Supadata makes the old inference-only plan incomplete. YouTube normally uses transcript and metadata operations, Instagram may use one or two operations depending on the media and partial failures, and Link uses Supadata only when local scraping falls back. A fixed credit lookup by Import Source would misstate spend. Unknown provider charges and attempts that end before inference also need deliberate treatment.
 
-The existing issue also asks for model, token, outcome, success-rate, and reconciliation data. Those are no longer requirements. This dashboard is a lightweight operational overview for one System Admin, not a billing ledger or analytics system.
+Product outcome, success-rate, and reconciliation data remain outside this dashboard. Model identity and total token usage are retained separately so issue #193 can base an output-token limit on production data. This dashboard is a lightweight operational overview for one System Admin, not a billing ledger or analytics system.
 
 ## Solution
 
-Record one reporting-focused AI Import Attempt for every authenticated, valid import request. The record keeps anonymous historical attribution, Import Source, lifecycle timestamps, a fixed estimated AI Import Cost, and incrementally captured Supadata Credit Spend counters. It does not retain imported content, product outcome, model identity, token usage, provider request identifiers, or raw provider usage.
+Record one reporting-focused AI Import Attempt for every authenticated, valid import request. The record keeps anonymous historical attribution, Import Source, lifecycle timestamps, a fixed estimated AI Import Cost, incrementally captured Supadata Credit Spend counters, model identity, and total input and output tokens. It does not retain imported content, product outcome, provider request identifiers, or raw provider usage.
 
 Add an unlinked, System Admin-only AI Import Spend dashboard that presents inference USD and Supadata credits as separate measures. It provides rolling 24-hour figures, selectable calendar periods, daily history, Household and member attribution, Import Source breakdowns, unknown-charge counts, and links to the two provider consoles. The dashboard follows the supplied Dashboard v2 handoff at high fidelity while adding responsive and accessible behavior where the handoff is silent.
 
@@ -146,9 +146,9 @@ The application database remains the source of truth. Numeric totals sum the amo
 
 - Use four inference states: `PENDING`, `NOT_INCURRED`, `ESTIMATED`, and `UNKNOWN`. Start at `PENDING`. Finish as `NOT_INCURRED` when inference never began, `ESTIMATED` when the provider returned usable billing data and the app fixed an estimate, or `UNKNOWN` when inference began without usable billing data.
 
-- Persist the inference-start timestamp immediately before calling the model. Capture usage at the model-step callback, before structured-output parsing can reject a billed response. Calculate the current request's estimate at capture time and store only the resulting USD `Float`. Keep the unrounded numeric value and round only for display.
+- Persist the inference-start timestamp, provider ID, and requested model ID immediately before calling the model. Capture the response model ID and total input and output tokens at the model-step callback, before structured-output parsing can reject a billed response. Calculate the current request's estimate at capture time. Keep the unrounded USD `Float` and round only for display.
 
-- Keep the pricing function narrow. It recognizes only explicitly configured models. Missing usage or an unrecognized configured model produces `UNKNOWN` without failing the import. Do not store model identity, token counts, a pricing version, provider identifiers, or raw usage.
+- Keep the pricing function narrow. It recognizes only explicitly configured models. Missing usage or an unrecognized configured model produces `UNKNOWN` without failing the import. Store the provider ID, requested and response model IDs, and total input and output tokens. Do not store a pricing version, provider request identifiers, or raw usage.
 
 - Accept the AI SDK retry blind spot. If a retry eventually succeeds, store the estimate from the successful response even though an earlier failed provider request might have incurred an unreported charge. Do not disable retries or add custom retry instrumentation for this feature.
 
@@ -242,9 +242,9 @@ The application database remains the source of truth. Numeric totals sum the amo
 
 ## Out of Scope
 
-- Product outcome, success rate, model identity, token counts, pricing-version history, provider request identifiers, raw provider usage, imported content, prompts, generated Recipe content, and per-provider-operation history.
+- Product outcome, success rate, pricing-version history, provider request identifiers, raw provider usage, imported content, prompts, generated Recipe content, and per-provider-operation history.
 
-- Retrospective answers that require those omitted fields. If they become useful later, collection begins when the new fields are introduced.
+- Retrospective answers that require those omitted fields. If they become useful later, collection begins when the new fields are introduced. Model identity and token history begin with the migration that adds those fields; earlier AI Import Attempts remain unknown.
 
 - Anthropic Usage or Cost Admin API integration, automated invoice reconciliation, billing exports, external analytics storage, and a second observability product.
 

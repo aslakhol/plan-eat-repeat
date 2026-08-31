@@ -36,7 +36,23 @@ export type AiImportAttemptChanges = {
   finishedAt?: Date;
   inferenceStartedAt?: Date;
   inferenceState?: AiImportInferenceState;
+  providerId?: string;
+  requestedModelId?: string;
+  responseModelId?: string;
+  totalInputTokens?: number | null;
+  totalOutputTokens?: number | null;
   estimatedAiImportCostUsd?: number | null;
+};
+
+type AiImportModelIdentity = {
+  providerId: string;
+  requestedModelId: string;
+};
+
+type AiImportInferenceUsage = {
+  responseModelId: string;
+  totalInputTokens: number | null;
+  totalOutputTokens: number | null;
 };
 
 export type AiImportTrackingPersistence = {
@@ -105,6 +121,8 @@ export const createTrackedRecipeImporter = <Result>({
     let attemptId: string | null = null;
     let inferenceState: AiImportInferenceState = "NOT_INCURRED";
     let estimatedAiImportCostUsd: number | null = null;
+    let modelIdentity: AiImportModelIdentity | null = null;
+    let inferenceUsage: AiImportInferenceUsage | null = null;
 
     let attribution: AiImportAttribution | null = null;
     try {
@@ -141,18 +159,36 @@ export const createTrackedRecipeImporter = <Result>({
     };
 
     const observer: InferenceObserver = {
-      onInferenceStart: async () => {
+      onInferenceStart: async ({ providerId, requestedModelId }) => {
         inferenceState = "UNKNOWN";
+        modelIdentity = { providerId, requestedModelId };
         await updateAttempt("start-inference", {
           inferenceStartedAt: now(),
+          ...modelIdentity,
         });
       },
-      onInferenceUsage: async (model, usage) => {
-        estimatedAiImportCostUsd = estimateAiImportCostUsd(model, usage);
+      onInferenceUsage: async ({
+        providerId,
+        requestedModelId,
+        responseModelId,
+        usage,
+      }) => {
+        modelIdentity = { providerId, requestedModelId };
+        inferenceUsage = {
+          responseModelId,
+          totalInputTokens: usage.inputTokens ?? null,
+          totalOutputTokens: usage.outputTokens ?? null,
+        };
+        estimatedAiImportCostUsd = estimateAiImportCostUsd(
+          requestedModelId,
+          usage,
+        );
         inferenceState =
           estimatedAiImportCostUsd === null ? "UNKNOWN" : "ESTIMATED";
         await updateAttempt("capture-usage", {
           inferenceState,
+          ...modelIdentity,
+          ...inferenceUsage,
           estimatedAiImportCostUsd,
         });
       },
@@ -191,6 +227,8 @@ export const createTrackedRecipeImporter = <Result>({
       await updateAttempt("finish-attempt", {
         finishedAt: now(),
         inferenceState,
+        ...(modelIdentity ?? {}),
+        ...(inferenceUsage ?? {}),
         estimatedAiImportCostUsd,
       });
     }

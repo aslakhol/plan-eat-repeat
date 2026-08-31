@@ -79,11 +79,16 @@ export const importRecipeFromText = async (
   );
 
 export type InferenceObserver = {
-  onInferenceStart(): Promise<void> | void;
-  onInferenceUsage(
-    model: string,
-    usage: LanguageModelUsage,
-  ): Promise<void> | void;
+  onInferenceStart(model: {
+    providerId: string;
+    requestedModelId: string;
+  }): Promise<void> | void;
+  onInferenceUsage(result: {
+    providerId: string;
+    requestedModelId: string;
+    responseModelId: string;
+    usage: LanguageModelUsage;
+  }): Promise<void> | void;
 };
 
 export type RecipeImportImage = { data: string; mimeType: string };

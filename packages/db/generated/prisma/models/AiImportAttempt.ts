@@ -28,6 +28,8 @@ export type AggregateAiImportAttempt = {
 
 export type AiImportAttemptAvgAggregateOutputType = {
   membershipId: number | null
+  totalInputTokens: number | null
+  totalOutputTokens: number | null
   estimatedAiImportCostUsd: number | null
   supadataOperationsStarted: number | null
   supadataCredits: number | null
@@ -36,6 +38,8 @@ export type AiImportAttemptAvgAggregateOutputType = {
 
 export type AiImportAttemptSumAggregateOutputType = {
   membershipId: number | null
+  totalInputTokens: number | null
+  totalOutputTokens: number | null
   estimatedAiImportCostUsd: number | null
   supadataOperationsStarted: number | null
   supadataCredits: number | null
@@ -53,6 +57,11 @@ export type AiImportAttemptMinAggregateOutputType = {
   membershipAttributionKey: string | null
   inferenceState: $Enums.AiImportInferenceState | null
   inferenceStartedAt: Date | null
+  providerId: string | null
+  requestedModelId: string | null
+  responseModelId: string | null
+  totalInputTokens: number | null
+  totalOutputTokens: number | null
   estimatedAiImportCostUsd: number | null
   supadataOperationsStarted: number | null
   supadataCredits: number | null
@@ -70,6 +79,11 @@ export type AiImportAttemptMaxAggregateOutputType = {
   membershipAttributionKey: string | null
   inferenceState: $Enums.AiImportInferenceState | null
   inferenceStartedAt: Date | null
+  providerId: string | null
+  requestedModelId: string | null
+  responseModelId: string | null
+  totalInputTokens: number | null
+  totalOutputTokens: number | null
   estimatedAiImportCostUsd: number | null
   supadataOperationsStarted: number | null
   supadataCredits: number | null
@@ -87,6 +101,11 @@ export type AiImportAttemptCountAggregateOutputType = {
   membershipAttributionKey: number
   inferenceState: number
   inferenceStartedAt: number
+  providerId: number
+  requestedModelId: number
+  responseModelId: number
+  totalInputTokens: number
+  totalOutputTokens: number
   estimatedAiImportCostUsd: number
   supadataOperationsStarted: number
   supadataCredits: number
@@ -97,6 +116,8 @@ export type AiImportAttemptCountAggregateOutputType = {
 
 export type AiImportAttemptAvgAggregateInputType = {
   membershipId?: true
+  totalInputTokens?: true
+  totalOutputTokens?: true
   estimatedAiImportCostUsd?: true
   supadataOperationsStarted?: true
   supadataCredits?: true
@@ -105,6 +126,8 @@ export type AiImportAttemptAvgAggregateInputType = {
 
 export type AiImportAttemptSumAggregateInputType = {
   membershipId?: true
+  totalInputTokens?: true
+  totalOutputTokens?: true
   estimatedAiImportCostUsd?: true
   supadataOperationsStarted?: true
   supadataCredits?: true
@@ -122,6 +145,11 @@ export type AiImportAttemptMinAggregateInputType = {
   membershipAttributionKey?: true
   inferenceState?: true
   inferenceStartedAt?: true
+  providerId?: true
+  requestedModelId?: true
+  responseModelId?: true
+  totalInputTokens?: true
+  totalOutputTokens?: true
   estimatedAiImportCostUsd?: true
   supadataOperationsStarted?: true
   supadataCredits?: true
@@ -139,6 +167,11 @@ export type AiImportAttemptMaxAggregateInputType = {
   membershipAttributionKey?: true
   inferenceState?: true
   inferenceStartedAt?: true
+  providerId?: true
+  requestedModelId?: true
+  responseModelId?: true
+  totalInputTokens?: true
+  totalOutputTokens?: true
   estimatedAiImportCostUsd?: true
   supadataOperationsStarted?: true
   supadataCredits?: true
@@ -156,6 +189,11 @@ export type AiImportAttemptCountAggregateInputType = {
   membershipAttributionKey?: true
   inferenceState?: true
   inferenceStartedAt?: true
+  providerId?: true
+  requestedModelId?: true
+  responseModelId?: true
+  totalInputTokens?: true
+  totalOutputTokens?: true
   estimatedAiImportCostUsd?: true
   supadataOperationsStarted?: true
   supadataCredits?: true
@@ -260,6 +298,11 @@ export type AiImportAttemptGroupByOutputType = {
   membershipAttributionKey: string
   inferenceState: $Enums.AiImportInferenceState
   inferenceStartedAt: Date | null
+  providerId: string | null
+  requestedModelId: string | null
+  responseModelId: string | null
+  totalInputTokens: number | null
+  totalOutputTokens: number | null
   estimatedAiImportCostUsd: number | null
   supadataOperationsStarted: number
   supadataCredits: number
@@ -300,6 +343,11 @@ export type AiImportAttemptWhereInput = {
   membershipAttributionKey?: Prisma.StringFilter<"AiImportAttempt"> | string
   inferenceState?: Prisma.EnumAiImportInferenceStateFilter<"AiImportAttempt"> | $Enums.AiImportInferenceState
   inferenceStartedAt?: Prisma.DateTimeNullableFilter<"AiImportAttempt"> | Date | string | null
+  providerId?: Prisma.StringNullableFilter<"AiImportAttempt"> | string | null
+  requestedModelId?: Prisma.StringNullableFilter<"AiImportAttempt"> | string | null
+  responseModelId?: Prisma.StringNullableFilter<"AiImportAttempt"> | string | null
+  totalInputTokens?: Prisma.IntNullableFilter<"AiImportAttempt"> | number | null
+  totalOutputTokens?: Prisma.IntNullableFilter<"AiImportAttempt"> | number | null
   estimatedAiImportCostUsd?: Prisma.FloatNullableFilter<"AiImportAttempt"> | number | null
   supadataOperationsStarted?: Prisma.IntFilter<"AiImportAttempt"> | number
   supadataCredits?: Prisma.IntFilter<"AiImportAttempt"> | number
@@ -319,6 +367,11 @@ export type AiImportAttemptOrderByWithRelationInput = {
   membershipAttributionKey?: Prisma.SortOrder
   inferenceState?: Prisma.SortOrder
   inferenceStartedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  providerId?: Prisma.SortOrderInput | Prisma.SortOrder
+  requestedModelId?: Prisma.SortOrderInput | Prisma.SortOrder
+  responseModelId?: Prisma.SortOrderInput | Prisma.SortOrder
+  totalInputTokens?: Prisma.SortOrderInput | Prisma.SortOrder
+  totalOutputTokens?: Prisma.SortOrderInput | Prisma.SortOrder
   estimatedAiImportCostUsd?: Prisma.SortOrderInput | Prisma.SortOrder
   supadataOperationsStarted?: Prisma.SortOrder
   supadataCredits?: Prisma.SortOrder
@@ -341,6 +394,11 @@ export type AiImportAttemptWhereUniqueInput = Prisma.AtLeast<{
   membershipAttributionKey?: Prisma.StringFilter<"AiImportAttempt"> | string
   inferenceState?: Prisma.EnumAiImportInferenceStateFilter<"AiImportAttempt"> | $Enums.AiImportInferenceState
   inferenceStartedAt?: Prisma.DateTimeNullableFilter<"AiImportAttempt"> | Date | string | null
+  providerId?: Prisma.StringNullableFilter<"AiImportAttempt"> | string | null
+  requestedModelId?: Prisma.StringNullableFilter<"AiImportAttempt"> | string | null
+  responseModelId?: Prisma.StringNullableFilter<"AiImportAttempt"> | string | null
+  totalInputTokens?: Prisma.IntNullableFilter<"AiImportAttempt"> | number | null
+  totalOutputTokens?: Prisma.IntNullableFilter<"AiImportAttempt"> | number | null
   estimatedAiImportCostUsd?: Prisma.FloatNullableFilter<"AiImportAttempt"> | number | null
   supadataOperationsStarted?: Prisma.IntFilter<"AiImportAttempt"> | number
   supadataCredits?: Prisma.IntFilter<"AiImportAttempt"> | number
@@ -360,6 +418,11 @@ export type AiImportAttemptOrderByWithAggregationInput = {
   membershipAttributionKey?: Prisma.SortOrder
   inferenceState?: Prisma.SortOrder
   inferenceStartedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  providerId?: Prisma.SortOrderInput | Prisma.SortOrder
+  requestedModelId?: Prisma.SortOrderInput | Prisma.SortOrder
+  responseModelId?: Prisma.SortOrderInput | Prisma.SortOrder
+  totalInputTokens?: Prisma.SortOrderInput | Prisma.SortOrder
+  totalOutputTokens?: Prisma.SortOrderInput | Prisma.SortOrder
   estimatedAiImportCostUsd?: Prisma.SortOrderInput | Prisma.SortOrder
   supadataOperationsStarted?: Prisma.SortOrder
   supadataCredits?: Prisma.SortOrder
@@ -385,6 +448,11 @@ export type AiImportAttemptScalarWhereWithAggregatesInput = {
   membershipAttributionKey?: Prisma.StringWithAggregatesFilter<"AiImportAttempt"> | string
   inferenceState?: Prisma.EnumAiImportInferenceStateWithAggregatesFilter<"AiImportAttempt"> | $Enums.AiImportInferenceState
   inferenceStartedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AiImportAttempt"> | Date | string | null
+  providerId?: Prisma.StringNullableWithAggregatesFilter<"AiImportAttempt"> | string | null
+  requestedModelId?: Prisma.StringNullableWithAggregatesFilter<"AiImportAttempt"> | string | null
+  responseModelId?: Prisma.StringNullableWithAggregatesFilter<"AiImportAttempt"> | string | null
+  totalInputTokens?: Prisma.IntNullableWithAggregatesFilter<"AiImportAttempt"> | number | null
+  totalOutputTokens?: Prisma.IntNullableWithAggregatesFilter<"AiImportAttempt"> | number | null
   estimatedAiImportCostUsd?: Prisma.FloatNullableWithAggregatesFilter<"AiImportAttempt"> | number | null
   supadataOperationsStarted?: Prisma.IntWithAggregatesFilter<"AiImportAttempt"> | number
   supadataCredits?: Prisma.IntWithAggregatesFilter<"AiImportAttempt"> | number
@@ -400,6 +468,11 @@ export type AiImportAttemptCreateInput = {
   membershipAttributionKey: string
   inferenceState?: $Enums.AiImportInferenceState
   inferenceStartedAt?: Date | string | null
+  providerId?: string | null
+  requestedModelId?: string | null
+  responseModelId?: string | null
+  totalInputTokens?: number | null
+  totalOutputTokens?: number | null
   estimatedAiImportCostUsd?: number | null
   supadataOperationsStarted?: number
   supadataCredits?: number
@@ -419,6 +492,11 @@ export type AiImportAttemptUncheckedCreateInput = {
   membershipAttributionKey: string
   inferenceState?: $Enums.AiImportInferenceState
   inferenceStartedAt?: Date | string | null
+  providerId?: string | null
+  requestedModelId?: string | null
+  responseModelId?: string | null
+  totalInputTokens?: number | null
+  totalOutputTokens?: number | null
   estimatedAiImportCostUsd?: number | null
   supadataOperationsStarted?: number
   supadataCredits?: number
@@ -434,6 +512,11 @@ export type AiImportAttemptUpdateInput = {
   membershipAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   inferenceState?: Prisma.EnumAiImportInferenceStateFieldUpdateOperationsInput | $Enums.AiImportInferenceState
   inferenceStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  providerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestedModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  responseModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  totalOutputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedAiImportCostUsd?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   supadataOperationsStarted?: Prisma.IntFieldUpdateOperationsInput | number
   supadataCredits?: Prisma.IntFieldUpdateOperationsInput | number
@@ -453,6 +536,11 @@ export type AiImportAttemptUncheckedUpdateInput = {
   membershipAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   inferenceState?: Prisma.EnumAiImportInferenceStateFieldUpdateOperationsInput | $Enums.AiImportInferenceState
   inferenceStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  providerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestedModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  responseModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  totalOutputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedAiImportCostUsd?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   supadataOperationsStarted?: Prisma.IntFieldUpdateOperationsInput | number
   supadataCredits?: Prisma.IntFieldUpdateOperationsInput | number
@@ -470,6 +558,11 @@ export type AiImportAttemptCreateManyInput = {
   membershipAttributionKey: string
   inferenceState?: $Enums.AiImportInferenceState
   inferenceStartedAt?: Date | string | null
+  providerId?: string | null
+  requestedModelId?: string | null
+  responseModelId?: string | null
+  totalInputTokens?: number | null
+  totalOutputTokens?: number | null
   estimatedAiImportCostUsd?: number | null
   supadataOperationsStarted?: number
   supadataCredits?: number
@@ -485,6 +578,11 @@ export type AiImportAttemptUpdateManyMutationInput = {
   membershipAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   inferenceState?: Prisma.EnumAiImportInferenceStateFieldUpdateOperationsInput | $Enums.AiImportInferenceState
   inferenceStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  providerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestedModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  responseModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  totalOutputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedAiImportCostUsd?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   supadataOperationsStarted?: Prisma.IntFieldUpdateOperationsInput | number
   supadataCredits?: Prisma.IntFieldUpdateOperationsInput | number
@@ -502,6 +600,11 @@ export type AiImportAttemptUncheckedUpdateManyInput = {
   membershipAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   inferenceState?: Prisma.EnumAiImportInferenceStateFieldUpdateOperationsInput | $Enums.AiImportInferenceState
   inferenceStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  providerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestedModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  responseModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  totalOutputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedAiImportCostUsd?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   supadataOperationsStarted?: Prisma.IntFieldUpdateOperationsInput | number
   supadataCredits?: Prisma.IntFieldUpdateOperationsInput | number
@@ -529,6 +632,11 @@ export type AiImportAttemptCountOrderByAggregateInput = {
   membershipAttributionKey?: Prisma.SortOrder
   inferenceState?: Prisma.SortOrder
   inferenceStartedAt?: Prisma.SortOrder
+  providerId?: Prisma.SortOrder
+  requestedModelId?: Prisma.SortOrder
+  responseModelId?: Prisma.SortOrder
+  totalInputTokens?: Prisma.SortOrder
+  totalOutputTokens?: Prisma.SortOrder
   estimatedAiImportCostUsd?: Prisma.SortOrder
   supadataOperationsStarted?: Prisma.SortOrder
   supadataCredits?: Prisma.SortOrder
@@ -537,6 +645,8 @@ export type AiImportAttemptCountOrderByAggregateInput = {
 
 export type AiImportAttemptAvgOrderByAggregateInput = {
   membershipId?: Prisma.SortOrder
+  totalInputTokens?: Prisma.SortOrder
+  totalOutputTokens?: Prisma.SortOrder
   estimatedAiImportCostUsd?: Prisma.SortOrder
   supadataOperationsStarted?: Prisma.SortOrder
   supadataCredits?: Prisma.SortOrder
@@ -554,6 +664,11 @@ export type AiImportAttemptMaxOrderByAggregateInput = {
   membershipAttributionKey?: Prisma.SortOrder
   inferenceState?: Prisma.SortOrder
   inferenceStartedAt?: Prisma.SortOrder
+  providerId?: Prisma.SortOrder
+  requestedModelId?: Prisma.SortOrder
+  responseModelId?: Prisma.SortOrder
+  totalInputTokens?: Prisma.SortOrder
+  totalOutputTokens?: Prisma.SortOrder
   estimatedAiImportCostUsd?: Prisma.SortOrder
   supadataOperationsStarted?: Prisma.SortOrder
   supadataCredits?: Prisma.SortOrder
@@ -571,6 +686,11 @@ export type AiImportAttemptMinOrderByAggregateInput = {
   membershipAttributionKey?: Prisma.SortOrder
   inferenceState?: Prisma.SortOrder
   inferenceStartedAt?: Prisma.SortOrder
+  providerId?: Prisma.SortOrder
+  requestedModelId?: Prisma.SortOrder
+  responseModelId?: Prisma.SortOrder
+  totalInputTokens?: Prisma.SortOrder
+  totalOutputTokens?: Prisma.SortOrder
   estimatedAiImportCostUsd?: Prisma.SortOrder
   supadataOperationsStarted?: Prisma.SortOrder
   supadataCredits?: Prisma.SortOrder
@@ -579,6 +699,8 @@ export type AiImportAttemptMinOrderByAggregateInput = {
 
 export type AiImportAttemptSumOrderByAggregateInput = {
   membershipId?: Prisma.SortOrder
+  totalInputTokens?: Prisma.SortOrder
+  totalOutputTokens?: Prisma.SortOrder
   estimatedAiImportCostUsd?: Prisma.SortOrder
   supadataOperationsStarted?: Prisma.SortOrder
   supadataCredits?: Prisma.SortOrder
@@ -686,6 +808,11 @@ export type AiImportAttemptCreateWithoutHouseholdInput = {
   membershipAttributionKey: string
   inferenceState?: $Enums.AiImportInferenceState
   inferenceStartedAt?: Date | string | null
+  providerId?: string | null
+  requestedModelId?: string | null
+  responseModelId?: string | null
+  totalInputTokens?: number | null
+  totalOutputTokens?: number | null
   estimatedAiImportCostUsd?: number | null
   supadataOperationsStarted?: number
   supadataCredits?: number
@@ -703,6 +830,11 @@ export type AiImportAttemptUncheckedCreateWithoutHouseholdInput = {
   membershipAttributionKey: string
   inferenceState?: $Enums.AiImportInferenceState
   inferenceStartedAt?: Date | string | null
+  providerId?: string | null
+  requestedModelId?: string | null
+  responseModelId?: string | null
+  totalInputTokens?: number | null
+  totalOutputTokens?: number | null
   estimatedAiImportCostUsd?: number | null
   supadataOperationsStarted?: number
   supadataCredits?: number
@@ -749,6 +881,11 @@ export type AiImportAttemptScalarWhereInput = {
   membershipAttributionKey?: Prisma.StringFilter<"AiImportAttempt"> | string
   inferenceState?: Prisma.EnumAiImportInferenceStateFilter<"AiImportAttempt"> | $Enums.AiImportInferenceState
   inferenceStartedAt?: Prisma.DateTimeNullableFilter<"AiImportAttempt"> | Date | string | null
+  providerId?: Prisma.StringNullableFilter<"AiImportAttempt"> | string | null
+  requestedModelId?: Prisma.StringNullableFilter<"AiImportAttempt"> | string | null
+  responseModelId?: Prisma.StringNullableFilter<"AiImportAttempt"> | string | null
+  totalInputTokens?: Prisma.IntNullableFilter<"AiImportAttempt"> | number | null
+  totalOutputTokens?: Prisma.IntNullableFilter<"AiImportAttempt"> | number | null
   estimatedAiImportCostUsd?: Prisma.FloatNullableFilter<"AiImportAttempt"> | number | null
   supadataOperationsStarted?: Prisma.IntFilter<"AiImportAttempt"> | number
   supadataCredits?: Prisma.IntFilter<"AiImportAttempt"> | number
@@ -764,6 +901,11 @@ export type AiImportAttemptCreateWithoutMembershipInput = {
   membershipAttributionKey: string
   inferenceState?: $Enums.AiImportInferenceState
   inferenceStartedAt?: Date | string | null
+  providerId?: string | null
+  requestedModelId?: string | null
+  responseModelId?: string | null
+  totalInputTokens?: number | null
+  totalOutputTokens?: number | null
   estimatedAiImportCostUsd?: number | null
   supadataOperationsStarted?: number
   supadataCredits?: number
@@ -781,6 +923,11 @@ export type AiImportAttemptUncheckedCreateWithoutMembershipInput = {
   membershipAttributionKey: string
   inferenceState?: $Enums.AiImportInferenceState
   inferenceStartedAt?: Date | string | null
+  providerId?: string | null
+  requestedModelId?: string | null
+  responseModelId?: string | null
+  totalInputTokens?: number | null
+  totalOutputTokens?: number | null
   estimatedAiImportCostUsd?: number | null
   supadataOperationsStarted?: number
   supadataCredits?: number
@@ -823,6 +970,11 @@ export type AiImportAttemptCreateManyHouseholdInput = {
   membershipAttributionKey: string
   inferenceState?: $Enums.AiImportInferenceState
   inferenceStartedAt?: Date | string | null
+  providerId?: string | null
+  requestedModelId?: string | null
+  responseModelId?: string | null
+  totalInputTokens?: number | null
+  totalOutputTokens?: number | null
   estimatedAiImportCostUsd?: number | null
   supadataOperationsStarted?: number
   supadataCredits?: number
@@ -838,6 +990,11 @@ export type AiImportAttemptUpdateWithoutHouseholdInput = {
   membershipAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   inferenceState?: Prisma.EnumAiImportInferenceStateFieldUpdateOperationsInput | $Enums.AiImportInferenceState
   inferenceStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  providerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestedModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  responseModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  totalOutputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedAiImportCostUsd?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   supadataOperationsStarted?: Prisma.IntFieldUpdateOperationsInput | number
   supadataCredits?: Prisma.IntFieldUpdateOperationsInput | number
@@ -855,6 +1012,11 @@ export type AiImportAttemptUncheckedUpdateWithoutHouseholdInput = {
   membershipAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   inferenceState?: Prisma.EnumAiImportInferenceStateFieldUpdateOperationsInput | $Enums.AiImportInferenceState
   inferenceStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  providerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestedModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  responseModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  totalOutputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedAiImportCostUsd?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   supadataOperationsStarted?: Prisma.IntFieldUpdateOperationsInput | number
   supadataCredits?: Prisma.IntFieldUpdateOperationsInput | number
@@ -871,6 +1033,11 @@ export type AiImportAttemptUncheckedUpdateManyWithoutHouseholdInput = {
   membershipAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   inferenceState?: Prisma.EnumAiImportInferenceStateFieldUpdateOperationsInput | $Enums.AiImportInferenceState
   inferenceStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  providerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestedModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  responseModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  totalOutputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedAiImportCostUsd?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   supadataOperationsStarted?: Prisma.IntFieldUpdateOperationsInput | number
   supadataCredits?: Prisma.IntFieldUpdateOperationsInput | number
@@ -887,6 +1054,11 @@ export type AiImportAttemptCreateManyMembershipInput = {
   membershipAttributionKey: string
   inferenceState?: $Enums.AiImportInferenceState
   inferenceStartedAt?: Date | string | null
+  providerId?: string | null
+  requestedModelId?: string | null
+  responseModelId?: string | null
+  totalInputTokens?: number | null
+  totalOutputTokens?: number | null
   estimatedAiImportCostUsd?: number | null
   supadataOperationsStarted?: number
   supadataCredits?: number
@@ -902,6 +1074,11 @@ export type AiImportAttemptUpdateWithoutMembershipInput = {
   membershipAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   inferenceState?: Prisma.EnumAiImportInferenceStateFieldUpdateOperationsInput | $Enums.AiImportInferenceState
   inferenceStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  providerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestedModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  responseModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  totalOutputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedAiImportCostUsd?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   supadataOperationsStarted?: Prisma.IntFieldUpdateOperationsInput | number
   supadataCredits?: Prisma.IntFieldUpdateOperationsInput | number
@@ -919,6 +1096,11 @@ export type AiImportAttemptUncheckedUpdateWithoutMembershipInput = {
   membershipAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   inferenceState?: Prisma.EnumAiImportInferenceStateFieldUpdateOperationsInput | $Enums.AiImportInferenceState
   inferenceStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  providerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestedModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  responseModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  totalOutputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedAiImportCostUsd?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   supadataOperationsStarted?: Prisma.IntFieldUpdateOperationsInput | number
   supadataCredits?: Prisma.IntFieldUpdateOperationsInput | number
@@ -935,6 +1117,11 @@ export type AiImportAttemptUncheckedUpdateManyWithoutMembershipInput = {
   membershipAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   inferenceState?: Prisma.EnumAiImportInferenceStateFieldUpdateOperationsInput | $Enums.AiImportInferenceState
   inferenceStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  providerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requestedModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  responseModelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalInputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  totalOutputTokens?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   estimatedAiImportCostUsd?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   supadataOperationsStarted?: Prisma.IntFieldUpdateOperationsInput | number
   supadataCredits?: Prisma.IntFieldUpdateOperationsInput | number
@@ -954,6 +1141,11 @@ export type AiImportAttemptSelect<ExtArgs extends runtime.Types.Extensions.Inter
   membershipAttributionKey?: boolean
   inferenceState?: boolean
   inferenceStartedAt?: boolean
+  providerId?: boolean
+  requestedModelId?: boolean
+  responseModelId?: boolean
+  totalInputTokens?: boolean
+  totalOutputTokens?: boolean
   estimatedAiImportCostUsd?: boolean
   supadataOperationsStarted?: boolean
   supadataCredits?: boolean
@@ -973,6 +1165,11 @@ export type AiImportAttemptSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   membershipAttributionKey?: boolean
   inferenceState?: boolean
   inferenceStartedAt?: boolean
+  providerId?: boolean
+  requestedModelId?: boolean
+  responseModelId?: boolean
+  totalInputTokens?: boolean
+  totalOutputTokens?: boolean
   estimatedAiImportCostUsd?: boolean
   supadataOperationsStarted?: boolean
   supadataCredits?: boolean
@@ -992,6 +1189,11 @@ export type AiImportAttemptSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   membershipAttributionKey?: boolean
   inferenceState?: boolean
   inferenceStartedAt?: boolean
+  providerId?: boolean
+  requestedModelId?: boolean
+  responseModelId?: boolean
+  totalInputTokens?: boolean
+  totalOutputTokens?: boolean
   estimatedAiImportCostUsd?: boolean
   supadataOperationsStarted?: boolean
   supadataCredits?: boolean
@@ -1011,13 +1213,18 @@ export type AiImportAttemptSelectScalar = {
   membershipAttributionKey?: boolean
   inferenceState?: boolean
   inferenceStartedAt?: boolean
+  providerId?: boolean
+  requestedModelId?: boolean
+  responseModelId?: boolean
+  totalInputTokens?: boolean
+  totalOutputTokens?: boolean
   estimatedAiImportCostUsd?: boolean
   supadataOperationsStarted?: boolean
   supadataCredits?: boolean
   supadataUnknownOperationCount?: boolean
 }
 
-export type AiImportAttemptOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "source" | "startedAt" | "finishedAt" | "householdId" | "membershipId" | "householdAttributionKey" | "membershipAttributionKey" | "inferenceState" | "inferenceStartedAt" | "estimatedAiImportCostUsd" | "supadataOperationsStarted" | "supadataCredits" | "supadataUnknownOperationCount", ExtArgs["result"]["aiImportAttempt"]>
+export type AiImportAttemptOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "source" | "startedAt" | "finishedAt" | "householdId" | "membershipId" | "householdAttributionKey" | "membershipAttributionKey" | "inferenceState" | "inferenceStartedAt" | "providerId" | "requestedModelId" | "responseModelId" | "totalInputTokens" | "totalOutputTokens" | "estimatedAiImportCostUsd" | "supadataOperationsStarted" | "supadataCredits" | "supadataUnknownOperationCount", ExtArgs["result"]["aiImportAttempt"]>
 export type AiImportAttemptInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   household?: boolean | Prisma.AiImportAttempt$householdArgs<ExtArgs>
   membership?: boolean | Prisma.AiImportAttempt$membershipArgs<ExtArgs>
@@ -1048,6 +1255,11 @@ export type $AiImportAttemptPayload<ExtArgs extends runtime.Types.Extensions.Int
     membershipAttributionKey: string
     inferenceState: $Enums.AiImportInferenceState
     inferenceStartedAt: Date | null
+    providerId: string | null
+    requestedModelId: string | null
+    responseModelId: string | null
+    totalInputTokens: number | null
+    totalOutputTokens: number | null
     estimatedAiImportCostUsd: number | null
     supadataOperationsStarted: number
     supadataCredits: number
@@ -1487,6 +1699,11 @@ export interface AiImportAttemptFieldRefs {
   readonly membershipAttributionKey: Prisma.FieldRef<"AiImportAttempt", 'String'>
   readonly inferenceState: Prisma.FieldRef<"AiImportAttempt", 'AiImportInferenceState'>
   readonly inferenceStartedAt: Prisma.FieldRef<"AiImportAttempt", 'DateTime'>
+  readonly providerId: Prisma.FieldRef<"AiImportAttempt", 'String'>
+  readonly requestedModelId: Prisma.FieldRef<"AiImportAttempt", 'String'>
+  readonly responseModelId: Prisma.FieldRef<"AiImportAttempt", 'String'>
+  readonly totalInputTokens: Prisma.FieldRef<"AiImportAttempt", 'Int'>
+  readonly totalOutputTokens: Prisma.FieldRef<"AiImportAttempt", 'Int'>
   readonly estimatedAiImportCostUsd: Prisma.FieldRef<"AiImportAttempt", 'Float'>
   readonly supadataOperationsStarted: Prisma.FieldRef<"AiImportAttempt", 'Int'>
   readonly supadataCredits: Prisma.FieldRef<"AiImportAttempt", 'Int'>

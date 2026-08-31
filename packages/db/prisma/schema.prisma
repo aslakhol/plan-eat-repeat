@@ -146,6 +146,11 @@ model AiImportAttempt {
     membershipAttributionKey      String
     inferenceState                AiImportInferenceState @default(PENDING)
     inferenceStartedAt            DateTime?
+    providerId                    String?
+    requestedModelId              String?
+    responseModelId               String?
+    totalInputTokens              Int?
+    totalOutputTokens             Int?
     estimatedAiImportCostUsd      Float?
     supadataOperationsStarted     Int                    @default(0)
     supadataCredits               Int                    @default(0)

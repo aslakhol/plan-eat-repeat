@@ -30,6 +30,17 @@ const usage: LanguageModelUsage = {
   totalTokens: 1_200,
 };
 
+const modelIdentity = {
+  providerId: "anthropic.messages",
+  requestedModelId: "claude-opus-4-8",
+} as const;
+
+const inferenceUsage = {
+  ...modelIdentity,
+  responseModelId: "claude-opus-4-8-20260805",
+  usage,
+} as const;
+
 mock.module("@clerk/nextjs/server", {
   namedExports: {
     clerkClient: () =>
@@ -44,15 +55,12 @@ mock.module(new URL("./ai/extractRecipe.ts", import.meta.url).href, {
   namedExports: {
     extractRecipe: async (input: {
       observer?: {
-        onInferenceStart(): Promise<void> | void;
-        onInferenceUsage(
-          model: string,
-          usage: LanguageModelUsage,
-        ): Promise<void> | void;
+        onInferenceStart(model: typeof modelIdentity): Promise<void> | void;
+        onInferenceUsage(result: typeof inferenceUsage): Promise<void> | void;
       };
     }) => {
-      await input.observer?.onInferenceStart();
-      await input.observer?.onInferenceUsage("claude-opus-4-8", usage);
+      await input.observer?.onInferenceStart(modelIdentity);
+      await input.observer?.onInferenceUsage(inferenceUsage);
       return {
         name: "Tomato soup",
         recipe: { servings: null, parts: [] },
@@ -127,6 +135,11 @@ void test("an accepted Text mutation records exactly one priced attempt", () =>
       membershipAttributionKey: membership.aiImportSpendAttributionKey,
       inferenceState: "ESTIMATED",
       inferenceStartedAt: attempts[0]?.inferenceStartedAt,
+      providerId: "anthropic.messages",
+      requestedModelId: "claude-opus-4-8",
+      responseModelId: "claude-opus-4-8-20260805",
+      totalInputTokens: 1_000,
+      totalOutputTokens: 200,
       estimatedAiImportCostUsd: 0.01,
       supadataOperationsStarted: 0,
       supadataCredits: 0,
