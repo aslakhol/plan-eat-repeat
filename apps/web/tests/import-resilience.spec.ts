@@ -44,6 +44,10 @@ test("import empty, loading, error, no-match, and missing clipboard states stay 
 
   const urlInput = page.getByRole("textbox", { name: "Recipe URL" });
   const importButton = page.getByRole("button", { name: "Import recipe" });
+  await expect(urlInput).toHaveAttribute("autocomplete", "off");
+  await expect(urlInput).toHaveAttribute("autocapitalize", "none");
+  await expect(urlInput).toHaveAttribute("autocorrect", "off");
+  await expect(urlInput).toHaveAttribute("spellcheck", "false");
   await expect(urlInput).toHaveValue("");
   await expect(importButton).toBeDisabled();
   await urlInput.fill("not-a-url");

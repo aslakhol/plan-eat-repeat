@@ -588,6 +588,7 @@ export function AddDinnerSheet(props: Props) {
             <h2 className="mb-7 mt-6 font-serif text-4xl">{sourceTitle}</h2>
             <form
               className="space-y-3"
+              autoComplete="off"
               onSubmit={(event) => {
                 event.preventDefault();
                 void beginImport();
@@ -600,6 +601,10 @@ export function AddDinnerSheet(props: Props) {
                 id="recipe-import-url"
                 type="url"
                 inputMode="url"
+                autoComplete="off"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 value={url}
                 autoFocus
                 onChange={(event) => setUrl(event.target.value)}
