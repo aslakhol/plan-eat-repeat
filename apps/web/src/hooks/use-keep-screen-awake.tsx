@@ -3,7 +3,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from "react";
 
@@ -76,69 +75,91 @@ export const useKeepScreenAwakePreference = () => {
 
 export const useDinnerWakeLock = (isOpen: boolean) => {
   const { enabled, isReady } = useKeepScreenAwakePreference();
-  const sentinelRef = useRef<WakeLockSentinel | null>(null);
-  const requestInFlightRef = useRef(false);
-  const shouldLockRef = useRef(false);
+  useEffect(() => {
+    if (!isReady || !enabled || !isOpen || !("wakeLock" in navigator)) return;
 
-  const requestLock = useCallback(async () => {
-    if (
-      !shouldLockRef.current ||
-      requestInFlightRef.current ||
-      sentinelRef.current?.released === false ||
-      typeof navigator === "undefined" ||
-      !("wakeLock" in navigator)
-    ) {
-      return;
-    }
+    let disposed = false;
+    let sentinel: WakeLockSentinel | null = null;
+    let requestInFlight = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let retryDelay = 1_000;
 
-    requestInFlightRef.current = true;
-    try {
-      const sentinel = await navigator.wakeLock.request("screen");
+    const shouldLock = () =>
+      !disposed && document.visibilityState === "visible";
 
-      if (!shouldLockRef.current || document.visibilityState !== "visible") {
-        await sentinel.release();
+    const cancelRetry = () => {
+      clearTimeout(retryTimer);
+      retryTimer = undefined;
+    };
+
+    const releaseLock = () => {
+      const previous = sentinel;
+      sentinel = null;
+      if (previous?.released === false) {
+        void previous.release().catch(() => undefined);
+      }
+    };
+
+    const scheduleRetry = () => {
+      if (!shouldLock() || retryTimer !== undefined) return;
+      // Browsers can deny or revoke a lock temporarily. Back off while denied,
+      // but keep trying while the recipe is visible without requiring a tap.
+      retryTimer = setTimeout(() => {
+        retryTimer = undefined;
+        void requestLock();
+      }, retryDelay);
+      retryDelay = Math.min(retryDelay * 2, 30_000);
+    };
+
+    const requestLock = async () => {
+      if (!shouldLock() || requestInFlight || sentinel?.released === false) {
         return;
       }
 
-      sentinelRef.current = sentinel;
-      sentinel.addEventListener(
-        "release",
-        () => {
-          if (sentinelRef.current !== sentinel) return;
-          sentinelRef.current = null;
-        },
-        { once: true },
-      );
-    } catch {
-      // Unsupported, denied, or interrupted wake locks must not block Dinner viewing.
-    } finally {
-      requestInFlightRef.current = false;
-    }
-  }, []);
+      requestInFlight = true;
+      try {
+        const acquired = await navigator.wakeLock.request("screen");
+        if (!shouldLock()) {
+          await acquired.release();
+          return;
+        }
+        // A lock can already have been released before the request settles.
+        if (acquired.released) return;
 
-  const releaseLock = useCallback(() => {
-    const sentinel = sentinelRef.current;
-    sentinelRef.current = null;
-    if (sentinel?.released === false) {
-      void sentinel.release().catch(() => undefined);
-    }
-  }, []);
+        sentinel = acquired;
+        retryDelay = 1_000;
+        acquired.addEventListener(
+          "release",
+          () => {
+            if (sentinel !== acquired) return;
+            sentinel = null;
+            scheduleRetry();
+          },
+          { once: true },
+        );
+      } catch {
+        // Unsupported, denied, or interrupted wake locks must not block Dinner viewing.
+      } finally {
+        requestInFlight = false;
+        // Also covers returning to the page before an interrupted request settles.
+        if (sentinel?.released !== false) scheduleRetry();
+      }
+    };
 
-  useEffect(() => {
     const applyDesiredState = () => {
-      shouldLockRef.current =
-        isReady && enabled && isOpen && document.visibilityState === "visible";
-
-      if (shouldLockRef.current) void requestLock();
+      cancelRetry();
+      retryDelay = 1_000;
+      if (shouldLock()) void requestLock();
       else releaseLock();
     };
 
     applyDesiredState();
     document.addEventListener("visibilitychange", applyDesiredState);
     return () => {
+      disposed = true;
       document.removeEventListener("visibilitychange", applyDesiredState);
-      shouldLockRef.current = false;
+      cancelRetry();
       releaseLock();
     };
-  }, [enabled, isOpen, isReady, releaseLock, requestLock]);
+  }, [enabled, isOpen, isReady]);
 };
