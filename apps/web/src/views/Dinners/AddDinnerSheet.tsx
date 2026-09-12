@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/router";
+import { useAuth } from "@clerk/nextjs";
 import {
   Camera,
   Check,
@@ -28,6 +29,7 @@ import {
 } from "@planeatrepeat/shared";
 
 import { ImportPrompt } from "./ImportPrompt";
+import { useImportPromptDraft } from "./use-import-prompt-draft";
 
 import { api } from "~/utils/api";
 import { Button } from "~/components/ui/button";
@@ -183,10 +185,11 @@ function RecipeActionRow({
 }
 
 export function AddDinnerSheet(props: Props) {
+  const { userId } = useAuth();
   const householdQuery = api.household.household.useQuery(undefined, {
     enabled: props.open,
   });
-  if (!props.open) return null;
+  if (!props.open || !userId) return null;
   const household = householdQuery.data?.household;
   if (!household || !householdQuery.data)
     return (
@@ -208,10 +211,12 @@ export function AddDinnerSheet(props: Props) {
         </ResponsiveModalContent>
       </ResponsiveModal>
     );
+  const draftKey = `import-prompt:${userId}:${household.id}`;
   return (
     <AddDinnerFlow
       {...props}
-      key={household.id}
+      key={draftKey}
+      draftKey={draftKey}
       householdPrompt={
         household.importInstructions ?? householdQuery.data.systemDefaultPrompt
       }
@@ -221,7 +226,11 @@ export function AddDinnerSheet(props: Props) {
 }
 
 function AddDinnerFlow(
-  props: Props & { householdPrompt: string; systemDefaultPrompt: string },
+  props: Props & {
+    householdPrompt: string;
+    systemDefaultPrompt: string;
+    draftKey: string;
+  },
 ) {
   const { open, onOpenChange } = props;
   const flow =
@@ -254,8 +263,10 @@ function AddDinnerFlow(
   const abortControllerRef = useRef<AbortController | null>(null);
   const importAttemptRef = useRef(0);
   const clipboardSourceRef = useRef<RecipeImportSource | null>(null);
-  const [prompt, setPrompt] = useState(props.householdPrompt);
-  const [rememberPrompt, setRememberPrompt] = useState(false);
+  const {
+    draft: { prompt, rememberPrompt },
+    setDraft,
+  } = useImportPromptDraft(props.draftKey, props.householdPrompt);
   const [screen, setScreen] = useState<Screen>("choose");
   const [source, setSource] = useState<RecipeImportSource>("link");
   const [name, setName] = useState("");
@@ -519,8 +530,10 @@ function AddDinnerFlow(
       remember={rememberPrompt}
       householdPrompt={props.householdPrompt}
       systemDefaultPrompt={props.systemDefaultPrompt}
-      onPromptChange={setPrompt}
-      onRememberChange={setRememberPrompt}
+      onPromptChange={(prompt) => setDraft((draft) => ({ ...draft, prompt }))}
+      onRememberChange={(rememberPrompt) =>
+        setDraft((draft) => ({ ...draft, rememberPrompt }))
+      }
     />
   );
 
