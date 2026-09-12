@@ -12,20 +12,24 @@ const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl)
   throw new Error("DATABASE_URL is required for integration tests");
 
+let modelEffect:
+  | ((request: Parameters<typeof generateText>[0]) => Promise<void>)
+  | undefined;
 let modelRequest: Parameters<typeof generateText>[0] | undefined;
 const ai = await import("ai");
 mock.module("ai", {
   namedExports: {
     ...ai,
-    generateText: (request: Parameters<typeof generateText>[0]) => {
+    generateText: async (request: Parameters<typeof generateText>[0]) => {
       modelRequest = request;
-      return Promise.resolve({
+      await modelEffect?.(request);
+      return {
         output: {
           isRecipe: true,
           name: "Fusion soup",
           recipe: { servings: 2, parts: [] },
         },
-      });
+      };
     },
   },
 });
@@ -46,6 +50,8 @@ type Caller = ReturnType<typeof appRouter.createCaller>;
 const withFixture = async (
   run: (fixture: {
     caller: Caller;
+    callerWithSignal: (signal: AbortSignal) => Caller;
+    db: ReturnType<typeof createPrismaClient>;
     other: Caller;
     member: Caller;
     signedOut: Caller;
@@ -86,16 +92,21 @@ const withFixture = async (
     await db.membership.create({
       data: { userId: memberId, householdId: household.id, role: "MEMBER" },
     });
-    const callerFor = (userId: string | null) =>
-      appRouter.createCaller({
-        db,
-        auth: {
-          userId,
-          sessionClaims: { metadata: { householdId: household.id } },
-        },
-      } as Parameters<typeof appRouter.createCaller>[0]);
+    const callerFor = (userId: string | null, signal?: AbortSignal) =>
+      appRouter.createCaller(
+        {
+          db,
+          auth: {
+            userId,
+            sessionClaims: { metadata: { householdId: household.id } },
+          },
+        } as Parameters<typeof appRouter.createCaller>[0],
+        { signal },
+      );
     await run({
       caller: callers[0]!,
+      callerWithSignal: (signal) => callerFor(marker, signal),
+      db,
       other: callers[1]!,
       member: callerFor(memberId),
       signedOut: callerFor(null),
@@ -359,8 +370,183 @@ void test("Photo, Link, YouTube and Instagram use the saved Household Prompt thr
             modelRequest.system.endsWith(prompt),
         );
       }
+      const oneOff = "Use this import's prompt instead.";
+      await caller.dinner.importFromImages({
+        images: [{ data: "aGVsbG8=", mimeType: "image/jpeg" }],
+        prompt: oneOff,
+      });
+      assert.ok(
+        typeof modelRequest?.system === "string" &&
+          modelRequest.system.endsWith(oneOff),
+      );
+      for (const url of [
+        "https://example.com/soup",
+        "https://www.youtube.com/watch?v=BoFkDmTm2uc",
+        "https://www.instagram.com/reel/DOybkebkcaw/",
+      ]) {
+        await caller.dinner.importFromUrl({ url, prompt: oneOff });
+        assert.ok(
+          typeof modelRequest?.system === "string" &&
+            modelRequest.system.endsWith(oneOff),
+        );
+      }
+      assert.equal(
+        (await caller.household.household()).household?.importInstructions,
+        prompt,
+      );
       assert.deepEqual((await caller.dinner.dinners()).dinners, []);
     } finally {
       fetchMock.mock.restore();
+    }
+  }));
+
+void test("a one-off Import Prompt overrides the Household without remembering it", () =>
+  withFixture(async ({ caller }) => {
+    await caller.household.updateHousehold({
+      importInstructions: "Household recipe style",
+    });
+    await caller.dinner.importFromText({
+      text: "Tomato soup",
+      prompt: "Make Italian fusion and infer amounts.",
+      rememberPrompt: false,
+    });
+    assert.ok(
+      typeof modelRequest?.system === "string" &&
+        modelRequest.system.endsWith("Make Italian fusion and infer amounts."),
+    );
+    assert.equal(
+      (await caller.household.household()).household?.importInstructions,
+      "Household recipe style",
+    );
+    await caller.dinner.importFromText({
+      text: "Tomato soup",
+      prompt: " \n\t ",
+    });
+    assert.ok(
+      typeof modelRequest?.system === "string" &&
+        modelRequest.system.endsWith(shippedDefault),
+    );
+  }));
+
+void test("Remember saves the exact used prompt independently of the Import Draft", () =>
+  withFixture(async ({ caller, other }) => {
+    for (const prompt of [
+      " Infer quantities.\n",
+      "x".repeat(20_000),
+      `${shippedDefault}\n`,
+      shippedDefault,
+      " \n\t ",
+    ]) {
+      await caller.dinner.importFromText({
+        text: "Tomato soup",
+        prompt,
+        rememberPrompt: true,
+      });
+      assert.equal(
+        (await caller.household.household()).household?.importInstructions,
+        !prompt.trim() || prompt === shippedDefault ? null : prompt,
+      );
+    }
+    await assert.rejects(
+      caller.dinner.importFromText({
+        text: "Tomato soup",
+        prompt: "x".repeat(20_001),
+        rememberPrompt: true,
+      }),
+      { code: "BAD_REQUEST" },
+    );
+    assert.equal(
+      (await caller.household.household()).household?.importInstructions,
+      null,
+    );
+    assert.deepEqual((await caller.dinner.dinners()).dinners, []);
+    assert.equal(
+      (await other.household.household()).household?.importInstructions,
+      null,
+    );
+  }));
+
+void test("remembered prompts survive model failure and cancellation after submission", () =>
+  withFixture(async ({ caller, callerWithSignal }) => {
+    try {
+      modelEffect = () => Promise.reject(new Error("Model unavailable"));
+      await assert.rejects(
+        caller.dinner.importFromText({
+          text: "Tomato soup",
+          prompt: "Remember even if extraction fails",
+          rememberPrompt: true,
+        }),
+      );
+      assert.equal(
+        (await caller.household.household()).household?.importInstructions,
+        "Remember even if extraction fails",
+      );
+      const started = Promise.withResolvers<void>();
+      modelEffect = (request) =>
+        new Promise<void>((_resolve, reject) => {
+          started.resolve();
+          const signal = request.abortSignal;
+          assert.ok(signal);
+          signal.addEventListener(
+            "abort",
+            () => reject(new Error("Cancelled")),
+            { once: true },
+          );
+        });
+      const controller = new AbortController();
+      const importing = callerWithSignal(
+        controller.signal,
+      ).dinner.importFromText({
+        text: "Tomato soup",
+        prompt: "Remember even if cancelled",
+        rememberPrompt: true,
+      });
+      await started.promise;
+      assert.equal(
+        (await caller.household.household()).household?.importInstructions,
+        "Remember even if cancelled",
+      );
+      controller.abort();
+      await assert.rejects(importing);
+      assert.equal(
+        (await caller.household.household()).household?.importInstructions,
+        "Remember even if cancelled",
+      );
+      assert.deepEqual((await caller.dinner.dinners()).dinners, []);
+    } finally {
+      modelEffect = undefined;
+    }
+  }));
+
+void test("failure to remember a prompt still imports with the submitted instructions", () =>
+  withFixture(async ({ caller, db }) => {
+    await caller.household.updateHousehold({
+      importInstructions: "Saved Household Prompt",
+    });
+    const householdId = (await caller.household.household()).household!.id;
+    const constraint = `reject_prompt_${crypto.randomUUID().replaceAll("-", "")}`;
+    // Reject only this fixture's remembered value, keeping the router and DB real.
+    await db.$executeRawUnsafe(
+      `ALTER TABLE "Household" ADD CONSTRAINT "${constraint}" CHECK ("id" <> '${householdId.replaceAll("'", "''")}' OR "importInstructions" IS DISTINCT FROM 'My unsaved experiment')`,
+    );
+    try {
+      const draft = await caller.dinner.importFromText({
+        text: "Tomato soup",
+        prompt: "My unsaved experiment",
+        rememberPrompt: true,
+      });
+      assert.equal(draft.name, "Fusion soup");
+      assert.ok(
+        typeof modelRequest?.system === "string" &&
+          modelRequest.system.endsWith("My unsaved experiment"),
+      );
+      assert.equal(
+        (await caller.household.household()).household?.importInstructions,
+        "Saved Household Prompt",
+      );
+    } finally {
+      await db.$executeRawUnsafe(
+        `ALTER TABLE "Household" DROP CONSTRAINT "${constraint}"`,
+      );
     }
   }));

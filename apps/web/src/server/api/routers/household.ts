@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { IMPORT_PROMPT_MAX_LENGTH } from "@planeatrepeat/shared";
+import { householdPromptSchema } from "~/server/household-prompt";
 import { getSystemDefaultPrompt } from "~/server/ai/import-prompt";
 
 import {
@@ -22,14 +22,7 @@ const onboardingDinnerSchema = z.object({
 });
 
 // Keep the field name compatible with existing mobile import/settings calls.
-const importInstructionsSchema = z
-  .string()
-  .max(IMPORT_PROMPT_MAX_LENGTH, "Prompt must be at most 20,000 characters")
-  .transform((prompt) =>
-    !prompt.trim() || prompt === getSystemDefaultPrompt() ? null : prompt,
-  )
-  .nullable()
-  .optional();
+const importInstructionsSchema = householdPromptSchema.nullable().optional();
 
 export const householdRouter = createTRPCRouter({
   household: publicProcedure.query(async ({ ctx }) => {

@@ -87,6 +87,7 @@ const testHarness = (options: TestHarnessOptions = {}) => {
       assert.equal(input.membershipAttributionKey, "membership-key");
       return Promise.resolve("attempt-1");
     },
+    saveInstructions: () => Promise.resolve(),
     async loadInstructions() {
       actions.push("load-instructions");
       return options.loadInstructions?.() ?? "Use Norwegian";
