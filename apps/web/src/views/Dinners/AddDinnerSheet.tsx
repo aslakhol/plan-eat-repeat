@@ -27,6 +27,8 @@ import {
   validUrlOrNull,
 } from "@planeatrepeat/shared";
 
+import { ImportPrompt } from "./ImportPrompt";
+
 import { api } from "~/utils/api";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -181,6 +183,46 @@ function RecipeActionRow({
 }
 
 export function AddDinnerSheet(props: Props) {
+  const householdQuery = api.household.household.useQuery(undefined, {
+    enabled: props.open,
+  });
+  if (!props.open) return null;
+  const household = householdQuery.data?.household;
+  if (!household || !householdQuery.data)
+    return (
+      <ResponsiveModal open onOpenChange={props.onOpenChange}>
+        <ResponsiveModalContent className="p-6">
+          <ResponsiveModalTitle>
+            {householdQuery.isPending
+              ? "Loading"
+              : "Couldn't load import prompt"}
+          </ResponsiveModalTitle>
+          <ResponsiveModalDescription className="sr-only">
+            Recipe import settings
+          </ResponsiveModalDescription>
+          {!householdQuery.isPending && (
+            <Button onClick={() => void householdQuery.refetch()}>
+              Try again
+            </Button>
+          )}
+        </ResponsiveModalContent>
+      </ResponsiveModal>
+    );
+  return (
+    <AddDinnerFlow
+      {...props}
+      key={household.id}
+      householdPrompt={
+        household.importInstructions ?? householdQuery.data.systemDefaultPrompt
+      }
+      systemDefaultPrompt={householdQuery.data.systemDefaultPrompt}
+    />
+  );
+}
+
+function AddDinnerFlow(
+  props: Props & { householdPrompt: string; systemDefaultPrompt: string },
+) {
   const { open, onOpenChange } = props;
   const flow =
     props.mode === "existing"
@@ -212,6 +254,8 @@ export function AddDinnerSheet(props: Props) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const importAttemptRef = useRef(0);
   const clipboardSourceRef = useRef<RecipeImportSource | null>(null);
+  const [prompt, setPrompt] = useState(props.householdPrompt);
+  const [rememberPrompt, setRememberPrompt] = useState(false);
   const [screen, setScreen] = useState<Screen>("choose");
   const [source, setSource] = useState<RecipeImportSource>("link");
   const [name, setName] = useState("");
@@ -235,28 +279,10 @@ export function AddDinnerSheet(props: Props) {
   );
 
   useEffect(() => {
-    if (!open) {
-      importAttemptRef.current += 1;
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = null;
-      setScreen("choose");
-      setName("");
-      setUrl("");
-      setText("");
-      setPhotos([]);
-      setPreparingPhotos(false);
-      setPhotoInputError(null);
-      setSubmittedUrl("");
-      setImportError(null);
-      setValidationError(null);
-      clipboardSourceRef.current = null;
-      return;
-    }
-
     if (screen !== "choose") return;
     const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 100);
     return () => window.clearTimeout(focusTimer);
-  }, [open, screen]);
+  }, [screen]);
 
   useEffect(() => {
     if (!open || screen !== "url") return;
@@ -374,7 +400,7 @@ export function AddDinnerSheet(props: Props) {
     try {
       const importUrl = () =>
         utils.client.dinner.importFromUrl.mutate(
-          { url: sourceUrl! },
+          { url: sourceUrl!, prompt, rememberPrompt },
           { signal: controller.signal },
         );
       const importers: Record<
@@ -390,17 +416,23 @@ export function AddDinnerSheet(props: Props) {
         photos: () =>
           utils.client.dinner.importFromImages.mutate(
             {
+              prompt,
+              rememberPrompt,
               images: photos.map(({ data, mimeType }) => ({ data, mimeType })),
             },
             { signal: controller.signal },
           ),
         text: () =>
           utils.client.dinner.importFromText.mutate(
-            { text: text.trim() },
+            { text: text.trim(), prompt, rememberPrompt },
             { signal: controller.signal },
           ),
       };
-      const result = await importers[source]();
+      const result = await importers[source]().finally(async () => {
+        if (rememberPrompt) {
+          await utils.household.household.invalidate().catch(() => undefined);
+        }
+      });
       if (controller.signal.aborted || importAttemptRef.current !== attempt) {
         return;
       }
@@ -480,6 +512,17 @@ export function AddDinnerSheet(props: Props) {
   const errorCopy = importError
     ? importErrorCopy(importError.code, source, submittedUrl)
     : null;
+
+  const promptControl = (
+    <ImportPrompt
+      prompt={prompt}
+      remember={rememberPrompt}
+      householdPrompt={props.householdPrompt}
+      systemDefaultPrompt={props.systemDefaultPrompt}
+      onPromptChange={setPrompt}
+      onRememberChange={setRememberPrompt}
+    />
+  );
 
   return (
     <ResponsiveModal open={open} onOpenChange={requestOpenChange}>
@@ -626,6 +669,7 @@ export function AddDinnerSheet(props: Props) {
                   Enter a full http or https URL.
                 </p>
               )}
+              {promptControl}
               <Button
                 type="submit"
                 className="h-12 w-full text-base"
@@ -779,6 +823,7 @@ export function AddDinnerSheet(props: Props) {
                 </Button>
               </div>
             )}
+            <div className="mt-5">{promptControl}</div>
             {photos.length > 0 && (
               <Button
                 type="button"
@@ -820,6 +865,7 @@ export function AddDinnerSheet(props: Props) {
                 className="min-h-64 resize-none rounded-lg bg-white px-4 py-4 text-base"
                 placeholder="Paste or type the recipe"
               />
+              {promptControl}
               <Button
                 type="submit"
                 className="h-12 w-full text-base"

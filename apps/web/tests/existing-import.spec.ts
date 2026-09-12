@@ -55,6 +55,14 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
     await page.getByRole("button", { name: "Save dinner" }).click();
     await expect(page).toHaveURL(/\/dinners\/\d+$/);
     await page.route("**/api/trpc/dinner.importFromUrl**", async (route) => {
+      expect(route.request().postDataJSON()).toMatchObject({
+        "0": {
+          json: {
+            prompt: "Adapt this existing Dinner into Italian fusion.",
+            rememberPrompt: true,
+          },
+        },
+      });
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -73,6 +81,13 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
       await page
         .getByRole("textbox", { name: "Recipe URL" })
         .fill(importedSourceLink);
+      await page.getByRole("button", { name: "Prompt", exact: true }).click();
+      await page
+        .getByRole("textbox", { name: "Import Prompt", exact: true })
+        .fill("Adapt this existing Dinner into Italian fusion.");
+      await page
+        .getByRole("switch", { name: "Remember prompt", exact: true })
+        .click();
       await page.getByRole("button", { name: "Import recipe" }).click();
       await expect(
         page.getByRole("heading", { name: "Edit dinner" }),
