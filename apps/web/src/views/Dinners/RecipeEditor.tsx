@@ -177,7 +177,9 @@ export const RecipeEditor = ({
   const multiMode =
     watchedParts.length > 1 ||
     watchedParts.some((part) => part.name.trim().length > 0);
-  const ingredientNamesQuery = api.dinner.ingredientNames.useQuery();
+  const ingredientNamesQuery = api.dinner.ingredientNames.useQuery(undefined, {
+    staleTime: 60_000,
+  });
   const [importOpen, setImportOpen] = useState(false);
   const [nameAlternative, setNameAlternative] = useState(
     importedNameAlternative ?? null,
@@ -501,6 +503,13 @@ export const RecipeEditor = ({
                 ),
               )}
             </datalist>
+            <datalist id="recipe-ingredient-units">
+              {(ingredientNamesQuery.data?.ingredientUnits ?? UNITS).map(
+                (unit) => (
+                  <option key={unit} value={unit} />
+                ),
+              )}
+            </datalist>
           </div>
 
           <div className="space-y-2 border-t border-[hsl(40_15%_86%)] pt-5">
@@ -726,7 +735,7 @@ const PartEditor = ({
                   "rounded-[10px] border-transparent bg-[hsl(40_33%_95%)] shadow-[inset_0_0_0_1px_hsl(18_60%_80%)]",
               )}
             >
-              <div className="grid grid-cols-[60px_58px_1fr_30px] items-start gap-1.5">
+              <div className="grid grid-cols-[60px_88px_minmax(0,1fr)_30px] items-start gap-1.5">
                 <input
                   {...form.register(
                     `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.amount`,
@@ -741,7 +750,7 @@ const PartEditor = ({
                   control={form.control}
                   name={`recipe.parts.${partIndex}.ingredients.${ingredientIndex}.unit`}
                   render={({ field }) => (
-                    <select
+                    <Input
                       ref={field.ref}
                       value={field.value ?? ""}
                       onBlur={field.onBlur}
@@ -749,16 +758,12 @@ const PartEditor = ({
                       onChange={(event) =>
                         field.onChange(event.target.value || null)
                       }
+                      list="recipe-ingredient-units"
+                      autoComplete="off"
+                      placeholder="–"
                       aria-label={`Ingredient ${ingredientIndex + 1} unit`}
-                      className="focus:border-primary focus:ring-primary/15 h-9 min-w-0 rounded-md border bg-white px-1 text-center text-sm outline-none focus:ring-[3px]"
-                    >
-                      <option value="">–</option>
-                      {UNITS.map((unit) => (
-                        <option key={unit} value={unit}>
-                          {unit}
-                        </option>
-                      ))}
-                    </select>
+                      className="h-9 min-w-0 bg-white px-1 text-center text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-list-button]:hidden"
+                    />
                   )}
                 />
                 <div className="min-w-0">

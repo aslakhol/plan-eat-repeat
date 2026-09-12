@@ -1,0 +1,7 @@
+# Allow arbitrary units with numeric amounts
+
+Keep Recipe Ingredients as a required name with an optional positive numeric amount, text unit, and note; allow arbitrary unit wording while normalising recognised aliases through a small shared standard-unit registry. Preserve this simple editing and rendering model without adding free-text quantities, and record ingredient-independent conversions in the registry so future Shopping Lists can sum compatible measurements and group incompatible requirements without ingredient-specific conversions. This supersedes the temporary closed unit vocabulary in ADR-0015; the registry describes supported normalisation and conversion rather than restricting what a Household may write.
+
+Initially define conversions only within weight units g, kg, oz, and lb and within volume units ml, dl, and l. Recognise abbreviations for cups and spoons without converting them to other units; a missing unit remains separate from pcs, including in existing Recipes whose unsupported units may have been moved into notes by earlier imports.
+
+Suggest standard abbreviations and distinct custom units used in the Household's Recipes, provided the lookup remains inexpensive. Custom wording stays unchanged apart from surrounding whitespace, including singular and plural forms; there will be no custom-unit aliasing system or unit-management interface. Fixed equivalent spellings for standard units belong in the shared registry.

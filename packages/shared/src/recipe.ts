@@ -10,12 +10,15 @@ export const UNITS = [
   "tsp",
   "pcs",
 ] as const;
-export type Unit = (typeof UNITS)[number];
 
 export const recipeIngredientSchema = z.object({
   name: z.string().trim().min(1),
   amount: z.number().positive().nullable(),
-  unit: z.enum(UNITS).nullable(),
+  unit: z
+    .string()
+    .trim()
+    .nullable()
+    .transform((unit) => unit || null),
   note: z.string().trim().min(1).nullable(),
 });
 
