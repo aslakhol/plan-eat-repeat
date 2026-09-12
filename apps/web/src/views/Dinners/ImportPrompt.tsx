@@ -55,7 +55,10 @@ export function ImportPrompt({
           type="button"
           aria-expanded={expanded}
           aria-controls={contentId}
-          onClick={() => setExpanded(!expanded)}
+          onClick={() => {
+            resetMenu.current?.removeAttribute("open");
+            setExpanded(!expanded);
+          }}
           className={cn(
             "focus-visible:outline-primary flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-sm font-bold focus-visible:outline focus-visible:outline-2",
             changed && "text-primary",
@@ -69,6 +72,7 @@ export function ImportPrompt({
         </button>
         <DetailsMenu
           ref={resetMenu}
+          hidden={!expanded}
           className="absolute right-10 top-0 z-10"
           onToggle={(event) => setResetOpen(event.currentTarget.open)}
           onKeyDown={(event) => {

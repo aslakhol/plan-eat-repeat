@@ -16,10 +16,10 @@ test("every source offers the complete prompt, resets, and Remember without losi
     await page.getByRole("button", { name: source, exact: true }).click();
     const toggle = page.getByRole("button", { name: "Prompt", exact: true });
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
-    await expect(
-      page.locator("summary").filter({ hasText: "Reset" }),
-    ).toBeVisible();
+    const reset = page.locator("summary").filter({ hasText: "Reset" });
+    await expect(reset).not.toBeVisible();
     await toggle.click();
+    await expect(reset).toBeVisible();
     const prompt = page.getByRole("textbox", {
       name: "Import Prompt",
       exact: true,
@@ -30,9 +30,15 @@ test("every source offers the complete prompt, resets, and Remember without losi
     await expect(
       page.getByRole("switch", { name: "Remember prompt", exact: true }),
     ).toHaveAttribute("aria-checked", "false");
+    await reset.click();
     await toggle.click();
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await expect(reset).not.toBeVisible();
     await toggle.click();
+    await expect(reset).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Reset to household", exact: true }),
+    ).not.toBeVisible();
     await expect(prompt).toHaveValue("Make Italian fusion.");
     await page
       .getByRole("button", { name: "‹ Add a dinner", exact: true })
@@ -102,12 +108,13 @@ test("reset styling follows the Household while incoming saves preserve an open 
     await expect(card).toHaveClass(/border-primary/);
     await toggle.click();
     await expect(card).toHaveClass(/border-primary/);
+    await expect(reset).not.toBeVisible();
+    await toggle.click();
     await reset.click();
     await page
       .getByRole("button", { name: "Reset to household", exact: true })
       .click();
     await expect(card).not.toHaveClass(/border-primary/);
-    await toggle.click();
     await expect(prompt).toHaveValue(householdPrompt);
     await prompt.fill("");
     await expect(card).toHaveClass(/border-primary/);
