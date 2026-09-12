@@ -10,9 +10,10 @@ Ingredients and amounts
 - Do not invent quantities. For missing, approximate or vague source amounts, set amount to null and preserve useful wording in note.
 
 Units
-- Use these units: ${UNITS.join(", ")}.
-- Normalize equivalent names and abbreviations, such as gram to g, kilogram to kg, and stk or pieces to pcs.
-- If the source unit has no equivalent in this list, set unit to null and preserve the original unit in note.
+- Prefer recognised standard abbreviations: ${UNITS.join(", ")}.
+- Normalise equivalent names and abbreviations. Keep the source measurement; do not convert between units.
+- Preserve unsupported units in unit, not in note. Keep a missing unit as null rather than guessing pieces.
+- For example, "1 cheek of mango, diced" becomes amount 1, unit "cheek", name "mango", and note "diced".
 
 Recipe sections and steps
 - Keep the source's recipe sections as parts. Use one unnamed part when there are no sections.
