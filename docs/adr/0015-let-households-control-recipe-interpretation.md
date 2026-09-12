@@ -1,0 +1,5 @@
+# Let households control recipe interpretation
+
+The editable Import Prompt controls how AI interprets and transforms source content, including source fidelity, inferred quantities, substitutions, and substantial recipe adaptations. We trust Household members with these choices instead of restricting their instructions to language, tone, and detail; source acquisition and validation before inference remain outside this feature.
+
+Keep a short fixed system prompt for the required output schema, treating source content as data rather than AI instructions, and the response shape when `isRecipe` is false. Keep the current allowed ingredient units fixed for now because changing them requires work on the Recipe structure and its consumers; [issue #229](https://github.com/aslakhol/plan-eat-repeat/issues/229) tracks that follow-up. These fixed instructions are not displayed to users and must live together in one readable code definition, including the failure response instructions currently appended at the model call.

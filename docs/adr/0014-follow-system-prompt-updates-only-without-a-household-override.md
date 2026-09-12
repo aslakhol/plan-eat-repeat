@@ -1,0 +1,3 @@
+# Follow system prompt updates only without a household override
+
+A Household Prompt replaces the editable System Default Prompt rather than adding preferences to it. When saving a Household Prompt, store no override if the used prompt equals the System Default Prompt, so changes to the default in code reach those Households automatically; reset controls only change the textbox until a save occurs. Saved custom prompts remain independent of default edits, accepting that they will not receive those improvements until the Household saves a return to the default in exchange for preserving its chosen instructions.

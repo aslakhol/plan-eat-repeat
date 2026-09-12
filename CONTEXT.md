@@ -5,7 +5,7 @@ Plan Eat Repeat helps a household maintain a shared collection of dinners and as
 ## Language
 
 **Household**:
-A group of people who share one Cookbook and one set of Plan Slots.
+One or more people who share one Cookbook and one set of Plan Slots.
 _Avoid_: Account, family
 
 **Dinner**:
@@ -46,6 +46,16 @@ Unsaved Dinner editor content produced from an import source. It changes the Coo
 
 **AI Import Attempt**:
 A Household member's request to produce an Import Draft from an import source. It may succeed, fail, or be cancelled, and remains distinct from any Dinner later saved from the draft.
+
+**Import Prompt**:
+The editable instructions that guide how AI turns an Import Source's content into a structured Recipe. They may request adaptations that substantially change the source Recipe.
+
+**System Default Prompt**:
+The application's default Import Prompt, followed by Households without a saved Household Prompt. These Households receive changes to the default automatically.
+
+**Household Prompt**:
+A saved Import Prompt shared by a Household. A Household without one follows the System Default Prompt.
+_Avoid_: Household preferences
 
 **AI Import Spend**:
 The provider charges attributable to an AI Import Attempt. It consists of AI Import Cost and Supadata Credit Spend, which remain separate measures and are never converted into one another.
