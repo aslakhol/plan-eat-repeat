@@ -65,6 +65,13 @@ test("import empty, loading, error, no-match, and missing clipboard states stay 
     await importRequestGate;
     await route.abort();
   });
+  await page.getByRole("button", { name: "Prompt", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "Import Prompt", exact: true })
+    .fill("Keep this prompt after cancellation.");
+  await page
+    .getByRole("switch", { name: "Remember prompt", exact: true })
+    .click();
   const unreachableUrl = "https://127.0.0.1:1/recipe";
   await urlInput.fill(unreachableUrl);
   await importButton.click();
@@ -75,6 +82,21 @@ test("import empty, loading, error, no-match, and missing clipboard states stay 
   await page.getByRole("button", { name: "Cancel" }).click();
   releaseImportRequest();
   await expect(urlInput).toHaveValue(unreachableUrl);
+  await page.reload();
+  await page.getByRole("button", { name: "Add Dinner", exact: true }).click();
+  await page.getByRole("button", { name: "Link", exact: true }).click();
+  await page.getByRole("button", { name: "Prompt", exact: true }).click();
+  await expect(
+    page.getByRole("textbox", { name: "Import Prompt", exact: true }),
+  ).toHaveValue("Keep this prompt after cancellation.");
+  await expect(
+    page.getByRole("switch", { name: "Remember prompt", exact: true }),
+  ).toHaveAttribute("aria-checked", "true");
+  // The next request reaches the real API; keep this test's prompt local.
+  await page
+    .getByRole("switch", { name: "Remember prompt", exact: true })
+    .click();
+  await urlInput.fill(unreachableUrl);
 
   await page.unroute("**/api/trpc/dinner.importFromUrl**");
   await importButton.click();

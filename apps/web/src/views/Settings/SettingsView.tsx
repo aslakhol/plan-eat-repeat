@@ -7,9 +7,9 @@ import { api } from "../../utils/api";
 import { useClerk } from "@clerk/nextjs";
 import { Account } from "./Account";
 
-type Props = { household: Household | null };
+type Props = { household: Household | null; systemDefaultPrompt: string };
 
-export const SettingsView = ({ household }: Props) => {
+export const SettingsView = ({ household, systemDefaultPrompt }: Props) => {
   const { user } = useClerk();
   const membersQuery = api.household.members.useQuery(
     { householdId: household?.id ?? "" },
@@ -21,19 +21,23 @@ export const SettingsView = ({ household }: Props) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-serif text-3xl font-bold text-foreground">
+      <h1 className="text-foreground font-serif text-3xl font-bold">
         Settings
       </h1>
       <div className="flex max-w-3xl flex-col gap-6">
         {!household ? (
           <>
-            <NewHousehold />
+            <NewHousehold systemDefaultPrompt={systemDefaultPrompt} />
             <Account />
           </>
         ) : (
           <>
             <Account />
-            <EditHousehold household={household} />
+            <EditHousehold
+              key={household.id}
+              household={household}
+              systemDefaultPrompt={systemDefaultPrompt}
+            />
             <Memberships household={household} />
             {userIsAdmin && <Invites household={household} />}
           </>

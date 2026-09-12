@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { householdPromptSchema } from "~/server/household-prompt";
+import { getSystemDefaultPrompt } from "~/server/ai/import-prompt";
 
 import {
   createTRPCRouter,
@@ -19,13 +21,8 @@ const onboardingDinnerSchema = z.object({
   date: z.date(),
 });
 
-const importInstructionsSchema = z
-  .string()
-  .trim()
-  .max(1000, "Import instructions must be at most 1000 characters")
-  .transform((instructions) => (instructions === "" ? null : instructions))
-  .nullable()
-  .optional();
+// Keep the field name compatible with existing mobile import/settings calls.
+const importInstructionsSchema = householdPromptSchema.nullable().optional();
 
 export const householdRouter = createTRPCRouter({
   household: publicProcedure.query(async ({ ctx }) => {
@@ -37,7 +34,7 @@ export const householdRouter = createTRPCRouter({
       if (ctx.auth.sessionClaims?.metadata.householdId) {
         await tryUpdateClerkHouseholdMetadata(ctx.auth.userId, null);
       }
-      return { household: null };
+      return { household: null, systemDefaultPrompt: getSystemDefaultPrompt() };
     }
 
     const household = await ctx.db.household.findUnique({
@@ -54,7 +51,7 @@ export const householdRouter = createTRPCRouter({
       );
     }
 
-    return { household };
+    return { household, systemDefaultPrompt: getSystemDefaultPrompt() };
   }),
   createHousehold: protectedProcedure
     .input(
@@ -111,7 +108,7 @@ export const householdRouter = createTRPCRouter({
 
       await tryUpdateClerkHouseholdMetadata(ctx.auth.userId, household.id);
 
-      return { household };
+      return { household, systemDefaultPrompt: getSystemDefaultPrompt() };
     }),
   updateHousehold: protectedProcedureWithHousehold
     .input(

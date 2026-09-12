@@ -9,6 +9,8 @@ import {
   youtubeVideoIdFromUrl,
 } from "@planeatrepeat/shared";
 
+import { householdPromptSchema } from "~/server/household-prompt";
+
 import { estimateAiImportCostUsd } from "./ai-import-inference";
 import {
   importRecipeFromImages,
@@ -63,6 +65,10 @@ export type AiImportTrackingPersistence = {
   }): Promise<AiImportAttribution>;
   createAttempt(input: CreateAiImportAttemptInput): Promise<string>;
   loadInstructions(householdId: string): Promise<string | null>;
+  saveInstructions(
+    householdId: string,
+    instructions: string | null,
+  ): Promise<void>;
   updateAttempt(
     attemptId: string,
     changes: AiImportAttemptChanges,
@@ -80,6 +86,8 @@ export type TrackedRecipeImportRequest =
   | { type: "URL"; url: string };
 
 type TrackedRecipeImportInput = {
+  prompt?: string;
+  rememberPrompt?: boolean;
   request: TrackedRecipeImportRequest;
   householdId: string;
   userId: string;
@@ -222,9 +230,18 @@ export const createTrackedRecipeImporter = <Result>({
     };
 
     try {
-      const instructions = await persistence.loadInstructions(
-        input.householdId,
-      );
+      const instructions =
+        input.prompt ?? (await persistence.loadInstructions(input.householdId));
+      if (input.rememberPrompt) {
+        try {
+          await persistence.saveInstructions(
+            input.householdId,
+            householdPromptSchema.parse(instructions ?? ""),
+          );
+        } catch {
+          console.warn("[Recipe import] Could not remember Household Prompt");
+        }
+      }
       return await executeImport({
         request: input.request,
         instructions,
@@ -284,6 +301,12 @@ const prismaAiImportTrackingPersistence = (
       select: { importInstructions: true },
     });
     return household.importInstructions;
+  },
+  async saveInstructions(householdId, instructions) {
+    await db.household.update({
+      where: { id: householdId },
+      data: { importInstructions: instructions },
+    });
   },
   async updateAttempt(attemptId, changes) {
     await db.aiImportAttempt.update({

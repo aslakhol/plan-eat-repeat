@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
   ImportRecipeError,
+  importPromptSchema,
   importErrorMessages,
   MAX_RECIPE_IMPORT_IMAGE_DATA_LENGTH,
   MAX_RECIPE_IMPORT_IMAGES,
@@ -41,6 +42,11 @@ import {
   createDinnerInputSchema,
   editDinnerInputSchema,
 } from "~/server/dinner-input";
+
+const importPromptOptions = z.object({
+  prompt: importPromptSchema.optional(),
+  rememberPrompt: z.boolean().optional(),
+});
 
 const householdDinnersWithTags = (db: PrismaClient, householdId: string) =>
   db.dinner.findMany({
@@ -422,10 +428,12 @@ export const dinnerRouter = createTRPCRouter({
   }),
 
   importFromUrl: protectedProcedureWithHousehold
-    .input(z.object({ url: z.string().url() }))
+    .input(importPromptOptions.extend({ url: z.string().url() }))
     .mutation(async ({ ctx, input, signal }) => {
       try {
         const draft = await importTrackedRecipe(ctx.db, {
+          prompt: input.prompt,
+          rememberPrompt: input.rememberPrompt,
           request: { type: "URL", url: input.url },
           householdId: ctx.householdId,
           userId: ctx.auth.userId,
@@ -449,10 +457,12 @@ export const dinnerRouter = createTRPCRouter({
     }),
 
   importFromText: protectedProcedureWithHousehold
-    .input(z.object({ text: z.string().trim().min(1) }))
+    .input(importPromptOptions.extend({ text: z.string().trim().min(1) }))
     .mutation(async ({ ctx, input, signal }) => {
       try {
         return await importTrackedRecipe(ctx.db, {
+          prompt: input.prompt,
+          rememberPrompt: input.rememberPrompt,
           request: { type: "TEXT", text: input.text },
           householdId: ctx.householdId,
           userId: ctx.auth.userId,
@@ -464,10 +474,12 @@ export const dinnerRouter = createTRPCRouter({
     }),
 
   importFromImages: protectedProcedureWithHousehold
-    .input(z.object({ images: imageImportSchema }))
+    .input(importPromptOptions.extend({ images: imageImportSchema }))
     .mutation(async ({ ctx, input, signal }) => {
       try {
         return await importTrackedRecipe(ctx.db, {
+          prompt: input.prompt,
+          rememberPrompt: input.rememberPrompt,
           request: { type: "PHOTO", images: input.images },
           householdId: ctx.householdId,
           userId: ctx.auth.userId,
