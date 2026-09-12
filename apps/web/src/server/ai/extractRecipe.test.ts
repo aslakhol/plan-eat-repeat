@@ -52,16 +52,12 @@ void test("default extraction preserves source units and requests standard spell
   });
   const system = generateOptions?.system;
   assert.ok(typeof system === "string");
-  assert.match(system, /Preserve unsupported units in unit, not in note/);
+  assert.match(system, /Keep other unit wording in unit, or null if missing/);
   assert.match(
     system,
-    /Keep the source measurement; do not convert between units/,
+    /Keep source measurements; normalise equivalent spellings/,
   );
   assert.match(system, /Do not invent quantities/);
-  assert.match(
-    system,
-    /amount 1, unit "cheek", name "mango", and note "diced"/,
-  );
 });
 
 void test("the shared extraction schema preserves custom units, normalises aliases, and keeps numeric quantities", async () => {
@@ -140,6 +136,6 @@ void test("an edited Import Prompt can request unit preservation, translations, 
   const system = generateOptions?.system;
   assert.ok(typeof system === "string");
   assert.ok(system.endsWith(instructions));
-  assert.ok(!system.includes("do not convert between units"));
+  assert.ok(!system.includes("Keep source measurements"));
   assert.ok(!system.includes("Do not invent quantities"));
 });
