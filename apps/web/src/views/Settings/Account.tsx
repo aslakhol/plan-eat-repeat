@@ -37,7 +37,11 @@ export const Account = () => {
                 Account Settings
               </Button>
               <SignOutButton>
-                <Button className="w-full sm:w-auto" variant="outline">
+                <Button
+                  data-settings-sign-out
+                  className="w-full sm:w-auto"
+                  variant="outline"
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
                 </Button>

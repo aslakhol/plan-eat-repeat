@@ -1,5 +1,8 @@
 import { toast } from "../../components/ui/use-toast";
 
+import { IMPORT_PROMPT_MAX_LENGTH } from "@planeatrepeat/shared";
+import { useUnsavedSettingsPrompt } from "./use-unsaved-settings-prompt";
+
 import type { Household } from "@planeatrepeat/db";
 import { api } from "../../utils/api";
 import { z } from "zod";
@@ -30,12 +33,16 @@ import { useRouter } from "next/router";
 const householdFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   slug: z.string().min(3, "Slug must be at least 3 characters"),
-  importInstructions: z.string().max(1000),
+  importInstructions: z.string().max(IMPORT_PROMPT_MAX_LENGTH),
 });
 
 type HouseholdFormData = z.infer<typeof householdFormSchema>;
 
-export const NewHousehold = () => {
+export const NewHousehold = ({
+  systemDefaultPrompt,
+}: {
+  systemDefaultPrompt: string;
+}) => {
   const router = useRouter();
   const { user } = useClerk();
 
@@ -45,7 +52,7 @@ export const NewHousehold = () => {
     defaultValues: {
       name: "",
       slug: "",
-      importInstructions: "",
+      importInstructions: systemDefaultPrompt,
     },
   });
 
@@ -77,6 +84,8 @@ export const NewHousehold = () => {
       </CardHeader>
       <CardContent>
         <HouseholdForm
+          systemDefaultPrompt={systemDefaultPrompt}
+          householdPrompt={systemDefaultPrompt}
           form={form}
           onSubmit={onSubmit}
           submitLabel="Create Household"
@@ -89,27 +98,47 @@ export const NewHousehold = () => {
 
 type EditHouseholdProps = {
   household: Household;
+  systemDefaultPrompt: string;
 };
 
-export const EditHousehold = ({ household }: EditHouseholdProps) => {
+export const EditHousehold = ({
+  household,
+  systemDefaultPrompt,
+}: EditHouseholdProps) => {
   const utils = api.useUtils();
   const form = useForm<HouseholdFormData>({
     resolver: zodResolver(householdFormSchema),
     defaultValues: {
       name: household.name,
       slug: household.slug,
-      importInstructions: household.importInstructions ?? "",
+      importInstructions: household.importInstructions ?? systemDefaultPrompt,
     },
   });
 
+  const prompt = form.watch("importInstructions");
+  useUnsavedSettingsPrompt(
+    prompt !== form.formState.defaultValues?.importInstructions,
+  );
+
   const updateHouseholdMutation = api.household.updateHousehold.useMutation({
-    onSuccess: () => {
+    onSuccess: ({ household: saved }) => {
+      form.reset({
+        name: saved.name,
+        slug: saved.slug,
+        importInstructions: saved.importInstructions ?? systemDefaultPrompt,
+      });
       void utils.household.invalidate();
       toast({
         title: "Household updated",
         description: "Your household has been updated successfully",
       });
     },
+    onError: (error) =>
+      toast({
+        title: "Couldn't save household",
+        description: error.message,
+        variant: "destructive",
+      }),
   });
 
   const onSubmit = (data: HouseholdFormData) => {
@@ -129,6 +158,8 @@ export const EditHousehold = ({ household }: EditHouseholdProps) => {
         <HouseholdForm
           form={form}
           onSubmit={onSubmit}
+          systemDefaultPrompt={systemDefaultPrompt}
+          householdPrompt={household.importInstructions ?? systemDefaultPrompt}
           submitLabel="Save changes"
           isSubmitting={updateHouseholdMutation.isPending}
         />
@@ -142,6 +173,8 @@ type HouseholdFormProps = {
   onSubmit: (data: HouseholdFormData) => void;
   submitLabel: string;
   isSubmitting: boolean;
+  systemDefaultPrompt: string;
+  householdPrompt: string;
 };
 
 const HouseholdForm = ({
@@ -149,75 +182,101 @@ const HouseholdForm = ({
   onSubmit,
   submitLabel,
   isSubmitting,
+  systemDefaultPrompt,
+  householdPrompt,
 }: HouseholdFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Household Name</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  onChange={(e) => {
-                    field.onChange(e);
-                    form.setValue("slug", slugify(e.target.value));
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <fieldset disabled={isSubmitting} className="space-y-8">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Household Name</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      form.setValue("slug", slugify(e.target.value));
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="slug"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Household Slug</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-              <FormDescription>
-                The slug is used to identify your household. It will be part of
-                the URL for your household invitations.
-              </FormDescription>
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="slug"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Household Slug</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+                <FormDescription>
+                  The slug is used to identify your household. It will be part
+                  of the URL for your household invitations.
+                </FormDescription>
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="importInstructions"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Recipe import instructions</FormLabel>
-              <FormControl>
-                <Textarea
-                  {...field}
-                  maxLength={1000}
-                  placeholder="Keep steps short and explain techniques for beginners"
-                />
-              </FormControl>
-              <FormDescription>
-                Shape every imported recipe. For example: “Skriv på nynorsk”,
-                “Keep steps short”, or “Explain techniques for beginners”.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="importInstructions"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Household Prompt</FormLabel>
+                <FormControl>
+                  <Textarea
+                    {...field}
+                    maxLength={IMPORT_PROMPT_MAX_LENGTH}
+                    className="h-80 max-h-[50vh] resize-none overflow-y-auto"
+                  />
+                </FormControl>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      form.setValue("importInstructions", householdPrompt, {
+                        shouldDirty: true,
+                      })
+                    }
+                  >
+                    Reset to household
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      form.setValue("importInstructions", systemDefaultPrompt, {
+                        shouldDirty: true,
+                      })
+                    }
+                  >
+                    Reset to app default
+                  </Button>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <div className="flex justify-between">
-          <Button type="submit" disabled={isSubmitting} variant="outline">
-            {submitLabel}
-          </Button>
-        </div>
+          <div className="flex justify-between">
+            <Button type="submit" disabled={isSubmitting} variant="outline">
+              {submitLabel}
+            </Button>
+          </div>
+        </fieldset>
       </form>
     </Form>
   );

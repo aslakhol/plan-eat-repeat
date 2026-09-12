@@ -37,7 +37,10 @@ export default function Settings() {
       </Head>
       <SignedIn>
         {householdQuery.isSuccess && (
-          <SettingsView household={householdQuery.data?.household} />
+          <SettingsView
+            household={householdQuery.data.household}
+            systemDefaultPrompt={householdQuery.data.systemDefaultPrompt}
+          />
         )}
       </SignedIn>
       <SignedOut>
