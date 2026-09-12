@@ -29,7 +29,10 @@ import {
 } from "@planeatrepeat/shared";
 
 import { ImportPrompt } from "./ImportPrompt";
-import { useImportPromptDraft } from "./use-import-prompt-draft";
+import {
+  clearImportPromptDraft,
+  useImportPromptDraft,
+} from "./use-import-prompt-draft";
 
 import { api } from "~/utils/api";
 import { Button } from "~/components/ui/button";
@@ -185,15 +188,23 @@ function RecipeActionRow({
 }
 
 export function AddDinnerSheet(props: Props) {
-  const { userId } = useAuth();
+  const { userId, sessionClaims } = useAuth();
   const householdQuery = api.household.household.useQuery(undefined, {
     enabled: props.open,
   });
   if (!props.open || !userId) return null;
   const household = householdQuery.data?.household;
-  if (!household || !householdQuery.data)
+  const householdId = household?.id ?? sessionClaims?.metadata?.householdId;
+  const draftKey = householdId
+    ? `import-prompt:${userId}:${householdId}`
+    : null;
+  const onOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && draftKey) clearImportPromptDraft(draftKey);
+    props.onOpenChange(nextOpen);
+  };
+  if (!household || !householdQuery.data || !draftKey)
     return (
-      <ResponsiveModal open onOpenChange={props.onOpenChange}>
+      <ResponsiveModal open onOpenChange={onOpenChange}>
         <ResponsiveModalContent className="p-6">
           <ResponsiveModalTitle>
             {householdQuery.isPending
@@ -211,10 +222,10 @@ export function AddDinnerSheet(props: Props) {
         </ResponsiveModalContent>
       </ResponsiveModal>
     );
-  const draftKey = `import-prompt:${userId}:${household.id}`;
   return (
     <AddDinnerFlow
       {...props}
+      onOpenChange={onOpenChange}
       key={draftKey}
       draftKey={draftKey}
       householdPrompt={

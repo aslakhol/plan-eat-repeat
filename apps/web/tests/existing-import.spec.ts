@@ -82,6 +82,12 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
         .getByRole("textbox", { name: "Recipe URL" })
         .fill(importedSourceLink);
       await page.getByRole("button", { name: "Prompt", exact: true }).click();
+      await expect(
+        page.getByRole("switch", { name: "Remember prompt", exact: true }),
+      ).toHaveAttribute("aria-checked", "false");
+      await expect(
+        page.getByRole("textbox", { name: "Import Prompt", exact: true }),
+      ).not.toHaveValue("Adapt this existing Dinner into Italian fusion.");
       await page
         .getByRole("textbox", { name: "Import Prompt", exact: true })
         .fill("Adapt this existing Dinner into Italian fusion.");
@@ -118,6 +124,7 @@ test("existing Dinner import keeps conflicts independent and Cancel preserves pe
       page.locator("h1").filter({ hasText: importedName }),
     ).toBeVisible();
 
+    await page.reload();
     await importExistingRecipe();
     await expect(
       page.getByRole("button", { name: "Keep our link ✓" }),

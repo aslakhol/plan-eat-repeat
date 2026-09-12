@@ -33,3 +33,11 @@ export function useImportPromptDraft(
 
   return { draft, setDraft };
 }
+
+export function clearImportPromptDraft(storageKey: string) {
+  try {
+    localStorage.removeItem(storageKey);
+  } catch {
+    // Storage can be disabled without blocking sheet dismissal.
+  }
+}

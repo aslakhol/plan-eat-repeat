@@ -256,6 +256,7 @@ test("all sources submit the edited prompt and Remember through failures, retrie
       page.once("dialog", (dialog) => dialog.accept());
       await page.getByRole("button", { name: "Cancel", exact: true }).click();
       await expect(page).toHaveURL("/");
+      await page.reload();
       break;
     }
     await page.getByRole("button", { name: "Back", exact: true }).click();
@@ -263,6 +264,14 @@ test("all sources submit the edited prompt and Remember through failures, retrie
     await expect(
       page.getByRole("textbox", { name: "Import Prompt", exact: true }),
     ).toHaveValue(expectedPrompt);
+    await page.reload();
+    await page.getByRole("button", { name: "Add Dinner", exact: true }).click();
+    await page.getByRole("button", { name: source, exact: true }).click();
+    await page.getByRole("button", { name: "Prompt", exact: true }).click();
+    await expect(
+      page.getByRole("textbox", { name: "Import Prompt", exact: true }),
+    ).toHaveValue(expectedPrompt);
+    await expect(remember).toHaveAttribute("aria-checked", "true");
     await page
       .getByRole("button", { name: "‹ Add a dinner", exact: true })
       .click();

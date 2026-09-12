@@ -73,6 +73,131 @@ test("a prompt draft survives refresh and a fresh page without retaining source 
   );
 });
 
+test("explicit dismissal clears the prompt draft for the next import and fresh page", async ({
+  page,
+}) => {
+  await ensureSignedIn(page);
+  await openPrompt(page);
+  const householdPrompt = await promptInput(page).inputValue();
+  await promptInput(page).fill("Only this experiment.");
+  await rememberSwitch(page).click();
+  await page.reload();
+  await openPrompt(page, "Link");
+  await expect(promptInput(page)).toHaveValue("Only this experiment.");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).not.toBeVisible();
+  await page.reload();
+  await openPrompt(page);
+  await expect(promptInput(page)).toHaveValue(householdPrompt);
+  await expect(rememberSwitch(page)).toHaveAttribute("aria-checked", "false");
+});
+
+test("restored resets follow shared changes and successful import cleanup preserves the remembered Household Prompt", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await ensureSignedIn(page);
+  const auth = await page.request.post("/api/dev/auth-bypass");
+  const { userId } = (await auth.json()) as { userId: string };
+  const { household } = await db.membership.findUniqueOrThrow({
+    where: { userId },
+    include: { household: true },
+  });
+  try {
+    await db.household.update({
+      where: { id: household.id },
+      data: { importInstructions: "Our Household instructions." },
+    });
+    await page.reload();
+    await openPrompt(page);
+    await promptInput(page).fill("My current experiment.");
+    await rememberSwitch(page).click();
+    await db.household.update({
+      where: { id: household.id },
+      data: { importInstructions: "Another member's instructions." },
+    });
+    await page.reload();
+    await openPrompt(page);
+    await expect(promptInput(page)).toHaveValue("My current experiment.");
+    const reset = page.locator("summary").filter({ hasText: "Reset" });
+    await reset.click();
+    await page
+      .getByRole("button", { name: "Reset to app default", exact: true })
+      .click();
+    const appDefault = await promptInput(page).inputValue();
+    await page.reload();
+    await openPrompt(page);
+    await expect(promptInput(page)).toHaveValue(appDefault);
+    await expect(rememberSwitch(page)).toHaveAttribute("aria-checked", "true");
+    await expect(
+      page.getByRole("region", { name: "Import prompt", exact: true }),
+    ).toHaveClass(/border-primary/);
+    await reset.click();
+    await page
+      .getByRole("button", { name: "Reset to household", exact: true })
+      .click();
+    await expect(promptInput(page)).toHaveValue(
+      "Another member's instructions.",
+    );
+    await expect(
+      page.getByRole("region", { name: "Import prompt", exact: true }),
+    ).not.toHaveClass(/border-primary/);
+
+    await promptInput(page).fill("Our next shared prompt.");
+    await page.route("**/api/trpc/dinner.importFromText**", async (route) => {
+      expect(route.request().postDataJSON()).toMatchObject({
+        "0": {
+          json: { prompt: "Our next shared prompt.", rememberPrompt: true },
+        },
+      });
+      // The router's save behavior is covered by its real-database integration tests.
+      await db.household.update({
+        where: { id: household.id },
+        data: { importInstructions: "Our next shared prompt." },
+      });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([
+          {
+            result: {
+              data: {
+                json: {
+                  name: "Unsaved prompt experiment",
+                  recipe: { servings: null, parts: [] },
+                },
+              },
+            },
+          },
+        ]),
+      });
+    });
+    await page
+      .getByRole("textbox", { name: "Recipe text", exact: true })
+      .fill("Boil lentils.");
+    await page
+      .getByRole("button", { name: "Import recipe", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/dinners\/new/);
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Cancel", exact: true }).click();
+    await expect(page).toHaveURL("/");
+    await page.reload();
+    await openPrompt(page);
+    await expect(promptInput(page)).toHaveValue("Our next shared prompt.");
+    await expect(rememberSwitch(page)).toHaveAttribute("aria-checked", "false");
+    await page.keyboard.press("Escape");
+    await page.reload();
+    await openPrompt(page);
+    await expect(promptInput(page)).toHaveValue("Our next shared prompt.");
+  } finally {
+    await db.household.update({
+      where: { id: household.id },
+      data: { importInstructions: household.importInstructions },
+    });
+  }
+});
+
 test("local drafts stay separate between Households and between members sharing a browser", async ({
   page,
 }) => {
@@ -176,4 +301,36 @@ test("local drafts stay separate between Households and between members sharing 
     });
     await db.household.delete({ where: { id: otherHousehold.id } });
   }
+});
+
+test("dismissing before Household settings finish loading clears the prior draft", async ({
+  page,
+}) => {
+  await ensureSignedIn(page);
+  await openPrompt(page);
+  const initialPrompt = await promptInput(page).inputValue();
+  await promptInput(page).fill("Dismiss this interrupted experiment.");
+  await rememberSwitch(page).click();
+  const gate = Promise.withResolvers<void>();
+  await page.route("**/api/trpc/**", async (route) => {
+    if (route.request().url().includes("household.household"))
+      await gate.promise;
+    await route.continue();
+  });
+  try {
+    await page.reload();
+    await page.getByRole("button", { name: "Add Dinner", exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name: "Loading", exact: true }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).not.toBeVisible();
+  } finally {
+    gate.resolve();
+    await page.unrouteAll({ behavior: "wait" });
+  }
+  await page.reload();
+  await openPrompt(page);
+  await expect(promptInput(page)).toHaveValue(initialPrompt);
+  await expect(rememberSwitch(page)).toHaveAttribute("aria-checked", "false");
 });
