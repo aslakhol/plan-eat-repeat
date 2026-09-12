@@ -121,8 +121,44 @@ void test("Dinner editing rejects a scheme-less Link", () =>
     );
   }));
 
+void test("Recipe saves normalize standard spellings without converting amounts", () =>
+  withDinnerCaller(async ({ caller }) => {
+    const input = {
+      dinnerName: "Minced beef",
+      tagList: [],
+      link: null,
+      recipe: {
+        servings: 4,
+        parts: [
+          {
+            name: null,
+            ingredients: [
+              {
+                name: "minced beef",
+                amount: 0.5,
+                unit: " KILOGRAMS ",
+                note: null,
+              },
+            ],
+            steps: [],
+          },
+        ],
+      },
+    };
+    const { dinner } = await caller.create(input);
+    const created = await caller.get({ dinnerId: dinner.id });
+    assert.equal(created.dinner?.parts[0]?.ingredients[0]?.unit, "kg");
+    assert.equal(created.dinner?.parts[0]?.ingredients[0]?.amount, 0.5);
+
+    input.recipe.parts[0]!.ingredients[0]!.unit = " lbs. ";
+    await caller.edit({ ...input, dinnerId: dinner.id });
+    const edited = await caller.get({ dinnerId: dinner.id });
+    assert.equal(edited.dinner?.parts[0]?.ingredients[0]?.unit, "lb");
+    assert.equal(edited.dinner?.parts[0]?.ingredients[0]?.amount, 0.5);
+  }));
+
 void test("custom units and unspecified quantities survive editing, reloading, and a Published Dinner copy", () =>
-  withDinnerCaller(async ({ caller, marker }) => {
+  withDinnerCaller(async ({ caller, db, marker }) => {
     const ingredients = [
       { name: "mango", amount: 1.5, unit: "  large cheeks  ", note: "diced" },
       { name: "coriander", amount: null, unit: "handful", note: null },
@@ -179,6 +215,12 @@ void test("custom units and unspecified quantities survive editing, reloading, a
       ],
     );
     const { publicSlug } = await caller.publish({ dinnerId: dinner.id });
+    // Older Recipes may have non-canonical spellings. Copying normalizes
+    // the new Dinner without rewriting its source.
+    await db.recipeIngredient.updateMany({
+      where: { part: { dinnerId: dinner.id }, name: "lime" },
+      data: { unit: " pieces " },
+    });
     await withDinnerCaller(async ({ caller: destination }) => {
       const copy = await destination.savePublished({ publicSlug });
       const saved = await destination.get({ dinnerId: copy.dinner.id });
@@ -201,6 +243,8 @@ void test("custom units and unspecified quantities survive editing, reloading, a
         ),
       );
     });
+    const source = await caller.get({ dinnerId: dinner.id });
+    assert.equal(source.dinner?.parts[0]?.ingredients[3]?.unit, " pieces ");
   }));
 
 void test("ingredient suggestions include distinct units from only the caller's Household", () =>
@@ -221,6 +265,7 @@ void test("ingredient suggestions include distinct units from only the caller's 
                 { order: 4, name: "salt", unit: " " },
                 { order: 5, name: "onion", unit: null },
                 { order: 6, name: "butter", unit: "g" },
+                { order: 7, name: "butter", unit: " gRaMs " },
               ],
             },
           },
@@ -262,9 +307,12 @@ void test("ingredient suggestions include distinct units from only the caller's 
       assert.deepEqual(suggestions.ingredientUnits, [
         "g",
         "kg",
+        "oz",
+        "lb",
         "ml",
         "dl",
         "l",
+        "cup",
         "tbsp",
         "tsp",
         "pcs",
@@ -279,6 +327,18 @@ void test("ingredient suggestions include distinct units from only the caller's 
     } as Parameters<typeof dinnerRouter.createCaller>[0]);
     assert.deepEqual(await signedOut.ingredientNames(), {
       ingredientNames: [],
-      ingredientUnits: ["g", "kg", "ml", "dl", "l", "tbsp", "tsp", "pcs"],
+      ingredientUnits: [
+        "g",
+        "kg",
+        "oz",
+        "lb",
+        "ml",
+        "dl",
+        "l",
+        "cup",
+        "tbsp",
+        "tsp",
+        "pcs",
+      ],
     });
   }));

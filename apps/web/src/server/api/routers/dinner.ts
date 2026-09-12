@@ -7,6 +7,7 @@ import {
   MAX_RECIPE_IMPORT_IMAGE_DATA_LENGTH,
   MAX_RECIPE_IMPORT_IMAGES,
   UNITS,
+  normalizeUnit,
   youtubeVideoIdFromUrl,
   type DinnerWithRecipe,
   type RecipeInput,
@@ -427,8 +428,8 @@ export const dinnerRouter = createTRPCRouter({
         ...new Set([
           ...UNITS,
           ...ingredients
-            .map(({ unit }) => unit?.trim() ?? "")
-            .filter((unit) => unit !== "")
+            .map(({ unit }) => normalizeUnit(unit))
+            .filter((unit) => unit !== null)
             .sort(),
         ]),
       ],
