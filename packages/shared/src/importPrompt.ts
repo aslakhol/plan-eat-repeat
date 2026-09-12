@@ -1,0 +1,1 @@
+export const IMPORT_PROMPT_MAX_LENGTH = 20_000;

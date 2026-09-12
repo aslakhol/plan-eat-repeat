@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { IMPORT_PROMPT_MAX_LENGTH } from "@planeatrepeat/shared";
+import { getSystemDefaultPrompt } from "~/server/ai/import-prompt";
 
 import {
   createTRPCRouter,
@@ -19,11 +21,13 @@ const onboardingDinnerSchema = z.object({
   date: z.date(),
 });
 
+// Keep the field name compatible with existing mobile import/settings calls.
 const importInstructionsSchema = z
   .string()
-  .trim()
-  .max(1000, "Import instructions must be at most 1000 characters")
-  .transform((instructions) => (instructions === "" ? null : instructions))
+  .max(IMPORT_PROMPT_MAX_LENGTH, "Prompt must be at most 20,000 characters")
+  .transform((prompt) =>
+    !prompt.trim() || prompt === getSystemDefaultPrompt() ? null : prompt,
+  )
   .nullable()
   .optional();
 
@@ -37,7 +41,7 @@ export const householdRouter = createTRPCRouter({
       if (ctx.auth.sessionClaims?.metadata.householdId) {
         await tryUpdateClerkHouseholdMetadata(ctx.auth.userId, null);
       }
-      return { household: null };
+      return { household: null, systemDefaultPrompt: getSystemDefaultPrompt() };
     }
 
     const household = await ctx.db.household.findUnique({
@@ -54,7 +58,7 @@ export const householdRouter = createTRPCRouter({
       );
     }
 
-    return { household };
+    return { household, systemDefaultPrompt: getSystemDefaultPrompt() };
   }),
   createHousehold: protectedProcedure
     .input(
@@ -111,7 +115,7 @@ export const householdRouter = createTRPCRouter({
 
       await tryUpdateClerkHouseholdMetadata(ctx.auth.userId, household.id);
 
-      return { household };
+      return { household, systemDefaultPrompt: getSystemDefaultPrompt() };
     }),
   updateHousehold: protectedProcedureWithHousehold
     .input(

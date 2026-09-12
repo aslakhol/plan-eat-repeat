@@ -126,9 +126,7 @@ export function OnboardingScreen() {
 
   const createHouseholdMutation = api.household.createHousehold.useMutation({
     async onSuccess(data) {
-      utils.household.household.setData(undefined, {
-        household: data.household,
-      });
+      utils.household.household.setData(undefined, data);
       await Promise.allSettled([
         clearStoredDinners(),
         session ? session.reload() : Promise.resolve(),
