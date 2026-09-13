@@ -10,13 +10,7 @@ import { ClearDay } from "./ClearDay";
 import Link from "next/link";
 import { useRef } from "react";
 import { RecipeView } from "../Dinners/RecipeView";
-import {
-  ArrowRightLeft,
-  BookOpen,
-  MoreHorizontal,
-  Pencil,
-  X,
-} from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   buildDinnerEditorHref,
@@ -24,6 +18,7 @@ import {
 } from "~/lib/editor-navigation";
 import { useDinnerWakeLock } from "~/hooks/use-keep-screen-awake";
 import { DetailsMenu } from "~/components/ui/details-menu";
+import { useAddDinnersToShoppingList } from "~/hooks/use-add-dinners-to-shopping-list";
 
 type Props = {
   dinner: DinnerWithRecipe;
@@ -41,6 +36,7 @@ export const PlannedDinner = ({
   isOpen,
 }: Props) => {
   const menuRef = useRef<HTMLDetailsElement>(null);
+  const addToShoppingList = useAddDinnersToShoppingList(closeDialog);
   useDinnerWakeLock(isOpen);
 
   const closeMenu = () => menuRef.current?.removeAttribute("open");
@@ -74,7 +70,6 @@ export const PlannedDinner = ({
                     setChangePlan(true);
                   }}
                 >
-                  <ArrowRightLeft className="size-4" />
                   Change Dinner
                 </Button>
                 <Link
@@ -82,7 +77,6 @@ export const PlannedDinner = ({
                   className="hover:bg-muted flex w-full items-center gap-3 border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
                   onClick={closeMenu}
                 >
-                  <BookOpen className="size-4" />
                   Go to cookbook
                 </Link>
                 <Link
@@ -93,9 +87,20 @@ export const PlannedDinner = ({
                   className="hover:bg-muted flex w-full items-center gap-3 border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
                   onClick={closeMenu}
                 >
-                  <Pencil className="size-4" />
                   Edit this Dinner
                 </Link>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={addToShoppingList.isPending}
+                  className="h-auto w-full justify-start rounded-none border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                  onClick={() => {
+                    closeMenu();
+                    addToShoppingList.mutate({ dinnerIds: [dinner.id] });
+                  }}
+                >
+                  Add to shopping list
+                </Button>
                 <ClearDay
                   date={date}
                   closeDialog={closeDialog}
@@ -103,7 +108,6 @@ export const PlannedDinner = ({
                   className="text-destructive hover:bg-destructive/5 hover:text-destructive h-auto w-full justify-start rounded-none border-t px-3.5 py-3 text-[13.5px] font-semibold"
                   onBeforeClear={closeMenu}
                 >
-                  <X className="size-4" />
                   Clear {format(date, "EEEE")}
                 </ClearDay>
               </div>
