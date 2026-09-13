@@ -1,4 +1,11 @@
-import { Bot, Calendar, Plus, Settings, UtensilsCrossed } from "lucide-react";
+import {
+  Bot,
+  Calendar,
+  Plus,
+  Settings,
+  ShoppingBasket,
+  UtensilsCrossed,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +32,11 @@ const items = [
     title: "Dinners",
     url: "/dinners",
     icon: UtensilsCrossed,
+  },
+  {
+    title: "Shopping list",
+    url: "/shopping-list",
+    icon: ShoppingBasket,
   },
   {
     title: "Settings",
@@ -54,24 +66,31 @@ export function AppSidebar({ onAddDinner }: { onAddDinner: () => void }) {
                   <span>Add Dinner</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={
-                      item.url === "/"
-                        ? router.pathname === "/"
-                        : router.pathname.startsWith(item.url)
-                    }
-                    tooltip={item.title}
-                  >
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) => {
+                const isActive =
+                  item.url === "/"
+                    ? router.pathname === "/"
+                    : router.pathname === item.url ||
+                      router.pathname.startsWith(`${item.url}/`);
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.title}
+                    >
+                      <Link
+                        href={item.url}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
               {access?.isSystemAdmin && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
