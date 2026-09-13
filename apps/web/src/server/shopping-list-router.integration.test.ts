@@ -113,6 +113,15 @@ void test("another Household cannot read, remove, or clear shared Shopping Items
     await withShoppingList(async ({ caller: other }) => {
       assert.deepEqual(await other.list(), []);
       await other.remove({ id: item.id });
+      await assert.rejects(
+        other.edit({
+          id: item.id,
+          name: "Other apples",
+          amount: null,
+          unit: null,
+          note: null,
+        }),
+      );
       await other.addManual({ name: "Other apples" });
       await other.clear();
       assert.deepEqual(await other.list(), []);
@@ -122,10 +131,61 @@ void test("another Household cannot read, remove, or clear shared Shopping Items
     assert.deepEqual(await caller.list(), []);
   }));
 
+void test("incompatible and unspecified quantities stay adjacent and independently removable", () =>
+  withShoppingList(async ({ caller }) => {
+    await caller.addManual({ name: "Apples" });
+    await caller.addManual({ name: "Zucchini" });
+    for (const [amount, unit] of [
+      [2, null],
+      [400, "g"],
+      [2, "pcs"],
+      [null, "g"],
+      [null, "grams"],
+      [null, "kg"],
+      [1, "handfuls"],
+      [2, " handfuls "],
+      [1, "Handfuls"],
+    ] as const) {
+      const draft = await caller.addManual({ name: "Next requirement" });
+      await caller.edit({
+        id: draft.id,
+        name: "Tomatoes",
+        amount,
+        unit,
+        note: null,
+      });
+    }
+    const items = await caller.list();
+    assert.deepEqual(
+      items.map(({ name }) => name),
+      ["Apples", ...Array<string>(7).fill("Tomatoes"), "Zucchini"],
+    );
+    const tomatoes = items.filter(({ name }) => name === "Tomatoes");
+    assert.deepEqual(
+      tomatoes.map(({ amount, unit }) => ({ amount, unit })),
+      [
+        { amount: 2, unit: null },
+        { amount: 400, unit: "g" },
+        { amount: 2, unit: "pcs" },
+        { amount: null, unit: "g" },
+        { amount: null, unit: "kg" },
+        { amount: 3, unit: "handfuls" },
+        { amount: 1, unit: "Handfuls" },
+      ],
+    );
+    await caller.remove({ id: tomatoes[0]!.id });
+    assert.deepEqual(
+      await caller.list(),
+      items.filter(({ id }) => id !== tomatoes[0]!.id),
+    );
+  }));
+
 void test("manual additions combine bare names using only case and surrounding whitespace", () =>
   withShoppingList(async ({ caller, member }) => {
-    const original = await caller.addManual({ name: "Green apples" });
-    const duplicate = await member.addManual({ name: "  GREEN APPLES  " });
+    const [original, duplicate] = await Promise.all([
+      caller.addManual({ name: "Green apples" }),
+      member.addManual({ name: "  GREEN APPLES  " }),
+    ]);
     assert.equal(duplicate.id, original.id);
     for (const name of ["Green  apples", "Green apple", "Gréen apples"]) {
       await caller.addManual({ name });
@@ -136,5 +196,58 @@ void test("manual additions combine bare names using only case and surrounding w
       items.find(({ id }) => id === original.id),
       original,
     );
-    assert.ok(items.every(({ amount, unit }) => amount === null && unit === null));
+    assert.ok(
+      items.every(({ amount, unit }) => amount === null && unit === null),
+    );
+  }));
+
+void test("saving a compatible edit combines quantities in the destination unit and preserves distinct notes", () =>
+  withShoppingList(async ({ caller, member }) => {
+    const potatoes = await caller.addManual({ name: "Potatoes" });
+    await caller.edit({
+      id: potatoes.id,
+      name: "Potatoes",
+      amount: 500,
+      unit: "g",
+      note: "For roasting",
+    });
+    const extra = await member.addManual({ name: "More potatoes" });
+    const merged = await member.edit({
+      id: extra.id,
+      name: " POTATOES ",
+      amount: 1,
+      unit: "kilograms",
+      note: "Organic; For roasting",
+    });
+    assert.equal(merged.id, potatoes.id);
+    assert.deepEqual(
+      (await caller.list()).map(({ name, amount, unit, note }) => ({
+        name,
+        amount,
+        unit,
+        note,
+      })),
+      [
+        {
+          name: "Potatoes",
+          amount: 1500,
+          unit: "g",
+          note: "For roasting; Organic",
+        },
+      ],
+    );
+    // A bare manual addition remains unspecified alongside the numeric row.
+    const bare = await caller.addManual({ name: "potatoes" });
+    assert.notEqual(bare.id, potatoes.id);
+    assert.equal(bare.amount, null);
+    const final = await caller.edit({
+      id: bare.id,
+      name: "Potatoes",
+      amount: 250,
+      unit: "grams",
+      note: "Organic",
+    });
+    assert.equal(final.amount, 1750);
+    assert.equal(final.note, "For roasting; Organic");
+    assert.equal((await member.list()).length, 1);
   }));
