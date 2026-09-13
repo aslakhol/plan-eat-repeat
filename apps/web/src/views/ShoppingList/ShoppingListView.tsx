@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import { cn } from "~/lib/utils";
 import { api, type RouterOutputs } from "~/utils/api";
 import { AddItemSheet } from "./AddItemSheet";
 import { EditItemSheet } from "./EditItemSheet";
@@ -27,7 +26,6 @@ function ShoppingItemRow({
   item: ShoppingItem;
   onEdit: () => void;
 }) {
-  const [removing, setRemoving] = useState(false);
   const utils = api.useUtils();
   const remove = api.shoppingList.remove.useMutation({
     networkMode: "always",
@@ -35,29 +33,15 @@ function ShoppingItemRow({
     onSuccess: () => utils.shoppingList.list.invalidate(),
   });
 
-  const removeItem = async () => {
-    setRemoving(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 200));
-    try {
-      await remove.mutateAsync({ id: item.id });
-    } catch {
-      // The mutation cache displays the error. Keep the unsaved item on the list.
-    } finally {
-      setRemoving(false);
-    }
-  };
+  if (remove.isPending) return null;
 
   return (
     <li className="bg-secondary/70 flex items-center rounded-[14px]">
       <button
         type="button"
         aria-label={`Remove ${item.name} from list`}
-        disabled={removing}
-        onClick={() => void removeItem()}
-        className={cn(
-          "hover:bg-secondary focus-visible:ring-ring min-h-14 min-w-0 flex-1 rounded-[14px] px-3.5 py-3 text-left outline-none transition-opacity [overflow-wrap:anywhere] focus-visible:ring-2",
-          removing && "text-muted-foreground line-through opacity-50",
-        )}
+        onClick={() => remove.mutate({ id: item.id })}
+        className="hover:bg-secondary focus-visible:ring-ring min-h-14 min-w-0 flex-1 rounded-[14px] px-3.5 py-3 text-left outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
       >
         <span className="font-serif text-[17px]">{item.name}</span>
         {item.note && (
@@ -71,7 +55,6 @@ function ShoppingItemRow({
           type="button"
           aria-label={`Edit quantity for ${item.name}`}
           onClick={onEdit}
-          disabled={removing}
           className="bg-background border-border hover:bg-accent focus-visible:ring-ring max-w-[35%] rounded-lg border px-2 py-1 text-sm font-semibold outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
         >
           {[item.amount, item.unit].filter((value) => value !== null).join(" ")}
@@ -80,7 +63,6 @@ function ShoppingItemRow({
       <button
         type="button"
         aria-label={`Edit ${item.name}`}
-        disabled={removing}
         onClick={onEdit}
         className="text-muted-foreground focus-visible:ring-ring flex size-11 shrink-0 items-center justify-center rounded-xl outline-none focus-visible:ring-2"
       >
