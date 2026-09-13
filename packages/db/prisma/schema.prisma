@@ -68,6 +68,19 @@ model RecipeStep {
     @@index([partId])
 }
 
+model ShoppingItem {
+    id             String    @id @default(cuid())
+    household      Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    householdId    String
+    name           String
+    normalizedName String
+    amount         Float?
+    unit           String?
+    note           String?
+
+    @@index([householdId, normalizedName])
+}
+
 model Tag {
     value  String   @id
     Dinner Dinner[]
@@ -110,6 +123,7 @@ model Household {
     Members                     Membership[]
     Invite                      Invite[]
     AiImportAttempts            AiImportAttempt[]
+    ShoppingItems               ShoppingItem[]
 }
 
 model Membership {
