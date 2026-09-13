@@ -15,6 +15,8 @@ import { cn } from "~/lib/utils";
 import { api, type RouterOutputs } from "~/utils/api";
 import { AddItemSheet } from "./AddItemSheet";
 import { EditItemSheet } from "./EditItemSheet";
+import { DinnerPicker, type ShoppingDinnerSource } from "./DinnerPicker";
+import { DinnerSourceActions } from "./DinnerSourceActions";
 
 type ShoppingItem = RouterOutputs["shoppingList"]["list"][number];
 
@@ -84,6 +86,13 @@ function ShoppingItemRow({
 
 export function ShoppingListView() {
   const [addOpen, setAddOpen] = useState(false);
+  const [pickerSource, setPickerSource] = useState<ShoppingDinnerSource | null>(
+    null,
+  );
+  const openPicker = (source: ShoppingDinnerSource) => {
+    setAddOpen(false);
+    setPickerSource(source);
+  };
   const [clearOpen, setClearOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ShoppingItem | null>(null);
   const menuRef = useRef<HTMLDetailsElement>(null);
@@ -149,13 +158,16 @@ export function ShoppingListView() {
         (list.data.length === 0 ? (
           <div className="flex min-h-[60dvh] flex-col items-center justify-center gap-5 px-4">
             <h2 className="font-serif text-xl">Nothing on the list</h2>
-            <Button
-              variant="outline"
-              className="h-12 w-full max-w-sm rounded-xl bg-white"
-              onClick={() => setAddOpen(true)}
-            >
-              Add an item
-            </Button>
+            <div className="flex w-full max-w-sm flex-col gap-2.5">
+              <Button
+                variant="outline"
+                className="h-12 w-full max-w-sm rounded-xl bg-white"
+                onClick={() => setAddOpen(true)}
+              >
+                Add an item
+              </Button>
+              <DinnerSourceActions onSelect={openPicker} />
+            </div>
           </div>
         ) : (
           <>
@@ -178,7 +190,17 @@ export function ShoppingListView() {
           </>
         ))}
 
-      <AddItemSheet open={addOpen} onOpenChange={setAddOpen} />
+      <AddItemSheet
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        onSelectDinners={openPicker}
+      />
+      {pickerSource && (
+        <DinnerPicker
+          initialSource={pickerSource}
+          onClose={() => setPickerSource(null)}
+        />
+      )}
       {editingItem && (
         <EditItemSheet
           item={editingItem}

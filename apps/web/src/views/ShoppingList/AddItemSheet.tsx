@@ -8,13 +8,17 @@ import {
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { api } from "~/utils/api";
+import { DinnerSourceActions } from "./DinnerSourceActions";
+import { type ShoppingDinnerSource } from "./DinnerPicker";
 
 export function AddItemSheet({
   open,
   onOpenChange,
+  onSelectDinners,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSelectDinners: (source: ShoppingDinnerSource) => void;
 }) {
   const [name, setName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -79,6 +83,9 @@ export function AddItemSheet({
             Could not add the item. Check your connection and try again.
           </p>
         )}
+        <div className="mt-4 border-t pt-4">
+          <DinnerSourceActions onSelect={onSelectDinners} />
+        </div>
       </ResponsiveModalContent>
     </ResponsiveModal>
   );
