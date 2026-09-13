@@ -1,4 +1,5 @@
 import { MoreHorizontal, Plus } from "lucide-react";
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { DetailsMenu } from "~/components/ui/details-menu";
@@ -112,6 +113,13 @@ export function ShoppingListView() {
             <span className="sr-only">Shopping list actions</span>
           </summary>
           <div className="border-border absolute right-0 z-20 mt-2 w-44 rounded-xl border bg-white p-1 shadow-lg">
+            <Link
+              href="/shopping-list/usually-have"
+              className="hover:bg-muted block w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold"
+              onClick={() => menuRef.current?.removeAttribute("open")}
+            >
+              Usually have
+            </Link>
             <button
               type="button"
               className="hover:bg-muted w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold disabled:opacity-50"

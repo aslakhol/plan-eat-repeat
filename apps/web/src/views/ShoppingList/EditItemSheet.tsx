@@ -16,6 +16,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
+import { cn } from "~/lib/utils";
 import { api, type RouterOutputs } from "~/utils/api";
 
 export function EditItemSheet({
@@ -31,10 +32,26 @@ export function EditItemSheet({
     item.amount === null ? "" : formatAmount(item.amount),
   );
   const [unit, setUnit] = useState(item.unit ?? "");
+  const [excludedDraft, setExcludedDraft] = useState<boolean>();
+  const preferences = api.shoppingList.usuallyHave.useQuery(undefined, {
+    refetchInterval: 2000,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
+    retry: false,
+  });
+  const excluded =
+    excludedDraft ??
+    preferences.data?.some(
+      (preference) => preference.normalizedName === name.trim().toLowerCase(),
+    ) ??
+    false;
   const ingredientNames = api.dinner.ingredientNames.useQuery();
   const utils = api.useUtils();
   const onSuccess = async () => {
-    await utils.shoppingList.list.invalidate();
+    await Promise.all([
+      utils.shoppingList.list.invalidate(),
+      utils.shoppingList.usuallyHave.invalidate(),
+    ]);
     onClose();
   };
   const edit = api.shoppingList.edit.useMutation({
@@ -74,13 +91,14 @@ export function EditItemSheet({
           className="space-y-4"
           onSubmit={(event) => {
             event.preventDefault();
-            if (name.trim() && amountValid && !pending)
+            if (name.trim() && amountValid && !pending && preferences.isSuccess)
               edit.mutate({
                 id: item.id,
                 name,
                 note,
                 amount: parsedAmount,
                 unit,
+                usuallyHave: excluded,
               });
           }}
         >
@@ -176,6 +194,40 @@ export function EditItemSheet({
                 Amount must be a number more than 0
               </p>
             )}
+            <div className="border-border flex items-center justify-between gap-4 rounded-xl border p-3.5">
+              <Label
+                htmlFor="edit-shopping-excluded"
+                className="text-sm font-semibold leading-snug"
+              >
+                Do not automatically add to shopping list
+              </Label>
+              <button
+                id="edit-shopping-excluded"
+                type="button"
+                role="switch"
+                aria-checked={excluded}
+                disabled={!preferences.isSuccess}
+                onClick={() => setExcludedDraft(!excluded)}
+                className={cn(
+                  "focus-visible:ring-ring relative h-7 w-12 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50",
+                  excluded ? "bg-primary" : "bg-muted-foreground/30",
+                )}
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute left-1 top-1 size-5 rounded-full bg-white shadow-sm transition-transform",
+                    excluded && "translate-x-5",
+                  )}
+                />
+              </button>
+            </div>
+            {preferences.isError && (
+              <p role="alert" className="text-destructive text-sm">
+                Could not load Usually have. Check your connection and try
+                again.
+              </p>
+            )}
             {(edit.isError || remove.isError) && (
               <p role="alert" className="text-destructive text-sm">
                 Could not {remove.isError ? "remove" : "save"} the item. Check
@@ -194,7 +246,9 @@ export function EditItemSheet({
               <Button
                 type="submit"
                 className="h-12 flex-1 rounded-xl"
-                disabled={!name.trim() || !amountValid}
+                disabled={
+                  !name.trim() || !amountValid || !preferences.isSuccess
+                }
               >
                 {edit.isPending ? "Saving…" : "Save"}
               </Button>
