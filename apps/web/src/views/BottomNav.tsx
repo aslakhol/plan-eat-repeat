@@ -1,3 +1,11 @@
+import { Fragment } from "react";
+import {
+  Book,
+  Calendar,
+  Plus,
+  ShoppingBasket,
+  SlidersHorizontal,
+} from "lucide-react";
 import { useRouter } from "next/router";
 import { cn } from "../lib/utils";
 import Link from "next/link";
@@ -14,49 +22,54 @@ export const BottomNav = ({ onAddDinner }: { onAddDinner: () => void }) => {
       }
     : undefined;
 
-  const navClass =
-    "flex h-full min-w-0 flex-1 items-center justify-center text-[15px] font-bold text-muted-foreground transition-colors hover:text-primary";
-  const activeClass = "text-primary";
+  const items = [
+    { title: "Plan", url: "/", icon: Calendar },
+    { title: "Cookbook", url: "/dinners", icon: Book },
+    { title: "Shopping list", url: "/shopping-list", icon: ShoppingBasket },
+    { title: "Settings", url: "/settings", icon: SlidersHorizontal },
+  ];
 
   return (
     <nav
       aria-label="Primary navigation"
-      className="bg-background/95 supports-[backdrop-filter]:bg-background/80 fixed bottom-0 left-0 right-0 z-40 h-[72px] border-t pb-[env(safe-area-inset-bottom)] backdrop-blur"
+      className="bg-background/95 supports-[backdrop-filter]:bg-background/80 fixed bottom-0 left-0 right-0 z-40 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
-      <div className="mx-auto grid h-full w-full max-w-lg grid-cols-[1fr_76px_1fr] items-center px-3">
-        <Link
-          href="/"
-          className={cn(navClass, router.asPath === "/" && activeClass)}
-          aria-current={router.asPath === "/" ? "page" : undefined}
-          onClick={onClick}
-        >
-          Week
-        </Link>
+      <div className="mx-auto grid h-16 w-full max-w-lg grid-cols-5 items-center px-3">
+        {items.map((item) => {
+          const isActive =
+            item.url === "/"
+              ? router.pathname === "/"
+              : router.pathname === item.url ||
+                router.pathname.startsWith(`${item.url}/`);
 
-        <button
-          type="button"
-          aria-label="Add Dinner"
-          className="bg-primary text-primary-foreground focus-visible:ring-ring relative -top-5 mx-auto flex size-[64px] items-center justify-center rounded-full text-[40px] font-light leading-none shadow-[0_6px_18px_rgba(194,85,47,0.3)] transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-          onClick={onAddDinner}
-        >
-          <span aria-hidden="true" className="-translate-y-0.5">
-            +
-          </span>
-        </button>
+          return (
+            <Fragment key={item.url}>
+              <Link
+                href={item.url}
+                aria-label={item.title}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "text-muted-foreground hover:text-primary focus-visible:ring-ring flex h-full min-w-0 items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2",
+                  isActive && "text-primary",
+                )}
+                onClick={onClick}
+              >
+                <item.icon aria-hidden="true" className="size-6" />
+              </Link>
 
-        <Link
-          href="/dinners"
-          className={cn(
-            navClass,
-            router.asPath.startsWith("/dinners") && activeClass,
-          )}
-          aria-current={
-            router.asPath.startsWith("/dinners") ? "page" : undefined
-          }
-          onClick={onClick}
-        >
-          Cookbook
-        </Link>
+              {item.url === "/dinners" && (
+                <button
+                  type="button"
+                  aria-label="Add Dinner"
+                  className="bg-primary text-primary-foreground focus-visible:ring-ring relative -top-3 mx-auto flex size-[52px] items-center justify-center rounded-full shadow-[0_6px_18px_rgba(194,85,47,0.3)] transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                  onClick={onAddDinner}
+                >
+                  <Plus aria-hidden="true" className="size-7" />
+                </button>
+              )}
+            </Fragment>
+          );
+        })}
       </div>
     </nav>
   );
