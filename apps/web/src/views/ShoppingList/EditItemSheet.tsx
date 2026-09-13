@@ -238,14 +238,22 @@ export function EditItemSheet({
               <Button
                 type="button"
                 variant="outline"
-                className="h-12 rounded-xl px-6"
+                className="h-12 rounded-xl px-3"
                 onClick={onClose}
               >
                 Cancel
               </Button>
               <Button
+                type="button"
+                variant="outline"
+                className="text-destructive hover:bg-destructive/5 hover:text-destructive h-12 rounded-xl px-3"
+                onClick={() => remove.mutate({ id: item.id })}
+              >
+                {remove.isPending ? "Removing…" : "Remove from list"}
+              </Button>
+              <Button
                 type="submit"
-                className="h-12 flex-1 rounded-xl"
+                className="h-12 min-w-0 flex-1 rounded-xl px-3"
                 disabled={
                   !name.trim() || !amountValid || !preferences.isSuccess
                 }
@@ -253,13 +261,6 @@ export function EditItemSheet({
                 {edit.isPending ? "Saving…" : "Save"}
               </Button>
             </div>
-            <button
-              type="button"
-              className="text-destructive w-full py-2 text-sm font-semibold disabled:opacity-50"
-              onClick={() => remove.mutate({ id: item.id })}
-            >
-              {remove.isPending ? "Removing…" : "Remove from list"}
-            </button>
           </fieldset>
         </form>
       </ResponsiveModalContent>
