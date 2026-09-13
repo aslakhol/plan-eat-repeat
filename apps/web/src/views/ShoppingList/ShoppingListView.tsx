@@ -13,10 +13,17 @@ import {
 import { cn } from "~/lib/utils";
 import { api, type RouterOutputs } from "~/utils/api";
 import { AddItemSheet } from "./AddItemSheet";
+import { EditItemSheet } from "./EditItemSheet";
 
 type ShoppingItem = RouterOutputs["shoppingList"]["list"][number];
 
-function ShoppingItemRow({ item }: { item: ShoppingItem }) {
+function ShoppingItemRow({
+  item,
+  onEdit,
+}: {
+  item: ShoppingItem;
+  onEdit: () => void;
+}) {
   const [removing, setRemoving] = useState(false);
   const utils = api.useUtils();
   const remove = api.shoppingList.remove.useMutation({
@@ -38,18 +45,37 @@ function ShoppingItemRow({ item }: { item: ShoppingItem }) {
   };
 
   return (
-    <li>
+    <li className="bg-secondary/70 flex items-center rounded-[14px]">
       <button
         type="button"
         aria-label={`Remove ${item.name} from list`}
         disabled={removing}
         onClick={() => void removeItem()}
         className={cn(
-          "bg-secondary/70 hover:bg-secondary focus-visible:ring-ring min-h-14 w-full rounded-[14px] px-3.5 py-3 text-left font-serif text-[17px] outline-none transition-opacity [overflow-wrap:anywhere] focus-visible:ring-2",
+          "hover:bg-secondary focus-visible:ring-ring min-h-14 min-w-0 flex-1 rounded-[14px] px-3.5 py-3 text-left outline-none transition-opacity [overflow-wrap:anywhere] focus-visible:ring-2",
           removing && "text-muted-foreground line-through opacity-50",
         )}
       >
-        {item.name}
+        <span className="font-serif text-[17px]">{item.name}</span>
+        {item.note && (
+          <span className="text-muted-foreground mt-0.5 block text-xs">
+            {item.note}
+          </span>
+        )}
+      </button>
+      {(item.amount !== null || item.unit !== null) && (
+        <span className="bg-background border-border max-w-[35%] rounded-lg border px-2 py-1 text-sm font-semibold [overflow-wrap:anywhere]">
+          {[item.amount, item.unit].filter((value) => value !== null).join(" ")}
+        </span>
+      )}
+      <button
+        type="button"
+        aria-label={`Edit ${item.name}`}
+        disabled={removing}
+        onClick={onEdit}
+        className="text-muted-foreground focus-visible:ring-ring flex size-11 shrink-0 items-center justify-center rounded-xl outline-none focus-visible:ring-2"
+      >
+        <MoreHorizontal className="size-5" />
       </button>
     </li>
   );
@@ -58,6 +84,7 @@ function ShoppingItemRow({ item }: { item: ShoppingItem }) {
 export function ShoppingListView() {
   const [addOpen, setAddOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<ShoppingItem | null>(null);
   const menuRef = useRef<HTMLDetailsElement>(null);
   const utils = api.useUtils();
   const list = api.shoppingList.list.useQuery(undefined, {
@@ -133,13 +160,23 @@ export function ShoppingListView() {
             </button>
             <ul className="space-y-2" aria-label="Shopping items">
               {list.data.map((item) => (
-                <ShoppingItemRow key={item.id} item={item} />
+                <ShoppingItemRow
+                  key={item.id}
+                  item={item}
+                  onEdit={() => setEditingItem(item)}
+                />
               ))}
             </ul>
           </>
         ))}
 
       <AddItemSheet open={addOpen} onOpenChange={setAddOpen} />
+      {editingItem && (
+        <EditItemSheet
+          item={editingItem}
+          onClose={() => setEditingItem(null)}
+        />
+      )}
       <Dialog open={clearOpen} onOpenChange={setClearOpen}>
         <DialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-sm">
           <DialogHeader>
