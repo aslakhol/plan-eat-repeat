@@ -80,7 +80,7 @@ void test("Household members manage Usually Have, add Dinner and manual items, e
             ingredients: {
               create: {
                 order: 0,
-                name: "Carrots",
+                name: "carrots",
                 amount: 500,
                 unit: "g",
                 note: "Chopped",
@@ -128,7 +128,7 @@ void test("Household members manage Usually Have, add Dinner and manual items, e
       })),
       [
         { name: "2 kg potatoes", amount: null, unit: null, note: null },
-        { name: "apples", amount: null, unit: null, note: null },
+        { name: "Apples", amount: null, unit: null, note: null },
         { name: "Carrots", amount: 500, unit: "g", note: null },
         { name: "Oil", amount: null, unit: null, note: null },
         { name: "Zucchini", amount: null, unit: null, note: null },
@@ -145,7 +145,7 @@ void test("Household members manage Usually Have, add Dinner and manual items, e
     const edited = await caller.list();
     assert.deepEqual(
       edited.map(({ name }) => name),
-      ["apples", "Carrots", "Oil", "Yukon potatoes", "Zucchini"],
+      ["Apples", "Carrots", "Oil", "Yukon potatoes", "Zucchini"],
     );
     assert.deepEqual(
       edited
@@ -167,7 +167,7 @@ void test("Household members manage Usually Have, add Dinner and manual items, e
     await member.remove({ id: potatoes.id });
     assert.deepEqual(
       (await caller.list()).map(({ name }) => name),
-      ["apples", "Carrots", "Oil", "Zucchini"],
+      ["Apples", "Carrots", "Oil", "Zucchini"],
     );
     await caller.setUsuallyHave({ name: "Carrots", excluded: true });
     await caller.clear();

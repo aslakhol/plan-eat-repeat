@@ -14,10 +14,11 @@ export const saveShoppingItem = async (
   if (id) {
     await tx.shoppingItem.findUniqueOrThrow({ where: { id, householdId } });
   }
+  const name = input.name.trim();
   const item = {
     ...fields,
-    name: input.name.trim(),
-    normalizedName: input.name.trim().toLowerCase(),
+    name: id ? name : name.charAt(0).toUpperCase() + name.slice(1),
+    normalizedName: name.toLowerCase(),
     unit: normalizeUnit(input.unit),
   };
   const candidates = await tx.shoppingItem.findMany({
