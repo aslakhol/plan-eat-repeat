@@ -121,3 +121,20 @@ void test("another Household cannot read, remove, or clear shared Shopping Items
     await caller.clear();
     assert.deepEqual(await caller.list(), []);
   }));
+
+void test("manual additions combine bare names using only case and surrounding whitespace", () =>
+  withShoppingList(async ({ caller, member }) => {
+    const original = await caller.addManual({ name: "Green apples" });
+    const duplicate = await member.addManual({ name: "  GREEN APPLES  " });
+    assert.equal(duplicate.id, original.id);
+    for (const name of ["Green  apples", "Green apple", "Gréen apples"]) {
+      await caller.addManual({ name });
+    }
+    const items = await member.list();
+    assert.equal(items.length, 4);
+    assert.deepEqual(
+      items.find(({ id }) => id === original.id),
+      original,
+    );
+    assert.ok(items.every(({ amount, unit }) => amount === null && unit === null));
+  }));

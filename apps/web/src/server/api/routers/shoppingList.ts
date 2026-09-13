@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { normalizeUnit } from "@planeatrepeat/shared";
+import { addShoppingItem } from "../../shopping-list";
 import { createTRPCRouter, protectedProcedureWithHousehold } from "../trpc";
 
 export const shoppingListRouter = createTRPCRouter({
@@ -17,13 +18,9 @@ export const shoppingListRouter = createTRPCRouter({
   addManual: protectedProcedureWithHousehold
     .input(z.object({ name: z.string().trim().min(1, "Enter an item name") }))
     .mutation(({ ctx, input }) =>
-      ctx.db.shoppingItem.create({
-        data: {
-          householdId: ctx.householdId,
-          name: input.name,
-          normalizedName: input.name.toLowerCase(),
-        },
-      }),
+      ctx.db.$transaction((tx) =>
+        addShoppingItem(tx, ctx.householdId, input.name),
+      ),
     ),
 
   edit: protectedProcedureWithHousehold
