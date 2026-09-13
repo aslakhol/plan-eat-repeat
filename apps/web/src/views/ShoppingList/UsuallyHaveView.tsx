@@ -39,6 +39,9 @@ export function UsuallyHaveView() {
         </Link>
         <h1 className="font-serif text-[30px] leading-tight">Usually have</h1>
       </header>
+      <p className="text-muted-foreground mb-4 text-[12.5px] leading-relaxed">
+        Skipped when a recipe is added to the shopping list.
+      </p>
       <form
         className="mb-3 flex gap-2.5"
         onSubmit={(event) => {
