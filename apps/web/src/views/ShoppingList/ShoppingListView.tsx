@@ -64,7 +64,7 @@ function ShoppingItemRow({
         type="button"
         aria-label={`Edit ${item.name}`}
         onClick={onEdit}
-        className="text-muted-foreground focus-visible:ring-ring flex size-11 shrink-0 items-center justify-center rounded-xl outline-none focus-visible:ring-2"
+        className="text-muted-foreground border-border hover:bg-accent focus-visible:ring-ring mx-2 flex size-8 shrink-0 items-center justify-center rounded-lg border bg-white outline-none focus-visible:ring-2"
       >
         <MoreHorizontal className="size-5" />
       </button>
