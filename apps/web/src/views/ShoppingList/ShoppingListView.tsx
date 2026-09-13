@@ -45,7 +45,7 @@ function ShoppingItemRow({
       >
         <span className="font-serif text-[17px]">{item.name}</span>
         {item.note && (
-          <span className="text-muted-foreground ml-1 text-[13px] italic">
+          <span className="text-muted-foreground ml-1 text-[13px]">
             {item.note}
           </span>
         )}
