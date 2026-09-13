@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { mock, test } from "node:test";
-import { createPrismaClient } from "@planeatrepeat/db";
+import { createPrismaClient, type Prisma } from "@planeatrepeat/db";
 
 const { loadEnvConfig } = createRequire(import.meta.url)(
   "@next/env",
@@ -18,11 +18,16 @@ mock.module("@clerk/nextjs/server", {
   },
 });
 const { shoppingListRouter } = await import("./api/routers/shoppingList");
+const { dinnerRouter } = await import("./api/routers/dinner");
 
 const withShoppingList = async (
   run: (fixture: {
     caller: ReturnType<typeof shoppingListRouter.createCaller>;
     member: ReturnType<typeof shoppingListRouter.createCaller>;
+    dinners: ReturnType<typeof dinnerRouter.createCaller>;
+    createDinner: (
+      data: Omit<Prisma.DinnerUncheckedCreateInput, "householdId">,
+    ) => Promise<{ id: number }>;
   }) => Promise<void>,
 ) => {
   const db = createPrismaClient(databaseUrl);
@@ -47,17 +52,57 @@ const withShoppingList = async (
     await run({
       caller: callerFor(userIds[0]!),
       member: callerFor(userIds[1]!),
+      dinners: dinnerRouter.createCaller({
+        db,
+        auth: { userId: userIds[0]! },
+      } as Parameters<typeof dinnerRouter.createCaller>[0]),
+      createDinner: (data) =>
+        db.dinner.create({ data: { ...data, householdId: household.id } }),
     });
   } finally {
+    await db.dinner.deleteMany({ where: { householdId: household.id } });
     await db.household.delete({ where: { id: household.id } });
     await db.user.deleteMany({ where: { id: { in: userIds } } });
     await db.$disconnect();
   }
 };
 
-void test("Household members add literal Shopping Items, edit the shared list, and remove them", () =>
-  withShoppingList(async ({ caller, member }) => {
+void test("Household members add a Dinner and literal Shopping Items, edit the shared list, and remove them", () =>
+  withShoppingList(async ({ caller, member, createDinner }) => {
     assert.deepEqual(await caller.list(), []);
+    const dinner = await createDinner({
+      name: "Roast vegetables",
+      servings: 4,
+      parts: {
+        create: [
+          {
+            order: 0,
+            ingredients: {
+              create: {
+                order: 0,
+                name: "Carrots",
+                amount: 500,
+                unit: "g",
+                note: "Chopped",
+              },
+            },
+          },
+          {
+            order: 1,
+            ingredients: {
+              create: {
+                order: 0,
+                name: "Oil",
+                amount: 2,
+                unit: "tbsp",
+                note: "For frying",
+              },
+            },
+          },
+        ],
+      },
+    });
+    await caller.addDinners({ dinnerIds: [dinner.id] });
     const potatoes = await caller.addManual({ name: "2 kg potatoes" });
     await member.addManual({ name: "Zucchini" });
     await caller.addManual({ name: "apples" });
@@ -72,6 +117,8 @@ void test("Household members add literal Shopping Items, edit the shared list, a
       [
         { name: "2 kg potatoes", amount: null, unit: null, note: null },
         { name: "apples", amount: null, unit: null, note: null },
+        { name: "Carrots", amount: 500, unit: "g", note: null },
+        { name: "Oil", amount: 2, unit: "tbsp", note: null },
         { name: "Zucchini", amount: null, unit: null, note: null },
       ],
     );
@@ -85,7 +132,7 @@ void test("Household members add literal Shopping Items, edit the shared list, a
     const edited = await caller.list();
     assert.deepEqual(
       edited.map(({ name }) => name),
-      ["apples", "Yukon potatoes", "Zucchini"],
+      ["apples", "Carrots", "Oil", "Yukon potatoes", "Zucchini"],
     );
     assert.deepEqual(
       edited
@@ -103,30 +150,39 @@ void test("Household members add literal Shopping Items, edit the shared list, a
     await member.remove({ id: potatoes.id });
     assert.deepEqual(
       (await caller.list()).map(({ name }) => name),
-      ["apples", "Zucchini"],
+      ["apples", "Carrots", "Oil", "Zucchini"],
     );
   }));
 
-void test("another Household cannot read, remove, or clear shared Shopping Items", () =>
-  withShoppingList(async ({ caller }) => {
-    const item = await caller.addManual({ name: "Private apples" });
-    await withShoppingList(async ({ caller: other }) => {
-      assert.deepEqual(await other.list(), []);
-      await other.remove({ id: item.id });
-      await assert.rejects(
-        other.edit({
-          id: item.id,
-          name: "Other apples",
-          amount: null,
-          unit: null,
-          note: null,
-        }),
-      );
-      await other.addManual({ name: "Other apples" });
-      await other.clear();
-      assert.deepEqual(await other.list(), []);
-      assert.equal((await caller.list())[0]?.id, item.id);
-    });
+void test("another Household cannot read or change Shopping Items, add private Dinners, or undo an addition", () =>
+  withShoppingList(async ({ caller, createDinner }) => {
+    const dinner = await createDinner({ name: "Private apples" });
+    const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
+    const item = (await caller.list())[0]!;
+    await withShoppingList(
+      async ({ caller: other, createDinner: createOtherDinner }) => {
+        const otherDinner = await createOtherDinner({ name: "Other pears" });
+        await assert.rejects(
+          other.addDinners({ dinnerIds: [otherDinner.id, dinner.id] }),
+        );
+        assert.deepEqual(await other.list(), []);
+        await other.undo(addition.undo);
+        await other.remove({ id: item.id });
+        await assert.rejects(
+          other.edit({
+            id: item.id,
+            name: "Other apples",
+            amount: null,
+            unit: null,
+            note: null,
+          }),
+        );
+        await other.addManual({ name: "Other apples" });
+        await other.clear();
+        assert.deepEqual(await other.list(), []);
+        assert.equal((await caller.list())[0]?.id, item.id);
+      },
+    );
     await caller.clear();
     assert.deepEqual(await caller.list(), []);
   }));
@@ -250,4 +306,107 @@ void test("saving a compatible edit combines quantities in the destination unit 
     assert.equal(final.amount, 1750);
     assert.equal(final.note, "For roasting; Organic");
     assert.equal((await member.list()).length, 1);
+  }));
+
+void test("Undo reverses a repeated Dinner batch while retaining pre-existing numeric and unquantified requirements", () =>
+  withShoppingList(async ({ caller, member, createDinner, dinners }) => {
+    const flour = await caller.addManual({ name: "Flour" });
+    await caller.edit({
+      id: flour.id,
+      name: "Flour",
+      amount: 500,
+      unit: "g",
+      note: "Bread flour",
+    });
+    await member.addManual({ name: "Salt" });
+    const before = await caller.list();
+    const dinner = await createDinner({
+      name: "Bread",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: {
+            create: [
+              {
+                order: 0,
+                name: " FLOUR ",
+                amount: 1,
+                unit: "kg",
+                note: "Sifted",
+              },
+              { order: 1, name: "salt" },
+              { order: 2, name: "Yeast", amount: 7, unit: "g" },
+              { order: 3, name: "Water" },
+            ],
+          },
+        },
+      },
+    });
+    const addition = await caller.addDinners({
+      dinnerIds: [dinner.id, dinner.id],
+    });
+    assert.deepEqual(
+      (await member.list()).map(({ name, amount, unit, note }) => ({
+        name,
+        amount,
+        unit,
+        note,
+      })),
+      [
+        { name: "Flour", amount: 2500, unit: "g", note: "Bread flour" },
+        { name: "Salt", amount: null, unit: null, note: null },
+        { name: "Water", amount: null, unit: null, note: null },
+        { name: "Yeast", amount: 14, unit: "g", note: null },
+      ],
+    );
+    // Shopping requirements and Undo survive deletion of the source Recipe.
+    await dinners.delete({ dinnerId: dinner.id });
+    assert.equal((await member.list()).length, 4);
+    await member.undo(addition.undo);
+    assert.deepEqual(await caller.list(), before);
+    await member.undo(addition.undo);
+    assert.deepEqual(await caller.list(), before);
+  }));
+
+void test("ingredientless Dinners use their names, and Undo leaves intervening edits and removals alone", () =>
+  withShoppingList(async ({ caller, member, createDinner }) => {
+    const dinners = await Promise.all([
+      createDinner({ name: "Takeaway" }),
+      createDinner({ name: "Toast", notes: "Use yesterday's bread" }),
+      createDinner({
+        name: "Soup",
+        parts: {
+          create: {
+            order: 0,
+            steps: { create: { order: 0, text: "Heat the soup" } },
+          },
+        },
+      }),
+    ]);
+    const dinnerIds = dinners.map(({ id }) => id);
+    const addition = await caller.addDinners({ dinnerIds });
+    const repeated = await member.addDinners({ dinnerIds });
+    await member.undo(repeated.undo);
+    const items = await caller.list();
+    assert.deepEqual(
+      items.map(({ name, amount, unit, note }) => ({
+        name,
+        amount,
+        unit,
+        note,
+      })),
+      [
+        { name: "Soup", amount: null, unit: null, note: null },
+        { name: "Takeaway", amount: null, unit: null, note: null },
+        { name: "Toast", amount: null, unit: null, note: null },
+      ],
+    );
+    const takeaway = items.find(({ name }) => name === "Takeaway")!;
+    await member.edit({ ...takeaway, name: "Pizza", note: "From the bakery" });
+    await member.remove({ id: items.find(({ name }) => name === "Toast")!.id });
+    await caller.undo(addition.undo);
+    assert.deepEqual(
+      (await member.list()).map(({ name }) => name),
+      ["Pizza"],
+    );
   }));
