@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ShoppingItem } from "@planeatrepeat/db";
-import { saveShoppingItem } from "../../shopping-list";
+import { saveShoppingItem, setUsuallyHave } from "../../shopping-list";
 import { createTRPCRouter, protectedProcedureWithHousehold } from "../trpc";
 
 const itemFields = z.object({
@@ -25,6 +25,26 @@ export const shoppingListRouter = createTRPCRouter({
         a.id.localeCompare(b.id),
     );
   }),
+
+  usuallyHave: protectedProcedureWithHousehold.query(({ ctx }) =>
+    ctx.db.usuallyHave.findMany({
+      where: { householdId: ctx.householdId },
+      orderBy: { normalizedName: "asc" },
+    }),
+  ),
+
+  setUsuallyHave: protectedProcedureWithHousehold
+    .input(
+      z.object({
+        name: z.string().trim().min(1, "Enter an ingredient name"),
+        excluded: z.boolean(),
+      }),
+    )
+    .mutation(({ ctx, input }) =>
+      ctx.db.$transaction((tx) =>
+        setUsuallyHave(tx, ctx.householdId, input.name, input.excluded),
+      ),
+    ),
 
   addManual: protectedProcedureWithHousehold
     .input(z.object({ name: z.string().trim().min(1, "Enter an item name") }))
@@ -51,6 +71,13 @@ export const shoppingListRouter = createTRPCRouter({
             })
           ).map((item) => [item.id, item]),
         );
+        const excludedNames = new Set(
+          (
+            await tx.usuallyHave.findMany({
+              where: { householdId: ctx.householdId },
+            })
+          ).map(({ normalizedName }) => normalizedName),
+        );
         const added = new Map<string, ShoppingItem>();
         for (const dinnerId of input.dinnerIds) {
           const dinner = await tx.dinner.findUniqueOrThrow({
@@ -63,6 +90,7 @@ export const shoppingListRouter = createTRPCRouter({
               ? ingredients
               : [{ name: dinner.name, amount: null, unit: null }];
           for (const item of requirements) {
+            if (excludedNames.has(item.name.trim().toLowerCase())) continue;
             const saved = await saveShoppingItem(tx, ctx.householdId, {
               name: item.name,
               amount: item.amount,
@@ -125,9 +153,21 @@ export const shoppingListRouter = createTRPCRouter({
     ),
 
   edit: protectedProcedureWithHousehold
-    .input(itemFields.extend({ id: z.string() }))
+    .input(
+      itemFields.extend({
+        id: z.string(),
+        usuallyHave: z.boolean().optional(),
+      }),
+    )
     .mutation(({ ctx, input }) =>
-      ctx.db.$transaction((tx) => saveShoppingItem(tx, ctx.householdId, input)),
+      ctx.db.$transaction(async (tx) => {
+        const { usuallyHave, ...fields } = input;
+        const saved = await saveShoppingItem(tx, ctx.householdId, fields);
+        if (usuallyHave !== undefined) {
+          await setUsuallyHave(tx, ctx.householdId, saved.name, usuallyHave);
+        }
+        return saved;
+      }),
     ),
 
   remove: protectedProcedureWithHousehold

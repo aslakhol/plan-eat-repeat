@@ -81,6 +81,15 @@ model ShoppingItem {
     @@index([householdId, normalizedName])
 }
 
+model UsuallyHave {
+    household      Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    householdId    String
+    name           String
+    normalizedName String
+
+    @@id([householdId, normalizedName])
+}
+
 model Tag {
     value  String   @id
     Dinner Dinner[]
@@ -124,6 +133,7 @@ model Household {
     Invite                      Invite[]
     AiImportAttempts            AiImportAttempt[]
     ShoppingItems               ShoppingItem[]
+    UsuallyHave                 UsuallyHave[]
 }
 
 model Membership {

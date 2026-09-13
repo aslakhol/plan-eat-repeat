@@ -389,6 +389,7 @@ export const ModelName = {
   RecipeIngredient: 'RecipeIngredient',
   RecipeStep: 'RecipeStep',
   ShoppingItem: 'ShoppingItem',
+  UsuallyHave: 'UsuallyHave',
   Tag: 'Tag',
   Plan: 'Plan',
   User: 'User',
@@ -411,7 +412,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "dinner" | "recipePart" | "recipeIngredient" | "recipeStep" | "shoppingItem" | "tag" | "plan" | "user" | "household" | "membership" | "aiImportAttempt" | "invite"
+    modelProps: "dinner" | "recipePart" | "recipeIngredient" | "recipeStep" | "shoppingItem" | "usuallyHave" | "tag" | "plan" | "user" | "household" | "membership" | "aiImportAttempt" | "invite"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -782,6 +783,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.ShoppingItemCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.ShoppingItemCountAggregateOutputType> | number
+        }
+      }
+    }
+    UsuallyHave: {
+      payload: Prisma.$UsuallyHavePayload<ExtArgs>
+      fields: Prisma.UsuallyHaveFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UsuallyHaveFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsuallyHavePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UsuallyHaveFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsuallyHavePayload>
+        }
+        findFirst: {
+          args: Prisma.UsuallyHaveFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsuallyHavePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UsuallyHaveFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsuallyHavePayload>
+        }
+        findMany: {
+          args: Prisma.UsuallyHaveFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsuallyHavePayload>[]
+        }
+        create: {
+          args: Prisma.UsuallyHaveCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsuallyHavePayload>
+        }
+        createMany: {
+          args: Prisma.UsuallyHaveCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.UsuallyHaveCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsuallyHavePayload>[]
+        }
+        delete: {
+          args: Prisma.UsuallyHaveDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsuallyHavePayload>
+        }
+        update: {
+          args: Prisma.UsuallyHaveUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsuallyHavePayload>
+        }
+        deleteMany: {
+          args: Prisma.UsuallyHaveDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UsuallyHaveUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.UsuallyHaveUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsuallyHavePayload>[]
+        }
+        upsert: {
+          args: Prisma.UsuallyHaveUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsuallyHavePayload>
+        }
+        aggregate: {
+          args: Prisma.UsuallyHaveAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUsuallyHave>
+        }
+        groupBy: {
+          args: Prisma.UsuallyHaveGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UsuallyHaveGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UsuallyHaveCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UsuallyHaveCountAggregateOutputType> | number
         }
       }
     }
@@ -1406,6 +1481,15 @@ export const ShoppingItemScalarFieldEnum = {
 export type ShoppingItemScalarFieldEnum = (typeof ShoppingItemScalarFieldEnum)[keyof typeof ShoppingItemScalarFieldEnum]
 
 
+export const UsuallyHaveScalarFieldEnum = {
+  householdId: 'householdId',
+  name: 'name',
+  normalizedName: 'normalizedName'
+} as const
+
+export type UsuallyHaveScalarFieldEnum = (typeof UsuallyHaveScalarFieldEnum)[keyof typeof UsuallyHaveScalarFieldEnum]
+
+
 export const TagScalarFieldEnum = {
   value: 'value'
 } as const
@@ -1731,6 +1815,7 @@ export type GlobalOmitConfig = {
   recipeIngredient?: Prisma.RecipeIngredientOmit
   recipeStep?: Prisma.RecipeStepOmit
   shoppingItem?: Prisma.ShoppingItemOmit
+  usuallyHave?: Prisma.UsuallyHaveOmit
   tag?: Prisma.TagOmit
   plan?: Prisma.PlanOmit
   user?: Prisma.UserOmit

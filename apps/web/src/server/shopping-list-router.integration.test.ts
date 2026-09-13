@@ -67,7 +67,7 @@ const withShoppingList = async (
   }
 };
 
-void test("Household members add a Dinner and literal Shopping Items, edit the shared list, and remove them", () =>
+void test("Household members manage Usually Have, add Dinner and manual items, edit the shared list, and remove them", () =>
   withShoppingList(async ({ caller, member, createDinner }) => {
     assert.deepEqual(await caller.list(), []);
     const dinner = await createDinner({
@@ -102,7 +102,19 @@ void test("Household members add a Dinner and literal Shopping Items, edit the s
         ],
       },
     });
+    assert.deepEqual(await caller.usuallyHave(), []);
+    const oil = await member.addManual({ name: "Oil" });
+    await caller.setUsuallyHave({ name: "  OIL  ", excluded: true });
+    await member.setUsuallyHave({ name: "oil", excluded: true });
+    assert.equal((await member.usuallyHave()).length, 1);
+    assert.deepEqual(await caller.list(), [oil]);
+    await caller.remove({ id: oil.id });
     await caller.addDinners({ dinnerIds: [dinner.id] });
+    assert.deepEqual(
+      (await member.list()).map(({ name }) => name),
+      ["Carrots"],
+    );
+    await member.addManual({ name: "Oil" });
     const potatoes = await caller.addManual({ name: "2 kg potatoes" });
     await member.addManual({ name: "Zucchini" });
     await caller.addManual({ name: "apples" });
@@ -118,7 +130,7 @@ void test("Household members add a Dinner and literal Shopping Items, edit the s
         { name: "2 kg potatoes", amount: null, unit: null, note: null },
         { name: "apples", amount: null, unit: null, note: null },
         { name: "Carrots", amount: 500, unit: "g", note: null },
-        { name: "Oil", amount: 2, unit: "tbsp", note: null },
+        { name: "Oil", amount: null, unit: null, note: null },
         { name: "Zucchini", amount: null, unit: null, note: null },
       ],
     );
@@ -128,6 +140,7 @@ void test("Household members add a Dinner and literal Shopping Items, edit the s
       amount: 1.5,
       unit: " kilograms ",
       note: " For roasting ",
+      usuallyHave: true,
     });
     const edited = await caller.list();
     assert.deepEqual(
@@ -147,10 +160,30 @@ void test("Household members add a Dinner and literal Shopping Items, edit the s
         },
       ],
     );
+    assert.deepEqual(
+      (await member.usuallyHave()).map(({ normalizedName }) => normalizedName),
+      ["oil", "yukon potatoes"],
+    );
     await member.remove({ id: potatoes.id });
     assert.deepEqual(
       (await caller.list()).map(({ name }) => name),
       ["apples", "Carrots", "Oil", "Zucchini"],
+    );
+    await caller.setUsuallyHave({ name: "Carrots", excluded: true });
+    await caller.clear();
+    assert.equal((await member.usuallyHave()).length, 3);
+    const skipped = await caller.addDinners({ dinnerIds: [dinner.id] });
+    assert.deepEqual(await member.list(), []);
+    assert.deepEqual(skipped.undo.items, []);
+    await member.setUsuallyHave({ name: " Oil ", excluded: false });
+    await caller.addDinners({ dinnerIds: [dinner.id] });
+    assert.deepEqual(
+      (await member.list()).map(({ name, amount, unit }) => ({
+        name,
+        amount,
+        unit,
+      })),
+      [{ name: "Oil", amount: 2, unit: "tbsp" }],
     );
   }));
 
@@ -159,8 +192,12 @@ void test("another Household cannot read or change Shopping Items, add private D
     const dinner = await createDinner({ name: "Private apples" });
     const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
     const item = (await caller.list())[0]!;
+    await caller.setUsuallyHave({ name: "Private apples", excluded: true });
     await withShoppingList(
       async ({ caller: other, createDinner: createOtherDinner }) => {
+        assert.deepEqual(await other.usuallyHave(), []);
+        await other.setUsuallyHave({ name: "Private apples", excluded: false });
+        assert.equal((await caller.usuallyHave()).length, 1);
         const otherDinner = await createOtherDinner({ name: "Other pears" });
         await assert.rejects(
           other.addDinners({ dinnerIds: [otherDinner.id, dinner.id] }),

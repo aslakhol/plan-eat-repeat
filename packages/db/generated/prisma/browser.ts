@@ -43,6 +43,11 @@ export type RecipeStep = Prisma.RecipeStepModel
  */
 export type ShoppingItem = Prisma.ShoppingItemModel
 /**
+ * Model UsuallyHave
+ * 
+ */
+export type UsuallyHave = Prisma.UsuallyHaveModel
+/**
  * Model Tag
  * 
  */

@@ -56,6 +56,7 @@ export const ModelName = {
   RecipeIngredient: 'RecipeIngredient',
   RecipeStep: 'RecipeStep',
   ShoppingItem: 'ShoppingItem',
+  UsuallyHave: 'UsuallyHave',
   Tag: 'Tag',
   Plan: 'Plan',
   User: 'User',
@@ -143,6 +144,15 @@ export const ShoppingItemScalarFieldEnum = {
 } as const
 
 export type ShoppingItemScalarFieldEnum = (typeof ShoppingItemScalarFieldEnum)[keyof typeof ShoppingItemScalarFieldEnum]
+
+
+export const UsuallyHaveScalarFieldEnum = {
+  householdId: 'householdId',
+  name: 'name',
+  normalizedName: 'normalizedName'
+} as const
+
+export type UsuallyHaveScalarFieldEnum = (typeof UsuallyHaveScalarFieldEnum)[keyof typeof UsuallyHaveScalarFieldEnum]
 
 
 export const TagScalarFieldEnum = {

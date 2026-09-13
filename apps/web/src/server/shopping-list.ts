@@ -64,3 +64,22 @@ export const saveShoppingItem = async (
     data: { householdId, ...item },
   });
 };
+
+export const setUsuallyHave = async (
+  tx: Prisma.TransactionClient,
+  householdId: string,
+  name: string,
+  excluded: boolean,
+) => {
+  await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
+  const normalizedName = name.trim().toLowerCase();
+  if (excluded) {
+    await tx.usuallyHave.upsert({
+      where: { householdId_normalizedName: { householdId, normalizedName } },
+      create: { householdId, name: name.trim(), normalizedName },
+      update: {},
+    });
+  } else {
+    await tx.usuallyHave.deleteMany({ where: { householdId, normalizedName } });
+  }
+};
