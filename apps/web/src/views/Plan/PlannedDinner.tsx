@@ -10,14 +10,7 @@ import { ClearDay } from "./ClearDay";
 import Link from "next/link";
 import { useRef } from "react";
 import { RecipeView } from "../Dinners/RecipeView";
-import {
-  ArrowRightLeft,
-  BookOpen,
-  MoreHorizontal,
-  Pencil,
-  ShoppingBasket,
-  X,
-} from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   buildDinnerEditorHref,
@@ -77,7 +70,6 @@ export const PlannedDinner = ({
                     setChangePlan(true);
                   }}
                 >
-                  <ArrowRightLeft className="size-4" />
                   Change Dinner
                 </Button>
                 <Link
@@ -85,7 +77,6 @@ export const PlannedDinner = ({
                   className="hover:bg-muted flex w-full items-center gap-3 border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
                   onClick={closeMenu}
                 >
-                  <BookOpen className="size-4" />
                   Go to cookbook
                 </Link>
                 <Link
@@ -96,7 +87,6 @@ export const PlannedDinner = ({
                   className="hover:bg-muted flex w-full items-center gap-3 border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
                   onClick={closeMenu}
                 >
-                  <Pencil className="size-4" />
                   Edit this Dinner
                 </Link>
                 <Button
@@ -109,7 +99,6 @@ export const PlannedDinner = ({
                     addToShoppingList.mutate({ dinnerIds: [dinner.id] });
                   }}
                 >
-                  <ShoppingBasket className="size-4" />
                   Add to shopping list
                 </Button>
                 <ClearDay
@@ -119,7 +108,6 @@ export const PlannedDinner = ({
                   className="text-destructive hover:bg-destructive/5 hover:text-destructive h-auto w-full justify-start rounded-none border-t px-3.5 py-3 text-[13.5px] font-semibold"
                   onBeforeClear={closeMenu}
                 >
-                  <X className="size-4" />
                   Clear {format(date, "EEEE")}
                 </ClearDay>
               </div>
