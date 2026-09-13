@@ -198,9 +198,8 @@ export const RecipeView = ({
               )}
 
               {part.ingredients.length > 0 && (
-                // max-content sizes the amount column to the part's longest
-                // amount; the column (and its gap) is dropped entirely when
-                // no ingredient in the part has one.
+                // Keep short amounts compact, but wrap long custom units so
+                // the ingredient name always has room.
                 <div
                   ref={
                     partIndex === firstIngredientsPartIndex
@@ -210,7 +209,7 @@ export const RecipeView = ({
                   className={cn(
                     "grid scroll-mt-14 gap-y-1.5 text-[14px] leading-[1.45]",
                     hasAmounts(part)
-                      ? "grid-cols-[max-content_1fr] gap-x-2.5"
+                      ? "grid-cols-[fit-content(40%)_minmax(0,1fr)] gap-x-2.5"
                       : "grid-cols-1",
                     part.name ? "mt-2.5" : "mt-0",
                   )}
@@ -228,9 +227,11 @@ export const RecipeView = ({
                     return (
                       <Fragment key={ingredient.id}>
                         {hasAmounts(part) && (
-                          <span className="font-bold">{amount}</span>
+                          <span className="min-w-0 font-bold [overflow-wrap:anywhere]">
+                            {amount}
+                          </span>
                         )}
-                        <span className="font-medium">
+                        <span className="min-w-0 font-medium [overflow-wrap:anywhere]">
                           {ingredient.name}
                           {ingredient.note && (
                             <span className="text-muted-foreground font-normal italic">

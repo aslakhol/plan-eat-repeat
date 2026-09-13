@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { type Prisma, type PrismaClient } from "@planeatrepeat/db";
+import { normalizeUnit } from "@planeatrepeat/shared";
 import { householdSlugBase } from "~/lib/household";
 
 const SAVE_BURST_WINDOW_MS = 10_000;
@@ -95,7 +96,7 @@ export const projectPublishedDinnerCopy = <T extends PublishedDinnerCopySource>(
         create: part.ingredients.map((ingredient, ingredientIndex) => ({
           name: ingredient.name,
           amount: ingredient.amount,
-          unit: ingredient.unit,
+          unit: normalizeUnit(ingredient.unit),
           note: ingredient.note,
           order: ingredientIndex,
         })),

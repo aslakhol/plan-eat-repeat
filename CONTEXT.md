@@ -15,6 +15,21 @@ _Avoid_: Meal, dish, recipe
 **Recipe**:
 The optional structured cooking content attached to a Dinner. A Recipe may contain multiple named parts, ingredients, and steps; it is not managed independently from its Dinner.
 
+**Recipe Ingredient**:
+A named ingredient within a Recipe part, with an optional positive numeric Amount, Unit, and Ingredient Note. Its name is required; it has no free-text alternative to Amount.
+
+**Amount**:
+The positive number specifying how much of a Recipe Ingredient is needed. An absent Amount leaves the quantity unspecified.
+
+**Unit**:
+The optional measure accompanying a Recipe Ingredient's Amount. It may be a recognised Standard Unit or arbitrary wording such as "cheek" or "handful"; an absent Unit is unspecified and distinct from pieces.
+
+**Standard Unit**:
+A Unit recognised by the application, with a preferred abbreviation and equivalent spellings. Defined conversions relate compatible measurements without depending on the ingredient.
+
+**Ingredient Note**:
+Optional wording accompanying a Recipe Ingredient, such as preparation details or serving instructions.
+
 **Name-only Dinner**:
 A Dinner that has a name but no Recipe or notes.
 _Avoid_: Bare dinner, empty dinner

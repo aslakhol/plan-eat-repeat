@@ -1,21 +1,10 @@
 import { z } from "zod";
-
-export const UNITS = [
-  "g",
-  "kg",
-  "ml",
-  "dl",
-  "l",
-  "tbsp",
-  "tsp",
-  "pcs",
-] as const;
-export type Unit = (typeof UNITS)[number];
+import { normalizeUnit } from "./units";
 
 export const recipeIngredientSchema = z.object({
   name: z.string().trim().min(1),
   amount: z.number().positive().nullable(),
-  unit: z.enum(UNITS).nullable(),
+  unit: z.string().nullable().transform(normalizeUnit),
   note: z.string().trim().min(1).nullable(),
 });
 

@@ -78,13 +78,17 @@ const Ingredients = ({ dinner }: { dinner: PublishedDinner }) => {
                 <div
                   key={`${ingredient.name}-${ingredientIndex}`}
                   className={
-                    amount ? "grid grid-cols-[max-content_1fr] gap-x-3" : ""
+                    amount
+                      ? "grid grid-cols-[fit-content(40%)_minmax(0,1fr)] gap-x-3"
+                      : ""
                   }
                 >
                   {amount && (
-                    <span className="min-w-12 font-bold">{amount}</span>
+                    <span className="min-w-0 font-bold [overflow-wrap:anywhere]">
+                      {amount}
+                    </span>
                   )}
-                  <span className="font-medium">
+                  <span className="min-w-0 font-medium [overflow-wrap:anywhere]">
                     {ingredient.name}
                     {ingredient.note && (
                       <span className="text-muted-foreground font-normal italic">

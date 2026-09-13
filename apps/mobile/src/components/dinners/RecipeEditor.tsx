@@ -123,7 +123,7 @@ const editorIngredient = (ingredient: {
 }) => ({
   name: ingredient.name,
   amount: ingredient.amount === null ? "" : String(ingredient.amount),
-  unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
+  unit: ingredient.unit,
   note: ingredient.note ?? "",
 });
 
@@ -197,7 +197,12 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
     const multiMode =
       watchedParts.length > 1 ||
       watchedParts.some((part) => part.name.trim().length > 0);
-    const ingredientNamesQuery = api.dinner.ingredientNames.useQuery();
+    const ingredientNamesQuery = api.dinner.ingredientNames.useQuery(
+      undefined,
+      {
+        staleTime: 60_000,
+      },
+    );
 
     // Disarm the guard while a save/delete is in flight so the goBack after a
     // successful delete isn't intercepted by the discard prompt.
@@ -257,7 +262,7 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
         >
           <View className="gap-5">
             {showImportReview && (
-              <View className="border-[hsl(18,60%,80%)] bg-[hsl(40,33%,95%)] rounded-md border px-3 py-2">
+              <View className="rounded-md border border-[hsl(18,60%,80%)] bg-[hsl(40,33%,95%)] px-3 py-2">
                 <Text className="text-foreground text-sm font-semibold">
                   {initialValues?.link
                     ? `Imported from ${sourceLabel(initialValues.link)}`
@@ -389,6 +394,9 @@ export const RecipeEditor = forwardRef<RecipeEditorHandle, Props>(
                   ingredientNames={
                     ingredientNamesQuery.data?.ingredientNames ?? []
                   }
+                  ingredientUnits={
+                    ingredientNamesQuery.data?.ingredientUnits ?? UNITS
+                  }
                   canMoveUp={partIndex > 0}
                   canMoveDown={partIndex < parts.fields.length - 1}
                   onMoveUp={() => parts.move(partIndex, partIndex - 1)}
@@ -474,6 +482,7 @@ type PartEditorProps = {
   partIndex: number;
   multiMode: boolean;
   ingredientNames: string[];
+  ingredientUnits: readonly string[];
   canMoveUp: boolean;
   canMoveDown: boolean;
   onMoveUp: () => void;
@@ -486,6 +495,7 @@ function PartEditor({
   partIndex,
   multiMode,
   ingredientNames,
+  ingredientUnits,
   canMoveUp,
   canMoveDown,
   onMoveUp,
@@ -585,6 +595,12 @@ function PartEditor({
           const name = form.watch(
             `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.name`,
           );
+          const unit = form.watch(
+            `recipe.parts.${partIndex}.ingredients.${ingredientIndex}.unit`,
+          );
+          const unitSuggestions = ingredientUnits.filter((candidate) =>
+            candidate.toLowerCase().includes((unit ?? "").trim().toLowerCase()),
+          );
           const ingredientError =
             form.formState.errors.recipe?.parts?.[partIndex]?.ingredients?.[
               ingredientIndex
@@ -630,15 +646,18 @@ function PartEditor({
                   control={form.control}
                   name={`recipe.parts.${partIndex}.ingredients.${ingredientIndex}.unit`}
                   render={({ field }) => (
-                    <Pressable
+                    <Input
+                      value={field.value ?? ""}
+                      onBlur={field.onBlur}
+                      onFocus={() => open(ingredient.id)}
+                      onChangeText={(value) => field.onChange(value || null)}
                       accessibilityLabel={`Ingredient ${ingredientIndex + 1} unit`}
-                      className="border-input h-11 w-[56px] items-center justify-center rounded-md border bg-white"
-                      onPress={() => open(ingredient.id)}
-                    >
-                      <Text className="text-foreground text-sm">
-                        {field.value ?? "–"}
-                      </Text>
-                    </Pressable>
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      placeholder="–"
+                      textAlign="center"
+                      className="h-11 w-[88px] bg-white px-1 py-0"
+                    />
                   )}
                 />
                 <View className="min-w-0 flex-1">
@@ -721,11 +740,11 @@ function PartEditor({
                         keyboardShouldPersistTaps="handled"
                         contentContainerStyle={{ gap: 6 }}
                       >
-                        {[null, ...UNITS].map((unit) => {
+                        {[null, ...unitSuggestions].map((unit) => {
                           const selected = field.value === unit;
                           return (
                             <Pressable
-                              key={unit ?? "none"}
+                              key={unit === null ? "no-unit" : `unit:${unit}`}
                               accessibilityRole="radio"
                               accessibilityState={{ selected }}
                               className={cn(

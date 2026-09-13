@@ -6,6 +6,8 @@ import {
   importErrorMessages,
   MAX_RECIPE_IMPORT_IMAGE_DATA_LENGTH,
   MAX_RECIPE_IMPORT_IMAGES,
+  UNITS,
+  normalizeUnit,
   youtubeVideoIdFromUrl,
   type DinnerWithRecipe,
   type RecipeInput,
@@ -406,10 +408,11 @@ export const dinnerRouter = createTRPCRouter({
 
   ingredientNames: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.householdId) {
-      return { ingredientNames: [] };
+      return { ingredientNames: [], ingredientUnits: [...UNITS] };
     }
 
-    const ingredients = await ctx.db.recipeIngredient.findMany({
+    const ingredients = await ctx.db.recipeIngredient.groupBy({
+      by: ["name", "unit"],
       where: {
         part: {
           dinner: {
@@ -417,13 +420,19 @@ export const dinnerRouter = createTRPCRouter({
           },
         },
       },
-      distinct: ["name"],
-      select: { name: true },
-      orderBy: { name: "asc" },
     });
 
     return {
-      ingredientNames: ingredients.map((ingredient) => ingredient.name),
+      ingredientNames: [...new Set(ingredients.map(({ name }) => name))].sort(),
+      ingredientUnits: [
+        ...new Set([
+          ...UNITS,
+          ...ingredients
+            .map(({ unit }) => normalizeUnit(unit))
+            .filter((unit) => unit !== null)
+            .sort(),
+        ]),
+      ],
     };
   }),
 

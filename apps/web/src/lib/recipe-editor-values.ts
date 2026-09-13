@@ -1,4 +1,4 @@
-import { UNITS, type RecipeInput, type Unit } from "@planeatrepeat/shared";
+import { type RecipeInput } from "@planeatrepeat/shared";
 
 export type RecipeEditorDraftValues = {
   name: string;
@@ -13,7 +13,7 @@ export type RecipeEditorDraftValues = {
       ingredients: Array<{
         name: string;
         amount: string;
-        unit: Unit | null;
+        unit: string | null;
         note: string;
       }>;
       steps: Array<{ text: string }>;
@@ -51,6 +51,6 @@ export const editorIngredientValues = (ingredient: {
 }) => ({
   name: ingredient.name,
   amount: ingredient.amount === null ? "" : String(ingredient.amount),
-  unit: UNITS.find((unit) => unit === ingredient.unit) ?? null,
+  unit: ingredient.unit,
   note: ingredient.note ?? "",
 });
