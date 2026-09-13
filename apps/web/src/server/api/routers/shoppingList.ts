@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeUnit } from "@planeatrepeat/shared";
 import { createTRPCRouter, protectedProcedureWithHousehold } from "../trpc";
 
 export const shoppingListRouter = createTRPCRouter({
@@ -24,6 +25,28 @@ export const shoppingListRouter = createTRPCRouter({
         },
       }),
     ),
+
+  edit: protectedProcedureWithHousehold
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string().trim().min(1, "Enter an item name"),
+        amount: z.number().finite().positive().nullable(),
+        unit: z.string().nullable().transform(normalizeUnit),
+        note: z
+          .string()
+          .trim()
+          .nullable()
+          .transform((note) => (note === "" ? null : note)),
+      }),
+    )
+    .mutation(({ ctx, input }) => {
+      const { id, ...item } = input;
+      return ctx.db.shoppingItem.update({
+        where: { id, householdId: ctx.householdId },
+        data: { ...item, normalizedName: item.name.toLowerCase() },
+      });
+    }),
 
   remove: protectedProcedureWithHousehold
     .input(z.object({ id: z.string() }))

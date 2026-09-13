@@ -55,7 +55,7 @@ const withShoppingList = async (
   }
 };
 
-void test("Household members add literal Shopping Items, read the shared list, and remove them", () =>
+void test("Household members add literal Shopping Items, edit the shared list, and remove them", () =>
   withShoppingList(async ({ caller, member }) => {
     assert.deepEqual(await caller.list(), []);
     const potatoes = await caller.addManual({ name: "2 kg potatoes" });
@@ -73,6 +73,31 @@ void test("Household members add literal Shopping Items, read the shared list, a
         { name: "2 kg potatoes", amount: null, unit: null, note: null },
         { name: "apples", amount: null, unit: null, note: null },
         { name: "Zucchini", amount: null, unit: null, note: null },
+      ],
+    );
+    await member.edit({
+      id: potatoes.id,
+      name: " Yukon potatoes ",
+      amount: 1.5,
+      unit: " kilograms ",
+      note: " For roasting ",
+    });
+    const edited = await caller.list();
+    assert.deepEqual(
+      edited.map(({ name }) => name),
+      ["apples", "Yukon potatoes", "Zucchini"],
+    );
+    assert.deepEqual(
+      edited
+        .filter(({ id }) => id === potatoes.id)
+        .map(({ name, amount, unit, note }) => ({ name, amount, unit, note })),
+      [
+        {
+          name: "Yukon potatoes",
+          amount: 1.5,
+          unit: "kg",
+          note: "For roasting",
+        },
       ],
     );
     await member.remove({ id: potatoes.id });
