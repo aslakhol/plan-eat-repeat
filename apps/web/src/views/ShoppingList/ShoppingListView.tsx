@@ -117,10 +117,17 @@ export function ShoppingListView() {
       <header className="mb-4 flex items-center justify-between gap-3">
         <h1 className="font-serif text-[30px] leading-tight">Shopping list</h1>
         <DetailsMenu ref={menuRef} className="relative">
-          <summary className="border-border text-muted-foreground flex size-9 cursor-pointer list-none items-center justify-center rounded-full border [&::-webkit-details-marker]:hidden">
-            <MoreHorizontal className="size-5" />
-            <span className="sr-only">Shopping list actions</span>
-          </summary>
+          <Button
+            asChild
+            variant="outline"
+            size="icon"
+            className="size-9 shrink-0 rounded-full bg-white"
+          >
+            <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+              <MoreHorizontal className="size-4" />
+              <span className="sr-only">Shopping list actions</span>
+            </summary>
+          </Button>
           <div className="border-border absolute right-0 z-20 mt-2 w-44 rounded-xl border bg-white p-1 shadow-lg">
             <Link
               href="/shopping-list/usually-have"
