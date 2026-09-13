@@ -30,11 +30,15 @@ import { useDinnerWakeLock } from "~/hooks/use-keep-screen-awake";
 import { DinnerMergeSheet } from "./DinnerMergeSheet";
 import { DetailsMenu } from "~/components/ui/details-menu";
 import { ShareDinnerView } from "./ShareDinnerView";
+import { useAddDinnersToShoppingList } from "~/hooks/use-add-dinners-to-shopping-list";
 
 export const DinnerDetail = () => {
   const router = useRouter();
   const posthog = usePostHog();
   const utils = api.useUtils();
+  const addToShoppingList = useAddDinnersToShoppingList(async () => {
+    await router.replace("/dinners");
+  });
   const { today, query: summariesQuery } = useDinnerSummaries();
   const [editing, setEditing] = useState(false);
   const [planning, setPlanning] = useState(false);
@@ -258,6 +262,17 @@ export const DinnerDetail = () => {
                 }}
               >
                 {favourite ? "Remove from favourites" : "Add to favourites"}
+              </button>
+              <button
+                type="button"
+                disabled={addToShoppingList.isPending}
+                className="hover:bg-muted w-full border-t px-3.5 py-3 text-left text-[13.5px] font-semibold disabled:opacity-50"
+                onClick={() => {
+                  closeActionMenu();
+                  addToShoppingList.mutate({ dinnerIds: [dinner.id] });
+                }}
+              >
+                Add to shopping list
               </button>
               {summariesQuery.isSuccess &&
                 summariesQuery.data.dinners.length >= 2 &&

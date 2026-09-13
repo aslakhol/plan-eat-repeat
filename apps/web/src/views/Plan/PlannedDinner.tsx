@@ -15,6 +15,7 @@ import {
   BookOpen,
   MoreHorizontal,
   Pencil,
+  ShoppingBasket,
   X,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
@@ -24,6 +25,7 @@ import {
 } from "~/lib/editor-navigation";
 import { useDinnerWakeLock } from "~/hooks/use-keep-screen-awake";
 import { DetailsMenu } from "~/components/ui/details-menu";
+import { useAddDinnersToShoppingList } from "~/hooks/use-add-dinners-to-shopping-list";
 
 type Props = {
   dinner: DinnerWithRecipe;
@@ -41,6 +43,7 @@ export const PlannedDinner = ({
   isOpen,
 }: Props) => {
   const menuRef = useRef<HTMLDetailsElement>(null);
+  const addToShoppingList = useAddDinnersToShoppingList(closeDialog);
   useDinnerWakeLock(isOpen);
 
   const closeMenu = () => menuRef.current?.removeAttribute("open");
@@ -96,6 +99,19 @@ export const PlannedDinner = ({
                   <Pencil className="size-4" />
                   Edit this Dinner
                 </Link>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={addToShoppingList.isPending}
+                  className="h-auto w-full justify-start rounded-none border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                  onClick={() => {
+                    closeMenu();
+                    addToShoppingList.mutate({ dinnerIds: [dinner.id] });
+                  }}
+                >
+                  <ShoppingBasket className="size-4" />
+                  Add to shopping list
+                </Button>
                 <ClearDay
                   date={date}
                   closeDialog={closeDialog}
