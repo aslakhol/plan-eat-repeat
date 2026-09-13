@@ -67,9 +67,15 @@ function ShoppingItemRow({
         )}
       </button>
       {(item.amount !== null || item.unit !== null) && (
-        <span className="bg-background border-border max-w-[35%] rounded-lg border px-2 py-1 text-sm font-semibold [overflow-wrap:anywhere]">
+        <button
+          type="button"
+          aria-label={`Edit quantity for ${item.name}`}
+          onClick={onEdit}
+          disabled={removing}
+          className="bg-background border-border hover:bg-accent focus-visible:ring-ring max-w-[35%] rounded-lg border px-2 py-1 text-sm font-semibold outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
+        >
           {[item.amount, item.unit].filter((value) => value !== null).join(" ")}
-        </span>
+        </button>
       )}
       <button
         type="button"
