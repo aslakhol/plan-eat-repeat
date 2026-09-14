@@ -19,10 +19,68 @@ type OrderableDinnerSummary = NamedDinner & {
   lastCookedDate: Date | null;
 };
 
-type FilterableDinnerSummary = {
+export type FilterableDinnerSummary = {
   name: string;
   tags: ReadonlyArray<{ value: string }>;
+  hasLink?: boolean;
+  hasNotes?: boolean;
+  hasRecipe?: boolean;
 };
+
+export type DinnerContentSummary = {
+  hasLink: boolean;
+  hasRecipe: boolean;
+  hasNotes: boolean;
+};
+
+export const dinnerContentFilterOptions = [
+  { value: "has-link", label: "Has link", field: "hasLink", present: true },
+  { value: "no-link", label: "No link", field: "hasLink", present: false },
+  {
+    value: "has-recipe",
+    label: "Has recipe",
+    field: "hasRecipe",
+    present: true,
+  },
+  {
+    value: "no-recipe",
+    label: "No recipe",
+    field: "hasRecipe",
+    present: false,
+  },
+  { value: "has-notes", label: "Has notes", field: "hasNotes", present: true },
+  { value: "no-notes", label: "No notes", field: "hasNotes", present: false },
+] as const;
+
+export type DinnerContentFilter =
+  (typeof dinnerContentFilterOptions)[number]["value"];
+
+export const toggleDinnerContentFilter = (
+  selected: readonly DinnerContentFilter[],
+  value: DinnerContentFilter,
+): DinnerContentFilter[] => {
+  const option = dinnerContentFilterOptions.find(
+    (option) => option.value === value,
+  )!;
+  const remaining = selected.filter(
+    (selectedValue) =>
+      !dinnerContentFilterOptions.some(
+        (other) =>
+          other.value === selectedValue && other.field === option.field,
+      ),
+  );
+  return selected.includes(value) ? remaining : [...remaining, value];
+};
+
+export const matchesDinnerContentFilters = (
+  dinner: Pick<FilterableDinnerSummary, "hasLink" | "hasNotes" | "hasRecipe">,
+  selected: readonly DinnerContentFilter[],
+) =>
+  dinnerContentFilterOptions.every((option) => {
+    if (!selected.includes(option.value)) return true;
+    const present = Boolean(dinner[option.field]);
+    return present === option.present;
+  });
 
 export type DinnerTagCount = {
   value: string;
@@ -98,6 +156,7 @@ export const filterDinnerSummaries = <Dinner extends FilterableDinnerSummary>(
   dinners: readonly Dinner[],
   search: string,
   selectedTags: readonly string[],
+  selectedContentFilters: readonly DinnerContentFilter[] = [],
 ): Dinner[] => {
   const normalisedSearch = normaliseCollectionText(search);
 
@@ -111,7 +170,11 @@ export const filterDinnerSummaries = <Dinner extends FilterableDinnerSummary>(
       dinner.tags.some((tag) => tag.value === selectedTag),
     );
 
-    return matchesSearch && matchesTags;
+    return (
+      matchesSearch &&
+      matchesTags &&
+      matchesDinnerContentFilters(dinner, selectedContentFilters)
+    );
   });
 };
 
@@ -204,16 +267,19 @@ export const deriveDinnerCollection = <
   controls: {
     search: string;
     selectedTags: readonly string[];
+    selectedContentFilters?: readonly DinnerContentFilter[];
     sort: CookbookSort;
   },
 ) => {
   const hasActiveFilters =
     normaliseCollectionText(controls.search).length > 0 ||
-    controls.selectedTags.length > 0;
+    controls.selectedTags.length > 0 ||
+    (controls.selectedContentFilters?.length ?? 0) > 0;
   const matchingDinners = filterDinnerSummaries(
     dinners,
     controls.search,
     controls.selectedTags,
+    controls.selectedContentFilters,
   );
   const orderedDinners = orderDinnerSummaries(matchingDinners, controls.sort);
   const firstNonFavouriteIndex = orderedDinners.findIndex(
@@ -249,6 +315,7 @@ export const deriveDinnerPickerCollection = <
     excludedDinnerId?: number;
     search: string;
     selectedTags: readonly string[];
+    selectedContentFilters?: readonly DinnerContentFilter[];
     sort: CookbookSort;
   },
 ) => {

@@ -326,7 +326,11 @@ export const dinnerRouter = createTRPCRouter({
         return { dinners: [] };
       }
 
-      const dinners = await householdDinnersWithTags(ctx.db, householdId);
+      const dinners = await ctx.db.dinner.findMany({
+        where: { householdId },
+        include: { tags: true, _count: { select: { parts: true } } },
+        orderBy: [{ name: "asc" }, { id: "asc" }],
+      });
       const dinnerIds = dinners.map((dinner) => dinner.id);
 
       if (dinnerIds.length === 0) {
@@ -367,10 +371,13 @@ export const dinnerRouter = createTRPCRouter({
       }
 
       return {
-        dinners: dinners.map((dinner) => {
+        dinners: dinners.map(({ _count, ...dinner }) => {
           const history = pastPlansByDinner.get(dinner.id);
           return {
             ...dinner,
+            hasLink: Boolean(dinner.link?.trim()),
+            hasRecipe: _count.parts > 0,
+            hasNotes: Boolean(dinner.notes?.trim()),
             lastCookedDate: history?._max.date ?? null,
             cookingFrequency: history?._count._all ?? 0,
             currentWeekPlanDates: currentWeekPlansByDinner.get(dinner.id) ?? [],

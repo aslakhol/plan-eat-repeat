@@ -1,8 +1,13 @@
-import { compareDinnerNames, filterDinnerSummaries } from "~/lib/cookbook";
+import {
+  compareDinnerNames,
+  filterDinnerSummaries,
+  type DinnerContentFilter,
+  type DinnerContentSummary,
+} from "~/lib/cookbook";
 
 export type SharedDinnerSort = "recent" | "az" | "most-saved";
 
-type SharedDinnerSummary = {
+type SharedDinnerSummary = DinnerContentSummary & {
   id: number;
   name: string;
   tags: ReadonlyArray<{ value: string }>;
@@ -33,6 +38,7 @@ export const deriveSharedDinnerCollection = <
   controls: {
     search: string;
     selectedTags: readonly string[];
+    selectedContentFilters?: readonly DinnerContentFilter[];
     sort: SharedDinnerSort;
   },
 ) => {
@@ -40,6 +46,7 @@ export const deriveSharedDinnerCollection = <
     dinners,
     controls.search,
     controls.selectedTags,
+    controls.selectedContentFilters,
   );
   const ordered = [...filtered].sort((left, right) => {
     if (controls.sort === "az") return compareDinnerNames(left, right);

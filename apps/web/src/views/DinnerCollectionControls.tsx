@@ -12,6 +12,11 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
   buildDinnerTagGroups,
+  dinnerContentFilterOptions,
+  matchesDinnerContentFilters,
+  toggleDinnerContentFilter,
+  type DinnerContentFilter,
+  type DinnerContentSummary,
   filterDinnerSummaries,
   matchesDinnerCollectionText,
   type CookbookSort,
@@ -19,7 +24,7 @@ import {
 } from "~/lib/cookbook";
 import { cn } from "~/lib/utils";
 
-type CollectionDinner = {
+type CollectionDinner = DinnerContentSummary & {
   name: string;
   tags: ReadonlyArray<{ value: string }>;
 };
@@ -42,6 +47,8 @@ type Props<Sort extends string> = {
   onSearchChange: (search: string) => void;
   selectedTags: string[];
   onSelectedTagsChange: (tags: string[]) => void;
+  selectedContentFilters: DinnerContentFilter[];
+  onSelectedContentFiltersChange: (filters: DinnerContentFilter[]) => void;
   sort: Sort;
   onSortChange: (sort: Sort) => void;
   placeholder?: string;
@@ -58,6 +65,8 @@ export const DinnerCollectionControls = <Sort extends string = CookbookSort>({
   onSearchChange,
   selectedTags,
   onSelectedTagsChange,
+  selectedContentFilters,
+  onSelectedContentFiltersChange,
   sort,
   onSortChange,
   placeholder = "Search dinners…",
@@ -68,6 +77,9 @@ export const DinnerCollectionControls = <Sort extends string = CookbookSort>({
 }: Props<Sort>) => {
   const [tagFilterOpen, setTagFilterOpen] = useState(false);
   const [draftTags, setDraftTags] = useState<string[]>(selectedTags);
+  const [draftContentFilters, setDraftContentFilters] = useState(
+    selectedContentFilters,
+  );
   const [tagSearch, setTagSearch] = useState("");
   const hasTagFilterHistoryEntry = useRef(false);
 
@@ -85,6 +97,7 @@ export const DinnerCollectionControls = <Sort extends string = CookbookSort>({
 
   const openTagFilter = () => {
     setDraftTags(selectedTags);
+    setDraftContentFilters(selectedContentFilters);
     setTagSearch("");
     window.history.pushState(window.history.state, "", window.location.href);
     hasTagFilterHistoryEntry.current = true;
@@ -124,7 +137,7 @@ export const DinnerCollectionControls = <Sort extends string = CookbookSort>({
           className={cn(
             "h-11 w-11 shrink-0 rounded-lg",
             filterButtonClassName,
-            selectedTags.length > 0 &&
+            (selectedTags.length > 0 || selectedContentFilters.length > 0) &&
               "border-primary bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
           )}
           onClick={openTagFilter}
@@ -133,11 +146,26 @@ export const DinnerCollectionControls = <Sort extends string = CookbookSort>({
         </Button>
       </div>
 
-      {selectedTags.length > 0 && (
-        <div className="flex flex-wrap gap-2" aria-label="Active tag filters">
+      {(selectedTags.length > 0 || selectedContentFilters.length > 0) && (
+        <div className="flex flex-wrap gap-2" aria-label="Active filters">
+          {dinnerContentFilterOptions
+            .filter((option) => selectedContentFilters.includes(option.value))
+            .map((option) => (
+              <ActiveTagChip
+                key={option.value}
+                tag={option.label}
+                onRemove={() =>
+                  onSelectedContentFiltersChange(
+                    selectedContentFilters.filter(
+                      (value) => value !== option.value,
+                    ),
+                  )
+                }
+              />
+            ))}
           {selectedTags.map((tag) => (
             <ActiveTagChip
-              key={tag}
+              key={`tag:${tag}`}
               tag={tag}
               onRemove={() =>
                 onSelectedTagsChange(
@@ -173,12 +201,16 @@ export const DinnerCollectionControls = <Sort extends string = CookbookSort>({
         }}
         dinners={dinners}
         tagVocabularyDinners={tagVocabularyDinners}
+        search={search}
+        draftContentFilters={draftContentFilters}
+        onDraftContentFiltersChange={setDraftContentFilters}
         draftTags={draftTags}
         onDraftTagsChange={setDraftTags}
         tagSearch={tagSearch}
         onTagSearchChange={setTagSearch}
         onApply={() => {
           onSelectedTagsChange(draftTags);
+          onSelectedContentFiltersChange(draftContentFilters);
           closeTagFilter();
         }}
       />
@@ -209,6 +241,9 @@ type TagFilterSheetProps = {
   onOpenChange: (open: boolean) => void;
   dinners: readonly CollectionDinner[];
   tagVocabularyDinners: readonly CollectionDinner[];
+  search: string;
+  draftContentFilters: DinnerContentFilter[];
+  onDraftContentFiltersChange: (filters: DinnerContentFilter[]) => void;
   draftTags: string[];
   onDraftTagsChange: (tags: string[]) => void;
   tagSearch: string;
@@ -221,6 +256,9 @@ const TagFilterSheet = ({
   onOpenChange,
   dinners,
   tagVocabularyDinners,
+  search,
+  draftContentFilters,
+  onDraftContentFiltersChange,
   draftTags,
   onDraftTagsChange,
   tagSearch,
@@ -234,7 +272,25 @@ const TagFilterSheet = ({
   const all = groups.all.filter((tag) =>
     matchesDinnerCollectionText(tag.value, tagSearch),
   );
-  const matchingCount = filterDinnerSummaries(dinners, "", draftTags).length;
+  const selectedContentOptions = dinnerContentFilterOptions.filter((option) =>
+    draftContentFilters.includes(option.value),
+  );
+  const otherOptions = dinnerContentFilterOptions.filter(
+    (option) =>
+      !draftContentFilters.includes(option.value) &&
+      matchesDinnerCollectionText(option.label, tagSearch),
+  );
+  const matchingCount = filterDinnerSummaries(
+    dinners,
+    search,
+    draftTags,
+    draftContentFilters,
+  ).length;
+  const toggleContentFilter = (value: DinnerContentFilter) => {
+    onDraftContentFiltersChange(
+      toggleDinnerContentFilter(draftContentFilters, value),
+    );
+  };
   const toggleTag = (tag: string) => {
     onDraftTagsChange(
       draftTags.includes(tag)
@@ -247,10 +303,10 @@ const TagFilterSheet = ({
     <ResponsiveModal open={open} onOpenChange={onOpenChange}>
       <ResponsiveModalContent className="flex h-[min(88dvh,760px)] max-h-[88dvh] flex-col overflow-hidden bg-white md:max-w-xl">
         <ResponsiveModalTitle className="sr-only">
-          Filter Dinners by tag
+          Filter dinners
         </ResponsiveModalTitle>
         <ResponsiveModalDescription className="sr-only">
-          Choose one or more tags. Dinners must match every selected tag.
+          Dinners must match every selected filter.
         </ResponsiveModalDescription>
 
         <Input
@@ -264,11 +320,20 @@ const TagFilterSheet = ({
         />
 
         <ResponsiveModalScrollViewport className="min-h-0 flex-1 space-y-7 py-5">
-          {groups.selected.length > 0 && (
+          {(groups.selected.length > 0 ||
+            selectedContentOptions.length > 0) && (
             <TagSection label="Selected">
+              {selectedContentOptions.map((option) => (
+                <TagChoice
+                  key={option.value}
+                  tag={{ value: option.label, count: 0 }}
+                  selected
+                  onClick={() => toggleContentFilter(option.value)}
+                />
+              ))}
               {groups.selected.map((tag) => (
                 <TagChoice
-                  key={tag.value}
+                  key={`tag:${tag.value}`}
                   tag={tag}
                   selected
                   onClick={() => toggleTag(tag.value)}
@@ -276,7 +341,10 @@ const TagFilterSheet = ({
               ))}
               <button
                 type="button"
-                onClick={() => onDraftTagsChange([])}
+                onClick={() => {
+                  onDraftTagsChange([]);
+                  onDraftContentFiltersChange([]);
+                }}
                 className="text-muted-foreground rounded-full border border-dashed px-3 py-1.5 text-xs font-semibold"
               >
                 Clear all
@@ -308,11 +376,30 @@ const TagFilterSheet = ({
             </TagSection>
           )}
 
-          {mostUsed.length === 0 && all.length === 0 && (
-            <p className="text-muted-foreground py-8 text-center text-sm">
-              No tags match.
-            </p>
+          {otherOptions.length > 0 && (
+            <TagSection label="Other">
+              {otherOptions.map((option) => (
+                <TagChoice
+                  key={option.value}
+                  tag={{
+                    value: option.label,
+                    count: tagVocabularyDinners.filter((dinner) =>
+                      matchesDinnerContentFilters(dinner, [option.value]),
+                    ).length,
+                  }}
+                  onClick={() => toggleContentFilter(option.value)}
+                />
+              ))}
+            </TagSection>
           )}
+
+          {mostUsed.length === 0 &&
+            all.length === 0 &&
+            otherOptions.length === 0 && (
+              <p className="text-muted-foreground py-8 text-center text-sm">
+                No filters match.
+              </p>
+            )}
         </ResponsiveModalScrollViewport>
 
         <Button

@@ -9,6 +9,7 @@ import {
   publicDinnerListUrl,
   publicSlugForHousehold,
 } from "./public-dinner-list";
+import { deriveSharedDinnerCollection } from "./shared-dinners";
 import { PublicDinnerListUnavailable } from "../views/PublicDinnerList/PublicDinnerListUnavailable";
 import { PublicDinnerListView } from "../views/PublicDinnerList/PublicDinnerListView";
 
@@ -37,6 +38,9 @@ void test("Public Dinner List searches names and tags and requires every selecte
       name: "Crème brûlée",
       publicSlug: "creme-brulee-one",
       publishedAt: "2026-08-20T12:00:00.000Z",
+      hasLink: false,
+      hasRecipe: false,
+      hasNotes: false,
       saveCount: 2,
       tags: ["Dessert", "French"],
     },
@@ -44,6 +48,9 @@ void test("Public Dinner List searches names and tags and requires every selecte
       name: "Friday curry",
       publicSlug: "friday-curry-two",
       publishedAt: "2026-08-21T12:00:00.000Z",
+      hasLink: false,
+      hasRecipe: false,
+      hasNotes: false,
       saveCount: 4,
       tags: ["Quick", "Indian"],
     },
@@ -51,6 +58,9 @@ void test("Public Dinner List searches names and tags and requires every selecte
       name: "Quick noodles",
       publicSlug: "quick-noodles-three",
       publishedAt: "2026-08-22T12:00:00.000Z",
+      hasLink: false,
+      hasRecipe: false,
+      hasNotes: false,
       saveCount: 0,
       tags: ["Quick", "Vegetarian"],
     },
@@ -88,6 +98,9 @@ void test("Public Dinner List applies all three public sorts with deterministic 
       name: "Apple stew",
       publicSlug: "apple-stew-b",
       publishedAt: "2026-08-20T12:00:00.000Z",
+      hasLink: false,
+      hasRecipe: false,
+      hasNotes: false,
       saveCount: 2,
       tags: [],
     },
@@ -95,6 +108,9 @@ void test("Public Dinner List applies all three public sorts with deterministic 
       name: "Apple stew",
       publicSlug: "apple-stew-a",
       publishedAt: "2026-08-20T12:00:00.000Z",
+      hasLink: false,
+      hasRecipe: false,
+      hasNotes: false,
       saveCount: 2,
       tags: [],
     },
@@ -102,6 +118,9 @@ void test("Public Dinner List applies all three public sorts with deterministic 
       name: "Ziti",
       publicSlug: "ziti-newest",
       publishedAt: "2026-08-22T12:00:00.000Z",
+      hasLink: false,
+      hasRecipe: false,
+      hasNotes: false,
       saveCount: 1,
       tags: [],
     },
@@ -141,6 +160,9 @@ void test("a Public Dinner List renders Household attribution and Published Dinn
             name: "Spaghetti Carbonara",
             publicSlug: "spaghetti-carbonara-dinner1",
             publishedAt: "2026-08-12T12:00:00.000Z",
+            hasLink: false,
+            hasRecipe: false,
+            hasNotes: false,
             saveCount: 2,
             tags: ["Quick", "Pasta"],
           },
@@ -162,6 +184,9 @@ void test("server markup links every Published Dinner", () => {
     name: `Dinner ${index + 1}`,
     publicSlug: `dinner-${index + 1}`,
     publishedAt: `2026-08-${String(20 - index).padStart(2, "0")}T12:00:00.000Z`,
+    hasLink: false,
+    hasRecipe: false,
+    hasNotes: false,
     saveCount: 0,
     tags: [],
   }));
@@ -186,4 +211,54 @@ void test("an inactive Public Dinner List renders the public unavailable experie
   assert.match(html, /This page is no longer shared/);
   assert.match(html, /Continue to Plan Eat Repeat/);
   assert.doesNotMatch(html, /0 dinners shared/);
+});
+
+void test("Public and shared lists combine content filters with tags and search", () => {
+  const dinners = [
+    {
+      id: 1,
+      name: "Bean chilli",
+      publicSlug: "chilli",
+      publishedAt: "2026-08-20T12:00:00.000Z",
+      saveCount: 0,
+      tags: ["Quick"],
+      hasLink: true,
+      hasRecipe: true,
+      hasNotes: false,
+    },
+    {
+      id: 2,
+      name: "Bean stew",
+      publicSlug: "stew",
+      publishedAt: "2026-08-20T12:00:00.000Z",
+      saveCount: 0,
+      tags: ["Quick"],
+      hasLink: true,
+      hasRecipe: true,
+      hasNotes: true,
+    },
+  ];
+  const controls = {
+    search: "bean",
+    selectedTags: ["Quick"],
+    selectedContentFilters: ["has-recipe", "no-notes"] as const,
+    sort: "az" as const,
+  };
+  assert.deepEqual(
+    derivePublicDinnerList(dinners, controls).dinners.map(
+      (dinner) => dinner.id,
+    ),
+    [1],
+  );
+  const shared = dinners.map((dinner) => ({
+    ...dinner,
+    publishedAt: new Date(dinner.publishedAt),
+    tags: dinner.tags.map((value) => ({ value })),
+  }));
+  assert.deepEqual(
+    deriveSharedDinnerCollection(shared, controls).dinners.map(
+      (dinner) => dinner.id,
+    ),
+    [1],
+  );
 });

@@ -8,6 +8,7 @@ import {
   filterDinnerSummaries,
   formatDinnerSummaryLabel,
   orderDinnerSummaries,
+  toggleDinnerContentFilter,
 } from "./cookbook";
 
 const summary = (
@@ -371,4 +372,105 @@ void test("summary label formats ISO-week recency through 52 weeks, then over a 
   assert.equal(labelFor(new Date(2026, 7, 3)), "1 wk ago");
   assert.equal(labelFor(new Date(2025, 7, 13)), "52 wks ago");
   assert.equal(labelFor(new Date(2025, 7, 4)), "over a year ago");
+});
+
+void test("Content filters match presence and absence independently of real tags", () => {
+  const dinners = [
+    {
+      ...summary(1, "Bean chilli"),
+      tags: [{ value: "Quick" }],
+      hasLink: true,
+      hasRecipe: false,
+      hasNotes: true,
+    },
+    {
+      ...summary(2, "Bean stew"),
+      tags: [{ value: "Quick" }],
+      hasLink: false,
+      hasRecipe: true,
+      hasNotes: false,
+    },
+    {
+      ...summary(3, "Soup"),
+      tags: [{ value: "Has link" }],
+      hasLink: false,
+      hasRecipe: false,
+      hasNotes: false,
+    },
+  ];
+  assert.deepEqual(
+    filterDinnerSummaries(dinners, "", [], ["has-link"]).map(
+      (dinner) => dinner.id,
+    ),
+    [1],
+  );
+  assert.deepEqual(
+    filterDinnerSummaries(dinners, "", [], ["no-link"]).map(
+      (dinner) => dinner.id,
+    ),
+    [2, 3],
+  );
+  assert.deepEqual(
+    filterDinnerSummaries(dinners, "", [], ["has-recipe"]).map(
+      (dinner) => dinner.id,
+    ),
+    [2],
+  );
+  assert.deepEqual(
+    filterDinnerSummaries(dinners, "", [], ["no-recipe"]).map(
+      (dinner) => dinner.id,
+    ),
+    [1, 3],
+  );
+  assert.deepEqual(
+    filterDinnerSummaries(dinners, "", [], ["has-notes"]).map(
+      (dinner) => dinner.id,
+    ),
+    [1],
+  );
+  assert.deepEqual(
+    filterDinnerSummaries(dinners, "", [], ["no-notes"]).map(
+      (dinner) => dinner.id,
+    ),
+    [2, 3],
+  );
+  assert.deepEqual(
+    filterDinnerSummaries(dinners, "", ["Has link"]).map((dinner) => dinner.id),
+    [3],
+  );
+
+  const collection = deriveDinnerCollection(dinners, {
+    search: "bean",
+    selectedTags: ["Quick"],
+    selectedContentFilters: ["no-link", "has-recipe", "no-notes"],
+    sort: "az",
+  });
+  assert.deepEqual(
+    collection.dinners.map((dinner) => dinner.id),
+    [2],
+  );
+  assert.equal(collection.matchingCount, 1);
+  assert.equal(collection.hasActiveFilters, true);
+  assert.equal(
+    deriveDinnerPickerCollection(dinners, {
+      excludedDinnerId: 2,
+      search: "",
+      selectedTags: [],
+      selectedContentFilters: ["has-recipe"],
+      sort: "az",
+    }).emptyState,
+    "no-matches",
+  );
+});
+
+void test("Content filter toggles replace the opposite choice and retain other fields", () => {
+  assert.deepEqual(toggleDinnerContentFilter([], "has-link"), ["has-link"]);
+  assert.deepEqual(
+    toggleDinnerContentFilter(["has-link", "has-notes"], "no-link"),
+    ["has-notes", "no-link"],
+  );
+  assert.deepEqual(
+    toggleDinnerContentFilter(["no-link", "has-notes"], "no-link"),
+    ["has-notes"],
+  );
 });
