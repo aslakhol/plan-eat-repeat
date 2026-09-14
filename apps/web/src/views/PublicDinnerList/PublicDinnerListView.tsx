@@ -1,3 +1,4 @@
+import { type DinnerContentFilter } from "~/lib/cookbook";
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
 
@@ -96,7 +97,7 @@ const NoMatches = ({ onClear }: { onClear: () => void }) => (
   <div className="flex min-h-48 flex-col items-center justify-center gap-3 px-4 text-center md:col-span-3">
     <h2 className="font-serif text-xl">No dinners match</h2>
     <p className="text-muted-foreground text-sm">
-      Try another search or clear the selected tags.
+      Try another search or clear the filters.
     </p>
     <Button type="button" variant="outline" onClick={onClear}>
       Clear filters
@@ -111,11 +112,14 @@ export const PublicDinnerListView = ({
 }) => {
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedContentFilters, setSelectedContentFilters] = useState<
+    DinnerContentFilter[]
+  >([]);
   const [sort, setSort] = useState<PublicDinnerListSort>("recent");
   const controlDinners = useMemo(
     () =>
       dinnerList.dinners.map((dinner) => ({
-        name: dinner.name,
+        ...dinner,
         tags: dinner.tags.map((value) => ({ value })),
       })),
     [dinnerList.dinners],
@@ -123,12 +127,14 @@ export const PublicDinnerListView = ({
   const publicDinnerList = derivePublicDinnerList(dinnerList.dinners, {
     search,
     selectedTags,
+    selectedContentFilters,
     sort,
   });
 
   const clearFilters = () => {
     setSearch("");
     setSelectedTags([]);
+    setSelectedContentFilters([]);
   };
 
   return (
@@ -169,6 +175,8 @@ export const PublicDinnerListView = ({
             onSearchChange={setSearch}
             selectedTags={selectedTags}
             onSelectedTagsChange={setSelectedTags}
+            selectedContentFilters={selectedContentFilters}
+            onSelectedContentFiltersChange={setSelectedContentFilters}
             sort={sort}
             onSortChange={setSort}
             sortOptions={publicDinnerListSortOptions}

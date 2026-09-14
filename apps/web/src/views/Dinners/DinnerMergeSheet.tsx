@@ -17,6 +17,7 @@ import {
   deriveDinnerCollection,
   formatDinnerSummaryLabel,
   type CookbookSort,
+  type DinnerContentFilter,
 } from "~/lib/cookbook";
 import { cn } from "~/lib/utils";
 import { api, type RouterOutputs } from "~/utils/api";
@@ -43,12 +44,6 @@ type PeekLine = {
   muted?: boolean;
   truncate?: boolean;
 };
-
-const sortOptions = [
-  { value: "az" as const, label: "A–Z" },
-  { value: "not-lately" as const, label: "Haven't had lately" },
-  { value: "favourites" as const, label: "Favourites" },
-];
 
 const plural = (count: number, singular: string, pluralForm = `${singular}s`) =>
   `${count} ${count === 1 ? singular : pluralForm}`;
@@ -110,6 +105,9 @@ export const DinnerMergeSheet = ({
   const utils = api.useUtils();
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedContentFilters, setSelectedContentFilters] = useState<
+    DinnerContentFilter[]
+  >([]);
   const [sort, setSort] = useState<CookbookSort>("az");
   const [loadingCandidateId, setLoadingCandidateId] = useState<number | null>(
     null,
@@ -215,6 +213,8 @@ export const DinnerMergeSheet = ({
           }}
           onSearchChange={setSearch}
           onSelectedTagsChange={setSelectedTags}
+          selectedContentFilters={selectedContentFilters}
+          onSelectedContentFiltersChange={setSelectedContentFilters}
           onSortChange={setSort}
           onChoose={(summary) => void chooseCandidate(summary)}
         />
@@ -229,12 +229,14 @@ type PickerContentProps = {
   today: Date;
   search: string;
   selectedTags: string[];
+  selectedContentFilters: DinnerContentFilter[];
   sort: CookbookSort;
   loadingCandidateId: number | null;
   viewportRef: React.RefObject<HTMLDivElement | null>;
   onViewportScroll: (scrollTop: number) => void;
   onSearchChange: (search: string) => void;
   onSelectedTagsChange: (tags: string[]) => void;
+  onSelectedContentFiltersChange: (filters: DinnerContentFilter[]) => void;
   onSortChange: (sort: CookbookSort) => void;
   onChoose: (summary: DinnerSummary) => void;
 };
@@ -245,18 +247,21 @@ const PickerContent = ({
   today,
   search,
   selectedTags,
+  selectedContentFilters,
   sort,
   loadingCandidateId,
   viewportRef,
   onViewportScroll,
   onSearchChange,
   onSelectedTagsChange,
+  onSelectedContentFiltersChange,
   onSortChange,
   onChoose,
 }: PickerContentProps) => {
   const collection = deriveDinnerCollection(dinners, {
     search,
     selectedTags,
+    selectedContentFilters,
     sort,
   });
   const actionableCount = collection.dinners.filter(
@@ -271,6 +276,7 @@ const PickerContent = ({
   const clearFilters = () => {
     onSearchChange("");
     onSelectedTagsChange([]);
+    onSelectedContentFiltersChange([]);
   };
 
   return (
@@ -290,10 +296,11 @@ const PickerContent = ({
         onSearchChange={onSearchChange}
         selectedTags={selectedTags}
         onSelectedTagsChange={onSelectedTagsChange}
+        selectedContentFilters={selectedContentFilters}
+        onSelectedContentFiltersChange={onSelectedContentFiltersChange}
         sort={sort}
         onSortChange={onSortChange}
         placeholder="Search dinners…"
-        sortOptions={sortOptions}
         className="shrink-0"
       />
 
@@ -332,13 +339,12 @@ const PickerContent = ({
                 </Button>
               </div>
             )}
-
           </div>
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-3 px-4 text-center">
             <h2 className="font-serif text-xl">No dinners match</h2>
             <p className="text-muted-foreground text-sm">
-              Try another search or clear the selected tags.
+              Try another search or clear the filters.
             </p>
             <Button type="button" variant="outline" onClick={clearFilters}>
               Clear filters

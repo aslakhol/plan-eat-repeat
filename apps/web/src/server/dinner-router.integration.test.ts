@@ -342,3 +342,45 @@ void test("ingredient suggestions include distinct units from only the caller's 
       ],
     });
   }));
+
+void test("Dinner summaries expose content presence without loading recipe parts", () =>
+  withDinnerCaller(async ({ caller, db, householdId, marker }) => {
+    await db.dinner.create({
+      data: {
+        name: `With content ${marker}`,
+        householdId,
+        link: "https://example.com/recipe",
+        notes: "Serve warm",
+        parts: {
+          create: { order: 0, steps: { create: { order: 0, text: "Cook" } } },
+        },
+      },
+    });
+    await db.dinner.create({
+      data: {
+        name: `Without content ${marker}`,
+        householdId,
+        link: "  ",
+        notes: "  ",
+      },
+    });
+    const { dinners } = await caller.summaries({
+      today: new Date("2026-09-14T00:00:00Z"),
+      currentWeekStart: new Date("2026-09-14T00:00:00Z"),
+      currentWeekEnd: new Date("2026-09-21T00:00:00Z"),
+    });
+    assert.deepEqual(
+      dinners.map(({ hasLink, hasRecipe, hasNotes }) => ({
+        hasLink,
+        hasRecipe,
+        hasNotes,
+      })),
+      [
+        { hasLink: true, hasRecipe: true, hasNotes: true },
+        { hasLink: false, hasRecipe: false, hasNotes: false },
+      ],
+    );
+    assert.ok(
+      dinners.every((dinner) => !("parts" in dinner) && !("_count" in dinner)),
+    );
+  }));

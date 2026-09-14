@@ -129,6 +129,9 @@ export const findSharedDinners = async (
       name: true,
       publicSlug: true,
       publishedAt: true,
+      link: true,
+      notes: true,
+      _count: { select: { parts: true } },
       tags: { select: { value: true }, orderBy: { value: "asc" } },
     },
     orderBy: [{ publishedAt: "desc" }, { name: "asc" }, { id: "asc" }],
@@ -152,8 +155,11 @@ export const findSharedDinners = async (
     );
   }
 
-  return dinners.map((dinner) => ({
+  return dinners.map(({ link, notes, _count, ...dinner }) => ({
     ...dinner,
+    hasLink: Boolean(link?.trim()),
+    hasRecipe: _count.parts > 0,
+    hasNotes: Boolean(notes?.trim()),
     publicSlug: dinner.publicSlug!,
     publishedAt: dinner.publishedAt!,
     saveCount: saveCounts.get(dinner.id) ?? 0,

@@ -16,6 +16,7 @@ import {
   deriveDinnerCollection,
   formatDinnerSummaryLabel,
   type CookbookSort,
+  type DinnerContentFilter,
 } from "~/lib/cookbook";
 import { buildDinnerPlanningWeek } from "~/lib/dinner-planning";
 import { cn } from "~/lib/utils";
@@ -36,6 +37,9 @@ export function DinnerPicker({
   const [weekOffset, setWeekOffset] = useState(0);
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedContentFilters, setSelectedContentFilters] = useState<
+    DinnerContentFilter[]
+  >([]);
   const [sort, setSort] = useState<CookbookSort>("not-lately");
   // A planned occurrence and the same Dinner in the Cookbook are separate additions.
   const [selections, setSelections] = useState(new Map<string, number>());
@@ -49,6 +53,7 @@ export function DinnerPicker({
   const collection = deriveDinnerCollection(dinners.data?.dinners ?? [], {
     search,
     selectedTags,
+    selectedContentFilters,
     sort,
   });
   const toggle = (key: string, dinnerId: number) => {
@@ -102,6 +107,8 @@ export function DinnerPicker({
             onSearchChange={setSearch}
             selectedTags={selectedTags}
             onSelectedTagsChange={setSelectedTags}
+            selectedContentFilters={selectedContentFilters}
+            onSelectedContentFiltersChange={setSelectedContentFilters}
             sort={sort}
             onSortChange={setSort}
             placeholder="Search the cookbook…"

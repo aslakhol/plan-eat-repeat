@@ -1,9 +1,14 @@
-import { matchesDinnerCollectionText } from "~/lib/cookbook";
+import {
+  matchesDinnerCollectionText,
+  matchesDinnerContentFilters,
+  type DinnerContentFilter,
+  type DinnerContentSummary,
+} from "~/lib/cookbook";
 import { publicSlugForName } from "~/lib/public-slug";
 
 export type PublicDinnerListSort = "recent" | "az" | "most-saved";
 
-export type PublicDinnerListDinner = {
+export type PublicDinnerListDinner = DinnerContentSummary & {
   name: string;
   publicSlug: string;
   publishedAt: string;
@@ -35,6 +40,7 @@ export const derivePublicDinnerList = <Dinner extends PublicDinnerListDinner>(
   controls: {
     search: string;
     selectedTags: readonly string[];
+    selectedContentFilters?: readonly DinnerContentFilter[];
     sort: PublicDinnerListSort;
   },
 ) => {
@@ -47,7 +53,11 @@ export const derivePublicDinnerList = <Dinner extends PublicDinnerListDinner>(
     const matchesTags = controls.selectedTags.every((selectedTag) =>
       dinner.tags.includes(selectedTag),
     );
-    return matchesSearch && matchesTags;
+    return (
+      matchesSearch &&
+      matchesTags &&
+      matchesDinnerContentFilters(dinner, controls.selectedContentFilters ?? [])
+    );
   });
   const ordered = [...filtered].sort((left, right) => {
     if (controls.sort === "az") return comparePublicDinnerNames(left, right);

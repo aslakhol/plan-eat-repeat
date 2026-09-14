@@ -17,6 +17,7 @@ import {
   deriveDinnerPickerCollection,
   formatDinnerSummaryLabel,
   type CookbookSort,
+  type DinnerContentFilter,
 } from "~/lib/cookbook";
 import {
   formatDinnerPlanningConfirmation,
@@ -37,18 +38,15 @@ type Props = {
 
 type DinnerSummary = RouterOutputs["dinner"]["summaries"]["dinners"][number];
 
-const pickerSortOptions = [
-  { value: "not-lately" as const, label: "Haven't had lately" },
-  { value: "az" as const, label: "A–Z" },
-  { value: "favourites" as const, label: "Favourites" },
-];
-
 export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   const posthog = usePostHog();
   const { openAddDinner } = useDinnerCreation();
   const utils = api.useUtils();
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedContentFilters, setSelectedContentFilters] = useState<
+    DinnerContentFilter[]
+  >([]);
   const [sort, setSort] = useState<CookbookSort>("not-lately");
   const [planningError, setPlanningError] = useState<string | null>(null);
   const surpriseDinnerNameRef = useRef<string | null>(null);
@@ -60,6 +58,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
       excludedDinnerId: plannedDinner?.id,
       search,
       selectedTags,
+      selectedContentFilters,
       sort,
     },
   );
@@ -130,10 +129,11 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
           onSearchChange={setSearch}
           selectedTags={selectedTags}
           onSelectedTagsChange={setSelectedTags}
+          selectedContentFilters={selectedContentFilters}
+          onSelectedContentFiltersChange={setSelectedContentFilters}
           sort={sort}
           onSortChange={setSort}
           placeholder="Search the cookbook…"
-          sortOptions={pickerSortOptions}
           className="shrink-0"
         />
       )}
@@ -182,12 +182,13 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
         ) : (
           <PickerMessage
             title="No dinners match"
-            body="Try another search or clear the selected tags."
+            body="Try another search or clear the filters."
             action={{
               label: "Clear filters",
               onClick: () => {
                 setSearch("");
                 setSelectedTags([]);
+                setSelectedContentFilters([]);
               },
             }}
           />

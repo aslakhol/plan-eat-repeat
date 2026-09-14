@@ -1,3 +1,4 @@
+import { type DinnerContentFilter } from "~/lib/cookbook";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -80,6 +81,9 @@ export const SharedDinnersView = () => {
   const sharedDinnersQuery = api.dinner.sharedDinners.useQuery();
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedContentFilters, setSelectedContentFilters] = useState<
+    DinnerContentFilter[]
+  >([]);
   const [sort, setSort] = useState<SharedDinnerSort>("recent");
 
   if (sharedDinnersQuery.isPending) {
@@ -117,6 +121,7 @@ export const SharedDinnersView = () => {
   const collection = deriveSharedDinnerCollection(dinners, {
     search,
     selectedTags,
+    selectedContentFilters,
     sort,
   });
 
@@ -141,6 +146,8 @@ export const SharedDinnersView = () => {
         onSearchChange={setSearch}
         selectedTags={selectedTags}
         onSelectedTagsChange={setSelectedTags}
+        selectedContentFilters={selectedContentFilters}
+        onSelectedContentFiltersChange={setSelectedContentFilters}
         sort={sort}
         onSortChange={setSort}
         sortOptions={sharedDinnerSortOptions}
@@ -159,7 +166,7 @@ export const SharedDinnersView = () => {
         <div className="mx-auto flex min-h-[30vh] max-w-sm flex-col items-center justify-center gap-3 text-center">
           <h2 className="font-serif text-xl">No shared dinners match</h2>
           <p className="text-muted-foreground text-sm">
-            Try another search or clear the selected tags.
+            Try another search or clear the filters.
           </p>
           <Button
             type="button"
@@ -167,6 +174,7 @@ export const SharedDinnersView = () => {
             onClick={() => {
               setSearch("");
               setSelectedTags([]);
+              setSelectedContentFilters([]);
             }}
           >
             Clear filters

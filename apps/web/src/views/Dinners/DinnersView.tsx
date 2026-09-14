@@ -3,7 +3,11 @@ import { DinnerList } from "./DinnerList";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { useDinnerSummaries } from "~/hooks/use-dinner-summaries";
-import { deriveDinnerCollection, type CookbookSort } from "~/lib/cookbook";
+import {
+  deriveDinnerCollection,
+  type CookbookSort,
+  type DinnerContentFilter,
+} from "~/lib/cookbook";
 import { DinnerCollectionControls } from "../DinnerCollectionControls";
 import { CookHeader } from "~/components/CookHeader";
 
@@ -11,6 +15,9 @@ export const DinnersView = () => {
   const { query: dinnersQuery, today } = useDinnerSummaries();
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedContentFilters, setSelectedContentFilters] = useState<
+    DinnerContentFilter[]
+  >([]);
   const [sort, setSort] = useState<CookbookSort>("az");
 
   if (dinnersQuery.isPending) {
@@ -44,6 +51,7 @@ export const DinnersView = () => {
   const collection = deriveDinnerCollection(dinnersQuery.data.dinners, {
     search,
     selectedTags,
+    selectedContentFilters,
     sort,
   });
 
@@ -57,6 +65,8 @@ export const DinnersView = () => {
           onSearchChange={setSearch}
           selectedTags={selectedTags}
           onSelectedTagsChange={setSelectedTags}
+          selectedContentFilters={selectedContentFilters}
+          onSelectedContentFiltersChange={setSelectedContentFilters}
           sort={sort}
           onSortChange={setSort}
           placeholder="Search dinners…"
@@ -83,7 +93,7 @@ export const DinnersView = () => {
             <div className="mx-auto flex min-h-[30vh] max-w-sm flex-col items-center justify-center gap-3 text-center">
               <h2 className="font-serif text-xl">No dinners match</h2>
               <p className="text-muted-foreground text-sm">
-                Try another search or clear the selected tags.
+                Try another search or clear the filters.
               </p>
               <Button
                 type="button"
@@ -91,6 +101,7 @@ export const DinnersView = () => {
                 onClick={() => {
                   setSearch("");
                   setSelectedTags([]);
+                  setSelectedContentFilters([]);
                 }}
               >
                 Clear filters
