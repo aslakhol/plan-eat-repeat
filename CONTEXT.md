@@ -49,7 +49,10 @@ The Household's shared collection of items still to buy, added manually or from 
 A named requirement on the Shopping List, with an optional Amount, Unit, and shopping note. It is independent of the Dinner or Recipe Ingredient it may have come from.
 
 **Usually Have**:
-The Household's set of ingredient names to skip when adding from Dinners to its Shopping List. Membership in this set neither prevents manual additions nor removes existing Shopping Items.
+The Household's set of ingredient names to place in Recently Used instead of its Shopping List when adding from Dinners. Membership in this set neither prevents manual additions nor removes existing Shopping Items.
+
+**Recently Used**:
+The Household's reusable items from Shopping List removals and Usually Have exclusions when adding from Dinners, shown most recent first without time-based expiry, with at most 25 names and none currently on the Shopping List. Names match regardless of capitalisation and surrounding whitespace; each entry holds the latest item's Amount, Unit, and shopping note unless edited for reuse.
 
 **Plan Slot**:
 The assignment of one Dinner to one Household calendar date. A Plan Slot identifies a date, not an instant in time.
