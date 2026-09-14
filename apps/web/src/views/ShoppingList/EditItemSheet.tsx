@@ -22,9 +22,11 @@ import { api, type RouterOutputs } from "~/utils/api";
 export function EditItemSheet({
   item,
   onClose,
+  recent = false,
 }: {
   item: RouterOutputs["shoppingList"]["list"][number];
   onClose: () => void;
+  recent?: boolean;
 }) {
   const [name, setName] = useState(item.name);
   const [note, setNote] = useState(item.note ?? "");
@@ -48,22 +50,20 @@ export function EditItemSheet({
   const ingredientNames = api.dinner.ingredientNames.useQuery();
   const utils = api.useUtils();
   const onSuccess = async () => {
-    await Promise.all([
-      utils.shoppingList.list.invalidate(),
-      utils.shoppingList.usuallyHave.invalidate(),
-    ]);
+    await utils.shoppingList.invalidate();
     onClose();
   };
-  const edit = api.shoppingList.edit.useMutation({
-    networkMode: "always",
+  const options = {
+    networkMode: "always" as const,
     retry: false,
     onSuccess,
-  });
-  const remove = api.shoppingList.remove.useMutation({
-    networkMode: "always",
-    retry: false,
-    onSuccess,
-  });
+  };
+  const editActive = api.shoppingList.edit.useMutation(options);
+  const editRecent = api.shoppingList.editRecent.useMutation(options);
+  const removeActive = api.shoppingList.remove.useMutation(options);
+  const removeRecent = api.shoppingList.removeRecent.useMutation(options);
+  const edit = recent ? editRecent : editActive;
+  const remove = recent ? removeRecent : removeActive;
   const pending = edit.isPending || remove.isPending;
   const parsedAmount = parseAmount(amount);
   const amountValid =
@@ -247,9 +247,14 @@ export function EditItemSheet({
                 type="button"
                 variant="outline"
                 className="text-destructive hover:bg-destructive/5 hover:text-destructive h-12 rounded-xl px-3"
+                aria-label={recent ? "Remove from recently used" : undefined}
                 onClick={() => remove.mutate({ id: item.id })}
               >
-                {remove.isPending ? "Removing…" : "Remove from list"}
+                {remove.isPending
+                  ? "Removing…"
+                  : recent
+                    ? "Remove"
+                    : "Remove from list"}
               </Button>
               <Button
                 type="submit"

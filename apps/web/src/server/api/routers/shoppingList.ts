@@ -1,6 +1,10 @@
 import { z } from "zod";
 import type { ShoppingItem } from "@planeatrepeat/db";
 import { saveShoppingItem, setUsuallyHave } from "../../shopping-list";
+import {
+  editRecentShoppingItem,
+  rememberShoppingItems,
+} from "../../recent-shopping-items";
 import { createTRPCRouter, protectedProcedureWithHousehold } from "../trpc";
 
 const itemFields = z.object({
@@ -15,6 +19,86 @@ const itemFields = z.object({
 });
 
 export const shoppingListRouter = createTRPCRouter({
+  editRecent: protectedProcedureWithHousehold
+    .input(
+      itemFields.extend({
+        id: z.string(),
+        usuallyHave: z.boolean().optional(),
+      }),
+    )
+    .mutation(({ ctx, input }) =>
+      ctx.db.$transaction(async (tx) => {
+        const saved = await editRecentShoppingItem(tx, ctx.householdId, input);
+        if (input.usuallyHave !== undefined) {
+          await setUsuallyHave(
+            tx,
+            ctx.householdId,
+            saved.name,
+            input.usuallyHave,
+          );
+        }
+        return saved;
+      }),
+    ),
+
+  removeRecent: protectedProcedureWithHousehold
+    .input(z.object({ id: z.string() }))
+    .mutation(({ ctx, input }) =>
+      ctx.db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
+        return tx.recentShoppingItem.deleteMany({
+          where: { id: input.id, householdId: ctx.householdId },
+        });
+      }),
+    ),
+
+  recent: protectedProcedureWithHousehold.query(async ({ ctx }) => {
+    const [recent, active] = await Promise.all([
+      ctx.db.recentShoppingItem.findMany({
+        where: { householdId: ctx.householdId },
+        orderBy: [{ recentlyUsedAt: "desc" }, { normalizedName: "asc" }],
+        take: 25,
+      }),
+      ctx.db.shoppingItem.findMany({
+        where: { householdId: ctx.householdId },
+        select: { normalizedName: true },
+        distinct: ["normalizedName"],
+      }),
+    ]);
+    const activeNames = new Set(active.map((item) => item.normalizedName));
+    return recent.filter((item) => !activeNames.has(item.normalizedName));
+  }),
+
+  addRecent: protectedProcedureWithHousehold
+    .input(z.object({ id: z.string() }))
+    .mutation(({ ctx, input }) =>
+      ctx.db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
+        const recent = await tx.recentShoppingItem.findUniqueOrThrow({
+          where: { id: input.id, householdId: ctx.householdId },
+        });
+        const active = await tx.shoppingItem.findFirst({
+          where: {
+            householdId: ctx.householdId,
+            normalizedName: recent.normalizedName,
+          },
+        });
+        if (active) return active;
+        const { name, amount, unit, note } = recent;
+        const saved = await saveShoppingItem(tx, ctx.householdId, {
+          name,
+          amount,
+          unit,
+          note,
+        });
+        await tx.recentShoppingItem.update({
+          where: { id: recent.id, householdId: ctx.householdId },
+          data: { revision: crypto.randomUUID() },
+        });
+        return saved;
+      }),
+    ),
+
   list: protectedProcedureWithHousehold.query(async ({ ctx }) => {
     const items = await ctx.db.shoppingItem.findMany({
       where: { householdId: ctx.householdId },
@@ -78,11 +162,30 @@ export const shoppingListRouter = createTRPCRouter({
             })
           ).map(({ normalizedName }) => normalizedName),
         );
+        const recentBefore = new Map(
+          (
+            await tx.recentShoppingItem.findMany({
+              where: {
+                householdId: ctx.householdId,
+                normalizedName: { in: [...excludedNames] },
+              },
+            })
+          ).map((item) => [item.normalizedName, item]),
+        );
         const added = new Map<string, ShoppingItem>();
+        const skipped: Pick<
+          ShoppingItem,
+          "name" | "amount" | "unit" | "note"
+        >[] = [];
         for (const dinnerId of input.dinnerIds) {
           const dinner = await tx.dinner.findUniqueOrThrow({
             where: { id: dinnerId, householdId: ctx.householdId },
-            include: { parts: { include: { ingredients: true } } },
+            include: {
+              parts: {
+                orderBy: { order: "asc" },
+                include: { ingredients: { orderBy: { order: "asc" } } },
+              },
+            },
           });
           const ingredients = dinner.parts.flatMap((part) => part.ingredients);
           const requirements =
@@ -90,7 +193,15 @@ export const shoppingListRouter = createTRPCRouter({
               ? ingredients
               : [{ name: dinner.name, amount: null, unit: null }];
           for (const item of requirements) {
-            if (excludedNames.has(item.name.trim().toLowerCase())) continue;
+            if (excludedNames.has(item.name.trim().toLowerCase())) {
+              skipped.push({
+                name: item.name,
+                amount: item.amount,
+                unit: item.unit,
+                note: null,
+              });
+              continue;
+            }
             const saved = await saveShoppingItem(tx, ctx.householdId, {
               name: item.name,
               amount: item.amount,
@@ -100,8 +211,30 @@ export const shoppingListRouter = createTRPCRouter({
             added.set(saved.id, saved);
           }
         }
+        const recent = await rememberShoppingItems(
+          tx,
+          ctx.householdId,
+          skipped,
+        );
         return {
           undo: {
+            recent: recent.map(({ id, normalizedName, revision }) => {
+              const original = recentBefore.get(normalizedName);
+              return {
+                id,
+                revision,
+                before: original
+                  ? {
+                      name: original.name,
+                      amount: original.amount,
+                      unit: original.unit,
+                      note: original.note,
+                      recentlyUsedAt: original.recentlyUsedAt,
+                      revision: original.revision,
+                    }
+                  : null,
+              };
+            }),
             items: [...added.values()].flatMap(
               ({ id, name, amount, unit, note }) => {
                 const original = before.get(id);
@@ -129,6 +262,17 @@ export const shoppingListRouter = createTRPCRouter({
   undo: protectedProcedureWithHousehold
     .input(
       z.object({
+        recent: z
+          .array(
+            z.object({
+              id: z.string(),
+              revision: z.string(),
+              before: itemFields
+                .extend({ recentlyUsedAt: z.date(), revision: z.string() })
+                .nullable(),
+            }),
+          )
+          .default([]),
         items: z.array(
           itemFields.extend({
             id: z.string(),
@@ -147,6 +291,21 @@ export const shoppingListRouter = createTRPCRouter({
             await tx.shoppingItem.updateMany({ where, data: before });
           } else {
             await tx.shoppingItem.deleteMany({ where });
+          }
+        }
+        for (const { before, ...after } of input.recent) {
+          // Revisions also protect edits that only change recency or restore an item.
+          const where = { ...after, householdId: ctx.householdId };
+          if (before) {
+            await tx.recentShoppingItem.updateMany({
+              where,
+              data: {
+                ...before,
+                normalizedName: before.name.trim().toLowerCase(),
+              },
+            });
+          } else {
+            await tx.recentShoppingItem.deleteMany({ where });
           }
         }
       }),
@@ -173,14 +332,25 @@ export const shoppingListRouter = createTRPCRouter({
   remove: protectedProcedureWithHousehold
     .input(z.object({ id: z.string() }))
     .mutation(({ ctx, input }) =>
-      ctx.db.shoppingItem.deleteMany({
-        where: { id: input.id, householdId: ctx.householdId },
+      ctx.db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
+        const where = { id: input.id, householdId: ctx.householdId };
+        const item = await tx.shoppingItem.findUnique({ where });
+        if (item) await rememberShoppingItems(tx, ctx.householdId, [item]);
+        return tx.shoppingItem.deleteMany({ where });
       }),
     ),
 
   clear: protectedProcedureWithHousehold.mutation(({ ctx }) =>
-    ctx.db.shoppingItem.deleteMany({
-      where: { householdId: ctx.householdId },
+    ctx.db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
+      const where = { householdId: ctx.householdId };
+      const items = await tx.shoppingItem.findMany({
+        where,
+        orderBy: [{ normalizedName: "asc" }, { id: "asc" }],
+      });
+      await rememberShoppingItems(tx, ctx.householdId, items);
+      return tx.shoppingItem.deleteMany({ where });
     }),
   ),
 });

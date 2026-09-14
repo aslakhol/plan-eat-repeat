@@ -1,6 +1,6 @@
-import { MoreHorizontal, Plus } from "lucide-react";
+import { ChevronDown, MoreHorizontal, Plus } from "lucide-react";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { DetailsMenu } from "~/components/ui/details-menu";
 import {
@@ -12,48 +12,68 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { api, type RouterOutputs } from "~/utils/api";
+import { toast } from "~/components/ui/use-toast";
+import { cn } from "~/lib/utils";
 import { AddItemSheet } from "./AddItemSheet";
 import { EditItemSheet } from "./EditItemSheet";
 import { DinnerPicker, type ShoppingDinnerSource } from "./DinnerPicker";
 import { DinnerSourceActions } from "./DinnerSourceActions";
 
 type ShoppingItem = RouterOutputs["shoppingList"]["list"][number];
+const RECENT_OPEN_KEY = "plan-eat-repeat:recently-used-open";
 
 function ShoppingItemRow({
   item,
   onEdit,
+  recent = false,
 }: {
   item: ShoppingItem;
   onEdit: () => void;
+  recent?: boolean;
 }) {
   const utils = api.useUtils();
-  const remove = api.shoppingList.remove.useMutation({
-    networkMode: "always",
+  const options = {
+    networkMode: "always" as const,
     retry: false,
-    onSuccess: () => utils.shoppingList.list.invalidate(),
-  });
-
-  if (remove.isPending) return null;
+    onSuccess: () => utils.shoppingList.invalidate(),
+    onError: () =>
+      toast({
+        variant: "destructive",
+        title: "Could not update shopping list",
+      }),
+  };
+  const remove = api.shoppingList.remove.useMutation(options);
+  const add = api.shoppingList.addRecent.useMutation(options);
+  const action = recent ? add : remove;
 
   return (
     <li className="bg-secondary/70 flex items-center rounded-[14px]">
       <button
         type="button"
-        aria-label={`Remove ${item.name} from list`}
-        onClick={() => remove.mutate({ id: item.id })}
-        className="hover:bg-secondary focus-visible:ring-ring min-h-14 min-w-0 flex-1 rounded-[14px] px-3.5 py-3 text-left outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
+        aria-label={
+          recent
+            ? `Add ${item.name} to shopping list`
+            : `Remove ${item.name} from list`
+        }
+        disabled={action.isPending}
+        onClick={() => action.mutate({ id: item.id })}
+        className="hover:bg-secondary focus-visible:ring-ring flex min-h-14 min-w-0 flex-1 items-center gap-2 rounded-[14px] px-3.5 py-3 text-left outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
       >
-        <span className="font-serif text-[17px]">{item.name}</span>
-        {item.note && (
-          <span className="text-muted-foreground ml-1 text-[13px]">
-            {item.note}
-          </span>
-        )}
+        {recent && <Plus className="text-muted-foreground size-4 shrink-0" />}
+        <span>
+          <span className="font-serif text-[17px]">{item.name}</span>
+          {item.note && (
+            <span className="text-muted-foreground ml-1 text-[13px]">
+              {item.note}
+            </span>
+          )}
+        </span>
       </button>
       {(item.amount !== null || item.unit !== null) && (
         <button
           type="button"
           aria-label={`Edit quantity for ${item.name}`}
+          disabled={action.isPending}
           onClick={onEdit}
           className="bg-background border-border hover:bg-accent focus-visible:ring-ring max-w-[35%] rounded-lg border px-2 py-1 text-sm font-semibold outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
         >
@@ -63,6 +83,7 @@ function ShoppingItemRow({
       <button
         type="button"
         aria-label={`Edit ${item.name}`}
+        disabled={action.isPending}
         onClick={onEdit}
         className="text-muted-foreground border-border hover:bg-accent focus-visible:ring-ring mx-2 flex size-8 shrink-0 items-center justify-center rounded-lg border bg-white outline-none focus-visible:ring-2"
       >
@@ -82,7 +103,18 @@ export function ShoppingListView() {
     setPickerSource(source);
   };
   const [clearOpen, setClearOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<ShoppingItem | null>(null);
+  const [editingItem, setEditingItem] = useState<{
+    item: ShoppingItem;
+    recent: boolean;
+  } | null>(null);
+  const [recentOpen, setRecentOpen] = useState(true);
+  useEffect(() => {
+    try {
+      setRecentOpen(localStorage.getItem(RECENT_OPEN_KEY) !== "false");
+    } catch {
+      // The accordion still works when browser storage is unavailable.
+    }
+  }, []);
   const menuRef = useRef<HTMLDetailsElement>(null);
   const utils = api.useUtils();
   const list = api.shoppingList.list.useQuery(undefined, {
@@ -91,11 +123,20 @@ export function ShoppingListView() {
     refetchOnReconnect: "always",
     retry: false,
   });
+  const recent = api.shoppingList.recent.useQuery(undefined, {
+    refetchInterval: 2000,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
+    retry: false,
+  });
+  const activeNames = new Set(list.data?.map((item) => item.normalizedName));
+  const recentItems =
+    recent.data?.filter((item) => !activeNames.has(item.normalizedName)) ?? [];
   const clear = api.shoppingList.clear.useMutation({
     networkMode: "always",
     retry: false,
     onSuccess: async () => {
-      await utils.shoppingList.list.invalidate();
+      await utils.shoppingList.invalidate();
       setClearOpen(false);
     },
   });
@@ -151,7 +192,12 @@ export function ShoppingListView() {
       )}
       {list.data &&
         (list.data.length === 0 ? (
-          <div className="flex min-h-[60dvh] flex-col items-center justify-center gap-5 px-4">
+          <div
+            className={cn(
+              "flex flex-col items-center justify-center gap-5 px-4",
+              recentItems.length ? "min-h-[35dvh] py-8" : "min-h-[60dvh]",
+            )}
+          >
             <h2 className="font-serif text-xl">Nothing on the list</h2>
             <div className="flex w-full max-w-sm flex-col gap-2.5">
               <Button
@@ -178,12 +224,62 @@ export function ShoppingListView() {
                 <ShoppingItemRow
                   key={item.id}
                   item={item}
-                  onEdit={() => setEditingItem(item)}
+                  onEdit={() => setEditingItem({ item, recent: false })}
                 />
               ))}
             </ul>
           </>
         ))}
+
+      {recent.isError && (
+        <p role="alert" className="text-destructive mt-4 text-sm">
+          Could not refresh recently used items. Check your connection.
+        </p>
+      )}
+      {list.data && recentItems.length > 0 && (
+        <section className="mt-6" aria-label="Recently used">
+          <h2>
+            <button
+              type="button"
+              aria-expanded={recentOpen}
+              aria-controls="recent-shopping-items"
+              className="focus-visible:ring-ring mb-2 flex min-h-12 w-full items-center justify-between rounded-lg text-left font-serif text-xl outline-none focus-visible:ring-2"
+              onClick={() => {
+                const open = !recentOpen;
+                setRecentOpen(open);
+                try {
+                  localStorage.setItem(RECENT_OPEN_KEY, String(open));
+                } catch {
+                  // Keep the choice in memory when browser storage is unavailable.
+                }
+              }}
+            >
+              Recently used
+              <ChevronDown
+                className={cn(
+                  "size-5 transition-transform",
+                  recentOpen && "rotate-180",
+                )}
+              />
+            </button>
+          </h2>
+          <ul
+            id="recent-shopping-items"
+            hidden={!recentOpen}
+            className="space-y-2"
+            aria-label="Recently used items"
+          >
+            {recentItems.map((item) => (
+              <ShoppingItemRow
+                key={item.id}
+                item={item}
+                recent
+                onEdit={() => setEditingItem({ item, recent: true })}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
 
       <AddItemSheet
         open={addOpen}
@@ -198,7 +294,8 @@ export function ShoppingListView() {
       )}
       {editingItem && (
         <EditItemSheet
-          item={editingItem}
+          item={editingItem.item}
+          recent={editingItem.recent}
           onClose={() => setEditingItem(null)}
         />
       )}

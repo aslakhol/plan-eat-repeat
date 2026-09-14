@@ -9,7 +9,7 @@ export const useAddDinnersToShoppingList = (
   const undo = api.shoppingList.undo.useMutation({
     networkMode: "always",
     retry: false,
-    onSuccess: () => void utils.shoppingList.list.invalidate(),
+    onSuccess: () => void utils.shoppingList.invalidate(),
     onError: (error) => {
       toast({
         variant: "destructive",
@@ -25,7 +25,7 @@ export const useAddDinnersToShoppingList = (
     onSuccess: async (result) => {
       // Close the Dinner or picker drawer so Undo is outside its focus trap.
       await onAdded?.();
-      void utils.shoppingList.list.invalidate();
+      void utils.shoppingList.invalidate();
       toast({
         title: "Added to shopping list",
         action: (

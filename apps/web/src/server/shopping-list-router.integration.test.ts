@@ -67,6 +67,208 @@ const withShoppingList = async (
   }
 };
 
+void test("Recently Used keeps the latest details per name, hides active names, and restores items for the Household", () =>
+  withShoppingList(async ({ caller, member }) => {
+    assert.deepEqual(await caller.recent(), []);
+    const milk = await caller.addManual({ name: "Milk" });
+    await caller.edit({ ...milk, amount: 1, unit: "l", note: "Whole milk" });
+    const extra = await member.addManual({ name: " MILK " });
+    await caller.remove({ id: milk.id });
+    assert.deepEqual(await member.recent(), []);
+    await member.edit({
+      ...extra,
+      amount: 200,
+      unit: "ml",
+      note: "For coffee",
+    });
+    await member.remove({ id: extra.id });
+    const recent = await caller.recent();
+    assert.equal(recent.length, 1);
+    assert.deepEqual(
+      recent.map(({ amount, unit, note }) => ({ amount, unit, note })),
+      [{ amount: 200, unit: "ml", note: "For coffee" }],
+    );
+    await member.addRecent({ id: recent[0]!.id });
+    await caller.addRecent({ id: recent[0]!.id });
+    assert.deepEqual(await member.recent(), []);
+    assert.deepEqual(
+      (await caller.list()).map(({ amount, unit, note }) => ({
+        amount,
+        unit,
+        note,
+      })),
+      [{ amount: 200, unit: "ml", note: "For coffee" }],
+    );
+  }));
+
+void test("clearing the Shopping List remembers at most 25 displayed names and adding one leaves 24", () =>
+  withShoppingList(async ({ caller }) => {
+    for (let index = 0; index < 27; index++) {
+      await caller.addManual({
+        name: `Item ${String(index).padStart(2, "0")}`,
+      });
+    }
+    await caller.clear();
+    const recent = await caller.recent();
+    assert.equal(recent.length, 25);
+    assert.equal(recent[0]!.name, "Item 00");
+    assert.equal(recent.at(-1)!.name, "Item 24");
+    await caller.addManual({ name: " ITEM 00 " });
+    assert.equal((await caller.recent()).length, 24);
+    const [active] = await caller.list();
+    await caller.remove({ id: active!.id });
+    assert.equal((await caller.recent())[0]!.name.toLowerCase(), "item 00");
+  }));
+
+void test("editing, merging, and dismissing recent entries preserves recency and Usually Have preferences", () =>
+  withShoppingList(async ({ caller, member }) => {
+    for (const name of ["Milk", "Bread", "Apples"]) {
+      const item = await caller.addManual({ name });
+      await caller.remove({ id: item.id });
+    }
+    const before = await caller.recent();
+    const milk = before.find((item) => item.name === "Milk")!;
+    const bread = before.find((item) => item.name === "Bread")!;
+    await member.editRecent({
+      ...milk,
+      name: "BREAD",
+      amount: 2,
+      unit: "pcs",
+      note: "Wholemeal",
+      usuallyHave: true,
+    });
+    const recent = await caller.recent();
+    assert.deepEqual(
+      recent.map((item) => item.name),
+      ["Apples", "BREAD"],
+    );
+    assert.equal(
+      recent[1]!.recentlyUsedAt.getTime(),
+      bread.recentlyUsedAt.getTime(),
+    );
+    assert.equal(recent[1]!.amount, 2);
+    assert.equal(recent[1]!.note, "Wholemeal");
+    assert.deepEqual(await caller.list(), []);
+    assert.deepEqual(
+      (await member.usuallyHave()).map((item) => item.normalizedName),
+      ["bread"],
+    );
+    await member.removeRecent({ id: recent[1]!.id });
+    assert.deepEqual(
+      (await caller.recent()).map((item) => item.name),
+      ["Apples"],
+    );
+  }));
+
+void test("excluded Dinner ingredients replace recent details and Undo restores the previous history", () =>
+  withShoppingList(async ({ caller, member, createDinner }) => {
+    const milk = await caller.addManual({ name: "Milk" });
+    await caller.edit({ ...milk, amount: 1, unit: "l", note: "Whole milk" });
+    await caller.remove({ id: milk.id });
+    const bread = await caller.addManual({ name: "Bread" });
+    await caller.remove({ id: bread.id });
+    await caller.setUsuallyHave({ name: "Milk", excluded: true });
+    await caller.setUsuallyHave({ name: "Salt", excluded: true });
+    const before = await caller.recent();
+    const dinner = await createDinner({
+      name: "Pancakes",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: {
+            create: [
+              { order: 2, name: "Milk", amount: 200, unit: "ml", note: "Warm" },
+              { order: 0, name: " MILK ", amount: 100, unit: "ml" },
+              { order: 1, name: "Salt", amount: 1, unit: "tsp" },
+              { order: 3, name: "Flour", amount: 250, unit: "g" },
+            ],
+          },
+        },
+      },
+    });
+    const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
+    assert.deepEqual(
+      (await member.recent()).map(({ name, amount, unit, note }) => ({
+        name,
+        amount,
+        unit,
+        note,
+      })),
+      [
+        { name: "Milk", amount: 200, unit: "ml", note: null },
+        { name: "Salt", amount: 1, unit: "tsp", note: null },
+        { name: "Bread", amount: null, unit: null, note: null },
+      ],
+    );
+    assert.deepEqual(
+      (await caller.list()).map((item) => item.name),
+      ["Flour"],
+    );
+    await member.undo(addition.undo);
+    assert.deepEqual(await caller.recent(), before);
+    assert.deepEqual(await caller.list(), []);
+    await caller.undo(addition.undo);
+    assert.deepEqual(await caller.recent(), before);
+  }));
+
+void test("Undo leaves recent entries edited, dismissed, restored, or removed again by another member alone", () =>
+  withShoppingList(async ({ caller, member, createDinner }) => {
+    const names = ["Milk", "Salt", "Bread", "Apples"];
+    for (const name of names)
+      await caller.setUsuallyHave({ name, excluded: true });
+    const dinner = await createDinner({
+      name: "Breakfast",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: {
+            create: names.map((name, order) => ({
+              name,
+              order,
+              amount: 1,
+              unit: "pcs",
+            })),
+          },
+        },
+      },
+    });
+    const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
+    const recent = await member.recent();
+    const named = (name: string) => recent.find((item) => item.name === name)!;
+    await member.editRecent({ ...named("Milk"), amount: 2 });
+    await member.removeRecent({ id: named("Salt").id });
+    await member.addRecent({ id: named("Bread").id });
+    const apples = await member.addRecent({ id: named("Apples").id });
+    await member.remove({ id: apples.id });
+    const beforeUndo = await member.recent();
+    await caller.undo(addition.undo);
+    assert.deepEqual(await member.recent(), beforeUndo);
+    const bread = (await member.list())[0]!;
+    assert.equal(bread.name, "Bread");
+    // Restoring also protects the hidden recent entry from the earlier Undo.
+    await member.edit({ ...bread, name: "Toast" });
+    assert.ok((await member.recent()).some((item) => item.name === "Bread"));
+  }));
+
+void test("recent entry operations and Dinner Undo stay within their Household", () =>
+  withShoppingList(async ({ caller, createDinner }) => {
+    await caller.setUsuallyHave({ name: "Milk", excluded: true });
+    const dinner = await createDinner({ name: "Milk" });
+    const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
+    const [recent] = await caller.recent();
+    await withShoppingList(async ({ caller: other }) => {
+      assert.deepEqual(await other.recent(), []);
+      await assert.rejects(other.addRecent({ id: recent!.id }));
+      await assert.rejects(
+        other.editRecent({ ...recent!, name: "Stolen milk" }),
+      );
+      await other.removeRecent({ id: recent!.id });
+      await other.undo(addition.undo);
+      assert.deepEqual(await other.recent(), []);
+    });
+    assert.deepEqual(await caller.recent(), [recent]);
+  }));
+
 void test("Household members manage Usually Have, add Dinner and manual items, edit the shared list, and remove them", () =>
   withShoppingList(async ({ caller, member, createDinner }) => {
     assert.deepEqual(await caller.list(), []);
