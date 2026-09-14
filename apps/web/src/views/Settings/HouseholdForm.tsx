@@ -152,7 +152,7 @@ export const EditHousehold = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Edit Household</CardTitle>
+        <CardTitle>Household</CardTitle>
       </CardHeader>
       <CardContent>
         <HouseholdForm
