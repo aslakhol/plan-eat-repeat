@@ -46,8 +46,6 @@ function ShoppingItemRow({
   const add = api.shoppingList.addRecent.useMutation(options);
   const action = recent ? add : remove;
 
-  if (action.isPending) return null;
-
   return (
     <li className="bg-secondary/70 flex items-center rounded-[14px]">
       <button
@@ -57,6 +55,7 @@ function ShoppingItemRow({
             ? `Add ${item.name} to shopping list`
             : `Remove ${item.name} from list`
         }
+        disabled={action.isPending}
         onClick={() => action.mutate({ id: item.id })}
         className="hover:bg-secondary focus-visible:ring-ring flex min-h-14 min-w-0 flex-1 items-center gap-2 rounded-[14px] px-3.5 py-3 text-left outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
       >
@@ -74,6 +73,7 @@ function ShoppingItemRow({
         <button
           type="button"
           aria-label={`Edit quantity for ${item.name}`}
+          disabled={action.isPending}
           onClick={onEdit}
           className="bg-background border-border hover:bg-accent focus-visible:ring-ring max-w-[35%] rounded-lg border px-2 py-1 text-sm font-semibold outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
         >
@@ -83,6 +83,7 @@ function ShoppingItemRow({
       <button
         type="button"
         aria-label={`Edit ${item.name}`}
+        disabled={action.isPending}
         onClick={onEdit}
         className="text-muted-foreground border-border hover:bg-accent focus-visible:ring-ring mx-2 flex size-8 shrink-0 items-center justify-center rounded-lg border bg-white outline-none focus-visible:ring-2"
       >

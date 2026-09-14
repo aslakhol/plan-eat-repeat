@@ -1,5 +1,5 @@
 import { createPrismaClient } from "@planeatrepeat/db";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { createRequire } from "node:module";
 import { ensureSignedIn } from "./capture-support";
 
@@ -44,6 +44,29 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
   });
   const removeItem = (name: string) =>
     page.getByRole("button", { name: `Remove ${name} from list`, exact: true });
+  const moveWithoutFlashing = async (
+    action: Locator,
+    procedure: "addRecent" | "remove",
+  ) => {
+    const url = `**/api/trpc/shoppingList.${procedure}*`;
+    const gate = Promise.withResolvers<void>();
+    await page.route(url, async (route) => {
+      await gate.promise;
+      await route.continue();
+    });
+    const request = page.waitForRequest(url);
+    const response = page.waitForResponse(url);
+    try {
+      await action.click();
+      await request;
+      // Keep the row in place until the transfer can be reflected in both lists.
+      await expect(action).toBeVisible({ timeout: 500 });
+    } finally {
+      gate.resolve();
+      await response;
+      await page.unroute(url);
+    }
+  };
   try {
     await page
       .getByRole("link", { name: "Shopping list", exact: true })
@@ -126,7 +149,7 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
       .fill("Red lentils");
     await editor.getByRole("button", { name: "Save", exact: true }).click();
     await expect(editor).not.toBeVisible();
-    await addRecent.click();
+    await moveWithoutFlashing(addRecent, "addRecent");
     await expect(removeItem(ingredientName)).toBeVisible();
     await expect(addRecent).toHaveCount(0);
     await expect(
@@ -135,7 +158,7 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
         exact: true,
       }),
     ).toHaveText("300 g");
-    await removeItem(ingredientName).click();
+    await moveWithoutFlashing(removeItem(ingredientName), "remove");
     await expect(addRecent).toBeVisible();
     await page
       .getByRole("button", { name: `Edit ${ingredientName}`, exact: true })
