@@ -1,6 +1,11 @@
-# Testing policy
+---
+name: testing
+description: Use when deciding what and how to test.
+---
 
-This is a family-and-friends project. Keep tests that catch meaningful failures without making routine changes expensive.
+# Testing
+
+Plan Eat Repeat is a family-and-friends project. Keep tests that catch meaningful failures without making routine changes expensive.
 
 - Test domain rules, data preservation, Household boundaries, import reliability, and asynchronous behaviour such as cancellation and stale responses.
 - Keep a few Playwright journeys for creating and editing Dinners, planning, and shopping. Use browser tests for navigation, authentication continuation, draft persistence, and other behaviour lower-level tests cannot establish.

@@ -1,6 +1,6 @@
 # AI import spend manual verification
 
-The [testing policy](../agents/testing.md) leaves internal admin functionality to manual verification.
+The [testing skill](../../.agents/skills/testing/SKILL.md) leaves internal admin functionality to manual verification.
 
 When changing spend collection or the dashboard:
 
