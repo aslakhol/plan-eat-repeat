@@ -103,6 +103,107 @@ void test("Shopping Language defaults to English and ordinary members update onl
     );
   }));
 
+void test("only the selected standard catalog categorizes new names", () =>
+  withShoppingList(async ({ caller, memberSettings }) => {
+    await memberSettings.updateHousehold({ shoppingLanguage: "no" });
+    for (const [name, category] of [
+      ["Milk", "OWN_ITEMS"],
+      ["Melk", "DAIRY"],
+      ["Fersk  KJØTTDEIG", "MEAT"],
+      ["Poteter", "OWN_ITEMS"],
+      ["Potet", "PRODUCE"],
+      ["Te", "BEVERAGES"],
+    ] as const) {
+      assert.equal(
+        (await caller.addManual({ name })).product.category,
+        category,
+      );
+    }
+    await memberSettings.updateHousehold({ shoppingLanguage: "en" });
+    assert.equal(
+      (await caller.addManual({ name: "Milk" })).product.category,
+      "OWN_ITEMS",
+    );
+    assert.equal(
+      (await caller.addManual({ name: "Egg" })).product.category,
+      "OWN_ITEMS",
+    );
+    assert.equal(
+      (await caller.addManual({ name: "Eggs" })).product.category,
+      "DAIRY",
+    );
+  }));
+
+void test("language changes preserve entered names and remembered assignments without translating overrides", () =>
+  withShoppingList(async ({ caller, settings, createDinner }) => {
+    const milk = await caller.addManual({ name: "Milk" });
+    const mystery = await caller.addManual({ name: "Melk" });
+    const beef = await caller.addManual({ name: "Beef" });
+    await caller.edit({ ...beef, category: "SNACKS" });
+    await settings.updateHousehold({ shoppingLanguage: "no" });
+    assert.deepEqual(
+      (await caller.list()).map(({ name, product }) => [
+        name,
+        product.category,
+      ]),
+      [
+        ["Milk", "DAIRY"],
+        ["Beef", "SNACKS"],
+        ["Melk", "OWN_ITEMS"],
+      ],
+    );
+    assert.equal(
+      (await caller.addManual({ name: "Fresh milk" })).product.category,
+      "DAIRY",
+    );
+    assert.equal(
+      (await caller.addManual({ name: "Beef balls" })).product.category,
+      "SNACKS",
+    );
+    assert.equal(
+      (await caller.addManual({ name: "Storfekjøtt" })).product.category,
+      "MEAT",
+    );
+    assert.equal(
+      (await caller.addManual({ name: "Bread" })).product.category,
+      "OWN_ITEMS",
+    );
+    await caller.remove({ id: milk.id });
+    await caller.remove({ id: mystery.id });
+    for (const recent of await caller.recent())
+      await caller.addRecent({ id: recent.id });
+    assert.equal(
+      (await caller.list()).find((item) => item.name === "Melk")?.product
+        .category,
+      "OWN_ITEMS",
+    );
+    const dinner = await createDinner({
+      name: "Breakfast",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: { create: { order: 0, name: "Brød" } },
+        },
+      },
+    });
+    await caller.addDinners({ dinnerIds: [dinner.id] });
+    assert.equal(
+      (await caller.list()).find((item) => item.name === "Brød")?.product
+        .category,
+      "BAKERY",
+    );
+    await withShoppingList(async ({ caller: other }) => {
+      assert.equal(
+        (await other.addManual({ name: "Milk" })).product.category,
+        "DAIRY",
+      );
+      assert.equal(
+        (await other.addManual({ name: "Melk" })).product.category,
+        "OWN_ITEMS",
+      );
+    });
+  }));
+
 void test("first shopping names use exact catalog matches, longest whole phrases, and Own Items", () =>
   withShoppingList(async ({ caller }) => {
     for (const name of [

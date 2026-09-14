@@ -1,13 +1,25 @@
-import type { Prisma, ShoppingCategory } from "@planeatrepeat/db";
+import type {
+  Prisma,
+  ShoppingCategory,
+  ShoppingLanguage,
+} from "@planeatrepeat/db";
 import { normalizeShoppingName } from "@planeatrepeat/shared";
 import { shoppingCatalog } from "./shopping-catalog";
 
-const catalog = new Map(
-  shoppingCatalog.map(({ en, category }) => [
-    normalizeShoppingName(en),
-    category,
-  ]),
-);
+const catalogs = {
+  en: new Map(
+    shoppingCatalog.map(({ en, category }) => [
+      normalizeShoppingName(en),
+      category,
+    ]),
+  ),
+  no: new Map(
+    shoppingCatalog.map(({ no, category }) => [
+      normalizeShoppingName(no),
+      category,
+    ]),
+  ),
+} satisfies Record<ShoppingLanguage, Map<string, ShoppingCategory>>;
 
 export const rememberShoppingProduct = async (
   tx: Prisma.TransactionClient,
@@ -21,6 +33,11 @@ export const rememberShoppingProduct = async (
   });
   if (existing) return existing;
 
+  const { shoppingLanguage } = await tx.household.findUniqueOrThrow({
+    where: { id: householdId },
+    select: { shoppingLanguage: true },
+  });
+  const catalog = catalogs[shoppingLanguage];
   let category: ShoppingCategory | undefined =
     initialCategory ?? catalog.get(normalizedName);
   if (!category) {
