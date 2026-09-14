@@ -1,6 +1,7 @@
 import {
   normalizeShoppingName,
   shoppingCategoryOrder,
+  shoppingCategories,
 } from "@planeatrepeat/shared";
 import { z } from "zod";
 import { ShoppingCategory, type ShoppingItem } from "@planeatrepeat/db";
@@ -23,6 +24,17 @@ const itemFields = z.object({
 });
 
 export const shoppingListRouter = createTRPCRouter({
+  categories: protectedProcedureWithHousehold.query(async ({ ctx }) => {
+    const { shoppingLanguage } = await ctx.db.household.findUniqueOrThrow({
+      where: { id: ctx.householdId },
+      select: { shoppingLanguage: true },
+    });
+    return shoppingCategoryOrder.map((id) => ({
+      id,
+      label: shoppingCategories[id][shoppingLanguage],
+    }));
+  }),
+
   editRecent: protectedProcedureWithHousehold
     .input(
       itemFields.extend({

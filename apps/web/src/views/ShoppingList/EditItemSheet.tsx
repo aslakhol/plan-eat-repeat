@@ -4,8 +4,6 @@ import {
   normalizeShoppingName,
   parseAmount,
   UNITS,
-  shoppingCategories,
-  shoppingCategoryOrder,
 } from "@planeatrepeat/shared";
 import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
@@ -38,6 +36,12 @@ export function EditItemSheet({
   onClose: () => void;
   recent?: boolean;
 }) {
+  const categories = api.shoppingList.categories.useQuery(undefined, {
+    refetchInterval: 2000,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
+    retry: false,
+  });
   const [name, setName] = useState(item.name);
   const [note, setNote] = useState(item.note ?? "");
   const [amount, setAmount] = useState(
@@ -211,27 +215,30 @@ export function EditItemSheet({
               <Label htmlFor="edit-shopping-category">Category</Label>
               <Select
                 value={categoryDraft ?? ""}
+                disabled={!categories.isSuccess || pending}
                 onValueChange={(value) =>
                   setCategoryDraft(
-                    shoppingCategoryOrder.find(
-                      (category) => category === value,
-                    ),
+                    categories.data?.find((category) => category.id === value)
+                      ?.id,
                   )
                 }
-                disabled={pending}
               >
                 <SelectTrigger
                   id="edit-shopping-category"
                   className="h-12 rounded-xl"
                 >
                   <SelectValue
-                    placeholder={shoppingCategories[item.product.category].en}
+                    placeholder={
+                      categories.data?.find(
+                        (category) => category.id === item.product.category,
+                      )?.label
+                    }
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {shoppingCategoryOrder.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {shoppingCategories[category].en}
+                  {categories.data?.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -204,6 +204,28 @@ void test("language changes preserve entered names and remembered assignments wi
     });
   }));
 
+void test("category labels follow Shopping Language while category identity and order stay stable", () =>
+  withShoppingList(async ({ caller, member, memberSettings }) => {
+    const english = await caller.categories();
+    assert.deepEqual(english[0], {
+      id: "PRODUCE",
+      label: "Fruits & Vegetables",
+    });
+    assert.deepEqual(english.at(-1), { id: "OWN_ITEMS", label: "Own Items" });
+    await memberSettings.updateHousehold({ shoppingLanguage: "no" });
+    const norwegian = await member.categories();
+    assert.deepEqual(
+      norwegian.map(({ id }) => id),
+      english.map(({ id }) => id),
+    );
+    assert.deepEqual(norwegian[0], { id: "PRODUCE", label: "Frukt og grønt" });
+    assert.deepEqual(norwegian[2], { id: "DAIRY", label: "Meieriprodukter" });
+    assert.deepEqual(norwegian.at(-1), {
+      id: "OWN_ITEMS",
+      label: "Egne varer",
+    });
+  }));
+
 void test("first shopping names use exact catalog matches, longest whole phrases, and Own Items", () =>
   withShoppingList(async ({ caller }) => {
     for (const name of [
