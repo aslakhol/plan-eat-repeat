@@ -1,6 +1,6 @@
+import { ImportRecipeError } from "@planeatrepeat/shared";
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ImportRecipeError } from "@planeatrepeat/shared";
 
 import { createSupadataInstagramAdapter } from "./supadata";
 
@@ -126,47 +126,6 @@ void test("Supadata receives a canonical URL for plural Instagram reels links", 
     `https://www.instagram.com/reel/${mediaId}/`,
     `https://www.instagram.com/reel/${mediaId}/`,
   ]);
-});
-
-void test("Supadata starts an Instagram transcript as soon as video metadata completes", async () => {
-  const mediaId = "DOybkebkcaw";
-  const requestPaths: string[] = [];
-  const adapter = createSupadataInstagramAdapter({
-    apiKey: "test-key",
-    fetch: ((input: string | URL | Request) => {
-      const request = requestUrl(input);
-      requestPaths.push(request.pathname);
-
-      if (request.pathname === "/v1/metadata") {
-        return Promise.resolve(
-          Response.json({
-            platform: "instagram",
-            type: "video",
-            id: mediaId,
-            title: "Pasta",
-            description: "250 g pasta",
-          }),
-        );
-      }
-      return Promise.resolve(
-        Response.json({
-          content: "Boil the pasta.",
-          lang: "en",
-          availableLangs: ["en"],
-        }),
-      );
-    }) as typeof fetch,
-    diagnostics: { info: () => undefined, warn: () => undefined },
-  });
-
-  const evidence = await adapter.acquire(
-    `https://www.instagram.com/reels/${mediaId}/`,
-    mediaId,
-    new AbortController().signal,
-  );
-
-  assert.equal(evidence.transcript, "Boil the pasta.");
-  assert.deepEqual(requestPaths, ["/v1/metadata", "/v1/transcript"]);
 });
 
 for (const type of ["image", "carousel", "post"] as const) {

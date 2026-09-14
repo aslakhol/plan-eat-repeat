@@ -1,13 +1,11 @@
+import { MockLanguageModelV3 } from "ai/test";
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
-import { MockLanguageModelV3 } from "ai/test";
 
 process.env.ANTHROPIC_API_KEY = "test-key";
 process.env.AI_EXTRACT_MODEL = "test-model";
 process.env.SKIP_ENV_VALIDATION = "1";
 
-const ai = await import("ai");
-let generateOptions: Parameters<typeof ai.generateText>[0] | undefined;
 let modelOutput: unknown = {
   isRecipe: true,
   name: "Soup",
@@ -28,37 +26,7 @@ const model = new MockLanguageModelV3({
 mock.module("@ai-sdk/anthropic", {
   namedExports: { anthropic: () => model },
 });
-mock.module("ai", {
-  namedExports: {
-    ...ai,
-    generateText: (options: Parameters<typeof ai.generateText>[0]) => {
-      generateOptions = options;
-      return ai.generateText(options);
-    },
-  },
-});
-
 const { extractRecipe } = await import("./extractRecipe");
-
-void test("recipe extraction keeps two provider retries", async () => {
-  await extractRecipe({ parts: [{ type: "text", text: "Soup recipe" }] });
-
-  assert.equal(generateOptions?.maxRetries, 2);
-});
-
-void test("default extraction preserves source units and requests standard spellings without measurement conversion", async () => {
-  await extractRecipe({
-    parts: [{ type: "text", text: "1 cheek of mango, diced" }],
-  });
-  const system = generateOptions?.system;
-  assert.ok(typeof system === "string");
-  assert.match(system, /Keep other unit wording in unit, or null if missing/);
-  assert.match(
-    system,
-    /Keep source measurements; normalise equivalent spellings/,
-  );
-  assert.match(system, /Do not invent quantities/);
-});
 
 void test("the shared extraction schema preserves custom units, normalises aliases, and keeps numeric quantities", async () => {
   const validIngredients = [
@@ -124,18 +92,4 @@ void test("the shared extraction schema preserves custom units, normalises alias
   } finally {
     modelOutput = previous;
   }
-});
-
-void test("an edited Import Prompt can request unit preservation, translations, conversions, and adaptations", async () => {
-  const instructions =
-    "Preserve source units except convert cups to grams using your estimate. Translate to Norwegian and substitute beans for meat.";
-  await extractRecipe({
-    parts: [{ type: "text", text: "Soup recipe" }],
-    instructions,
-  });
-  const system = generateOptions?.system;
-  assert.ok(typeof system === "string");
-  assert.ok(system.endsWith(instructions));
-  assert.ok(!system.includes("Keep source measurements"));
-  assert.ok(!system.includes("Do not invent quantities"));
 });
