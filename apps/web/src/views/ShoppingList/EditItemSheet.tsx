@@ -4,6 +4,8 @@ import {
   normalizeShoppingName,
   parseAmount,
   UNITS,
+  shoppingCategories,
+  shoppingCategoryOrder,
 } from "@planeatrepeat/shared";
 import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
@@ -16,6 +18,13 @@ import {
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { Textarea } from "~/components/ui/textarea";
 import { cn } from "~/lib/utils";
 import { api, type RouterOutputs } from "~/utils/api";
@@ -35,6 +44,8 @@ export function EditItemSheet({
     item.amount === null ? "" : formatAmount(item.amount),
   );
   const [unit, setUnit] = useState(item.unit ?? "");
+  const [categoryDraft, setCategoryDraft] =
+    useState<typeof item.product.category>();
   const [excludedDraft, setExcludedDraft] = useState<boolean>();
   const preferences = api.shoppingList.usuallyHave.useQuery(undefined, {
     refetchInterval: 2000,
@@ -100,6 +111,7 @@ export function EditItemSheet({
                 amount: parsedAmount,
                 unit,
                 usuallyHave: excluded,
+                category: categoryDraft,
               });
           }}
         >
@@ -195,6 +207,36 @@ export function EditItemSheet({
                 Amount must be a number more than 0
               </p>
             )}
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-shopping-category">Category</Label>
+              <Select
+                value={categoryDraft ?? ""}
+                onValueChange={(value) =>
+                  setCategoryDraft(
+                    shoppingCategoryOrder.find(
+                      (category) => category === value,
+                    ),
+                  )
+                }
+                disabled={pending}
+              >
+                <SelectTrigger
+                  id="edit-shopping-category"
+                  className="h-12 rounded-xl"
+                >
+                  <SelectValue
+                    placeholder={shoppingCategories[item.product.category].en}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {shoppingCategoryOrder.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {shoppingCategories[category].en}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="border-border flex items-center justify-between gap-4 rounded-xl border p-3.5">
               <Label
                 htmlFor="edit-shopping-excluded"
