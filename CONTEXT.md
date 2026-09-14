@@ -1,11 +1,11 @@
 # Meal Planning
 
-Plan Eat Repeat helps a household maintain a shared collection of dinners and assign them to calendar days.
+Plan Eat Repeat helps a household maintain a shared collection of dinners, assign them to calendar days, and keep a shared shopping list.
 
 ## Language
 
 **Household**:
-One or more people who share one Cookbook and one set of Plan Slots.
+One or more people who share one Cookbook, one set of Plan Slots, and one Shopping List.
 _Avoid_: Account, family
 
 **Dinner**:
@@ -19,10 +19,10 @@ The optional structured cooking content attached to a Dinner. A Recipe may conta
 A named ingredient within a Recipe part, with an optional positive numeric Amount, Unit, and Ingredient Note. Its name is required; it has no free-text alternative to Amount.
 
 **Amount**:
-The positive number specifying how much of a Recipe Ingredient is needed. An absent Amount leaves the quantity unspecified.
+The positive number specifying how much of a Recipe Ingredient or Shopping Item is needed. An absent Amount leaves the quantity unspecified.
 
 **Unit**:
-The optional measure accompanying a Recipe Ingredient's Amount. It may be a recognised Standard Unit or arbitrary wording such as "cheek" or "handful"; an absent Unit is unspecified and distinct from pieces.
+The optional measure for a Recipe Ingredient or Shopping Item. It may be a recognised Standard Unit or arbitrary wording such as "cheek" or "handful"; an absent Unit is unspecified and distinct from pieces.
 
 **Standard Unit**:
 A Unit recognised by the application, with a preferred abbreviation and equivalent spellings. Defined conversions relate compatible measurements without depending on the ingredient.
@@ -41,6 +41,15 @@ _Avoid_: Recipe-less dinner, un-recipe'd dinner
 **Cookbook**:
 The Household's collection of active Dinners.
 _Avoid_: Dinner library, Dinners
+
+**Shopping List**:
+The Household's shared collection of items still to buy, added manually or from Dinners. Items leave the list when taken into the basket.
+
+**Shopping Item**:
+A named requirement on the Shopping List, with an optional Amount, Unit, and shopping note. It is independent of the Dinner or Recipe Ingredient it may have come from.
+
+**Usually Have**:
+The Household's set of ingredient names to skip when adding from Dinners to its Shopping List. Membership in this set neither prevents manual additions nor removes existing Shopping Items.
 
 **Plan Slot**:
 The assignment of one Dinner to one Household calendar date. A Plan Slot identifies a date, not an instant in time.
