@@ -1702,6 +1702,7 @@ export const HouseholdScalarFieldEnum = {
   name: 'name',
   slug: 'slug',
   publicSlug: 'publicSlug',
+  shoppingLanguage: 'shoppingLanguage',
   importInstructions: 'importInstructions',
   aiImportSpendAttributionKey: 'aiImportSpendAttributionKey',
   createdAt: 'createdAt',
@@ -1864,6 +1865,20 @@ export type EnumShoppingCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<
  * Reference to a field of type 'ShoppingCategory[]'
  */
 export type ListEnumShoppingCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ShoppingCategory[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ShoppingLanguage'
+ */
+export type EnumShoppingLanguageFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ShoppingLanguage'>
+    
+
+
+/**
+ * Reference to a field of type 'ShoppingLanguage[]'
+ */
+export type ListEnumShoppingLanguageFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ShoppingLanguage[]'>
     
 
 

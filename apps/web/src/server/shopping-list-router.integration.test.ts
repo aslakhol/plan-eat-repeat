@@ -21,12 +21,15 @@ mock.module("@clerk/nextjs/server", {
 });
 const { shoppingListRouter } = await import("./api/routers/shoppingList");
 const { dinnerRouter } = await import("./api/routers/dinner");
+const { householdRouter } = await import("./api/routers/household");
 
 const withShoppingList = async (
   run: (fixture: {
     caller: ReturnType<typeof shoppingListRouter.createCaller>;
     member: ReturnType<typeof shoppingListRouter.createCaller>;
     dinners: ReturnType<typeof dinnerRouter.createCaller>;
+    settings: ReturnType<typeof householdRouter.createCaller>;
+    memberSettings: ReturnType<typeof householdRouter.createCaller>;
     createDinner: (
       data: Omit<Prisma.DinnerUncheckedCreateInput, "householdId">,
     ) => Promise<{ id: number }>;
@@ -50,10 +53,20 @@ const withShoppingList = async (
       db,
       auth: { userId },
     } as Parameters<typeof shoppingListRouter.createCaller>[0]);
+  const settingsFor = (userId: string) =>
+    householdRouter.createCaller({
+      db,
+      auth: {
+        userId,
+        sessionClaims: { metadata: { householdId: household.id } },
+      },
+    } as Parameters<typeof householdRouter.createCaller>[0]);
   try {
     await run({
       caller: callerFor(userIds[0]!),
       member: callerFor(userIds[1]!),
+      settings: settingsFor(userIds[0]!),
+      memberSettings: settingsFor(userIds[1]!),
       dinners: dinnerRouter.createCaller({
         db,
         auth: { userId: userIds[0]! },
@@ -68,6 +81,27 @@ const withShoppingList = async (
     await db.$disconnect();
   }
 };
+
+void test("Shopping Language defaults to English and ordinary members update only their Household", () =>
+  withShoppingList(async ({ settings, memberSettings }) => {
+    assert.equal(
+      (await settings.household()).household?.shoppingLanguage,
+      "en",
+    );
+    await memberSettings.updateHousehold({ shoppingLanguage: "no" });
+    assert.equal(
+      (await settings.household()).household?.shoppingLanguage,
+      "no",
+    );
+    await withShoppingList(async ({ settings: other }) => {
+      assert.equal((await other.household()).household?.shoppingLanguage, "en");
+    });
+    await settings.updateHousehold({ shoppingLanguage: "en" });
+    assert.equal(
+      (await memberSettings.household()).household?.shoppingLanguage,
+      "en",
+    );
+  }));
 
 void test("first shopping names use exact catalog matches, longest whole phrases, and Own Items", () =>
   withShoppingList(async ({ caller }) => {
@@ -990,6 +1024,17 @@ void test("existing shopping details and reusable state survive the Shopping Pro
       db,
       auth: { userId: "migration-user" },
     } as Parameters<typeof shoppingListRouter.createCaller>[0]);
+    const settings = householdRouter.createCaller({
+      db,
+      auth: {
+        userId: "migration-user",
+        sessionClaims: { metadata: { householdId: "migration-household" } },
+      },
+    } as Parameters<typeof householdRouter.createCaller>[0]);
+    assert.equal(
+      (await settings.household()).household?.shoppingLanguage,
+      "en",
+    );
     const items = await caller.list();
     assert.deepEqual(
       items.map(({ id, name, amount, unit, note }) => ({

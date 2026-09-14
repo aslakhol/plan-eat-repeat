@@ -68,6 +68,11 @@ model RecipeStep {
     @@index([partId])
 }
 
+enum ShoppingLanguage {
+    en
+    no
+}
+
 enum ShoppingCategory {
     PRODUCE
     BAKERY
@@ -177,6 +182,7 @@ model Household {
     name                        String
     slug                        String               @unique
     publicSlug                  String?              @unique
+    shoppingLanguage            ShoppingLanguage     @default(en)
     importInstructions          String?
     aiImportSpendAttributionKey String               @unique @default(uuid())
     createdAt                   DateTime             @default(now())

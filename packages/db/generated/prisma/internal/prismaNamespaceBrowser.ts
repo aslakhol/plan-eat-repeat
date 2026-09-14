@@ -219,6 +219,7 @@ export const HouseholdScalarFieldEnum = {
   name: 'name',
   slug: 'slug',
   publicSlug: 'publicSlug',
+  shoppingLanguage: 'shoppingLanguage',
   importInstructions: 'importInstructions',
   aiImportSpendAttributionKey: 'aiImportSpendAttributionKey',
   createdAt: 'createdAt',

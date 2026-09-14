@@ -9,6 +9,14 @@
 * 🟢 You can import this file directly.
 */
 
+export const ShoppingLanguage = {
+  en: 'en',
+  no: 'no'
+} as const
+
+export type ShoppingLanguage = (typeof ShoppingLanguage)[keyof typeof ShoppingLanguage]
+
+
 export const ShoppingCategory = {
   PRODUCE: 'PRODUCE',
   BAKERY: 'BAKERY',

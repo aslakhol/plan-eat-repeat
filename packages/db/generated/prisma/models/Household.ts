@@ -29,6 +29,7 @@ export type HouseholdMinAggregateOutputType = {
   name: string | null
   slug: string | null
   publicSlug: string | null
+  shoppingLanguage: $Enums.ShoppingLanguage | null
   importInstructions: string | null
   aiImportSpendAttributionKey: string | null
   createdAt: Date | null
@@ -40,6 +41,7 @@ export type HouseholdMaxAggregateOutputType = {
   name: string | null
   slug: string | null
   publicSlug: string | null
+  shoppingLanguage: $Enums.ShoppingLanguage | null
   importInstructions: string | null
   aiImportSpendAttributionKey: string | null
   createdAt: Date | null
@@ -51,6 +53,7 @@ export type HouseholdCountAggregateOutputType = {
   name: number
   slug: number
   publicSlug: number
+  shoppingLanguage: number
   importInstructions: number
   aiImportSpendAttributionKey: number
   createdAt: number
@@ -64,6 +67,7 @@ export type HouseholdMinAggregateInputType = {
   name?: true
   slug?: true
   publicSlug?: true
+  shoppingLanguage?: true
   importInstructions?: true
   aiImportSpendAttributionKey?: true
   createdAt?: true
@@ -75,6 +79,7 @@ export type HouseholdMaxAggregateInputType = {
   name?: true
   slug?: true
   publicSlug?: true
+  shoppingLanguage?: true
   importInstructions?: true
   aiImportSpendAttributionKey?: true
   createdAt?: true
@@ -86,6 +91,7 @@ export type HouseholdCountAggregateInputType = {
   name?: true
   slug?: true
   publicSlug?: true
+  shoppingLanguage?: true
   importInstructions?: true
   aiImportSpendAttributionKey?: true
   createdAt?: true
@@ -170,6 +176,7 @@ export type HouseholdGroupByOutputType = {
   name: string
   slug: string
   publicSlug: string | null
+  shoppingLanguage: $Enums.ShoppingLanguage
   importInstructions: string | null
   aiImportSpendAttributionKey: string
   createdAt: Date
@@ -202,6 +209,7 @@ export type HouseholdWhereInput = {
   name?: Prisma.StringFilter<"Household"> | string
   slug?: Prisma.StringFilter<"Household"> | string
   publicSlug?: Prisma.StringNullableFilter<"Household"> | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFilter<"Household"> | $Enums.ShoppingLanguage
   importInstructions?: Prisma.StringNullableFilter<"Household"> | string | null
   aiImportSpendAttributionKey?: Prisma.StringFilter<"Household"> | string
   createdAt?: Prisma.DateTimeFilter<"Household"> | Date | string
@@ -221,6 +229,7 @@ export type HouseholdOrderByWithRelationInput = {
   name?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   publicSlug?: Prisma.SortOrderInput | Prisma.SortOrder
+  shoppingLanguage?: Prisma.SortOrder
   importInstructions?: Prisma.SortOrderInput | Prisma.SortOrder
   aiImportSpendAttributionKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -244,6 +253,7 @@ export type HouseholdWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.HouseholdWhereInput[]
   NOT?: Prisma.HouseholdWhereInput | Prisma.HouseholdWhereInput[]
   name?: Prisma.StringFilter<"Household"> | string
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFilter<"Household"> | $Enums.ShoppingLanguage
   importInstructions?: Prisma.StringNullableFilter<"Household"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Household"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Household"> | Date | string
@@ -262,6 +272,7 @@ export type HouseholdOrderByWithAggregationInput = {
   name?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   publicSlug?: Prisma.SortOrderInput | Prisma.SortOrder
+  shoppingLanguage?: Prisma.SortOrder
   importInstructions?: Prisma.SortOrderInput | Prisma.SortOrder
   aiImportSpendAttributionKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -279,6 +290,7 @@ export type HouseholdScalarWhereWithAggregatesInput = {
   name?: Prisma.StringWithAggregatesFilter<"Household"> | string
   slug?: Prisma.StringWithAggregatesFilter<"Household"> | string
   publicSlug?: Prisma.StringNullableWithAggregatesFilter<"Household"> | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageWithAggregatesFilter<"Household"> | $Enums.ShoppingLanguage
   importInstructions?: Prisma.StringNullableWithAggregatesFilter<"Household"> | string | null
   aiImportSpendAttributionKey?: Prisma.StringWithAggregatesFilter<"Household"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Household"> | Date | string
@@ -290,6 +302,7 @@ export type HouseholdCreateInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -309,6 +322,7 @@ export type HouseholdUncheckedCreateInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -328,6 +342,7 @@ export type HouseholdUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -347,6 +362,7 @@ export type HouseholdUncheckedUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -366,6 +382,7 @@ export type HouseholdCreateManyInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -377,6 +394,7 @@ export type HouseholdUpdateManyMutationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -388,6 +406,7 @@ export type HouseholdUncheckedUpdateManyInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -404,6 +423,7 @@ export type HouseholdCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   publicSlug?: Prisma.SortOrder
+  shoppingLanguage?: Prisma.SortOrder
   importInstructions?: Prisma.SortOrder
   aiImportSpendAttributionKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -415,6 +435,7 @@ export type HouseholdMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   publicSlug?: Prisma.SortOrder
+  shoppingLanguage?: Prisma.SortOrder
   importInstructions?: Prisma.SortOrder
   aiImportSpendAttributionKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -426,6 +447,7 @@ export type HouseholdMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   slug?: Prisma.SortOrder
   publicSlug?: Prisma.SortOrder
+  shoppingLanguage?: Prisma.SortOrder
   importInstructions?: Prisma.SortOrder
   aiImportSpendAttributionKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -507,6 +529,10 @@ export type HouseholdUpdateOneRequiredWithoutRecentShoppingItemsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.HouseholdUpdateToOneWithWhereWithoutRecentShoppingItemsInput, Prisma.HouseholdUpdateWithoutRecentShoppingItemsInput>, Prisma.HouseholdUncheckedUpdateWithoutRecentShoppingItemsInput>
 }
 
+export type EnumShoppingLanguageFieldUpdateOperationsInput = {
+  set?: $Enums.ShoppingLanguage
+}
+
 export type HouseholdCreateNestedOneWithoutMembersInput = {
   create?: Prisma.XOR<Prisma.HouseholdCreateWithoutMembersInput, Prisma.HouseholdUncheckedCreateWithoutMembersInput>
   connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutMembersInput
@@ -556,6 +582,7 @@ export type HouseholdCreateWithoutDinnersInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -574,6 +601,7 @@ export type HouseholdUncheckedCreateWithoutDinnersInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -608,6 +636,7 @@ export type HouseholdUpdateWithoutDinnersInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -626,6 +655,7 @@ export type HouseholdUncheckedUpdateWithoutDinnersInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -644,6 +674,7 @@ export type HouseholdCreateWithoutShoppingProductsInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -662,6 +693,7 @@ export type HouseholdUncheckedCreateWithoutShoppingProductsInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -696,6 +728,7 @@ export type HouseholdUpdateWithoutShoppingProductsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -714,6 +747,7 @@ export type HouseholdUncheckedUpdateWithoutShoppingProductsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -732,6 +766,7 @@ export type HouseholdCreateWithoutShoppingItemsInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -750,6 +785,7 @@ export type HouseholdUncheckedCreateWithoutShoppingItemsInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -784,6 +820,7 @@ export type HouseholdUpdateWithoutShoppingItemsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -802,6 +839,7 @@ export type HouseholdUncheckedUpdateWithoutShoppingItemsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -820,6 +858,7 @@ export type HouseholdCreateWithoutUsuallyHaveInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -838,6 +877,7 @@ export type HouseholdUncheckedCreateWithoutUsuallyHaveInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -872,6 +912,7 @@ export type HouseholdUpdateWithoutUsuallyHaveInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -890,6 +931,7 @@ export type HouseholdUncheckedUpdateWithoutUsuallyHaveInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -908,6 +950,7 @@ export type HouseholdCreateWithoutRecentShoppingItemsInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -926,6 +969,7 @@ export type HouseholdUncheckedCreateWithoutRecentShoppingItemsInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -960,6 +1004,7 @@ export type HouseholdUpdateWithoutRecentShoppingItemsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -978,6 +1023,7 @@ export type HouseholdUncheckedUpdateWithoutRecentShoppingItemsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -996,6 +1042,7 @@ export type HouseholdCreateWithoutMembersInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -1014,6 +1061,7 @@ export type HouseholdUncheckedCreateWithoutMembersInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -1048,6 +1096,7 @@ export type HouseholdUpdateWithoutMembersInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1066,6 +1115,7 @@ export type HouseholdUncheckedUpdateWithoutMembersInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1084,6 +1134,7 @@ export type HouseholdCreateWithoutAiImportAttemptsInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -1102,6 +1153,7 @@ export type HouseholdUncheckedCreateWithoutAiImportAttemptsInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -1136,6 +1188,7 @@ export type HouseholdUpdateWithoutAiImportAttemptsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1154,6 +1207,7 @@ export type HouseholdUncheckedUpdateWithoutAiImportAttemptsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1172,6 +1226,7 @@ export type HouseholdCreateWithoutInviteInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -1190,6 +1245,7 @@ export type HouseholdUncheckedCreateWithoutInviteInput = {
   name: string
   slug: string
   publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
   importInstructions?: string | null
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
@@ -1224,6 +1280,7 @@ export type HouseholdUpdateWithoutInviteInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1242,6 +1299,7 @@ export type HouseholdUncheckedUpdateWithoutInviteInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   slug?: Prisma.StringFieldUpdateOperationsInput | string
   publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
   importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1354,6 +1412,7 @@ export type HouseholdSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   name?: boolean
   slug?: boolean
   publicSlug?: boolean
+  shoppingLanguage?: boolean
   importInstructions?: boolean
   aiImportSpendAttributionKey?: boolean
   createdAt?: boolean
@@ -1374,6 +1433,7 @@ export type HouseholdSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   name?: boolean
   slug?: boolean
   publicSlug?: boolean
+  shoppingLanguage?: boolean
   importInstructions?: boolean
   aiImportSpendAttributionKey?: boolean
   createdAt?: boolean
@@ -1385,6 +1445,7 @@ export type HouseholdSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   name?: boolean
   slug?: boolean
   publicSlug?: boolean
+  shoppingLanguage?: boolean
   importInstructions?: boolean
   aiImportSpendAttributionKey?: boolean
   createdAt?: boolean
@@ -1396,13 +1457,14 @@ export type HouseholdSelectScalar = {
   name?: boolean
   slug?: boolean
   publicSlug?: boolean
+  shoppingLanguage?: boolean
   importInstructions?: boolean
   aiImportSpendAttributionKey?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type HouseholdOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "slug" | "publicSlug" | "importInstructions" | "aiImportSpendAttributionKey" | "createdAt" | "updatedAt", ExtArgs["result"]["household"]>
+export type HouseholdOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "slug" | "publicSlug" | "shoppingLanguage" | "importInstructions" | "aiImportSpendAttributionKey" | "createdAt" | "updatedAt", ExtArgs["result"]["household"]>
 export type HouseholdInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   Dinners?: boolean | Prisma.Household$DinnersArgs<ExtArgs>
   Members?: boolean | Prisma.Household$MembersArgs<ExtArgs>
@@ -1434,6 +1496,7 @@ export type $HouseholdPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     name: string
     slug: string
     publicSlug: string | null
+    shoppingLanguage: $Enums.ShoppingLanguage
     importInstructions: string | null
     aiImportSpendAttributionKey: string
     createdAt: Date
@@ -1873,6 +1936,7 @@ export interface HouseholdFieldRefs {
   readonly name: Prisma.FieldRef<"Household", 'String'>
   readonly slug: Prisma.FieldRef<"Household", 'String'>
   readonly publicSlug: Prisma.FieldRef<"Household", 'String'>
+  readonly shoppingLanguage: Prisma.FieldRef<"Household", 'ShoppingLanguage'>
   readonly importInstructions: Prisma.FieldRef<"Household", 'String'>
   readonly aiImportSpendAttributionKey: Prisma.FieldRef<"Household", 'String'>
   readonly createdAt: Prisma.FieldRef<"Household", 'DateTime'>
