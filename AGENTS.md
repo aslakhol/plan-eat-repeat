@@ -26,6 +26,8 @@ Guidance for agents working in this repository.
 
 ## Commands
 
+Before adding or changing tests, read [the testing policy](docs/agents/testing.md). It defines which behaviour deserves automated coverage and which checks belong in manual verification.
+
 - `pnpm dev` (all apps)
 - `pnpm dev:web`
 - `pnpm dev:mobile`

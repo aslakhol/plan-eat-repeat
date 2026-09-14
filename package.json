@@ -19,7 +19,10 @@
     "capture": "scripts/capture/run.sh",
     "capture:web": "scripts/capture/run-web.sh",
     "capture:mobile": "scripts/capture/run-mobile.sh",
-    "db:fix": "docker compose -f database-docker.yml down --volumes && docker compose -f database-docker.yml up --build -d && echo Waiting for databases to boot... && sleep 4 && echo Populating seed data... && pnpm run db:reset && echo Local databases wiped and ready. Restart pnpm run dev if running..."
+    "db:fix": "docker compose -f database-docker.yml down --volumes && docker compose -f database-docker.yml up --build -d && echo Waiting for databases to boot... && sleep 4 && echo Populating seed data... && pnpm run db:reset && echo Local databases wiped and ready. Restart pnpm run dev if running...",
+    "test": "turbo test",
+    "test:integration": "turbo test:integration",
+    "test:e2e": "turbo test:e2e"
   },
   "devDependencies": {
     "turbo": "^2.5.4",
