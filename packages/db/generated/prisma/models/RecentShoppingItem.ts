@@ -35,6 +35,7 @@ export type RecentShoppingItemSumAggregateOutputType = {
 }
 
 export type RecentShoppingItemMinAggregateOutputType = {
+  productId: string | null
   id: string | null
   householdId: string | null
   name: string | null
@@ -47,6 +48,7 @@ export type RecentShoppingItemMinAggregateOutputType = {
 }
 
 export type RecentShoppingItemMaxAggregateOutputType = {
+  productId: string | null
   id: string | null
   householdId: string | null
   name: string | null
@@ -59,6 +61,7 @@ export type RecentShoppingItemMaxAggregateOutputType = {
 }
 
 export type RecentShoppingItemCountAggregateOutputType = {
+  productId: number
   id: number
   householdId: number
   name: number
@@ -81,6 +84,7 @@ export type RecentShoppingItemSumAggregateInputType = {
 }
 
 export type RecentShoppingItemMinAggregateInputType = {
+  productId?: true
   id?: true
   householdId?: true
   name?: true
@@ -93,6 +97,7 @@ export type RecentShoppingItemMinAggregateInputType = {
 }
 
 export type RecentShoppingItemMaxAggregateInputType = {
+  productId?: true
   id?: true
   householdId?: true
   name?: true
@@ -105,6 +110,7 @@ export type RecentShoppingItemMaxAggregateInputType = {
 }
 
 export type RecentShoppingItemCountAggregateInputType = {
+  productId?: true
   id?: true
   householdId?: true
   name?: true
@@ -204,6 +210,7 @@ export type RecentShoppingItemGroupByArgs<ExtArgs extends runtime.Types.Extensio
 }
 
 export type RecentShoppingItemGroupByOutputType = {
+  productId: string
   id: string
   householdId: string
   name: string
@@ -239,6 +246,7 @@ export type RecentShoppingItemWhereInput = {
   AND?: Prisma.RecentShoppingItemWhereInput | Prisma.RecentShoppingItemWhereInput[]
   OR?: Prisma.RecentShoppingItemWhereInput[]
   NOT?: Prisma.RecentShoppingItemWhereInput | Prisma.RecentShoppingItemWhereInput[]
+  productId?: Prisma.StringFilter<"RecentShoppingItem"> | string
   id?: Prisma.StringFilter<"RecentShoppingItem"> | string
   householdId?: Prisma.StringFilter<"RecentShoppingItem"> | string
   name?: Prisma.StringFilter<"RecentShoppingItem"> | string
@@ -248,10 +256,12 @@ export type RecentShoppingItemWhereInput = {
   note?: Prisma.StringNullableFilter<"RecentShoppingItem"> | string | null
   recentlyUsedAt?: Prisma.DateTimeFilter<"RecentShoppingItem"> | Date | string
   revision?: Prisma.StringFilter<"RecentShoppingItem"> | string
+  product?: Prisma.XOR<Prisma.ShoppingProductScalarRelationFilter, Prisma.ShoppingProductWhereInput>
   household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
 }
 
 export type RecentShoppingItemOrderByWithRelationInput = {
+  productId?: Prisma.SortOrder
   id?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -261,6 +271,7 @@ export type RecentShoppingItemOrderByWithRelationInput = {
   note?: Prisma.SortOrderInput | Prisma.SortOrder
   recentlyUsedAt?: Prisma.SortOrder
   revision?: Prisma.SortOrder
+  product?: Prisma.ShoppingProductOrderByWithRelationInput
   household?: Prisma.HouseholdOrderByWithRelationInput
 }
 
@@ -270,6 +281,7 @@ export type RecentShoppingItemWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.RecentShoppingItemWhereInput | Prisma.RecentShoppingItemWhereInput[]
   OR?: Prisma.RecentShoppingItemWhereInput[]
   NOT?: Prisma.RecentShoppingItemWhereInput | Prisma.RecentShoppingItemWhereInput[]
+  productId?: Prisma.StringFilter<"RecentShoppingItem"> | string
   householdId?: Prisma.StringFilter<"RecentShoppingItem"> | string
   name?: Prisma.StringFilter<"RecentShoppingItem"> | string
   normalizedName?: Prisma.StringFilter<"RecentShoppingItem"> | string
@@ -278,10 +290,12 @@ export type RecentShoppingItemWhereUniqueInput = Prisma.AtLeast<{
   note?: Prisma.StringNullableFilter<"RecentShoppingItem"> | string | null
   recentlyUsedAt?: Prisma.DateTimeFilter<"RecentShoppingItem"> | Date | string
   revision?: Prisma.StringFilter<"RecentShoppingItem"> | string
+  product?: Prisma.XOR<Prisma.ShoppingProductScalarRelationFilter, Prisma.ShoppingProductWhereInput>
   household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
 }, "id" | "householdId_normalizedName">
 
 export type RecentShoppingItemOrderByWithAggregationInput = {
+  productId?: Prisma.SortOrder
   id?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -302,6 +316,7 @@ export type RecentShoppingItemScalarWhereWithAggregatesInput = {
   AND?: Prisma.RecentShoppingItemScalarWhereWithAggregatesInput | Prisma.RecentShoppingItemScalarWhereWithAggregatesInput[]
   OR?: Prisma.RecentShoppingItemScalarWhereWithAggregatesInput[]
   NOT?: Prisma.RecentShoppingItemScalarWhereWithAggregatesInput | Prisma.RecentShoppingItemScalarWhereWithAggregatesInput[]
+  productId?: Prisma.StringWithAggregatesFilter<"RecentShoppingItem"> | string
   id?: Prisma.StringWithAggregatesFilter<"RecentShoppingItem"> | string
   householdId?: Prisma.StringWithAggregatesFilter<"RecentShoppingItem"> | string
   name?: Prisma.StringWithAggregatesFilter<"RecentShoppingItem"> | string
@@ -322,10 +337,12 @@ export type RecentShoppingItemCreateInput = {
   note?: string | null
   recentlyUsedAt?: Date | string
   revision?: string
+  product: Prisma.ShoppingProductCreateNestedOneWithoutRecentItemsInput
   household: Prisma.HouseholdCreateNestedOneWithoutRecentShoppingItemsInput
 }
 
 export type RecentShoppingItemUncheckedCreateInput = {
+  productId: string
   id?: string
   householdId: string
   name: string
@@ -346,10 +363,12 @@ export type RecentShoppingItemUpdateInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recentlyUsedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   revision?: Prisma.StringFieldUpdateOperationsInput | string
+  product?: Prisma.ShoppingProductUpdateOneRequiredWithoutRecentItemsNestedInput
   household?: Prisma.HouseholdUpdateOneRequiredWithoutRecentShoppingItemsNestedInput
 }
 
 export type RecentShoppingItemUncheckedUpdateInput = {
+  productId?: Prisma.StringFieldUpdateOperationsInput | string
   id?: Prisma.StringFieldUpdateOperationsInput | string
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
@@ -362,6 +381,7 @@ export type RecentShoppingItemUncheckedUpdateInput = {
 }
 
 export type RecentShoppingItemCreateManyInput = {
+  productId: string
   id?: string
   householdId: string
   name: string
@@ -385,6 +405,7 @@ export type RecentShoppingItemUpdateManyMutationInput = {
 }
 
 export type RecentShoppingItemUncheckedUpdateManyInput = {
+  productId?: Prisma.StringFieldUpdateOperationsInput | string
   id?: Prisma.StringFieldUpdateOperationsInput | string
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
@@ -396,12 +417,23 @@ export type RecentShoppingItemUncheckedUpdateManyInput = {
   revision?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
+export type RecentShoppingItemListRelationFilter = {
+  every?: Prisma.RecentShoppingItemWhereInput
+  some?: Prisma.RecentShoppingItemWhereInput
+  none?: Prisma.RecentShoppingItemWhereInput
+}
+
+export type RecentShoppingItemOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
 export type RecentShoppingItemHouseholdIdNormalizedNameCompoundUniqueInput = {
   householdId: string
   normalizedName: string
 }
 
 export type RecentShoppingItemCountOrderByAggregateInput = {
+  productId?: Prisma.SortOrder
   id?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -418,6 +450,7 @@ export type RecentShoppingItemAvgOrderByAggregateInput = {
 }
 
 export type RecentShoppingItemMaxOrderByAggregateInput = {
+  productId?: Prisma.SortOrder
   id?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -430,6 +463,7 @@ export type RecentShoppingItemMaxOrderByAggregateInput = {
 }
 
 export type RecentShoppingItemMinOrderByAggregateInput = {
+  productId?: Prisma.SortOrder
   id?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   name?: Prisma.SortOrder
@@ -445,14 +479,46 @@ export type RecentShoppingItemSumOrderByAggregateInput = {
   amount?: Prisma.SortOrder
 }
 
-export type RecentShoppingItemListRelationFilter = {
-  every?: Prisma.RecentShoppingItemWhereInput
-  some?: Prisma.RecentShoppingItemWhereInput
-  none?: Prisma.RecentShoppingItemWhereInput
+export type RecentShoppingItemCreateNestedManyWithoutProductInput = {
+  create?: Prisma.XOR<Prisma.RecentShoppingItemCreateWithoutProductInput, Prisma.RecentShoppingItemUncheckedCreateWithoutProductInput> | Prisma.RecentShoppingItemCreateWithoutProductInput[] | Prisma.RecentShoppingItemUncheckedCreateWithoutProductInput[]
+  connectOrCreate?: Prisma.RecentShoppingItemCreateOrConnectWithoutProductInput | Prisma.RecentShoppingItemCreateOrConnectWithoutProductInput[]
+  createMany?: Prisma.RecentShoppingItemCreateManyProductInputEnvelope
+  connect?: Prisma.RecentShoppingItemWhereUniqueInput | Prisma.RecentShoppingItemWhereUniqueInput[]
 }
 
-export type RecentShoppingItemOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
+export type RecentShoppingItemUncheckedCreateNestedManyWithoutProductInput = {
+  create?: Prisma.XOR<Prisma.RecentShoppingItemCreateWithoutProductInput, Prisma.RecentShoppingItemUncheckedCreateWithoutProductInput> | Prisma.RecentShoppingItemCreateWithoutProductInput[] | Prisma.RecentShoppingItemUncheckedCreateWithoutProductInput[]
+  connectOrCreate?: Prisma.RecentShoppingItemCreateOrConnectWithoutProductInput | Prisma.RecentShoppingItemCreateOrConnectWithoutProductInput[]
+  createMany?: Prisma.RecentShoppingItemCreateManyProductInputEnvelope
+  connect?: Prisma.RecentShoppingItemWhereUniqueInput | Prisma.RecentShoppingItemWhereUniqueInput[]
+}
+
+export type RecentShoppingItemUpdateManyWithoutProductNestedInput = {
+  create?: Prisma.XOR<Prisma.RecentShoppingItemCreateWithoutProductInput, Prisma.RecentShoppingItemUncheckedCreateWithoutProductInput> | Prisma.RecentShoppingItemCreateWithoutProductInput[] | Prisma.RecentShoppingItemUncheckedCreateWithoutProductInput[]
+  connectOrCreate?: Prisma.RecentShoppingItemCreateOrConnectWithoutProductInput | Prisma.RecentShoppingItemCreateOrConnectWithoutProductInput[]
+  upsert?: Prisma.RecentShoppingItemUpsertWithWhereUniqueWithoutProductInput | Prisma.RecentShoppingItemUpsertWithWhereUniqueWithoutProductInput[]
+  createMany?: Prisma.RecentShoppingItemCreateManyProductInputEnvelope
+  set?: Prisma.RecentShoppingItemWhereUniqueInput | Prisma.RecentShoppingItemWhereUniqueInput[]
+  disconnect?: Prisma.RecentShoppingItemWhereUniqueInput | Prisma.RecentShoppingItemWhereUniqueInput[]
+  delete?: Prisma.RecentShoppingItemWhereUniqueInput | Prisma.RecentShoppingItemWhereUniqueInput[]
+  connect?: Prisma.RecentShoppingItemWhereUniqueInput | Prisma.RecentShoppingItemWhereUniqueInput[]
+  update?: Prisma.RecentShoppingItemUpdateWithWhereUniqueWithoutProductInput | Prisma.RecentShoppingItemUpdateWithWhereUniqueWithoutProductInput[]
+  updateMany?: Prisma.RecentShoppingItemUpdateManyWithWhereWithoutProductInput | Prisma.RecentShoppingItemUpdateManyWithWhereWithoutProductInput[]
+  deleteMany?: Prisma.RecentShoppingItemScalarWhereInput | Prisma.RecentShoppingItemScalarWhereInput[]
+}
+
+export type RecentShoppingItemUncheckedUpdateManyWithoutProductNestedInput = {
+  create?: Prisma.XOR<Prisma.RecentShoppingItemCreateWithoutProductInput, Prisma.RecentShoppingItemUncheckedCreateWithoutProductInput> | Prisma.RecentShoppingItemCreateWithoutProductInput[] | Prisma.RecentShoppingItemUncheckedCreateWithoutProductInput[]
+  connectOrCreate?: Prisma.RecentShoppingItemCreateOrConnectWithoutProductInput | Prisma.RecentShoppingItemCreateOrConnectWithoutProductInput[]
+  upsert?: Prisma.RecentShoppingItemUpsertWithWhereUniqueWithoutProductInput | Prisma.RecentShoppingItemUpsertWithWhereUniqueWithoutProductInput[]
+  createMany?: Prisma.RecentShoppingItemCreateManyProductInputEnvelope
+  set?: Prisma.RecentShoppingItemWhereUniqueInput | Prisma.RecentShoppingItemWhereUniqueInput[]
+  disconnect?: Prisma.RecentShoppingItemWhereUniqueInput | Prisma.RecentShoppingItemWhereUniqueInput[]
+  delete?: Prisma.RecentShoppingItemWhereUniqueInput | Prisma.RecentShoppingItemWhereUniqueInput[]
+  connect?: Prisma.RecentShoppingItemWhereUniqueInput | Prisma.RecentShoppingItemWhereUniqueInput[]
+  update?: Prisma.RecentShoppingItemUpdateWithWhereUniqueWithoutProductInput | Prisma.RecentShoppingItemUpdateWithWhereUniqueWithoutProductInput[]
+  updateMany?: Prisma.RecentShoppingItemUpdateManyWithWhereWithoutProductInput | Prisma.RecentShoppingItemUpdateManyWithWhereWithoutProductInput[]
+  deleteMany?: Prisma.RecentShoppingItemScalarWhereInput | Prisma.RecentShoppingItemScalarWhereInput[]
 }
 
 export type RecentShoppingItemCreateNestedManyWithoutHouseholdInput = {
@@ -497,8 +563,21 @@ export type RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput = {
   deleteMany?: Prisma.RecentShoppingItemScalarWhereInput | Prisma.RecentShoppingItemScalarWhereInput[]
 }
 
-export type RecentShoppingItemCreateWithoutHouseholdInput = {
+export type RecentShoppingItemCreateWithoutProductInput = {
   id?: string
+  name: string
+  normalizedName: string
+  amount?: number | null
+  unit?: string | null
+  note?: string | null
+  recentlyUsedAt?: Date | string
+  revision?: string
+  household: Prisma.HouseholdCreateNestedOneWithoutRecentShoppingItemsInput
+}
+
+export type RecentShoppingItemUncheckedCreateWithoutProductInput = {
+  id?: string
+  householdId: string
   name: string
   normalizedName: string
   amount?: number | null
@@ -508,7 +587,62 @@ export type RecentShoppingItemCreateWithoutHouseholdInput = {
   revision?: string
 }
 
+export type RecentShoppingItemCreateOrConnectWithoutProductInput = {
+  where: Prisma.RecentShoppingItemWhereUniqueInput
+  create: Prisma.XOR<Prisma.RecentShoppingItemCreateWithoutProductInput, Prisma.RecentShoppingItemUncheckedCreateWithoutProductInput>
+}
+
+export type RecentShoppingItemCreateManyProductInputEnvelope = {
+  data: Prisma.RecentShoppingItemCreateManyProductInput | Prisma.RecentShoppingItemCreateManyProductInput[]
+  skipDuplicates?: boolean
+}
+
+export type RecentShoppingItemUpsertWithWhereUniqueWithoutProductInput = {
+  where: Prisma.RecentShoppingItemWhereUniqueInput
+  update: Prisma.XOR<Prisma.RecentShoppingItemUpdateWithoutProductInput, Prisma.RecentShoppingItemUncheckedUpdateWithoutProductInput>
+  create: Prisma.XOR<Prisma.RecentShoppingItemCreateWithoutProductInput, Prisma.RecentShoppingItemUncheckedCreateWithoutProductInput>
+}
+
+export type RecentShoppingItemUpdateWithWhereUniqueWithoutProductInput = {
+  where: Prisma.RecentShoppingItemWhereUniqueInput
+  data: Prisma.XOR<Prisma.RecentShoppingItemUpdateWithoutProductInput, Prisma.RecentShoppingItemUncheckedUpdateWithoutProductInput>
+}
+
+export type RecentShoppingItemUpdateManyWithWhereWithoutProductInput = {
+  where: Prisma.RecentShoppingItemScalarWhereInput
+  data: Prisma.XOR<Prisma.RecentShoppingItemUpdateManyMutationInput, Prisma.RecentShoppingItemUncheckedUpdateManyWithoutProductInput>
+}
+
+export type RecentShoppingItemScalarWhereInput = {
+  AND?: Prisma.RecentShoppingItemScalarWhereInput | Prisma.RecentShoppingItemScalarWhereInput[]
+  OR?: Prisma.RecentShoppingItemScalarWhereInput[]
+  NOT?: Prisma.RecentShoppingItemScalarWhereInput | Prisma.RecentShoppingItemScalarWhereInput[]
+  productId?: Prisma.StringFilter<"RecentShoppingItem"> | string
+  id?: Prisma.StringFilter<"RecentShoppingItem"> | string
+  householdId?: Prisma.StringFilter<"RecentShoppingItem"> | string
+  name?: Prisma.StringFilter<"RecentShoppingItem"> | string
+  normalizedName?: Prisma.StringFilter<"RecentShoppingItem"> | string
+  amount?: Prisma.FloatNullableFilter<"RecentShoppingItem"> | number | null
+  unit?: Prisma.StringNullableFilter<"RecentShoppingItem"> | string | null
+  note?: Prisma.StringNullableFilter<"RecentShoppingItem"> | string | null
+  recentlyUsedAt?: Prisma.DateTimeFilter<"RecentShoppingItem"> | Date | string
+  revision?: Prisma.StringFilter<"RecentShoppingItem"> | string
+}
+
+export type RecentShoppingItemCreateWithoutHouseholdInput = {
+  id?: string
+  name: string
+  normalizedName: string
+  amount?: number | null
+  unit?: string | null
+  note?: string | null
+  recentlyUsedAt?: Date | string
+  revision?: string
+  product: Prisma.ShoppingProductCreateNestedOneWithoutRecentItemsInput
+}
+
 export type RecentShoppingItemUncheckedCreateWithoutHouseholdInput = {
+  productId: string
   id?: string
   name: string
   normalizedName: string
@@ -545,22 +679,56 @@ export type RecentShoppingItemUpdateManyWithWhereWithoutHouseholdInput = {
   data: Prisma.XOR<Prisma.RecentShoppingItemUpdateManyMutationInput, Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdInput>
 }
 
-export type RecentShoppingItemScalarWhereInput = {
-  AND?: Prisma.RecentShoppingItemScalarWhereInput | Prisma.RecentShoppingItemScalarWhereInput[]
-  OR?: Prisma.RecentShoppingItemScalarWhereInput[]
-  NOT?: Prisma.RecentShoppingItemScalarWhereInput | Prisma.RecentShoppingItemScalarWhereInput[]
-  id?: Prisma.StringFilter<"RecentShoppingItem"> | string
-  householdId?: Prisma.StringFilter<"RecentShoppingItem"> | string
-  name?: Prisma.StringFilter<"RecentShoppingItem"> | string
-  normalizedName?: Prisma.StringFilter<"RecentShoppingItem"> | string
-  amount?: Prisma.FloatNullableFilter<"RecentShoppingItem"> | number | null
-  unit?: Prisma.StringNullableFilter<"RecentShoppingItem"> | string | null
-  note?: Prisma.StringNullableFilter<"RecentShoppingItem"> | string | null
-  recentlyUsedAt?: Prisma.DateTimeFilter<"RecentShoppingItem"> | Date | string
-  revision?: Prisma.StringFilter<"RecentShoppingItem"> | string
+export type RecentShoppingItemCreateManyProductInput = {
+  id?: string
+  householdId: string
+  name: string
+  normalizedName: string
+  amount?: number | null
+  unit?: string | null
+  note?: string | null
+  recentlyUsedAt?: Date | string
+  revision?: string
+}
+
+export type RecentShoppingItemUpdateWithoutProductInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recentlyUsedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  revision?: Prisma.StringFieldUpdateOperationsInput | string
+  household?: Prisma.HouseholdUpdateOneRequiredWithoutRecentShoppingItemsNestedInput
+}
+
+export type RecentShoppingItemUncheckedUpdateWithoutProductInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  householdId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recentlyUsedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  revision?: Prisma.StringFieldUpdateOperationsInput | string
+}
+
+export type RecentShoppingItemUncheckedUpdateManyWithoutProductInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  householdId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recentlyUsedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  revision?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type RecentShoppingItemCreateManyHouseholdInput = {
+  productId: string
   id?: string
   name: string
   normalizedName: string
@@ -580,9 +748,11 @@ export type RecentShoppingItemUpdateWithoutHouseholdInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recentlyUsedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   revision?: Prisma.StringFieldUpdateOperationsInput | string
+  product?: Prisma.ShoppingProductUpdateOneRequiredWithoutRecentItemsNestedInput
 }
 
 export type RecentShoppingItemUncheckedUpdateWithoutHouseholdInput = {
+  productId?: Prisma.StringFieldUpdateOperationsInput | string
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
@@ -594,6 +764,7 @@ export type RecentShoppingItemUncheckedUpdateWithoutHouseholdInput = {
 }
 
 export type RecentShoppingItemUncheckedUpdateManyWithoutHouseholdInput = {
+  productId?: Prisma.StringFieldUpdateOperationsInput | string
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
@@ -607,6 +778,7 @@ export type RecentShoppingItemUncheckedUpdateManyWithoutHouseholdInput = {
 
 
 export type RecentShoppingItemSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  productId?: boolean
   id?: boolean
   householdId?: boolean
   name?: boolean
@@ -616,10 +788,12 @@ export type RecentShoppingItemSelect<ExtArgs extends runtime.Types.Extensions.In
   note?: boolean
   recentlyUsedAt?: boolean
   revision?: boolean
+  product?: boolean | Prisma.ShoppingProductDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["recentShoppingItem"]>
 
 export type RecentShoppingItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  productId?: boolean
   id?: boolean
   householdId?: boolean
   name?: boolean
@@ -629,10 +803,12 @@ export type RecentShoppingItemSelectCreateManyAndReturn<ExtArgs extends runtime.
   note?: boolean
   recentlyUsedAt?: boolean
   revision?: boolean
+  product?: boolean | Prisma.ShoppingProductDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["recentShoppingItem"]>
 
 export type RecentShoppingItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  productId?: boolean
   id?: boolean
   householdId?: boolean
   name?: boolean
@@ -642,10 +818,12 @@ export type RecentShoppingItemSelectUpdateManyAndReturn<ExtArgs extends runtime.
   note?: boolean
   recentlyUsedAt?: boolean
   revision?: boolean
+  product?: boolean | Prisma.ShoppingProductDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["recentShoppingItem"]>
 
 export type RecentShoppingItemSelectScalar = {
+  productId?: boolean
   id?: boolean
   householdId?: boolean
   name?: boolean
@@ -657,23 +835,28 @@ export type RecentShoppingItemSelectScalar = {
   revision?: boolean
 }
 
-export type RecentShoppingItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "householdId" | "name" | "normalizedName" | "amount" | "unit" | "note" | "recentlyUsedAt" | "revision", ExtArgs["result"]["recentShoppingItem"]>
+export type RecentShoppingItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"productId" | "id" | "householdId" | "name" | "normalizedName" | "amount" | "unit" | "note" | "recentlyUsedAt" | "revision", ExtArgs["result"]["recentShoppingItem"]>
 export type RecentShoppingItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  product?: boolean | Prisma.ShoppingProductDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }
 export type RecentShoppingItemIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  product?: boolean | Prisma.ShoppingProductDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }
 export type RecentShoppingItemIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  product?: boolean | Prisma.ShoppingProductDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }
 
 export type $RecentShoppingItemPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "RecentShoppingItem"
   objects: {
+    product: Prisma.$ShoppingProductPayload<ExtArgs>
     household: Prisma.$HouseholdPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    productId: string
     id: string
     householdId: string
     name: string
@@ -766,8 +949,8 @@ export interface RecentShoppingItemDelegate<ExtArgs extends runtime.Types.Extens
    * // Get first 10 RecentShoppingItems
    * const recentShoppingItems = await prisma.recentShoppingItem.findMany({ take: 10 })
    * 
-   * // Only select the `id`
-   * const recentShoppingItemWithIdOnly = await prisma.recentShoppingItem.findMany({ select: { id: true } })
+   * // Only select the `productId`
+   * const recentShoppingItemWithProductIdOnly = await prisma.recentShoppingItem.findMany({ select: { productId: true } })
    * 
    */
   findMany<T extends RecentShoppingItemFindManyArgs>(args?: Prisma.SelectSubset<T, RecentShoppingItemFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RecentShoppingItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
@@ -811,9 +994,9 @@ export interface RecentShoppingItemDelegate<ExtArgs extends runtime.Types.Extens
    *   ]
    * })
    * 
-   * // Create many RecentShoppingItems and only return the `id`
-   * const recentShoppingItemWithIdOnly = await prisma.recentShoppingItem.createManyAndReturn({
-   *   select: { id: true },
+   * // Create many RecentShoppingItems and only return the `productId`
+   * const recentShoppingItemWithProductIdOnly = await prisma.recentShoppingItem.createManyAndReturn({
+   *   select: { productId: true },
    *   data: [
    *     // ... provide data here
    *   ]
@@ -902,9 +1085,9 @@ export interface RecentShoppingItemDelegate<ExtArgs extends runtime.Types.Extens
    *   ]
    * })
    * 
-   * // Update zero or more RecentShoppingItems and only return the `id`
-   * const recentShoppingItemWithIdOnly = await prisma.recentShoppingItem.updateManyAndReturn({
-   *   select: { id: true },
+   * // Update zero or more RecentShoppingItems and only return the `productId`
+   * const recentShoppingItemWithProductIdOnly = await prisma.recentShoppingItem.updateManyAndReturn({
+   *   select: { productId: true },
    *   where: {
    *     // ... provide filter here
    *   },
@@ -1077,6 +1260,7 @@ readonly fields: RecentShoppingItemFieldRefs;
  */
 export interface Prisma__RecentShoppingItemClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  product<T extends Prisma.ShoppingProductDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ShoppingProductDefaultArgs<ExtArgs>>): Prisma.Prisma__ShoppingProductClient<runtime.Types.Result.GetResult<Prisma.$ShoppingProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   household<T extends Prisma.HouseholdDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.HouseholdDefaultArgs<ExtArgs>>): Prisma.Prisma__HouseholdClient<runtime.Types.Result.GetResult<Prisma.$HouseholdPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1107,6 +1291,7 @@ export interface Prisma__RecentShoppingItemClient<T, Null = never, ExtArgs exten
  * Fields of the RecentShoppingItem model
  */
 export interface RecentShoppingItemFieldRefs {
+  readonly productId: Prisma.FieldRef<"RecentShoppingItem", 'String'>
   readonly id: Prisma.FieldRef<"RecentShoppingItem", 'String'>
   readonly householdId: Prisma.FieldRef<"RecentShoppingItem", 'String'>
   readonly name: Prisma.FieldRef<"RecentShoppingItem", 'String'>

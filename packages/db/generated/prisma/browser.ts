@@ -38,6 +38,11 @@ export type RecipeIngredient = Prisma.RecipeIngredientModel
  */
 export type RecipeStep = Prisma.RecipeStepModel
 /**
+ * Model ShoppingProduct
+ * 
+ */
+export type ShoppingProduct = Prisma.ShoppingProductModel
+/**
  * Model ShoppingItem
  * 
  */

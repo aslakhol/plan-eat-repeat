@@ -67,6 +67,58 @@ const withShoppingList = async (
   }
 };
 
+void test("Shopping Products survive clearing, dismissal, and Usually Have removal across shopping trips", () =>
+  withShoppingList(async ({ caller, member, createDinner }) => {
+    await caller.setUsuallyHave({ name: " Olive  oil ", excluded: true });
+    const [preference] = await member.usuallyHave();
+    assert.ok(preference?.productId);
+    assert.deepEqual(await caller.list(), []);
+    assert.deepEqual(await caller.recent(), []);
+
+    const dinner = await createDinner({ name: "OLIVE\tOIL" });
+    const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
+    const [recent] = await member.recent();
+    assert.equal(recent?.productId, preference.productId);
+    await member.undo(addition.undo);
+    assert.deepEqual(await caller.recent(), []);
+    await member.setUsuallyHave({ name: "olive oil", excluded: false });
+    assert.deepEqual(await caller.usuallyHave(), []);
+
+    const manual = await caller.addManual({ name: "olive oil" });
+    assert.equal(manual.productId, preference.productId);
+    const measured = await member.edit({
+      ...manual,
+      amount: 1,
+      unit: "l",
+      note: "For salad",
+    });
+    await caller.addDinners({ dinnerIds: [dinner.id] });
+    const active = await member.list();
+    assert.equal(active.length, 2);
+    assert.ok(active.every((item) => item.productId === preference.productId));
+    assert.ok(
+      active.some(
+        (item) => item.id === measured.id && item.note === "For salad",
+      ),
+    );
+    await caller.clear();
+    const [cleared] = await member.recent();
+    assert.equal(cleared?.productId, preference.productId);
+    const restored = await member.addRecent({ id: cleared!.id });
+    assert.equal(restored.productId, preference.productId);
+    await member.remove({ id: restored.id });
+    const [removed] = await caller.recent();
+    await caller.removeRecent({ id: removed!.id });
+    assert.deepEqual(await caller.recent(), []);
+    const nextTrip = await member.addManual({ name: "OLIVE   OIL" });
+    assert.equal(nextTrip.productId, preference.productId);
+
+    await withShoppingList(async ({ caller: other }) => {
+      const otherOil = await other.addManual({ name: "Olive oil" });
+      assert.notEqual(otherOil.productId, preference.productId);
+    });
+  }));
+
 void test("Recently Used keeps the latest details per name, hides active names, and restores items for the Household", () =>
   withShoppingList(async ({ caller, member }) => {
     assert.deepEqual(await caller.recent(), []);

@@ -1,7 +1,7 @@
-import { normalizeShoppingName } from "@planeatrepeat/shared";
 import {
   amountInputSchema,
   formatAmount,
+  normalizeShoppingName,
   parseAmount,
   UNITS,
 } from "@planeatrepeat/shared";

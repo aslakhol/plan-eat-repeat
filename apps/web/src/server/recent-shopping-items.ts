@@ -1,3 +1,4 @@
+import { rememberShoppingProduct } from "./shopping-products";
 import type { Prisma, ShoppingItem } from "@planeatrepeat/db";
 import { normalizeShoppingName, normalizeUnit } from "@planeatrepeat/shared";
 
@@ -22,7 +23,9 @@ export async function rememberShoppingItems(
   const saved = [];
   for (const [normalizedName, item] of distinct) {
     const name = item.name.trim();
+    const product = await rememberShoppingProduct(tx, householdId, name);
     const data = {
+      productId: product.id,
       name: name.charAt(0).toUpperCase() + name.slice(1),
       normalizedName,
       amount: item.amount,
@@ -53,6 +56,7 @@ export async function editRecentShoppingItem(
   });
   const name = input.name.trim();
   const normalizedName = normalizeShoppingName(name);
+  const product = await rememberShoppingProduct(tx, householdId, name);
   const destination = await tx.recentShoppingItem.findUnique({
     where: { householdId_normalizedName: { householdId, normalizedName } },
   });
@@ -64,6 +68,7 @@ export async function editRecentShoppingItem(
   return tx.recentShoppingItem.update({
     where: { id: destination?.id ?? original.id, householdId },
     data: {
+      productId: product.id,
       name,
       normalizedName,
       amount: input.amount,

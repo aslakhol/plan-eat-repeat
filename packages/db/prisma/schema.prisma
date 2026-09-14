@@ -68,9 +68,24 @@ model RecipeStep {
     @@index([partId])
 }
 
+model ShoppingProduct {
+    id             String               @id @default(cuid())
+    household      Household            @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    householdId    String
+    name           String
+    normalizedName String
+    items          ShoppingItem[]
+    recentItems    RecentShoppingItem[]
+    usuallyHave    UsuallyHave[]
+
+    @@unique([householdId, normalizedName])
+}
+
 model ShoppingItem {
-    id             String    @id @default(cuid())
-    household      Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    product        ShoppingProduct @relation(fields: [productId], references: [id])
+    productId      String
+    id             String          @id @default(cuid())
+    household      Household       @relation(fields: [householdId], references: [id], onDelete: Cascade)
     householdId    String
     name           String
     normalizedName String
@@ -82,7 +97,9 @@ model ShoppingItem {
 }
 
 model UsuallyHave {
-    household      Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    product        ShoppingProduct @relation(fields: [productId], references: [id])
+    productId      String
+    household      Household       @relation(fields: [householdId], references: [id], onDelete: Cascade)
     householdId    String
     name           String
     normalizedName String
@@ -91,16 +108,18 @@ model UsuallyHave {
 }
 
 model RecentShoppingItem {
-    id             String    @id @default(cuid())
-    household      Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    product        ShoppingProduct @relation(fields: [productId], references: [id])
+    productId      String
+    id             String          @id @default(cuid())
+    household      Household       @relation(fields: [householdId], references: [id], onDelete: Cascade)
     householdId    String
     name           String
     normalizedName String
     amount         Float?
     unit           String?
     note           String?
-    recentlyUsedAt DateTime  @default(now())
-    revision       String    @default(uuid())
+    recentlyUsedAt DateTime        @default(now())
+    revision       String          @default(uuid())
 
     @@unique([householdId, normalizedName])
     @@index([householdId, recentlyUsedAt])
@@ -136,18 +155,19 @@ model User {
 }
 
 model Household {
-    id                          String            @id @default(cuid())
+    id                          String               @id @default(cuid())
     name                        String
-    slug                        String            @unique
-    publicSlug                  String?           @unique
+    slug                        String               @unique
+    publicSlug                  String?              @unique
     importInstructions          String?
-    aiImportSpendAttributionKey String            @unique @default(uuid())
-    createdAt                   DateTime          @default(now())
-    updatedAt                   DateTime          @updatedAt
+    aiImportSpendAttributionKey String               @unique @default(uuid())
+    createdAt                   DateTime             @default(now())
+    updatedAt                   DateTime             @updatedAt
     Dinners                     Dinner[]
     Members                     Membership[]
     Invite                      Invite[]
     AiImportAttempts            AiImportAttempt[]
+    ShoppingProducts            ShoppingProduct[]
     ShoppingItems               ShoppingItem[]
     RecentShoppingItems         RecentShoppingItem[]
     UsuallyHave                 UsuallyHave[]

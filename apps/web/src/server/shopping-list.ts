@@ -1,5 +1,10 @@
+import { rememberShoppingProduct } from "./shopping-products";
 import type { Prisma, ShoppingItem } from "@planeatrepeat/db";
-import { convertUnitAmount, normalizeShoppingName, normalizeUnit } from "@planeatrepeat/shared";
+import {
+  convertUnitAmount,
+  normalizeShoppingName,
+  normalizeUnit,
+} from "@planeatrepeat/shared";
 
 export const saveShoppingItem = async (
   tx: Prisma.TransactionClient,
@@ -15,7 +20,9 @@ export const saveShoppingItem = async (
     await tx.shoppingItem.findUniqueOrThrow({ where: { id, householdId } });
   }
   const name = input.name.trim();
+  const product = await rememberShoppingProduct(tx, householdId, name);
   const item = {
+    productId: product.id,
     ...fields,
     name: id ? name : name.charAt(0).toUpperCase() + name.slice(1),
     normalizedName: normalizeShoppingName(name),
@@ -75,9 +82,15 @@ export const setUsuallyHave = async (
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
   const normalizedName = normalizeShoppingName(name);
   if (excluded) {
+    const product = await rememberShoppingProduct(tx, householdId, name);
     await tx.usuallyHave.upsert({
       where: { householdId_normalizedName: { householdId, normalizedName } },
-      create: { householdId, name: name.trim(), normalizedName },
+      create: {
+        householdId,
+        name: name.trim(),
+        normalizedName,
+        productId: product.id,
+      },
       update: {},
     });
   } else {
