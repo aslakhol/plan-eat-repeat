@@ -68,12 +68,30 @@ model RecipeStep {
     @@index([partId])
 }
 
+enum ShoppingCategory {
+    PRODUCE
+    BAKERY
+    DAIRY
+    MEAT
+    INGREDIENTS
+    FROZEN
+    GRAINS
+    SNACKS
+    BEVERAGES
+    HOUSEHOLD
+    CARE
+    PETS
+    GARDEN
+    OWN_ITEMS
+}
+
 model ShoppingProduct {
     id             String               @id @default(cuid())
     household      Household            @relation(fields: [householdId], references: [id], onDelete: Cascade)
     householdId    String
     name           String
     normalizedName String
+    category       ShoppingCategory
     items          ShoppingItem[]
     recentItems    RecentShoppingItem[]
     usuallyHave    UsuallyHave[]

@@ -9,6 +9,26 @@
 * 🟢 You can import this file directly.
 */
 
+export const ShoppingCategory = {
+  PRODUCE: 'PRODUCE',
+  BAKERY: 'BAKERY',
+  DAIRY: 'DAIRY',
+  MEAT: 'MEAT',
+  INGREDIENTS: 'INGREDIENTS',
+  FROZEN: 'FROZEN',
+  GRAINS: 'GRAINS',
+  SNACKS: 'SNACKS',
+  BEVERAGES: 'BEVERAGES',
+  HOUSEHOLD: 'HOUSEHOLD',
+  CARE: 'CARE',
+  PETS: 'PETS',
+  GARDEN: 'GARDEN',
+  OWN_ITEMS: 'OWN_ITEMS'
+} as const
+
+export type ShoppingCategory = (typeof ShoppingCategory)[keyof typeof ShoppingCategory]
+
+
 export const MembershipRole = {
   ADMIN: 'ADMIN',
   MEMBER: 'MEMBER'

@@ -10,3 +10,5 @@ export * from "./dinnerLink";
 import type {} from "./clerk-types";
 
 export { IMPORT_PROMPT_MAX_LENGTH, importPromptSchema } from "./importPrompt";
+
+export * from "./shopping-categories";

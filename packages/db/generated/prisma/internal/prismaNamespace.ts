@@ -1622,7 +1622,8 @@ export const ShoppingProductScalarFieldEnum = {
   id: 'id',
   householdId: 'householdId',
   name: 'name',
-  normalizedName: 'normalizedName'
+  normalizedName: 'normalizedName',
+  category: 'category'
 } as const
 
 export type ShoppingProductScalarFieldEnum = (typeof ShoppingProductScalarFieldEnum)[keyof typeof ShoppingProductScalarFieldEnum]
@@ -1849,6 +1850,20 @@ export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, '
  * Reference to a field of type 'Float[]'
  */
 export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ShoppingCategory'
+ */
+export type EnumShoppingCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ShoppingCategory'>
+    
+
+
+/**
+ * Reference to a field of type 'ShoppingCategory[]'
+ */
+export type ListEnumShoppingCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ShoppingCategory[]'>
     
 
 

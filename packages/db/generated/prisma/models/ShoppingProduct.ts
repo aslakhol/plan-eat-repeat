@@ -29,6 +29,7 @@ export type ShoppingProductMinAggregateOutputType = {
   householdId: string | null
   name: string | null
   normalizedName: string | null
+  category: $Enums.ShoppingCategory | null
 }
 
 export type ShoppingProductMaxAggregateOutputType = {
@@ -36,6 +37,7 @@ export type ShoppingProductMaxAggregateOutputType = {
   householdId: string | null
   name: string | null
   normalizedName: string | null
+  category: $Enums.ShoppingCategory | null
 }
 
 export type ShoppingProductCountAggregateOutputType = {
@@ -43,6 +45,7 @@ export type ShoppingProductCountAggregateOutputType = {
   householdId: number
   name: number
   normalizedName: number
+  category: number
   _all: number
 }
 
@@ -52,6 +55,7 @@ export type ShoppingProductMinAggregateInputType = {
   householdId?: true
   name?: true
   normalizedName?: true
+  category?: true
 }
 
 export type ShoppingProductMaxAggregateInputType = {
@@ -59,6 +63,7 @@ export type ShoppingProductMaxAggregateInputType = {
   householdId?: true
   name?: true
   normalizedName?: true
+  category?: true
 }
 
 export type ShoppingProductCountAggregateInputType = {
@@ -66,6 +71,7 @@ export type ShoppingProductCountAggregateInputType = {
   householdId?: true
   name?: true
   normalizedName?: true
+  category?: true
   _all?: true
 }
 
@@ -146,6 +152,7 @@ export type ShoppingProductGroupByOutputType = {
   householdId: string
   name: string
   normalizedName: string
+  category: $Enums.ShoppingCategory
   _count: ShoppingProductCountAggregateOutputType | null
   _min: ShoppingProductMinAggregateOutputType | null
   _max: ShoppingProductMaxAggregateOutputType | null
@@ -174,6 +181,7 @@ export type ShoppingProductWhereInput = {
   householdId?: Prisma.StringFilter<"ShoppingProduct"> | string
   name?: Prisma.StringFilter<"ShoppingProduct"> | string
   normalizedName?: Prisma.StringFilter<"ShoppingProduct"> | string
+  category?: Prisma.EnumShoppingCategoryFilter<"ShoppingProduct"> | $Enums.ShoppingCategory
   household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
   items?: Prisma.ShoppingItemListRelationFilter
   recentItems?: Prisma.RecentShoppingItemListRelationFilter
@@ -185,6 +193,7 @@ export type ShoppingProductOrderByWithRelationInput = {
   householdId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   normalizedName?: Prisma.SortOrder
+  category?: Prisma.SortOrder
   household?: Prisma.HouseholdOrderByWithRelationInput
   items?: Prisma.ShoppingItemOrderByRelationAggregateInput
   recentItems?: Prisma.RecentShoppingItemOrderByRelationAggregateInput
@@ -200,6 +209,7 @@ export type ShoppingProductWhereUniqueInput = Prisma.AtLeast<{
   householdId?: Prisma.StringFilter<"ShoppingProduct"> | string
   name?: Prisma.StringFilter<"ShoppingProduct"> | string
   normalizedName?: Prisma.StringFilter<"ShoppingProduct"> | string
+  category?: Prisma.EnumShoppingCategoryFilter<"ShoppingProduct"> | $Enums.ShoppingCategory
   household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
   items?: Prisma.ShoppingItemListRelationFilter
   recentItems?: Prisma.RecentShoppingItemListRelationFilter
@@ -211,6 +221,7 @@ export type ShoppingProductOrderByWithAggregationInput = {
   householdId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   normalizedName?: Prisma.SortOrder
+  category?: Prisma.SortOrder
   _count?: Prisma.ShoppingProductCountOrderByAggregateInput
   _max?: Prisma.ShoppingProductMaxOrderByAggregateInput
   _min?: Prisma.ShoppingProductMinOrderByAggregateInput
@@ -224,12 +235,14 @@ export type ShoppingProductScalarWhereWithAggregatesInput = {
   householdId?: Prisma.StringWithAggregatesFilter<"ShoppingProduct"> | string
   name?: Prisma.StringWithAggregatesFilter<"ShoppingProduct"> | string
   normalizedName?: Prisma.StringWithAggregatesFilter<"ShoppingProduct"> | string
+  category?: Prisma.EnumShoppingCategoryWithAggregatesFilter<"ShoppingProduct"> | $Enums.ShoppingCategory
 }
 
 export type ShoppingProductCreateInput = {
   id?: string
   name: string
   normalizedName: string
+  category: $Enums.ShoppingCategory
   household: Prisma.HouseholdCreateNestedOneWithoutShoppingProductsInput
   items?: Prisma.ShoppingItemCreateNestedManyWithoutProductInput
   recentItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutProductInput
@@ -241,6 +254,7 @@ export type ShoppingProductUncheckedCreateInput = {
   householdId: string
   name: string
   normalizedName: string
+  category: $Enums.ShoppingCategory
   items?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutProductInput
   recentItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutProductInput
   usuallyHave?: Prisma.UsuallyHaveUncheckedCreateNestedManyWithoutProductInput
@@ -250,6 +264,7 @@ export type ShoppingProductUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   household?: Prisma.HouseholdUpdateOneRequiredWithoutShoppingProductsNestedInput
   items?: Prisma.ShoppingItemUpdateManyWithoutProductNestedInput
   recentItems?: Prisma.RecentShoppingItemUpdateManyWithoutProductNestedInput
@@ -261,6 +276,7 @@ export type ShoppingProductUncheckedUpdateInput = {
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   items?: Prisma.ShoppingItemUncheckedUpdateManyWithoutProductNestedInput
   recentItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutProductNestedInput
   usuallyHave?: Prisma.UsuallyHaveUncheckedUpdateManyWithoutProductNestedInput
@@ -271,12 +287,14 @@ export type ShoppingProductCreateManyInput = {
   householdId: string
   name: string
   normalizedName: string
+  category: $Enums.ShoppingCategory
 }
 
 export type ShoppingProductUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
 }
 
 export type ShoppingProductUncheckedUpdateManyInput = {
@@ -284,6 +302,7 @@ export type ShoppingProductUncheckedUpdateManyInput = {
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
 }
 
 export type ShoppingProductHouseholdIdNormalizedNameCompoundUniqueInput = {
@@ -296,6 +315,7 @@ export type ShoppingProductCountOrderByAggregateInput = {
   householdId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   normalizedName?: Prisma.SortOrder
+  category?: Prisma.SortOrder
 }
 
 export type ShoppingProductMaxOrderByAggregateInput = {
@@ -303,6 +323,7 @@ export type ShoppingProductMaxOrderByAggregateInput = {
   householdId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   normalizedName?: Prisma.SortOrder
+  category?: Prisma.SortOrder
 }
 
 export type ShoppingProductMinOrderByAggregateInput = {
@@ -310,6 +331,7 @@ export type ShoppingProductMinOrderByAggregateInput = {
   householdId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   normalizedName?: Prisma.SortOrder
+  category?: Prisma.SortOrder
 }
 
 export type ShoppingProductScalarRelationFilter = {
@@ -325,6 +347,10 @@ export type ShoppingProductListRelationFilter = {
 
 export type ShoppingProductOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type EnumShoppingCategoryFieldUpdateOperationsInput = {
+  set?: $Enums.ShoppingCategory
 }
 
 export type ShoppingProductCreateNestedOneWithoutItemsInput = {
@@ -415,6 +441,7 @@ export type ShoppingProductCreateWithoutItemsInput = {
   id?: string
   name: string
   normalizedName: string
+  category: $Enums.ShoppingCategory
   household: Prisma.HouseholdCreateNestedOneWithoutShoppingProductsInput
   recentItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutProductInput
   usuallyHave?: Prisma.UsuallyHaveCreateNestedManyWithoutProductInput
@@ -425,6 +452,7 @@ export type ShoppingProductUncheckedCreateWithoutItemsInput = {
   householdId: string
   name: string
   normalizedName: string
+  category: $Enums.ShoppingCategory
   recentItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutProductInput
   usuallyHave?: Prisma.UsuallyHaveUncheckedCreateNestedManyWithoutProductInput
 }
@@ -449,6 +477,7 @@ export type ShoppingProductUpdateWithoutItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   household?: Prisma.HouseholdUpdateOneRequiredWithoutShoppingProductsNestedInput
   recentItems?: Prisma.RecentShoppingItemUpdateManyWithoutProductNestedInput
   usuallyHave?: Prisma.UsuallyHaveUpdateManyWithoutProductNestedInput
@@ -459,6 +488,7 @@ export type ShoppingProductUncheckedUpdateWithoutItemsInput = {
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   recentItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutProductNestedInput
   usuallyHave?: Prisma.UsuallyHaveUncheckedUpdateManyWithoutProductNestedInput
 }
@@ -467,6 +497,7 @@ export type ShoppingProductCreateWithoutUsuallyHaveInput = {
   id?: string
   name: string
   normalizedName: string
+  category: $Enums.ShoppingCategory
   household: Prisma.HouseholdCreateNestedOneWithoutShoppingProductsInput
   items?: Prisma.ShoppingItemCreateNestedManyWithoutProductInput
   recentItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutProductInput
@@ -477,6 +508,7 @@ export type ShoppingProductUncheckedCreateWithoutUsuallyHaveInput = {
   householdId: string
   name: string
   normalizedName: string
+  category: $Enums.ShoppingCategory
   items?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutProductInput
   recentItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutProductInput
 }
@@ -501,6 +533,7 @@ export type ShoppingProductUpdateWithoutUsuallyHaveInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   household?: Prisma.HouseholdUpdateOneRequiredWithoutShoppingProductsNestedInput
   items?: Prisma.ShoppingItemUpdateManyWithoutProductNestedInput
   recentItems?: Prisma.RecentShoppingItemUpdateManyWithoutProductNestedInput
@@ -511,6 +544,7 @@ export type ShoppingProductUncheckedUpdateWithoutUsuallyHaveInput = {
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   items?: Prisma.ShoppingItemUncheckedUpdateManyWithoutProductNestedInput
   recentItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutProductNestedInput
 }
@@ -519,6 +553,7 @@ export type ShoppingProductCreateWithoutRecentItemsInput = {
   id?: string
   name: string
   normalizedName: string
+  category: $Enums.ShoppingCategory
   household: Prisma.HouseholdCreateNestedOneWithoutShoppingProductsInput
   items?: Prisma.ShoppingItemCreateNestedManyWithoutProductInput
   usuallyHave?: Prisma.UsuallyHaveCreateNestedManyWithoutProductInput
@@ -529,6 +564,7 @@ export type ShoppingProductUncheckedCreateWithoutRecentItemsInput = {
   householdId: string
   name: string
   normalizedName: string
+  category: $Enums.ShoppingCategory
   items?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutProductInput
   usuallyHave?: Prisma.UsuallyHaveUncheckedCreateNestedManyWithoutProductInput
 }
@@ -553,6 +589,7 @@ export type ShoppingProductUpdateWithoutRecentItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   household?: Prisma.HouseholdUpdateOneRequiredWithoutShoppingProductsNestedInput
   items?: Prisma.ShoppingItemUpdateManyWithoutProductNestedInput
   usuallyHave?: Prisma.UsuallyHaveUpdateManyWithoutProductNestedInput
@@ -563,6 +600,7 @@ export type ShoppingProductUncheckedUpdateWithoutRecentItemsInput = {
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   items?: Prisma.ShoppingItemUncheckedUpdateManyWithoutProductNestedInput
   usuallyHave?: Prisma.UsuallyHaveUncheckedUpdateManyWithoutProductNestedInput
 }
@@ -571,6 +609,7 @@ export type ShoppingProductCreateWithoutHouseholdInput = {
   id?: string
   name: string
   normalizedName: string
+  category: $Enums.ShoppingCategory
   items?: Prisma.ShoppingItemCreateNestedManyWithoutProductInput
   recentItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutProductInput
   usuallyHave?: Prisma.UsuallyHaveCreateNestedManyWithoutProductInput
@@ -580,6 +619,7 @@ export type ShoppingProductUncheckedCreateWithoutHouseholdInput = {
   id?: string
   name: string
   normalizedName: string
+  category: $Enums.ShoppingCategory
   items?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutProductInput
   recentItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutProductInput
   usuallyHave?: Prisma.UsuallyHaveUncheckedCreateNestedManyWithoutProductInput
@@ -619,18 +659,21 @@ export type ShoppingProductScalarWhereInput = {
   householdId?: Prisma.StringFilter<"ShoppingProduct"> | string
   name?: Prisma.StringFilter<"ShoppingProduct"> | string
   normalizedName?: Prisma.StringFilter<"ShoppingProduct"> | string
+  category?: Prisma.EnumShoppingCategoryFilter<"ShoppingProduct"> | $Enums.ShoppingCategory
 }
 
 export type ShoppingProductCreateManyHouseholdInput = {
   id?: string
   name: string
   normalizedName: string
+  category: $Enums.ShoppingCategory
 }
 
 export type ShoppingProductUpdateWithoutHouseholdInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   items?: Prisma.ShoppingItemUpdateManyWithoutProductNestedInput
   recentItems?: Prisma.RecentShoppingItemUpdateManyWithoutProductNestedInput
   usuallyHave?: Prisma.UsuallyHaveUpdateManyWithoutProductNestedInput
@@ -640,6 +683,7 @@ export type ShoppingProductUncheckedUpdateWithoutHouseholdInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   items?: Prisma.ShoppingItemUncheckedUpdateManyWithoutProductNestedInput
   recentItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutProductNestedInput
   usuallyHave?: Prisma.UsuallyHaveUncheckedUpdateManyWithoutProductNestedInput
@@ -649,6 +693,7 @@ export type ShoppingProductUncheckedUpdateManyWithoutHouseholdInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
 }
 
 
@@ -705,6 +750,7 @@ export type ShoppingProductSelect<ExtArgs extends runtime.Types.Extensions.Inter
   householdId?: boolean
   name?: boolean
   normalizedName?: boolean
+  category?: boolean
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
   items?: boolean | Prisma.ShoppingProduct$itemsArgs<ExtArgs>
   recentItems?: boolean | Prisma.ShoppingProduct$recentItemsArgs<ExtArgs>
@@ -717,6 +763,7 @@ export type ShoppingProductSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   householdId?: boolean
   name?: boolean
   normalizedName?: boolean
+  category?: boolean
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["shoppingProduct"]>
 
@@ -725,6 +772,7 @@ export type ShoppingProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   householdId?: boolean
   name?: boolean
   normalizedName?: boolean
+  category?: boolean
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["shoppingProduct"]>
 
@@ -733,9 +781,10 @@ export type ShoppingProductSelectScalar = {
   householdId?: boolean
   name?: boolean
   normalizedName?: boolean
+  category?: boolean
 }
 
-export type ShoppingProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "householdId" | "name" | "normalizedName", ExtArgs["result"]["shoppingProduct"]>
+export type ShoppingProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "householdId" | "name" | "normalizedName" | "category", ExtArgs["result"]["shoppingProduct"]>
 export type ShoppingProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
   items?: boolean | Prisma.ShoppingProduct$itemsArgs<ExtArgs>
@@ -763,6 +812,7 @@ export type $ShoppingProductPayload<ExtArgs extends runtime.Types.Extensions.Int
     householdId: string
     name: string
     normalizedName: string
+    category: $Enums.ShoppingCategory
   }, ExtArgs["result"]["shoppingProduct"]>
   composites: {}
 }
@@ -1194,6 +1244,7 @@ export interface ShoppingProductFieldRefs {
   readonly householdId: Prisma.FieldRef<"ShoppingProduct", 'String'>
   readonly name: Prisma.FieldRef<"ShoppingProduct", 'String'>
   readonly normalizedName: Prisma.FieldRef<"ShoppingProduct", 'String'>
+  readonly category: Prisma.FieldRef<"ShoppingProduct", 'ShoppingCategory'>
 }
     
 

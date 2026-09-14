@@ -51,6 +51,7 @@ export const saveShoppingItem = async (
       .map((note) => note.trim())
       .filter(Boolean);
     const combined = await tx.shoppingItem.update({
+      include: { product: { select: { category: true } } },
       where: { id: destination.id, householdId },
       data: {
         amount:
@@ -64,11 +65,13 @@ export const saveShoppingItem = async (
 
   if (id) {
     return tx.shoppingItem.update({
+      include: { product: { select: { category: true } } },
       where: { id, householdId },
       data: item,
     });
   }
   return tx.shoppingItem.create({
+    include: { product: { select: { category: true } } },
     data: { householdId, ...item },
   });
 };

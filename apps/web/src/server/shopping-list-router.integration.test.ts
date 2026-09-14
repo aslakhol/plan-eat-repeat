@@ -69,6 +69,44 @@ const withShoppingList = async (
   }
 };
 
+void test("first shopping names use exact catalog matches, longest whole phrases, and Own Items", () =>
+  withShoppingList(async ({ caller }) => {
+    for (const name of [
+      "Coconut milk",
+      "Chocolate milk",
+      "Fresh  BEEF\tsteak",
+      "Potato",
+      "Oat drink",
+      "Tea towels",
+      "Milkshake",
+      "(Milk)",
+      "Beef milk",
+      "Milk beef",
+    ]) {
+      await caller.addManual({ name });
+    }
+    assert.deepEqual(
+      Object.fromEntries(
+        (await caller.list()).map((item) => [
+          item.normalizedName,
+          item.product.category,
+        ]),
+      ),
+      {
+        "coconut milk": "INGREDIENTS",
+        "chocolate milk": "SNACKS",
+        "fresh beef steak": "MEAT",
+        potato: "OWN_ITEMS",
+        "oat drink": "OWN_ITEMS",
+        "tea towels": "BEVERAGES",
+        milkshake: "OWN_ITEMS",
+        "(milk)": "DAIRY",
+        "beef milk": "MEAT",
+        "milk beef": "DAIRY",
+      },
+    );
+  }));
+
 void test("Shopping Products survive clearing, dismissal, and Usually Have removal across shopping trips", () =>
   withShoppingList(async ({ caller, member, createDinner }) => {
     await caller.setUsuallyHave({ name: " Olive  oil ", excluded: true });
@@ -808,6 +846,7 @@ void test("existing shopping details and reusable state survive the Shopping Pro
     assert.equal(salt?.normalizedName, "salt");
     assert.ok(oil?.productId);
     assert.ok(items.every((item) => item.productId === oil.productId));
+    assert.ok(items.every((item) => item.product.category === "INGREDIENTS"));
     const recent = await caller.recent();
     assert.equal(recent.length, 1);
     assert.deepEqual(
@@ -830,6 +869,7 @@ void test("existing shopping details and reusable state survive the Shopping Pro
         },
       ],
     );
+    assert.equal(recent[0]!.product.category, "GRAINS");
     const restored = await caller.addRecent({ id: "latest" });
     assert.equal(restored.productId, recent[0]!.productId);
     await caller.clear();

@@ -59,6 +59,7 @@ export const shoppingListRouter = createTRPCRouter({
         where: { householdId: ctx.householdId },
         orderBy: [{ recentlyUsedAt: "desc" }, { normalizedName: "asc" }],
         take: 25,
+        include: { product: { select: { category: true } } },
       }),
       ctx.db.shoppingItem.findMany({
         where: { householdId: ctx.householdId },
@@ -103,6 +104,7 @@ export const shoppingListRouter = createTRPCRouter({
   list: protectedProcedureWithHousehold.query(async ({ ctx }) => {
     const items = await ctx.db.shoppingItem.findMany({
       where: { householdId: ctx.householdId },
+      include: { product: { select: { category: true } } },
     });
     return items.sort(
       (a, b) =>
