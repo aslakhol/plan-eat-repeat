@@ -20,5 +20,4 @@ Recipe sections and steps
 
 Reading the source
 - Combine structured recipe data and visible page text without duplicates. Keep explicit values supported by the source and use the page text to fill gaps.
-- For videos, prefer written ingredients and amounts in the description or caption over conflicting spoken wording.
-- If the source has no readable recipe, set isRecipe to false. This includes irrelevant content and photos too blurry, glared or cropped to read.`;
+- For videos, prefer written ingredients and amounts in the description or caption over conflicting spoken wording.`;
