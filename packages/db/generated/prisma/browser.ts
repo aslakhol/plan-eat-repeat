@@ -48,6 +48,11 @@ export type ShoppingItem = Prisma.ShoppingItemModel
  */
 export type UsuallyHave = Prisma.UsuallyHaveModel
 /**
+ * Model RecentShoppingItem
+ * 
+ */
+export type RecentShoppingItem = Prisma.RecentShoppingItemModel
+/**
  * Model Tag
  * 
  */

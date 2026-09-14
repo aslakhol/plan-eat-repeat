@@ -211,6 +211,7 @@ export type HouseholdWhereInput = {
   Invite?: Prisma.InviteListRelationFilter
   AiImportAttempts?: Prisma.AiImportAttemptListRelationFilter
   ShoppingItems?: Prisma.ShoppingItemListRelationFilter
+  RecentShoppingItems?: Prisma.RecentShoppingItemListRelationFilter
   UsuallyHave?: Prisma.UsuallyHaveListRelationFilter
 }
 
@@ -228,6 +229,7 @@ export type HouseholdOrderByWithRelationInput = {
   Invite?: Prisma.InviteOrderByRelationAggregateInput
   AiImportAttempts?: Prisma.AiImportAttemptOrderByRelationAggregateInput
   ShoppingItems?: Prisma.ShoppingItemOrderByRelationAggregateInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemOrderByRelationAggregateInput
   UsuallyHave?: Prisma.UsuallyHaveOrderByRelationAggregateInput
 }
 
@@ -248,6 +250,7 @@ export type HouseholdWhereUniqueInput = Prisma.AtLeast<{
   Invite?: Prisma.InviteListRelationFilter
   AiImportAttempts?: Prisma.AiImportAttemptListRelationFilter
   ShoppingItems?: Prisma.ShoppingItemListRelationFilter
+  RecentShoppingItems?: Prisma.RecentShoppingItemListRelationFilter
   UsuallyHave?: Prisma.UsuallyHaveListRelationFilter
 }, "id" | "slug" | "publicSlug" | "aiImportSpendAttributionKey">
 
@@ -293,6 +296,7 @@ export type HouseholdCreateInput = {
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
   UsuallyHave?: Prisma.UsuallyHaveCreateNestedManyWithoutHouseholdInput
 }
 
@@ -310,6 +314,7 @@ export type HouseholdUncheckedCreateInput = {
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
   UsuallyHave?: Prisma.UsuallyHaveUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
@@ -327,6 +332,7 @@ export type HouseholdUpdateInput = {
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
   UsuallyHave?: Prisma.UsuallyHaveUpdateManyWithoutHouseholdNestedInput
 }
 
@@ -344,6 +350,7 @@ export type HouseholdUncheckedUpdateInput = {
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
   UsuallyHave?: Prisma.UsuallyHaveUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
@@ -465,6 +472,20 @@ export type HouseholdUpdateOneRequiredWithoutUsuallyHaveNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.HouseholdUpdateToOneWithWhereWithoutUsuallyHaveInput, Prisma.HouseholdUpdateWithoutUsuallyHaveInput>, Prisma.HouseholdUncheckedUpdateWithoutUsuallyHaveInput>
 }
 
+export type HouseholdCreateNestedOneWithoutRecentShoppingItemsInput = {
+  create?: Prisma.XOR<Prisma.HouseholdCreateWithoutRecentShoppingItemsInput, Prisma.HouseholdUncheckedCreateWithoutRecentShoppingItemsInput>
+  connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutRecentShoppingItemsInput
+  connect?: Prisma.HouseholdWhereUniqueInput
+}
+
+export type HouseholdUpdateOneRequiredWithoutRecentShoppingItemsNestedInput = {
+  create?: Prisma.XOR<Prisma.HouseholdCreateWithoutRecentShoppingItemsInput, Prisma.HouseholdUncheckedCreateWithoutRecentShoppingItemsInput>
+  connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutRecentShoppingItemsInput
+  upsert?: Prisma.HouseholdUpsertWithoutRecentShoppingItemsInput
+  connect?: Prisma.HouseholdWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.HouseholdUpdateToOneWithWhereWithoutRecentShoppingItemsInput, Prisma.HouseholdUpdateWithoutRecentShoppingItemsInput>, Prisma.HouseholdUncheckedUpdateWithoutRecentShoppingItemsInput>
+}
+
 export type HouseholdCreateNestedOneWithoutMembersInput = {
   create?: Prisma.XOR<Prisma.HouseholdCreateWithoutMembersInput, Prisma.HouseholdUncheckedCreateWithoutMembersInput>
   connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutMembersInput
@@ -522,6 +543,7 @@ export type HouseholdCreateWithoutDinnersInput = {
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
   UsuallyHave?: Prisma.UsuallyHaveCreateNestedManyWithoutHouseholdInput
 }
 
@@ -538,6 +560,7 @@ export type HouseholdUncheckedCreateWithoutDinnersInput = {
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
   UsuallyHave?: Prisma.UsuallyHaveUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
@@ -570,6 +593,7 @@ export type HouseholdUpdateWithoutDinnersInput = {
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
   UsuallyHave?: Prisma.UsuallyHaveUpdateManyWithoutHouseholdNestedInput
 }
 
@@ -586,6 +610,7 @@ export type HouseholdUncheckedUpdateWithoutDinnersInput = {
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
   UsuallyHave?: Prisma.UsuallyHaveUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
@@ -602,6 +627,7 @@ export type HouseholdCreateWithoutShoppingItemsInput = {
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
   UsuallyHave?: Prisma.UsuallyHaveCreateNestedManyWithoutHouseholdInput
 }
 
@@ -618,6 +644,7 @@ export type HouseholdUncheckedCreateWithoutShoppingItemsInput = {
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
   UsuallyHave?: Prisma.UsuallyHaveUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
@@ -650,6 +677,7 @@ export type HouseholdUpdateWithoutShoppingItemsInput = {
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
   UsuallyHave?: Prisma.UsuallyHaveUpdateManyWithoutHouseholdNestedInput
 }
 
@@ -666,6 +694,7 @@ export type HouseholdUncheckedUpdateWithoutShoppingItemsInput = {
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
   UsuallyHave?: Prisma.UsuallyHaveUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
@@ -683,6 +712,7 @@ export type HouseholdCreateWithoutUsuallyHaveInput = {
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUncheckedCreateWithoutUsuallyHaveInput = {
@@ -699,6 +729,7 @@ export type HouseholdUncheckedCreateWithoutUsuallyHaveInput = {
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdCreateOrConnectWithoutUsuallyHaveInput = {
@@ -731,6 +762,7 @@ export type HouseholdUpdateWithoutUsuallyHaveInput = {
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdUncheckedUpdateWithoutUsuallyHaveInput = {
@@ -747,6 +779,91 @@ export type HouseholdUncheckedUpdateWithoutUsuallyHaveInput = {
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+}
+
+export type HouseholdCreateWithoutRecentShoppingItemsInput = {
+  id?: string
+  name: string
+  slug: string
+  publicSlug?: string | null
+  importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
+  Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
+  Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
+  ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
+  UsuallyHave?: Prisma.UsuallyHaveCreateNestedManyWithoutHouseholdInput
+}
+
+export type HouseholdUncheckedCreateWithoutRecentShoppingItemsInput = {
+  id?: string
+  name: string
+  slug: string
+  publicSlug?: string | null
+  importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
+  Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
+  Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
+  ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  UsuallyHave?: Prisma.UsuallyHaveUncheckedCreateNestedManyWithoutHouseholdInput
+}
+
+export type HouseholdCreateOrConnectWithoutRecentShoppingItemsInput = {
+  where: Prisma.HouseholdWhereUniqueInput
+  create: Prisma.XOR<Prisma.HouseholdCreateWithoutRecentShoppingItemsInput, Prisma.HouseholdUncheckedCreateWithoutRecentShoppingItemsInput>
+}
+
+export type HouseholdUpsertWithoutRecentShoppingItemsInput = {
+  update: Prisma.XOR<Prisma.HouseholdUpdateWithoutRecentShoppingItemsInput, Prisma.HouseholdUncheckedUpdateWithoutRecentShoppingItemsInput>
+  create: Prisma.XOR<Prisma.HouseholdCreateWithoutRecentShoppingItemsInput, Prisma.HouseholdUncheckedCreateWithoutRecentShoppingItemsInput>
+  where?: Prisma.HouseholdWhereInput
+}
+
+export type HouseholdUpdateToOneWithWhereWithoutRecentShoppingItemsInput = {
+  where?: Prisma.HouseholdWhereInput
+  data: Prisma.XOR<Prisma.HouseholdUpdateWithoutRecentShoppingItemsInput, Prisma.HouseholdUncheckedUpdateWithoutRecentShoppingItemsInput>
+}
+
+export type HouseholdUpdateWithoutRecentShoppingItemsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
+  Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
+  Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
+  ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
+  UsuallyHave?: Prisma.UsuallyHaveUpdateManyWithoutHouseholdNestedInput
+}
+
+export type HouseholdUncheckedUpdateWithoutRecentShoppingItemsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
+  Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
+  Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
+  ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  UsuallyHave?: Prisma.UsuallyHaveUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdCreateWithoutMembersInput = {
@@ -762,6 +879,7 @@ export type HouseholdCreateWithoutMembersInput = {
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
   UsuallyHave?: Prisma.UsuallyHaveCreateNestedManyWithoutHouseholdInput
 }
 
@@ -778,6 +896,7 @@ export type HouseholdUncheckedCreateWithoutMembersInput = {
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
   UsuallyHave?: Prisma.UsuallyHaveUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
@@ -810,6 +929,7 @@ export type HouseholdUpdateWithoutMembersInput = {
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
   UsuallyHave?: Prisma.UsuallyHaveUpdateManyWithoutHouseholdNestedInput
 }
 
@@ -826,6 +946,7 @@ export type HouseholdUncheckedUpdateWithoutMembersInput = {
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
   UsuallyHave?: Prisma.UsuallyHaveUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
@@ -842,6 +963,7 @@ export type HouseholdCreateWithoutAiImportAttemptsInput = {
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
   UsuallyHave?: Prisma.UsuallyHaveCreateNestedManyWithoutHouseholdInput
 }
 
@@ -858,6 +980,7 @@ export type HouseholdUncheckedCreateWithoutAiImportAttemptsInput = {
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
   UsuallyHave?: Prisma.UsuallyHaveUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
@@ -890,6 +1013,7 @@ export type HouseholdUpdateWithoutAiImportAttemptsInput = {
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
   UsuallyHave?: Prisma.UsuallyHaveUpdateManyWithoutHouseholdNestedInput
 }
 
@@ -906,6 +1030,7 @@ export type HouseholdUncheckedUpdateWithoutAiImportAttemptsInput = {
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
   UsuallyHave?: Prisma.UsuallyHaveUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
@@ -922,6 +1047,7 @@ export type HouseholdCreateWithoutInviteInput = {
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
   UsuallyHave?: Prisma.UsuallyHaveCreateNestedManyWithoutHouseholdInput
 }
 
@@ -938,6 +1064,7 @@ export type HouseholdUncheckedCreateWithoutInviteInput = {
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
   UsuallyHave?: Prisma.UsuallyHaveUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
@@ -970,6 +1097,7 @@ export type HouseholdUpdateWithoutInviteInput = {
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
   UsuallyHave?: Prisma.UsuallyHaveUpdateManyWithoutHouseholdNestedInput
 }
 
@@ -986,6 +1114,7 @@ export type HouseholdUncheckedUpdateWithoutInviteInput = {
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
   UsuallyHave?: Prisma.UsuallyHaveUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
@@ -1000,6 +1129,7 @@ export type HouseholdCountOutputType = {
   Invite: number
   AiImportAttempts: number
   ShoppingItems: number
+  RecentShoppingItems: number
   UsuallyHave: number
 }
 
@@ -1009,6 +1139,7 @@ export type HouseholdCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensi
   Invite?: boolean | HouseholdCountOutputTypeCountInviteArgs
   AiImportAttempts?: boolean | HouseholdCountOutputTypeCountAiImportAttemptsArgs
   ShoppingItems?: boolean | HouseholdCountOutputTypeCountShoppingItemsArgs
+  RecentShoppingItems?: boolean | HouseholdCountOutputTypeCountRecentShoppingItemsArgs
   UsuallyHave?: boolean | HouseholdCountOutputTypeCountUsuallyHaveArgs
 }
 
@@ -1060,6 +1191,13 @@ export type HouseholdCountOutputTypeCountShoppingItemsArgs<ExtArgs extends runti
 /**
  * HouseholdCountOutputType without action
  */
+export type HouseholdCountOutputTypeCountRecentShoppingItemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RecentShoppingItemWhereInput
+}
+
+/**
+ * HouseholdCountOutputType without action
+ */
 export type HouseholdCountOutputTypeCountUsuallyHaveArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.UsuallyHaveWhereInput
 }
@@ -1079,6 +1217,7 @@ export type HouseholdSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   Invite?: boolean | Prisma.Household$InviteArgs<ExtArgs>
   AiImportAttempts?: boolean | Prisma.Household$AiImportAttemptsArgs<ExtArgs>
   ShoppingItems?: boolean | Prisma.Household$ShoppingItemsArgs<ExtArgs>
+  RecentShoppingItems?: boolean | Prisma.Household$RecentShoppingItemsArgs<ExtArgs>
   UsuallyHave?: boolean | Prisma.Household$UsuallyHaveArgs<ExtArgs>
   _count?: boolean | Prisma.HouseholdCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["household"]>
@@ -1123,6 +1262,7 @@ export type HouseholdInclude<ExtArgs extends runtime.Types.Extensions.InternalAr
   Invite?: boolean | Prisma.Household$InviteArgs<ExtArgs>
   AiImportAttempts?: boolean | Prisma.Household$AiImportAttemptsArgs<ExtArgs>
   ShoppingItems?: boolean | Prisma.Household$ShoppingItemsArgs<ExtArgs>
+  RecentShoppingItems?: boolean | Prisma.Household$RecentShoppingItemsArgs<ExtArgs>
   UsuallyHave?: boolean | Prisma.Household$UsuallyHaveArgs<ExtArgs>
   _count?: boolean | Prisma.HouseholdCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -1137,6 +1277,7 @@ export type $HouseholdPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     Invite: Prisma.$InvitePayload<ExtArgs>[]
     AiImportAttempts: Prisma.$AiImportAttemptPayload<ExtArgs>[]
     ShoppingItems: Prisma.$ShoppingItemPayload<ExtArgs>[]
+    RecentShoppingItems: Prisma.$RecentShoppingItemPayload<ExtArgs>[]
     UsuallyHave: Prisma.$UsuallyHavePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -1547,6 +1688,7 @@ export interface Prisma__HouseholdClient<T, Null = never, ExtArgs extends runtim
   Invite<T extends Prisma.Household$InviteArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$InviteArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvitePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   AiImportAttempts<T extends Prisma.Household$AiImportAttemptsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$AiImportAttemptsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AiImportAttemptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   ShoppingItems<T extends Prisma.Household$ShoppingItemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$ShoppingItemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ShoppingItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  RecentShoppingItems<T extends Prisma.Household$RecentShoppingItemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$RecentShoppingItemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RecentShoppingItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   UsuallyHave<T extends Prisma.Household$UsuallyHaveArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$UsuallyHaveArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UsuallyHavePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -2090,6 +2232,30 @@ export type Household$ShoppingItemsArgs<ExtArgs extends runtime.Types.Extensions
   take?: number
   skip?: number
   distinct?: Prisma.ShoppingItemScalarFieldEnum | Prisma.ShoppingItemScalarFieldEnum[]
+}
+
+/**
+ * Household.RecentShoppingItems
+ */
+export type Household$RecentShoppingItemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RecentShoppingItem
+   */
+  select?: Prisma.RecentShoppingItemSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RecentShoppingItem
+   */
+  omit?: Prisma.RecentShoppingItemOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RecentShoppingItemInclude<ExtArgs> | null
+  where?: Prisma.RecentShoppingItemWhereInput
+  orderBy?: Prisma.RecentShoppingItemOrderByWithRelationInput | Prisma.RecentShoppingItemOrderByWithRelationInput[]
+  cursor?: Prisma.RecentShoppingItemWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RecentShoppingItemScalarFieldEnum | Prisma.RecentShoppingItemScalarFieldEnum[]
 }
 
 /**

@@ -90,6 +90,22 @@ model UsuallyHave {
     @@id([householdId, normalizedName])
 }
 
+model RecentShoppingItem {
+    id             String    @id @default(cuid())
+    household      Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    householdId    String
+    name           String
+    normalizedName String
+    amount         Float?
+    unit           String?
+    note           String?
+    recentlyUsedAt DateTime  @default(now())
+    revision       String    @default(uuid())
+
+    @@unique([householdId, normalizedName])
+    @@index([householdId, recentlyUsedAt])
+}
+
 model Tag {
     value  String   @id
     Dinner Dinner[]
@@ -133,6 +149,7 @@ model Household {
     Invite                      Invite[]
     AiImportAttempts            AiImportAttempt[]
     ShoppingItems               ShoppingItem[]
+    RecentShoppingItems         RecentShoppingItem[]
     UsuallyHave                 UsuallyHave[]
 }
 
