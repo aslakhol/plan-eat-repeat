@@ -2,6 +2,7 @@
 export * from "./types";
 export * from "./recipe";
 export * from "./units";
+export * from "./shopping";
 export * from "./recipeImport";
 export * from "./dinnerLink";
 

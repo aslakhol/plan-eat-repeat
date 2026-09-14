@@ -475,18 +475,20 @@ void test("incompatible and unspecified quantities stay adjacent and independent
     );
   }));
 
-void test("manual additions combine bare names using only case and surrounding whitespace", () =>
+void test("manual additions combine names regardless of capitalization and extra whitespace", () =>
   withShoppingList(async ({ caller, member }) => {
     const [original, duplicate] = await Promise.all([
       caller.addManual({ name: "Green apples" }),
       member.addManual({ name: "  GREEN APPLES  " }),
     ]);
     assert.equal(duplicate.id, original.id);
-    for (const name of ["Green  apples", "Green apple", "Gréen apples"]) {
+    const spaced = await caller.addManual({ name: " Green \t apples " });
+    assert.equal(spaced.id, original.id);
+    for (const name of ["Green apple", "Gréen apples"]) {
       await caller.addManual({ name });
     }
     const items = await member.list();
-    assert.equal(items.length, 4);
+    assert.equal(items.length, 3);
     assert.deepEqual(
       items.find(({ id }) => id === original.id),
       original,

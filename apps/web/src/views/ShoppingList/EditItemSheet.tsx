@@ -1,3 +1,4 @@
+import { normalizeShoppingName } from "@planeatrepeat/shared";
 import {
   amountInputSchema,
   formatAmount,
@@ -44,7 +45,7 @@ export function EditItemSheet({
   const excluded =
     excludedDraft ??
     preferences.data?.some(
-      (preference) => preference.normalizedName === name.trim().toLowerCase(),
+      (preference) => preference.normalizedName === normalizeShoppingName(name),
     ) ??
     false;
   const ingredientNames = api.dinner.ingredientNames.useQuery();

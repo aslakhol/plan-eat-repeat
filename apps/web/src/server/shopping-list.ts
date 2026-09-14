@@ -1,5 +1,5 @@
 import type { Prisma, ShoppingItem } from "@planeatrepeat/db";
-import { convertUnitAmount, normalizeUnit } from "@planeatrepeat/shared";
+import { convertUnitAmount, normalizeShoppingName, normalizeUnit } from "@planeatrepeat/shared";
 
 export const saveShoppingItem = async (
   tx: Prisma.TransactionClient,
@@ -18,7 +18,7 @@ export const saveShoppingItem = async (
   const item = {
     ...fields,
     name: id ? name : name.charAt(0).toUpperCase() + name.slice(1),
-    normalizedName: name.toLowerCase(),
+    normalizedName: normalizeShoppingName(name),
     unit: normalizeUnit(input.unit),
   };
   const candidates = await tx.shoppingItem.findMany({
@@ -73,7 +73,7 @@ export const setUsuallyHave = async (
   excluded: boolean,
 ) => {
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
-  const normalizedName = name.trim().toLowerCase();
+  const normalizedName = normalizeShoppingName(name);
   if (excluded) {
     await tx.usuallyHave.upsert({
       where: { householdId_normalizedName: { householdId, normalizedName } },

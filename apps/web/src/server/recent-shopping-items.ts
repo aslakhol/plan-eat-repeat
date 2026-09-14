@@ -1,5 +1,5 @@
 import type { Prisma, ShoppingItem } from "@planeatrepeat/db";
-import { normalizeUnit } from "@planeatrepeat/shared";
+import { normalizeShoppingName, normalizeUnit } from "@planeatrepeat/shared";
 
 export async function rememberShoppingItems(
   tx: Prisma.TransactionClient,
@@ -17,7 +17,7 @@ export async function rememberShoppingItems(
     Math.max(Date.now(), (latest?.recentlyUsedAt.getTime() ?? 0) + 1),
   );
   const distinct = new Map(
-    items.map((item) => [item.name.trim().toLowerCase(), item]),
+    items.map((item) => [normalizeShoppingName(item.name), item]),
   );
   const saved = [];
   for (const [normalizedName, item] of distinct) {
@@ -52,7 +52,7 @@ export async function editRecentShoppingItem(
     where: { id: input.id, householdId },
   });
   const name = input.name.trim();
-  const normalizedName = name.toLowerCase();
+  const normalizedName = normalizeShoppingName(name);
   const destination = await tx.recentShoppingItem.findUnique({
     where: { householdId_normalizedName: { householdId, normalizedName } },
   });

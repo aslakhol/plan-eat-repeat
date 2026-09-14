@@ -1,3 +1,4 @@
+import { normalizeShoppingName } from "@planeatrepeat/shared";
 import { z } from "zod";
 import type { ShoppingItem } from "@planeatrepeat/db";
 import { saveShoppingItem, setUsuallyHave } from "../../shopping-list";
@@ -193,7 +194,7 @@ export const shoppingListRouter = createTRPCRouter({
               ? ingredients
               : [{ name: dinner.name, amount: null, unit: null }];
           for (const item of requirements) {
-            if (excludedNames.has(item.name.trim().toLowerCase())) {
+            if (excludedNames.has(normalizeShoppingName(item.name))) {
               skipped.push({
                 name: item.name,
                 amount: item.amount,
@@ -301,7 +302,7 @@ export const shoppingListRouter = createTRPCRouter({
               where,
               data: {
                 ...before,
-                normalizedName: before.name.trim().toLowerCase(),
+                normalizedName: normalizeShoppingName(before.name),
               },
             });
           } else {
