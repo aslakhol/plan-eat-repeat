@@ -19,6 +19,45 @@
     },
     "db:generate": {
       "cache": false
+    },
+    "test": {
+      "cache": false,
+      "env": [
+        "DATABASE_URL",
+        "PLAYWRIGHT_BASE_URL",
+        "NEXT_PUBLIC_APP_URL",
+        "CLERK_SECRET_KEY",
+        "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+        "ANTHROPIC_API_KEY",
+        "SUPADATA_API_KEY",
+        "SKIP_ENV_VALIDATION"
+      ]
+    },
+    "test:integration": {
+      "cache": false,
+      "env": [
+        "DATABASE_URL",
+        "PLAYWRIGHT_BASE_URL",
+        "NEXT_PUBLIC_APP_URL",
+        "CLERK_SECRET_KEY",
+        "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+        "ANTHROPIC_API_KEY",
+        "SUPADATA_API_KEY",
+        "SKIP_ENV_VALIDATION"
+      ]
+    },
+    "test:e2e": {
+      "cache": false,
+      "env": [
+        "DATABASE_URL",
+        "PLAYWRIGHT_BASE_URL",
+        "NEXT_PUBLIC_APP_URL",
+        "CLERK_SECRET_KEY",
+        "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+        "ANTHROPIC_API_KEY",
+        "SUPADATA_API_KEY",
+        "SKIP_ENV_VALIDATION"
+      ]
     }
   }
 }

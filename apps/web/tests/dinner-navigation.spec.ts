@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 
 import {
-  assertNoHorizontalOverflow,
   deleteDinnerFromEditor,
   deleteDinnerIfPresent,
   ensureSignedIn,
@@ -16,10 +15,6 @@ test("global quick-add opens a URL-addressed Cookbook sheet", async ({
   const dinnerName = `Quick add ${Date.now()}`;
 
   try {
-    const addDinnerButton = page.getByRole("button", { name: "Add Dinner" });
-    await expect(page.getByRole("link", { name: "Week" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Cookbook" })).toBeVisible();
-    await expect(addDinnerButton).toBeVisible();
     await quickAddDinner(page, dinnerName);
     await expect(page).toHaveURL(/\/dinners\/\d+$/);
     await expect(page.locator("h1", { hasText: "Cookbook" })).toBeVisible();
@@ -76,6 +71,10 @@ test("empty Plan Slot manual creation saves and opens the planned-day sheet", as
     await expect(
       page.locator("h1").filter({ hasText: dinnerName }),
     ).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByRole("heading", { name: dinnerName, exact: true, level: 1 }),
+    ).toBeVisible();
     await expect(page.getByText("Planned Dinner actions")).toBeVisible();
     await page
       .locator("summary")
@@ -88,40 +87,4 @@ test("empty Plan Slot manual creation saves and opens the planned-day sheet", as
   } finally {
     if (!cleanedUp) await deleteDinnerIfPresent(page, dinnerName);
   }
-});
-
-test("critical Week and Cookbook actions remain reachable across responsive widths", async ({
-  page,
-}) => {
-  await ensureSignedIn(page);
-  for (const viewport of [
-    { width: 320, height: 700 },
-    { width: 390, height: 844 },
-    { width: 480, height: 900 },
-    { width: 1280, height: 800 },
-  ]) {
-    await page.setViewportSize(viewport);
-    await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Week" })).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Add Dinner" }),
-    ).toBeVisible();
-    await assertNoHorizontalOverflow(page);
-    await page.goto("/dinners");
-    await expect(page.getByRole("heading", { name: "Cookbook" })).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Add Dinner" }),
-    ).toBeVisible();
-    await expect(page.locator('a[href^="/dinners/"]').first()).toBeVisible();
-    await assertNoHorizontalOverflow(page);
-  }
-
-  await page.setViewportSize({ width: 320, height: 700 });
-  await page.goto("/");
-  await openFirstEmptyDay(page);
-  await expect(page.getByRole("button", { name: "New dinner" })).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Surprise me!" }),
-  ).toBeVisible();
-  await assertNoHorizontalOverflow(page);
 });

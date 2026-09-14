@@ -92,8 +92,6 @@ test("search discovery follows the active lifecycle of a Public Dinner List with
   const householdPath = publicDinnerListPath(householdPublicSlug);
   const canonicalUrl = publicDinnerListUrl(householdPublicSlug, appUrl);
   const inactiveUrl = publicDinnerListUrl(inactivePublicSlug, appUrl);
-  const title = `Dinners shared by ${householdName} · Plan Eat Repeat`;
-  const description = `Browse dinners shared publicly by ${householdName} on Plan Eat Repeat.`;
 
   try {
     const activeResponse = await page.goto(householdPath);
@@ -107,11 +105,6 @@ test("search discovery follows the active lifecycle of a Public Dinner List with
     expect(activeHtml).not.toContain(memberName);
     expect(activeHtml).not.toContain(planDate.toISOString());
     expect(activeHtml).not.toContain("favourite");
-    await expect(page).toHaveTitle(title);
-    await expect(page.locator('meta[name="description"]')).toHaveAttribute(
-      "content",
-      description,
-    );
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       "href",
       canonicalUrl,

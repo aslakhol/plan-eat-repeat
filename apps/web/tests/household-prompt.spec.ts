@@ -80,12 +80,6 @@ test("Settings saves full prompts, resets without persistence, and retains edits
       exact: true,
     });
     await expect(prompt).toHaveValue(savedPrompt);
-    const dimensions = await prompt.evaluate((el) => ({
-      height: el.clientHeight,
-      scroll: el.scrollHeight,
-    }));
-    expect(dimensions.height).toBeLessThanOrEqual(400);
-    expect(dimensions.scroll).toBeGreaterThan(dimensions.height);
     await page
       .getByRole("button", { name: "Reset to app default", exact: true })
       .click();

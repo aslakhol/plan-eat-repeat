@@ -26,6 +26,8 @@ Guidance for agents working in this repository.
 
 ## Commands
 
+Use the [testing skill](.agents/skills/testing/SKILL.md) when deciding what and how to test.
+
 - `pnpm dev` (all apps)
 - `pnpm dev:web`
 - `pnpm dev:mobile`

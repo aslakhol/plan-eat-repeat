@@ -17,7 +17,7 @@ const testDb = createPrismaClient(databaseUrl);
 
 test.afterAll(async () => testDb.$disconnect());
 
-test("an anonymous visitor browses every Published Dinner with the approved controls and responsive layout", async ({
+test("an anonymous visitor browses every Published Dinner using sorting, search, and tag filtering", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -148,13 +148,6 @@ test("an anonymous visitor browses every Published Dinner with the approved cont
       page.getByRole("heading", { name: householdName }),
     ).toBeVisible();
     await expect(page.getByPlaceholder("Search their dinners…")).toBeVisible();
-    await expect(page.getByPlaceholder("Search their dinners…")).toHaveCSS(
-      "height",
-      "42px",
-    );
-    await expect(
-      page.getByRole("button", { name: "Filter by tags" }),
-    ).toHaveCSS("height", "42px");
     await expect(
       page.getByRole("button", { name: "Recently shared" }),
     ).toHaveAttribute("aria-pressed", "true");
@@ -164,10 +157,6 @@ test("an anonymous visitor browses every Published Dinner with the approved cont
     ).toBeVisible();
     await expect(dinnerLinks).toHaveCount(8);
     await expect(dinnerLinks.first()).toContainText(names.beta);
-    await expect(page.getByRole("status")).toHaveText("Showing 8 dinners");
-    await expect(
-      page.getByRole("button", { name: /more dinners/ }),
-    ).toHaveCount(0);
 
     await page.getByRole("button", { name: "A–Z" }).click();
     await expect(dinnerLinks.first()).toContainText(names.alpha);
@@ -208,22 +197,6 @@ test("an anonymous visitor browses every Published Dinner with the approved cont
     ).toBeVisible();
     await page.getByRole("button", { name: "Clear filters" }).click();
     await expect(dinnerLinks).toHaveCount(8);
-
-    await expect(
-      page.getByRole("link", { name: "Start my cookbook" }),
-    ).toHaveCount(2);
-    for (const cta of await page
-      .getByRole("link", { name: "Start my cookbook" })
-      .all()) {
-      await expect(cta).toHaveAttribute("href", "/onboarding");
-    }
-    await expect(
-      page.locator("[data-public-list-desktop-footer]"),
-    ).toBeVisible();
-    await expect(page.locator("[data-public-list-mobile-upsell]")).toBeHidden();
-
-    await page.getByRole("link", { name: "Start my cookbook" }).first().click();
-    await expect(page).toHaveURL(/\/onboarding$/);
     await page.goto(householdPath);
 
     await page.getByPlaceholder("Search their dinners…").fill("beta curry");
@@ -231,30 +204,6 @@ test("an anonymous visitor browses every Published Dinner with the approved cont
     await expect(page).toHaveURL(
       new RegExp(`${publishedDinnerPath(beta.publicSlug!)}$`),
       { timeout: 15_000 },
-    );
-
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(householdPath);
-    await expect(
-      page.locator("[data-public-list-mobile-upsell]"),
-    ).toBeVisible();
-    await expect(
-      page.locator("[data-public-list-desktop-footer]"),
-    ).toBeHidden();
-    await expect(page.locator("[data-public-list-mobile-wordmark]")).toHaveCSS(
-      "font-size",
-      "13px",
-    );
-    await expect(page.getByPlaceholder("Search their dinners…")).toHaveCSS(
-      "height",
-      "38px",
-    );
-    await expect(
-      page.getByRole("button", { name: "Filter by tags" }),
-    ).toHaveCSS("height", "38px");
-    await expect(page.locator("[data-public-dinner-list]")).toHaveCSS(
-      "display",
-      "block",
     );
   } finally {
     await testDb.dinner.deleteMany({

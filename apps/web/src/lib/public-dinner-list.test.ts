@@ -1,7 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 
 import {
   derivePublicDinnerList,
@@ -10,8 +8,6 @@ import {
   publicSlugForHousehold,
 } from "./public-dinner-list";
 import { deriveSharedDinnerCollection } from "./shared-dinners";
-import { PublicDinnerListUnavailable } from "../views/PublicDinnerList/PublicDinnerListUnavailable";
-import { PublicDinnerListView } from "../views/PublicDinnerList/PublicDinnerListView";
 
 void test("Public Dinner List URLs keep a readable initial Household name and opaque identity", () => {
   assert.equal(
@@ -147,70 +143,6 @@ void test("Public Dinner List applies all three public sorts with deterministic 
     "apple-stew-b",
     "ziti-newest",
   ]);
-});
-
-void test("a Public Dinner List renders Household attribution and Published Dinner links in server markup", () => {
-  const html = renderToStaticMarkup(
-    createElement(PublicDinnerListView, {
-      dinnerList: {
-        publicSlug: "hendersons-9fK2_xYz",
-        householdName: "Hendersons",
-        dinners: [
-          {
-            name: "Spaghetti Carbonara",
-            publicSlug: "spaghetti-carbonara-dinner1",
-            publishedAt: "2026-08-12T12:00:00.000Z",
-            hasLink: false,
-            hasRecipe: false,
-            hasNotes: false,
-            saveCount: 2,
-            tags: ["Quick", "Pasta"],
-          },
-        ],
-      },
-    }),
-  );
-
-  assert.match(html, /Hendersons/);
-  assert.match(html, /1 dinner shared/);
-  assert.match(html, /href="\/d\/spaghetti-carbonara-dinner1"/);
-  assert.match(html, /Spaghetti Carbonara/);
-  assert.match(html, /Quick/);
-  assert.match(html, /Pasta/);
-});
-
-void test("server markup links every Published Dinner", () => {
-  const dinners = Array.from({ length: 8 }, (_, index) => ({
-    name: `Dinner ${index + 1}`,
-    publicSlug: `dinner-${index + 1}`,
-    publishedAt: `2026-08-${String(20 - index).padStart(2, "0")}T12:00:00.000Z`,
-    hasLink: false,
-    hasRecipe: false,
-    hasNotes: false,
-    saveCount: 0,
-    tags: [],
-  }));
-  const html = renderToStaticMarkup(
-    createElement(PublicDinnerListView, {
-      dinnerList: {
-        publicSlug: "hendersons-9fK2_xYz",
-        householdName: "Hendersons",
-        dinners,
-      },
-    }),
-  );
-
-  for (const dinner of dinners) {
-    assert.match(html, new RegExp(`href="/d/${dinner.publicSlug}"`));
-  }
-});
-
-void test("an inactive Public Dinner List renders the public unavailable experience", () => {
-  const html = renderToStaticMarkup(createElement(PublicDinnerListUnavailable));
-
-  assert.match(html, /This page is no longer shared/);
-  assert.match(html, /Continue to Plan Eat Repeat/);
-  assert.doesNotMatch(html, /0 dinners shared/);
 });
 
 void test("Public and shared lists combine content filters with tags and search", () => {

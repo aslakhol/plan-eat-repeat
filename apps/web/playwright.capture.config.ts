@@ -1,6 +1,6 @@
+import { defineConfig } from "@playwright/test";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "@playwright/test";
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFilePath);
@@ -11,6 +11,7 @@ const viewportHeight = Number(process.env.CAPTURE_VIEWPORT_HEIGHT ?? 932);
 
 export default defineConfig({
   testDir: path.join(currentDir, "tests"),
+  testMatch: "capture.spec.ts",
   fullyParallel: false,
   workers: 1,
   timeout: 60_000,

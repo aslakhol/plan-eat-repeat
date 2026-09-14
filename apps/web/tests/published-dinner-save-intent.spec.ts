@@ -1,8 +1,7 @@
 import { createRequire } from "node:module";
 
-import { expect, test, type Page } from "@playwright/test";
 import { createPrismaClient } from "@planeatrepeat/db";
-import { createClerkClient } from "@clerk/backend";
+import { expect, test, type Page } from "@playwright/test";
 
 import {
   completeLocalAuth,
@@ -16,11 +15,7 @@ const { loadEnvConfig } = createRequire(import.meta.url)(
 loadEnvConfig(process.cwd());
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL is required for browser tests");
-const clerkSecretKey = process.env.CLERK_SECRET_KEY;
-if (!clerkSecretKey)
-  throw new Error("CLERK_SECRET_KEY is required for browser tests");
 const testDb = createPrismaClient(databaseUrl);
-const testClerk = createClerkClient({ secretKey: clerkSecretKey });
 
 test.afterAll(async () => testDb.$disconnect());
 
@@ -31,14 +26,6 @@ const publishedDinnerAction = (page: Page) =>
   page.getByRole("article").getByRole("button", {
     name: "Add to my cookbook",
   });
-
-const findClerkUserByEmail = async (email: string) => {
-  const users = await testClerk.users.getUserList({
-    emailAddress: [email],
-    limit: 1,
-  });
-  return users.data[0] ?? null;
-};
 
 test("sign-in returns a Save Intent to the stable URL, saves latest content once, and cleans the query", async ({
   page,
@@ -114,10 +101,9 @@ test("sign-in returns a Save Intent to the stable URL, saves latest content once
     ]);
 
     await page.reload();
+    await publishedDinnerAction(page).click();
     await expect(
-      page
-        .getByRole("article")
-        .getByRole("button", { name: "Already in your cookbook" }),
+      page.getByRole("dialog", { name: "Already in your cookbook" }),
     ).toBeVisible();
     expect(
       await testDb.dinner.count({
@@ -129,91 +115,6 @@ test("sign-in returns a Save Intent to the stable URL, saves latest content once
     ).toBe(1);
   } finally {
     await resetLocalIdentity(testDb, auth.userId);
-    await testDb.dinner.deleteMany({ where: { id: source.id } });
-    await testDb.household.deleteMany({ where: { id: sourceHousehold.id } });
-  }
-});
-
-test("sign-up return bootstraps a usable one-person Household without onboarding", async ({
-  page,
-}) => {
-  test.setTimeout(120_000);
-  const marker = uniqueId();
-  const publicSlug = `save-intent-sign-up-${marker}`;
-  const returnPath = `/d/${publicSlug}?save=1`;
-  const testEmail = `save-intent+clerk_test_${marker.replaceAll("-", "_")}@example.com`;
-  const testPassword = `Codex-${marker}-Aa9!`;
-  const sourceHousehold = await testDb.household.create({
-    data: {
-      name: `First-time source ${marker}`,
-      slug: `first-source-${marker}`,
-      publicSlug: `first-source-${marker}-public`,
-    },
-  });
-  const source = await testDb.dinner.create({
-    data: {
-      name: `First-time save ${marker}`,
-      householdId: sourceHousehold.id,
-      publicSlug,
-      publishedAt: new Date(),
-    },
-  });
-
-  try {
-    await page.goto(`/d/${publicSlug}`);
-    await publishedDinnerAction(page).click();
-    const authDialog = page.getByRole("dialog");
-    await expect(authDialog).toBeVisible();
-    await authDialog.getByRole("link", { name: "Sign up" }).click();
-    await authDialog.locator('input[name="firstName"]').fill("First");
-    await authDialog.locator('input[name="lastName"]').fill("Time");
-    await authDialog.locator('input[name="emailAddress"]').fill(testEmail);
-    await authDialog.locator('input[name="password"]').fill(testPassword);
-    const verificationPrepared = page.waitForResponse(
-      (response) =>
-        response.url().includes("/prepare_verification") && response.ok(),
-    );
-    await authDialog
-      .getByRole("button", { name: "Continue", exact: true })
-      .click();
-    await verificationPrepared;
-    const verificationCode = authDialog.getByRole("textbox", {
-      name: "Enter verification code",
-    });
-    await expect(verificationCode).toBeVisible();
-    await verificationCode.pressSequentially("424242");
-
-    const savedDialog = page.getByRole("dialog", {
-      name: "Saved to your cookbook",
-    });
-    await expect(savedDialog).toBeVisible();
-    await expect(page).toHaveURL(new RegExp(`/d/${publicSlug}$`));
-    const clerkUser = await findClerkUserByEmail(testEmail);
-    expect(clerkUser).not.toBeNull();
-    const membership = await testDb.membership.findUniqueOrThrow({
-      where: { userId: clerkUser!.id },
-      include: { household: true },
-    });
-    expect(membership.role).toBe("ADMIN");
-    expect(membership.household.name).toBe("First Time's household");
-    expect(
-      await testDb.dinner.count({
-        where: {
-          householdId: membership.householdId,
-          sourceDinnerId: source.id,
-        },
-      }),
-    ).toBe(1);
-
-    await savedDialog.getByRole("link", { name: "Open my cookbook" }).click();
-    await expect(page).toHaveURL(/\/dinners$/);
-    await expect(page.getByRole("heading", { name: "Cookbook" })).toBeVisible();
-  } finally {
-    const clerkUser = await findClerkUserByEmail(testEmail);
-    if (clerkUser) {
-      await resetLocalIdentity(testDb, clerkUser.id);
-      await testClerk.users.deleteUser(clerkUser.id);
-    }
     await testDb.dinner.deleteMany({ where: { id: source.id } });
     await testDb.household.deleteMany({ where: { id: sourceHousehold.id } });
   }

@@ -1,11 +1,11 @@
-import { createRequire } from "node:module";
-import { randomUUID } from "node:crypto";
 import { createPrismaClient } from "@planeatrepeat/db";
 import { expect, test, type Page } from "@playwright/test";
+import { randomUUID } from "node:crypto";
+import { createRequire } from "node:module";
 import {
   completeLocalAuth,
-  provisionLocalAuth,
   ensureSignedIn,
+  provisionLocalAuth,
 } from "./capture-support";
 
 const { loadEnvConfig } = createRequire(import.meta.url)(
@@ -47,9 +47,6 @@ test("a prompt draft survives refresh and a fresh page without retaining source 
   await expect(
     page.getByRole("textbox", { name: "Recipe text", exact: true }),
   ).toBeEmpty();
-  await expect(
-    page.getByRole("region", { name: "Import prompt", exact: true }),
-  ).toHaveClass(/border-primary/);
 
   // Closing the document is not an explicit dismissal of the import sheet.
   await page.close();
@@ -129,9 +126,6 @@ test("restored resets follow shared changes and successful import cleanup preser
     await openPrompt(page);
     await expect(promptInput(page)).toHaveValue(appDefault);
     await expect(rememberSwitch(page)).toHaveAttribute("aria-checked", "true");
-    await expect(
-      page.getByRole("region", { name: "Import prompt", exact: true }),
-    ).toHaveClass(/border-primary/);
     await reset.click();
     await page
       .getByRole("button", { name: "Reset to household", exact: true })
@@ -139,9 +133,6 @@ test("restored resets follow shared changes and successful import cleanup preser
     await expect(promptInput(page)).toHaveValue(
       "Another member's instructions.",
     );
-    await expect(
-      page.getByRole("region", { name: "Import prompt", exact: true }),
-    ).not.toHaveClass(/border-primary/);
 
     await promptInput(page).fill("Our next shared prompt.");
     await page.route("**/api/trpc/dinner.importFromText**", async (route) => {

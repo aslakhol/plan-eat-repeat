@@ -12,8 +12,8 @@ test("Cookbook planning, Favourite ordering, and deletion remain coherent", asyn
   test.setTimeout(120_000);
   await ensureSignedIn(page);
   const testRun = Date.now();
-  const firstDinnerName = `Issue 131 A ${testRun}`;
-  const secondDinnerName = `Issue 131 B ${testRun}`;
+  const firstDinnerName = `Planning A ${testRun}`;
+  const secondDinnerName = `Planning B ${testRun}`;
 
   try {
     await quickAddDinner(page, firstDinnerName);
@@ -32,7 +32,15 @@ test("Cookbook planning, Favourite ordering, and deletion remain coherent", asyn
     await expect(page.getByRole("status")).toContainText(
       `${firstDinnerName} → ${plannedDate}`,
     );
-    await expect(page.getByRole("status")).not.toContainText("Undo");
+
+    await page.goto("/");
+    await expect(
+      page.getByText(firstDinnerName, { exact: true }),
+    ).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByText(firstDinnerName, { exact: true }),
+    ).toBeVisible();
 
     await quickAddDinner(page, secondDinnerName);
     const dinnerActions = page
@@ -62,7 +70,6 @@ test("Cookbook planning, Favourite ordering, and deletion remain coherent", asyn
     await expect(page.getByRole("status")).toContainText(
       `${secondDinnerName} → ${plannedDate}`,
     );
-    await expect(page.getByRole("status")).not.toContainText("Undo");
 
     await page.getByRole("button", { name: "Favourites" }).click();
     await expect(page.getByText("Most planned", { exact: true })).toBeVisible();

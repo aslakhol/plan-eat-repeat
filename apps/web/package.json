@@ -10,7 +10,10 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "start": "next start",
-    "capture": "playwright test -c playwright.capture.config.ts"
+    "capture": "playwright test -c playwright.capture.config.ts",
+    "test": "node ../../scripts/test.mjs",
+    "test:integration": "node ../../scripts/test.mjs --integration",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.8",
@@ -72,6 +75,7 @@
     "prettier-plugin-tailwindcss": "^0.5.1",
     "tailwindcss": "3.4.17",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.48.1"
+    "typescript-eslint": "^8.48.1",
+    "tsx": "^4.21.0"
   }
 }

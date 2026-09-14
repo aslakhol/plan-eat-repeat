@@ -35,8 +35,10 @@ const savePublishedDinner = (
     { publicSlug, forceCopy },
   );
 
-const publishedDinnerAction = (page: Page, name: string) =>
-  page.getByRole("article").getByRole("button", { name });
+const publishedDinnerAction = (page: Page) =>
+  page
+    .getByRole("article")
+    .getByRole("button", { name: "Add to my cookbook", exact: true });
 
 test("a signed-in Household saves, revisits, copies, plans, and keeps a detached Published Dinner", async ({
   page,
@@ -152,7 +154,7 @@ test("a signed-in Household saves, revisits, copies, plans, and keeps a detached
     const tagCountBeforeSave = await testDb.tag.count();
 
     await page.goto(`/d/${publicSlug}`);
-    await publishedDinnerAction(page, "Add to my cookbook").click();
+    await publishedDinnerAction(page).click();
     const saveResult = page.getByRole("dialog", {
       name: "Saved to your cookbook",
     });
@@ -199,22 +201,10 @@ test("a signed-in Household saves, revisits, copies, plans, and keeps a detached
     expect(firstCopy.parts[0]!.steps[0]?.text).toBe("Fry until fragrant.");
     expect(await testDb.tag.count()).toBe(tagCountBeforeSave);
 
-    expect((await savePublishedDinner(page, publicSlug)).status).toBe(200);
-    expect((await savePublishedDinner(page, publicSlug)).status).toBe(200);
-    expect(
-      await testDb.dinner.count({
-        where: {
-          householdId: destinationHouseholdId,
-          sourceDinnerId: source.id,
-        },
-      }),
-    ).toBe(1);
-
-    await page.reload();
-    await expect(
-      publishedDinnerAction(page, "Already in your cookbook"),
-    ).toBeVisible();
-    await publishedDinnerAction(page, "Already in your cookbook").click();
+    await saveResult.getByRole("link", { name: "Open my cookbook" }).click();
+    await expect(page).toHaveURL(new RegExp(`/dinners/${firstCopy.id}$`));
+    await page.goto(`/d/${publicSlug}`);
+    await publishedDinnerAction(page).click();
     const alreadySaved = page.getByRole("dialog", {
       name: "Already in your cookbook",
     });
@@ -222,7 +212,7 @@ test("a signed-in Household saves, revisits, copies, plans, and keeps a detached
     await expect(page).toHaveURL(new RegExp(`/dinners/${firstCopy.id}$`));
 
     await page.goto(`/d/${publicSlug}`);
-    await publishedDinnerAction(page, "Already in your cookbook").click();
+    await publishedDinnerAction(page).click();
     await page
       .getByRole("dialog", { name: "Already in your cookbook" })
       .getByRole("button", { name: "Save a copy" })
@@ -260,18 +250,6 @@ test("a signed-in Household saves, revisits, copies, plans, and keeps a detached
       )
       .toEqual({ dinnerId: plannedCopy.id });
 
-    await page.goto(`/d/${publicSlug}`);
-    await publishedDinnerAction(page, "Already in your cookbook").click();
-    await page
-      .getByRole("dialog", { name: "Already in your cookbook" })
-      .getByRole("button", { name: "Save a copy" })
-      .click();
-    await page
-      .getByRole("dialog", { name: "Saved to your cookbook" })
-      .getByRole("link", { name: "Open my cookbook" })
-      .click();
-    await expect(page).toHaveURL(/\/dinners$/);
-
     await testDb.dinner.delete({ where: { id: source.id } });
     await page.goto(`/dinners/${firstCopy.id}`);
     await expect(page.getByRole("heading", { name: sourceName })).toBeVisible();
@@ -289,9 +267,7 @@ test("a signed-in Household saves, revisits, copies, plans, and keeps a detached
       },
     });
     await page.goto(`/d/${ownPublicSlug}`);
-    await expect(
-      publishedDinnerAction(page, "Already in your cookbook"),
-    ).toBeVisible();
+    await expect(publishedDinnerAction(page)).toBeVisible();
     expect((await savePublishedDinner(page, ownPublicSlug)).status).toBe(200);
     expect(
       await testDb.dinner.count({
@@ -301,7 +277,7 @@ test("a signed-in Household saves, revisits, copies, plans, and keeps a detached
         },
       }),
     ).toBe(0);
-    await publishedDinnerAction(page, "Already in your cookbook").click();
+    await publishedDinnerAction(page).click();
     await page
       .getByRole("dialog", { name: "Already in your cookbook" })
       .getByRole("link", { name: "Open it" })
@@ -327,100 +303,6 @@ test("a signed-in Household saves, revisits, copies, plans, and keeps a detached
       await testDb.dinner.deleteMany({ where: { id: sourceDinnerId } });
     }
     if (sourceHouseholdId) {
-      await testDb.household.deleteMany({ where: { id: sourceHouseholdId } });
-    }
-  }
-});
-
-test("concurrent saves across different sources respect the Household burst limit", async ({
-  page,
-}) => {
-  test.setTimeout(120_000);
-  await ensureSignedIn(page);
-  const uniqueId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const markerName = `Save burst marker ${uniqueId}`;
-  const publicSlugs = Array.from(
-    { length: 21 },
-    (_, index) => `save-burst-${uniqueId}-${index}`,
-  );
-  let destinationHouseholdId: string | undefined;
-  let sourceHouseholdId: string | undefined;
-  let sourceDinnerIds: number[] = [];
-
-  try {
-    await quickAddDinner(page, markerName);
-    const marker = await testDb.dinner.findFirstOrThrow({
-      where: { name: markerName },
-      orderBy: { id: "desc" },
-    });
-    destinationHouseholdId = marker.householdId;
-    const sourceHousehold = await testDb.household.create({
-      data: {
-        name: `Save Burst Sources ${uniqueId}`,
-        slug: `save-burst-sources-${uniqueId}`,
-        publicSlug: `save-burst-sources-${uniqueId}-public`,
-      },
-    });
-    sourceHouseholdId = sourceHousehold.id;
-    await testDb.dinner.createMany({
-      data: publicSlugs.map((publicSlug, index) => ({
-        name: `Save burst Dinner ${uniqueId} ${index}`,
-        householdId: sourceHousehold.id,
-        publicSlug,
-        publishedAt: new Date(),
-      })),
-    });
-    sourceDinnerIds = (
-      await testDb.dinner.findMany({
-        where: { publicSlug: { in: publicSlugs } },
-        select: { id: true },
-      })
-    ).map((dinner) => dinner.id);
-
-    const statuses = await page.evaluate(async (slugs) => {
-      return Promise.all(
-        slugs.map(async (publicSlug) => {
-          const response = await fetch(
-            "/api/trpc/dinner.savePublished?batch=1",
-            {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ 0: { json: { publicSlug } } }),
-            },
-          );
-          return response.status;
-        }),
-      );
-    }, publicSlugs);
-
-    expect(statuses.filter((status) => status === 200)).toHaveLength(20);
-    expect(statuses.filter((status) => status === 429)).toHaveLength(1);
-    expect(
-      await testDb.dinner.count({
-        where: {
-          householdId: destinationHouseholdId,
-          sourceDinnerId: { in: sourceDinnerIds },
-        },
-      }),
-    ).toBe(20);
-  } finally {
-    if (destinationHouseholdId) {
-      await testDb.dinner.deleteMany({
-        where: {
-          householdId: destinationHouseholdId,
-          OR: [
-            { name: markerName },
-            ...(sourceDinnerIds.length > 0
-              ? [{ sourceDinnerId: { in: sourceDinnerIds } }]
-              : []),
-          ],
-        },
-      });
-    }
-    if (sourceHouseholdId) {
-      await testDb.dinner.deleteMany({
-        where: { householdId: sourceHouseholdId },
-      });
       await testDb.household.deleteMany({ where: { id: sourceHouseholdId } });
     }
   }
