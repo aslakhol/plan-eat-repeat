@@ -38,8 +38,8 @@ type Props = {
 type DinnerSummary = RouterOutputs["dinner"]["summaries"]["dinners"][number];
 
 const pickerSortOptions = [
-  { value: "not-lately" as const, label: "Haven't had lately" },
   { value: "az" as const, label: "A–Z" },
+  { value: "not-lately" as const, label: "Haven't had lately" },
   { value: "favourites" as const, label: "Favourites" },
 ];
 
