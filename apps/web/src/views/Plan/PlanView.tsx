@@ -71,17 +71,17 @@ export const PlanView = () => {
   }
 
   return (
-    <div className="flex flex-col gap-5 pb-24 sm:gap-6 md:pb-0">
-      <div className="flex flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 pb-24 md:gap-6 md:pb-0">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <h1 className="text-foreground font-serif text-3xl font-normal">
           Week
         </h1>
-        <div className="hidden sm:block">
+        <div className="hidden md:block">
           <WeekSelect setWeekOfSet={setWeekOffSet} weekLabel={week.label} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
+      <div className="grid grid-cols-1 gap-2.5">
         {week.days.map((day) => (
           <Day
             key={day.dateTime}

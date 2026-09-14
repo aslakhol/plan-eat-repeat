@@ -1,4 +1,5 @@
 import { format, isSameDay } from "date-fns";
+import { ChevronRight } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { PlannedDinner } from "./PlannedDinner";
 import { type DinnerWithRecipe } from "../../utils/types";
@@ -55,7 +56,7 @@ export const Day = ({
           data-testid="plan-day-trigger"
           data-date={format(date, "yyyy-MM-dd")}
           className={cn(
-            "group relative flex h-auto min-h-[80px] w-full flex-col items-stretch justify-center gap-0 overflow-hidden whitespace-normal rounded-[14px] border-[1.5px] px-4 py-3 text-left sm:min-h-[140px]",
+            "group relative flex h-auto min-h-[80px] w-full flex-col items-stretch justify-center gap-0 overflow-hidden whitespace-normal rounded-[14px] border-[1.5px] px-4 py-3 text-left md:grid md:grid-cols-[112px_minmax(0,1fr)_24px] md:items-center md:gap-5 md:px-5",
             !plannedDinner &&
               "border-border hover:border-primary/50 border-dashed bg-transparent",
             plannedDinner &&
@@ -66,23 +67,38 @@ export const Day = ({
         >
           <span
             className={cn(
-              "text-muted-foreground text-[11px] font-bold",
+              "text-muted-foreground text-[11px] font-bold md:border-r md:pr-4",
               isDateToday && "text-primary",
             )}
           >
-            {formatWeekOverviewDayLabel(date, today)}
+            <span className="md:hidden">
+              {formatWeekOverviewDayLabel(date, today)}
+            </span>
+            <span className="hidden md:flex md:flex-col md:gap-1">
+              <span className="text-[13px]">{format(date, "EEEE")}</span>
+              <span className="text-[11px] font-medium">
+                {format(date, "d MMM")}
+                {isDateToday && " · Tonight"}
+              </span>
+            </span>
           </span>
           {plannedDinner ? (
-            <span className="mt-1 line-clamp-2 font-serif text-xl font-normal leading-tight">
+            <span className="mt-1 line-clamp-2 font-serif text-xl font-normal leading-tight md:mt-0">
               {plannedDinner.name}
             </span>
           ) : (
             <span
               aria-hidden="true"
-              className="text-muted-foreground group-hover:text-primary absolute right-4 text-[24px] font-light leading-none transition-colors"
+              className="text-muted-foreground group-hover:text-primary absolute right-4 text-[24px] font-light leading-none transition-colors md:static md:col-start-3 md:text-center"
             >
               +
             </span>
+          )}
+          {plannedDinner && (
+            <ChevronRight
+              aria-hidden="true"
+              className="text-muted-foreground/60 group-hover:text-primary hidden justify-self-center md:block"
+            />
           )}
         </Button>
       </ResponsiveModalTrigger>
