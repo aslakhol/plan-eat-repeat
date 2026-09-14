@@ -11,7 +11,7 @@ if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
 const db = createPrismaClient(process.env.DATABASE_URL);
 test.afterAll(async () => db.$disconnect());
 
-test("add a manual item and recipe ingredients, then take them off the shopping list", async ({
+test("add shopping items, remove them, and edit and restore Recently Used", async ({
   page,
 }) => {
   await ensureSignedIn(page);
@@ -94,8 +94,65 @@ test("add a manual item and recipe ingredients, then take them off the shopping 
     await page.reload();
     await expect(removeItem(manualName)).toHaveCount(0);
     await expect(removeItem(ingredientName)).toHaveCount(0);
+
+    const accordion = page.getByRole("button", {
+      name: "Recently used",
+      exact: true,
+    });
+    const addRecent = page.getByRole("button", {
+      name: `Add ${ingredientName} to shopping list`,
+      exact: true,
+    });
+    await expect(accordion).toHaveAttribute("aria-expanded", "true");
+    await expect(addRecent).toBeVisible();
+    await accordion.click();
+    await page.reload();
+    await expect(accordion).toHaveAttribute("aria-expanded", "false");
+    await expect(addRecent).not.toBeVisible();
+    await accordion.click();
+
+    await page
+      .getByRole("button", {
+        name: `Edit quantity for ${ingredientName}`,
+        exact: true,
+      })
+      .click();
+    const editor = page.getByRole("dialog", { name: "Edit item", exact: true });
+    await editor
+      .getByRole("textbox", { name: "Amount", exact: true })
+      .fill("300");
+    await editor
+      .getByRole("textbox", { name: "Note", exact: true })
+      .fill("Red lentils");
+    await editor.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(editor).not.toBeVisible();
+    await addRecent.click();
+    await expect(removeItem(ingredientName)).toBeVisible();
+    await expect(addRecent).toHaveCount(0);
+    await expect(
+      page.getByRole("button", {
+        name: `Edit quantity for ${ingredientName}`,
+        exact: true,
+      }),
+    ).toHaveText("300 g");
+    await removeItem(ingredientName).click();
+    await expect(addRecent).toBeVisible();
+    await page
+      .getByRole("button", { name: `Edit ${ingredientName}`, exact: true })
+      .click();
+    await expect(
+      editor.getByRole("textbox", { name: "Note", exact: true }),
+    ).toHaveValue("Red lentils");
+    await editor
+      .getByRole("button", { name: "Remove from recently used", exact: true })
+      .click();
+    await expect(editor).not.toBeVisible();
+    await expect(addRecent).toHaveCount(0);
   } finally {
     await db.shoppingItem.deleteMany({
+      where: { householdId, name: { in: [manualName, ingredientName] } },
+    });
+    await db.recentShoppingItem.deleteMany({
       where: { householdId, name: { in: [manualName, ingredientName] } },
     });
     await db.dinner.delete({ where: { id: dinner.id } });

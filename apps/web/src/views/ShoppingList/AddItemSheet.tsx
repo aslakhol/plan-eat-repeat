@@ -29,7 +29,7 @@ export function AddItemSheet({
     onSuccess: () => {
       setName("");
       inputRef.current?.focus();
-      void utils.shoppingList.list.invalidate();
+      void utils.shoppingList.invalidate();
     },
   });
 
