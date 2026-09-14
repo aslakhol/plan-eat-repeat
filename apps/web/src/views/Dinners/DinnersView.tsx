@@ -5,7 +5,7 @@ import { Button } from "~/components/ui/button";
 import { useDinnerSummaries } from "~/hooks/use-dinner-summaries";
 import { deriveDinnerCollection, type CookbookSort } from "~/lib/cookbook";
 import { DinnerCollectionControls } from "../DinnerCollectionControls";
-import { CookSettingsHeader } from "~/components/CookSettingsHeader";
+import { CookHeader } from "~/components/CookHeader";
 
 export const DinnersView = () => {
   const { query: dinnersQuery, today } = useDinnerSummaries();
@@ -50,12 +50,7 @@ export const DinnersView = () => {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
       <div className="flex flex-col gap-4">
-        <CookSettingsHeader
-          title="Cookbook"
-          showSharedDinnersShortcut={dinnersQuery.data.dinners.some(
-            (dinner) => dinner.publishedAt !== null,
-          )}
-        />
+        <CookHeader title="Cookbook" />
         <DinnerCollectionControls
           dinners={dinnersQuery.data.dinners}
           search={search}

@@ -33,7 +33,10 @@ const openDinnerDetails = async (
 };
 
 const openFirstDinnerDetails = async (page: Page) =>
-  openDinnerDetails(page, page.locator('a[href^="/dinners/"]').first());
+  openDinnerDetails(
+    page,
+    page.locator('a[href^="/dinners/"]:not([href="/dinners/shared"])').first(),
+  );
 
 const openLongDinnerDetails = async (page: Page) => {
   await openDinnerDetails(
@@ -75,17 +78,6 @@ const openers = [
         page
           .getByRole("button", { name: /^(Plan .* for |.* already has )/ })
           .first(),
-      ).toBeVisible();
-    },
-  },
-  {
-    name: "Cook settings",
-    open: async (page: Page) => {
-      await page.goto("/");
-      await expect(page.getByRole("heading", { name: "Week" })).toBeVisible();
-      await page.getByRole("button", { name: "Open cook settings" }).click();
-      await expect(
-        page.getByRole("heading", { name: "Cook settings" }),
       ).toBeVisible();
     },
   },

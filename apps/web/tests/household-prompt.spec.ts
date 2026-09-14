@@ -6,9 +6,6 @@ test("Settings resets only the textbox and protects unsaved changes when leaving
 }) => {
   page.setDefaultTimeout(10_000);
   await ensureSignedIn(page);
-  await page
-    .getByRole("button", { name: "Open cook settings", exact: true })
-    .click();
   await page.getByRole("link", { name: "Settings", exact: true }).click();
   const prompt = page.getByRole("textbox", {
     name: "Household Prompt",
