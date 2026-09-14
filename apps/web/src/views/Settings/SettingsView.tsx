@@ -6,6 +6,7 @@ import { Invites } from "./Invites";
 import { api } from "../../utils/api";
 import { useClerk } from "@clerk/nextjs";
 import { Account } from "./Account";
+import { Cooking } from "./Cooking";
 
 type Props = { household: Household | null; systemDefaultPrompt: string };
 
@@ -29,10 +30,12 @@ export const SettingsView = ({ household, systemDefaultPrompt }: Props) => {
           <>
             <NewHousehold systemDefaultPrompt={systemDefaultPrompt} />
             <Account />
+            <Cooking />
           </>
         ) : (
           <>
             <Account />
+            <Cooking />
             <EditHousehold
               key={household.id}
               household={household}

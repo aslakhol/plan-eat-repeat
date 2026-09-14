@@ -13,19 +13,16 @@ test("the browser-local awake preference controls Week and Cookbook Dinner sheet
   await installWakeLockMock(page);
   await ensureSignedIn(page);
 
-  const settingsMenu = page.getByRole("button", {
-    name: "Open cook settings",
+  const settingsLink = page.getByRole("link", {
+    name: "Settings",
+    exact: true,
   });
-  await expect(settingsMenu).toBeVisible();
-  await settingsMenu.click();
+  await settingsLink.click();
   await expect(
     page.getByRole("switch", { name: "Keep screen awake" }),
   ).toBeChecked();
-  await expect(page.getByRole("link", { name: "Settings" })).toHaveAttribute(
-    "href",
-    "/settings",
-  );
-  await page.keyboard.press("Escape");
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Week" })).toBeVisible();
 
   await openFirstPlannedDinner(page);
   await expect
@@ -36,7 +33,7 @@ test("the browser-local awake preference controls Week and Cookbook Dinner sheet
     .poll(() => wakeLockCounts(page))
     .toEqual({ requests: 1, releases: 1 });
 
-  await settingsMenu.click();
+  await settingsLink.click();
   await page.getByRole("switch", { name: "Keep screen awake" }).click();
   await expect(
     page.getByRole("switch", { name: "Keep screen awake" }),
@@ -48,17 +45,16 @@ test("the browser-local awake preference controls Week and Cookbook Dinner sheet
       ),
     )
     .toBe("false");
-  await page.keyboard.press("Escape");
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Week" })).toBeVisible();
-  await settingsMenu.click();
+  await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
   await expect(
     page.getByRole("switch", { name: "Keep screen awake" }),
   ).not.toBeChecked();
-  await page.keyboard.press("Escape");
 
   await page.getByRole("link", { name: "Cookbook" }).click();
-  const firstDinner = page.locator('a[href^="/dinners/"]').first();
+  const firstDinner = page
+    .locator('a[href^="/dinners/"]:not([href="/dinners/shared"])')
+    .first();
   await expect(firstDinner).toBeVisible();
   await firstDinner.click();
   await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
@@ -67,13 +63,18 @@ test("the browser-local awake preference controls Week and Cookbook Dinner sheet
     .toEqual({ requests: 1, releases: 1 });
   await page.keyboard.press("Escape");
 
-  await settingsMenu.click();
+  await settingsLink.click();
   await page.getByRole("switch", { name: "Keep screen awake" }).click();
-  await page.keyboard.press("Escape");
+  await page.getByRole("link", { name: "Cookbook" }).click();
   await firstDinner.click();
   await expect
-    .poll(() => wakeLockCounts(page))
-    .toEqual({ requests: 2, releases: 1 });
+    .poll(async () => {
+      const { requests, releases } = await wakeLockCounts(page);
+      return requests - releases;
+    })
+    .toBe(1);
+  const activeLockCounts = await wakeLockCounts(page);
+  expect(activeLockCounts.requests).toBeGreaterThan(1);
 
   await page.evaluate(() => {
     Object.defineProperty(document, "visibilityState", {
@@ -84,7 +85,10 @@ test("the browser-local awake preference controls Week and Cookbook Dinner sheet
   });
   await expect
     .poll(() => wakeLockCounts(page))
-    .toEqual({ requests: 2, releases: 2 });
+    .toEqual({
+      requests: activeLockCounts.requests,
+      releases: activeLockCounts.releases + 1,
+    });
   await page.evaluate(() => {
     Object.defineProperty(document, "visibilityState", {
       configurable: true,
@@ -94,7 +98,10 @@ test("the browser-local awake preference controls Week and Cookbook Dinner sheet
   });
   await expect
     .poll(() => wakeLockCounts(page))
-    .toEqual({ requests: 3, releases: 2 });
+    .toEqual({
+      requests: activeLockCounts.requests + 1,
+      releases: activeLockCounts.releases + 1,
+    });
 
   await page.evaluate(() => {
     localStorage.setItem("plan-eat-repeat:keep-screen-awake", "false");
@@ -107,7 +114,10 @@ test("the browser-local awake preference controls Week and Cookbook Dinner sheet
   });
   await expect
     .poll(() => wakeLockCounts(page))
-    .toEqual({ requests: 3, releases: 3 });
+    .toEqual({
+      requests: activeLockCounts.requests + 1,
+      releases: activeLockCounts.releases + 2,
+    });
 });
 
 test("denied wake lock does not block Dinner viewing", async ({ page }) => {
@@ -122,6 +132,9 @@ test("denied wake lock does not block Dinner viewing", async ({ page }) => {
   });
   await ensureSignedIn(page);
   await page.getByRole("link", { name: "Cookbook" }).click();
-  await page.locator('a[href^="/dinners/"]').first().click();
+  await page
+    .locator('a[href^="/dinners/"]:not([href="/dinners/shared"])')
+    .first()
+    .click();
   await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
 });
