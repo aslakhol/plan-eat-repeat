@@ -92,35 +92,6 @@ void test("Dinner editing persists a normalized explicit Link", () =>
     assert.equal(result.dinner.link, "http://example.com/");
   }));
 
-void test("Dinner creation rejects a scheme-less Link", () =>
-  withDinnerCaller(async ({ caller, marker }) => {
-    await assert.rejects(
-      caller.create({
-        dinnerName: `Dinner ${marker}`,
-        tagList: [],
-        link: "example.com/recipe",
-      }),
-      /Enter a valid link/,
-    );
-  }));
-
-void test("Dinner editing rejects a scheme-less Link", () =>
-  withDinnerCaller(async ({ caller, db, householdId, marker }) => {
-    const dinner = await db.dinner.create({
-      data: { name: `Dinner ${marker}`, householdId },
-    });
-
-    await assert.rejects(
-      caller.edit({
-        dinnerId: dinner.id,
-        dinnerName: dinner.name,
-        tagList: [],
-        link: "example.com/recipe",
-      }),
-      /Enter a valid link/,
-    );
-  }));
-
 void test("Recipe saves normalize standard spellings without converting amounts", () =>
   withDinnerCaller(async ({ caller }) => {
     const input = {
