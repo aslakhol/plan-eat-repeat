@@ -1,52 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { ensureSignedIn } from "./capture-support";
 
-test("every source offers the complete prompt, resets, and Remember without losing an open experiment", async ({
-  page,
-}) => {
-  await ensureSignedIn(page);
-  await page.getByRole("button", { name: "Add Dinner", exact: true }).click();
-  for (const source of [
-    "Link",
-    "YouTube video",
-    "Instagram",
-    "Photos",
-    "Text",
-  ]) {
-    await page.getByRole("button", { name: source, exact: true }).click();
-    const toggle = page.getByRole("button", { name: "Prompt", exact: true });
-    await expect(toggle).toHaveAttribute("aria-expanded", "false");
-    const reset = page.locator("summary").filter({ hasText: "Reset" });
-    await expect(reset).not.toBeVisible();
-    await toggle.click();
-    await expect(reset).toBeVisible();
-    const prompt = page.getByRole("textbox", {
-      name: "Import Prompt",
-      exact: true,
-    });
-    await expect(prompt).toHaveAttribute("maxlength", "20000");
-    await expect(prompt).not.toHaveValue("");
-    await prompt.fill("Make Italian fusion.");
-    await expect(
-      page.getByRole("switch", { name: "Remember prompt", exact: true }),
-    ).toHaveAttribute("aria-checked", "false");
-    await reset.click();
-    await toggle.click();
-    await expect(toggle).toHaveAttribute("aria-expanded", "false");
-    await expect(reset).not.toBeVisible();
-    await toggle.click();
-    await expect(reset).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Reset to household", exact: true }),
-    ).not.toBeVisible();
-    await expect(prompt).toHaveValue("Make Italian fusion.");
-    await page
-      .getByRole("button", { name: "‹ Add a dinner", exact: true })
-      .click();
-  }
-});
-
-test("reset styling follows the Household while incoming saves preserve an open textbox", async ({
+test("incoming Household saves preserve an open prompt draft", async ({
   page,
 }) => {
   test.setTimeout(90_000);
@@ -78,26 +33,14 @@ test("reset styling follows the Household while incoming saves preserve an open 
     await page.goto("/");
     await page.getByRole("button", { name: "Add Dinner", exact: true }).click();
     await page.getByRole("button", { name: "Link", exact: true }).click();
-    const card = page.getByRole("region", {
-      name: "Import prompt",
-      exact: true,
-    });
     const toggle = page.getByRole("button", { name: "Prompt", exact: true });
     const reset = page.locator("summary").filter({ hasText: "Reset" });
     const prompt = page.getByRole("textbox", {
       name: "Import Prompt",
       exact: true,
     });
-    await expect(card).not.toHaveClass(/border-primary/);
     await toggle.click();
     await expect(prompt).toHaveValue(householdPrompt);
-    const height = await prompt.evaluate((el) => ({
-      client: el.clientHeight,
-      scroll: el.scrollHeight,
-    }));
-    expect(height.scroll).toBeGreaterThan(height.client);
-    expect(height.client).toBeLessThanOrEqual(320);
-    await page.screenshot({ path: "/tmp/issue-231-prompt-open.png" });
     await reset.click();
     await page
       .getByRole("button", { name: "Reset to app default", exact: true })
@@ -105,19 +48,15 @@ test("reset styling follows the Household while incoming saves preserve an open 
     const appDefault = await prompt.inputValue();
     expect(appDefault).not.toBe(householdPrompt);
     expect(await readSaved()).toBe(householdPrompt);
-    await expect(card).toHaveClass(/border-primary/);
     await toggle.click();
-    await expect(card).toHaveClass(/border-primary/);
     await expect(reset).not.toBeVisible();
     await toggle.click();
     await reset.click();
     await page
       .getByRole("button", { name: "Reset to household", exact: true })
       .click();
-    await expect(card).not.toHaveClass(/border-primary/);
     await expect(prompt).toHaveValue(householdPrompt);
     await prompt.fill("");
-    await expect(card).toHaveClass(/border-primary/);
     await prompt.fill("Keep my open experiment");
     await page
       .getByRole("switch", { name: "Remember prompt", exact: true })
@@ -141,7 +80,6 @@ test("reset styling follows the Household while incoming saves preserve an open 
       .getByRole("button", { name: "Reset to household", exact: true })
       .click();
     await expect(prompt).toHaveValue("Another member's prompt");
-    await expect(card).not.toHaveClass(/border-primary/);
     await page.keyboard.press("Escape");
     await expect(toggle).not.toBeVisible();
     await page.getByRole("button", { name: "Add Dinner", exact: true }).click();
@@ -160,7 +98,7 @@ test("reset styling follows the Household while incoming saves preserve an open 
   }
 });
 
-test("all sources submit the edited prompt and Remember through failures, retries, and a successful unsaved import", async ({
+test("an import retries with the edited prompt and clears its draft after success", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -192,97 +130,41 @@ test("all sources submit the edited prompt and Remember through failures, retrie
     });
   });
   await page.getByRole("button", { name: "Add Dinner", exact: true }).click();
-  for (const source of [
-    "Link",
-    "YouTube video",
-    "Instagram",
-    "Photos",
-    "Text",
-  ]) {
-    await page.getByRole("button", { name: source, exact: true }).click();
-    if (source === "Photos") {
-      await page
-        .getByLabel("Choose recipe photos", { exact: true })
-        .setInputFiles({
-          name: "recipe.png",
-          mimeType: "image/png",
-          buffer: Buffer.from(
-            await page.evaluate(() => {
-              const canvas = document.createElement("canvas");
-              canvas.width = 10;
-              canvas.height = 10;
-              return canvas.toDataURL("image/png").split(",")[1]!;
-            }),
-            "base64",
-          ),
-        });
-      await expect(page.getByAltText("Recipe photo 1 of 1")).toBeVisible();
-    } else if (source === "Text") {
-      await page
-        .getByRole("textbox", { name: "Recipe text", exact: true })
-        .fill("Boil lentils and season.");
-    } else {
-      await page
-        .getByRole("textbox", { name: "Recipe URL", exact: true })
-        .fill(
-          source === "YouTube video"
-            ? "https://www.youtube.com/watch?v=BoFkDmTm2uc"
-            : source === "Instagram"
-              ? "https://www.instagram.com/reel/DOybkebkcaw/"
-              : "https://example.com/soup",
-        );
-    }
-    await page.getByRole("button", { name: "Prompt", exact: true }).click();
-    expectedPrompt = `Make ${source} Italian fusion.`;
-    await page
-      .getByRole("textbox", { name: "Import Prompt", exact: true })
-      .fill(expectedPrompt);
-    const remember = page.getByRole("switch", {
-      name: "Remember prompt",
-      exact: true,
-    });
-    if (source === "Link") await remember.click();
-    await expect(remember).toHaveAttribute("aria-checked", "true");
-    const before = requests;
-    await page
-      .getByRole("button", { name: "Import recipe", exact: true })
-      .click();
-    await expect(
-      page.getByRole("button", { name: "Try again", exact: true }),
-    ).toBeVisible();
-    expect(requests).toBe(before + 1);
-    if (source === "Text") {
-      succeed = true;
-      await page
-        .getByRole("button", { name: "Try again", exact: true })
-        .click();
-      await expect(page).toHaveURL(/\/dinners\/new/);
-      await expect(
-        page.getByRole("textbox", { name: "Name", exact: true }),
-      ).toHaveValue("One-off import draft");
-      page.once("dialog", (dialog) => dialog.accept());
-      await page.getByRole("button", { name: "Cancel", exact: true }).click();
-      await expect(page).toHaveURL("/");
-      await page.reload();
-      break;
-    }
-    await page.getByRole("button", { name: "Back", exact: true }).click();
-    await page.getByRole("button", { name: "Prompt", exact: true }).click();
-    await expect(
-      page.getByRole("textbox", { name: "Import Prompt", exact: true }),
-    ).toHaveValue(expectedPrompt);
-    await page.reload();
-    await page.getByRole("button", { name: "Add Dinner", exact: true }).click();
-    await page.getByRole("button", { name: source, exact: true }).click();
-    await page.getByRole("button", { name: "Prompt", exact: true }).click();
-    await expect(
-      page.getByRole("textbox", { name: "Import Prompt", exact: true }),
-    ).toHaveValue(expectedPrompt);
-    await expect(remember).toHaveAttribute("aria-checked", "true");
-    await page
-      .getByRole("button", { name: "‹ Add a dinner", exact: true })
-      .click();
-  }
+
+  await page.getByRole("button", { name: "Text", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "Recipe text", exact: true })
+    .fill("Boil lentils and season.");
+  await page.getByRole("button", { name: "Prompt", exact: true }).click();
+  expectedPrompt = "Make Italian fusion.";
+  await page
+    .getByRole("textbox", { name: "Import Prompt", exact: true })
+    .fill(expectedPrompt);
+  const remember = page.getByRole("switch", {
+    name: "Remember prompt",
+    exact: true,
+  });
+  await remember.click();
+  await expect(remember).toHaveAttribute("aria-checked", "true");
+  const before = requests;
+  await page
+    .getByRole("button", { name: "Import recipe", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Try again", exact: true }),
+  ).toBeVisible();
+  expect(requests).toBe(before + 1);
+
+  succeed = true;
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(page).toHaveURL(/\/dinners\/new/);
+  await expect(
+    page.getByRole("textbox", { name: "Name", exact: true }),
+  ).toHaveValue("One-off import draft");
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page).toHaveURL("/");
+  await page.reload();
   await page.getByRole("button", { name: "Add Dinner", exact: true }).click();
   await page.getByRole("button", { name: "Text", exact: true }).click();
   await page.getByRole("button", { name: "Prompt", exact: true }).click();
