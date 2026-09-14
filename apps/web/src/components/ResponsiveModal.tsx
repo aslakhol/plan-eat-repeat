@@ -88,8 +88,21 @@ export const ResponsiveModalContent = ({
   }
 
   return (
-    <DialogContent className={className} showCloseButton={false}>
-      {children}
+    <DialogContent
+      // Keep fixed descendants anchored to the shell while its viewport scrolls.
+      className={cn(
+        className,
+        scrollViewport && "flex flex-col overflow-hidden",
+      )}
+      showCloseButton={false}
+    >
+      {scrollViewport ? (
+        <ResponsiveModalScrollViewport className={scrollViewportClassName}>
+          {children}
+        </ResponsiveModalScrollViewport>
+      ) : (
+        children
+      )}
     </DialogContent>
   );
 };
@@ -104,11 +117,7 @@ export const ResponsiveModalScrollViewport = React.forwardRef<
     <div
       ref={ref}
       data-responsive-modal-scroll-viewport={isMobile ? "" : undefined}
-      className={cn(
-        "min-h-0 overflow-y-auto",
-        isMobile && "-m-1.5 p-1.5",
-        className,
-      )}
+      className={cn("-m-1.5 min-h-0 overflow-y-auto p-1.5", className)}
       {...props}
     >
       {children}
