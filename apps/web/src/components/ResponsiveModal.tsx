@@ -87,7 +87,11 @@ export const ResponsiveModalContent = ({
     );
   }
 
-  return <DialogContent className={className}>{children}</DialogContent>;
+  return (
+    <DialogContent className={className} showCloseButton={false}>
+      {children}
+    </DialogContent>
+  );
 };
 
 export const ResponsiveModalScrollViewport = React.forwardRef<
