@@ -246,6 +246,42 @@ void test("active and recent renames preserve new-name categories, respect known
     );
   }));
 
+void test("the active list sorts by category then name while Recently Used and Usually Have keep their order", () =>
+  withShoppingList(async ({ caller, member }) => {
+    for (const name of [
+      "Milk",
+      "Beans",
+      "Bread",
+      "Carrots",
+      "Apples",
+      "A mystery",
+    ]) {
+      const item = await caller.addManual({ name });
+      await caller.remove({ id: item.id });
+      await caller.setUsuallyHave({ name, excluded: true });
+    }
+    assert.deepEqual(
+      (await caller.recent()).map((item) => item.name),
+      ["A mystery", "Apples", "Carrots", "Bread", "Beans", "Milk"],
+    );
+    assert.deepEqual(
+      (await caller.usuallyHave()).map((item) => item.name),
+      ["A mystery", "Apples", "Beans", "Bread", "Carrots", "Milk"],
+    );
+    for (const recent of await caller.recent())
+      await caller.addRecent({ id: recent.id });
+    assert.deepEqual(
+      (await member.list()).map((item) => item.name),
+      ["Apples", "Carrots", "Bread", "Milk", "Beans", "A mystery"],
+    );
+    const milk = (await caller.list()).find((item) => item.name === "Milk")!;
+    await member.edit({ ...milk, category: "PRODUCE" });
+    assert.deepEqual(
+      (await caller.list()).map((item) => item.name),
+      ["Apples", "Carrots", "Milk", "Bread", "Beans", "A mystery"],
+    );
+  }));
+
 void test("Shopping Products survive clearing, dismissal, and Usually Have removal across shopping trips", () =>
   withShoppingList(async ({ caller, member, createDinner }) => {
     await caller.setUsuallyHave({ name: " Olive  oil ", excluded: true });
@@ -563,8 +599,8 @@ void test("Household members manage Usually Have, add Dinner and manual items, e
         { name: "2 kg potatoes", amount: null, unit: null, note: null },
         { name: "Apples", amount: null, unit: null, note: null },
         { name: "Carrots", amount: 500, unit: "g", note: null },
-        { name: "Oil", amount: null, unit: null, note: null },
         { name: "Zucchini", amount: null, unit: null, note: null },
+        { name: "Oil", amount: null, unit: null, note: null },
       ],
     );
     await member.edit({
@@ -578,7 +614,7 @@ void test("Household members manage Usually Have, add Dinner and manual items, e
     const edited = await caller.list();
     assert.deepEqual(
       edited.map(({ name }) => name),
-      ["Apples", "Carrots", "Oil", "Yukon potatoes", "Zucchini"],
+      ["Apples", "Carrots", "Yukon potatoes", "Zucchini", "Oil"],
     );
     assert.deepEqual(
       edited
@@ -600,7 +636,7 @@ void test("Household members manage Usually Have, add Dinner and manual items, e
     await member.remove({ id: potatoes.id });
     assert.deepEqual(
       (await caller.list()).map(({ name }) => name),
-      ["Apples", "Carrots", "Oil", "Zucchini"],
+      ["Apples", "Carrots", "Zucchini", "Oil"],
     );
     await caller.setUsuallyHave({ name: "Carrots", excluded: true });
     await caller.clear();
@@ -684,7 +720,7 @@ void test("incompatible and unspecified quantities stay adjacent and independent
     const items = await caller.list();
     assert.deepEqual(
       items.map(({ name }) => name),
-      ["Apples", ...Array<string>(7).fill("Tomatoes"), "Zucchini"],
+      ["Apples", "Zucchini", ...Array<string>(7).fill("Tomatoes")],
     );
     const tomatoes = items.filter(({ name }) => name === "Tomatoes");
     assert.deepEqual(
@@ -825,10 +861,10 @@ void test("Undo reverses a repeated Dinner batch while retaining pre-existing nu
         note,
       })),
       [
-        { name: "Flour", amount: 2500, unit: "g", note: "Bread flour" },
         { name: "Salt", amount: null, unit: null, note: null },
-        { name: "Water", amount: null, unit: null, note: null },
         { name: "Yeast", amount: 14, unit: "g", note: null },
+        { name: "Flour", amount: 2500, unit: "g", note: "Bread flour" },
+        { name: "Water", amount: null, unit: null, note: null },
       ],
     );
     // Shopping requirements and Undo survive deletion of the source Recipe.
@@ -868,9 +904,9 @@ void test("ingredientless Dinners use their names, and Undo leaves intervening e
         note,
       })),
       [
+        { name: "Toast", amount: null, unit: null, note: null },
         { name: "Soup", amount: null, unit: null, note: null },
         { name: "Takeaway", amount: null, unit: null, note: null },
-        { name: "Toast", amount: null, unit: null, note: null },
       ],
     );
     const takeaway = items.find(({ name }) => name === "Takeaway")!;

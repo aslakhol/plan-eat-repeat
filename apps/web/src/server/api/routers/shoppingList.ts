@@ -1,4 +1,7 @@
-import { normalizeShoppingName } from "@planeatrepeat/shared";
+import {
+  normalizeShoppingName,
+  shoppingCategoryOrder,
+} from "@planeatrepeat/shared";
 import { z } from "zod";
 import { ShoppingCategory, type ShoppingItem } from "@planeatrepeat/db";
 import { saveShoppingItem, setUsuallyHave } from "../../shopping-list";
@@ -109,6 +112,8 @@ export const shoppingListRouter = createTRPCRouter({
     });
     return items.sort(
       (a, b) =>
+        shoppingCategoryOrder.indexOf(a.product.category) -
+          shoppingCategoryOrder.indexOf(b.product.category) ||
         a.normalizedName.localeCompare(b.normalizedName) ||
         a.id.localeCompare(b.id),
     );
