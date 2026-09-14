@@ -1,5 +1,8 @@
-import { rememberShoppingProduct } from "./shopping-products";
-import type { Prisma, ShoppingItem } from "@planeatrepeat/db";
+import {
+  editShoppingProduct,
+  rememberShoppingProduct,
+} from "./shopping-products";
+import type { Prisma, ShoppingCategory, ShoppingItem } from "@planeatrepeat/db";
 import {
   convertUnitAmount,
   normalizeShoppingName,
@@ -11,16 +14,28 @@ export const saveShoppingItem = async (
   householdId: string,
   input: Pick<ShoppingItem, "name" | "amount" | "unit" | "note"> & {
     id?: string;
+    category?: ShoppingCategory;
   },
 ) => {
   // Serialize combining writes so two members cannot both create the same row.
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
-  const { id, ...fields } = input;
-  if (id) {
-    await tx.shoppingItem.findUniqueOrThrow({ where: { id, householdId } });
-  }
+  const { id, category, ...fields } = input;
+  const original = id
+    ? await tx.shoppingItem.findUniqueOrThrow({
+        where: { id, householdId },
+        include: { product: { select: { category: true } } },
+      })
+    : null;
   const name = input.name.trim();
-  const product = await rememberShoppingProduct(tx, householdId, name);
+  const product = original
+    ? await editShoppingProduct(
+        tx,
+        householdId,
+        name,
+        original.product.category,
+        category,
+      )
+    : await rememberShoppingProduct(tx, householdId, name);
   const item = {
     productId: product.id,
     ...fields,

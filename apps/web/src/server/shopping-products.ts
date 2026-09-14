@@ -13,6 +13,7 @@ export const rememberShoppingProduct = async (
   tx: Prisma.TransactionClient,
   householdId: string,
   name: string,
+  initialCategory?: ShoppingCategory,
 ) => {
   const normalizedName = normalizeShoppingName(name);
   const existing = await tx.shoppingProduct.findUnique({
@@ -20,7 +21,8 @@ export const rememberShoppingProduct = async (
   });
   if (existing) return existing;
 
-  let category: ShoppingCategory | undefined = catalog.get(normalizedName);
+  let category: ShoppingCategory | undefined =
+    initialCategory ?? catalog.get(normalizedName);
   if (!category) {
     const remembered = await tx.shoppingProduct.findMany({
       where: { householdId },
@@ -58,3 +60,25 @@ export const rememberShoppingProduct = async (
     },
   });
 };
+
+// Renames inherit the source only for a new name; a known destination keeps its
+// own category unless the member explicitly selected a replacement.
+export async function editShoppingProduct(
+  tx: Prisma.TransactionClient,
+  householdId: string,
+  name: string,
+  originalCategory: ShoppingCategory,
+  selectedCategory?: ShoppingCategory,
+) {
+  const product = await rememberShoppingProduct(
+    tx,
+    householdId,
+    name,
+    selectedCategory ?? originalCategory,
+  );
+  if (selectedCategory === undefined) return product;
+  return tx.shoppingProduct.update({
+    where: { id: product.id, householdId },
+    data: { category: selectedCategory },
+  });
+}

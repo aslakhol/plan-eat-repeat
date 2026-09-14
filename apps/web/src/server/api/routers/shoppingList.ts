@@ -1,6 +1,6 @@
 import { normalizeShoppingName } from "@planeatrepeat/shared";
 import { z } from "zod";
-import type { ShoppingItem } from "@planeatrepeat/db";
+import { ShoppingCategory, type ShoppingItem } from "@planeatrepeat/db";
 import { saveShoppingItem, setUsuallyHave } from "../../shopping-list";
 import {
   editRecentShoppingItem,
@@ -25,6 +25,7 @@ export const shoppingListRouter = createTRPCRouter({
       itemFields.extend({
         id: z.string(),
         usuallyHave: z.boolean().optional(),
+        category: z.nativeEnum(ShoppingCategory).optional(),
       }),
     )
     .mutation(({ ctx, input }) =>
@@ -319,6 +320,7 @@ export const shoppingListRouter = createTRPCRouter({
       itemFields.extend({
         id: z.string(),
         usuallyHave: z.boolean().optional(),
+        category: z.nativeEnum(ShoppingCategory).optional(),
       }),
     )
     .mutation(({ ctx, input }) =>
