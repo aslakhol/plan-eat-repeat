@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import {
-  Bookmark,
+  BookMarked,
   Calendar,
   Plus,
   ShoppingCart,
@@ -24,7 +24,7 @@ export const BottomNav = ({ onAddDinner }: { onAddDinner: () => void }) => {
 
   const items = [
     { title: "Plan", url: "/", icon: Calendar },
-    { title: "Cookbook", url: "/dinners", icon: Bookmark },
+    { title: "Cookbook", url: "/dinners", icon: BookMarked },
     { title: "Shopping list", url: "/shopping-list", icon: ShoppingCart },
     { title: "Settings", url: "/settings", icon: Settings },
   ];

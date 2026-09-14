@@ -1,5 +1,5 @@
 import {
-  Bookmark,
+  BookMarked,
   Bot,
   Calendar,
   Plus,
@@ -31,7 +31,7 @@ const items = [
   {
     title: "Dinners",
     url: "/dinners",
-    icon: Bookmark,
+    icon: BookMarked,
   },
   {
     title: "Shopping list",
