@@ -1,3 +1,5 @@
+import { spawnSync } from "node:child_process";
+import { readFileSync, readdirSync } from "node:fs";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { mock, test } from "node:test";
@@ -104,7 +106,7 @@ void test("Shopping Products survive clearing, dismissal, and Usually Have remov
     await caller.clear();
     const [cleared] = await member.recent();
     assert.equal(cleared?.productId, preference.productId);
-    const restored = await member.addRecent({ id: cleared!.id });
+    const restored = await member.addRecent({ id: cleared.id });
     assert.equal(restored.productId, preference.productId);
     await member.remove({ id: restored.id });
     const [removed] = await caller.recent();
@@ -703,3 +705,144 @@ void test("ingredientless Dinners use their names, and Undo leaves intervening e
       ["Pizza"],
     );
   }));
+
+void test("existing shopping details and reusable state survive the Shopping Product migration", async () => {
+  // A disposable database exercises the actual historical migrations without
+  // changing the development Household or depending on today's Prisma schema.
+  const migrationRoot = new URL(
+    "../../../../packages/db/prisma/migrations/",
+    import.meta.url,
+  );
+  const migrations = readdirSync(migrationRoot)
+    .filter((name) => name !== "migration_lock.toml")
+    .sort();
+  const firstProductMigration = migrations.indexOf(
+    "20260915100000_normalize_shopping_names",
+  );
+  assert.ok(firstProductMigration > 0);
+  const migrationSql = (names: string[]) =>
+    names
+      .map((name) =>
+        readFileSync(new URL(`${name}/migration.sql`, migrationRoot), "utf8"),
+      )
+      .join("\n");
+  const admin = createPrismaClient(databaseUrl);
+  const databaseName = `shopping_migration_${crypto.randomUUID().replaceAll("-", "")}`;
+  const url = new URL(databaseUrl);
+  url.pathname = `/${databaseName}`;
+  const db = createPrismaClient(url.toString());
+  const execute = (sql: string) => {
+    const result = spawnSync(
+      "pnpm",
+      [
+        "--filter",
+        "@planeatrepeat/db",
+        "exec",
+        "prisma",
+        "db",
+        "execute",
+        "--stdin",
+      ],
+      {
+        cwd: new URL("../../../..", import.meta.url),
+        env: { ...process.env, DATABASE_URL: url.toString() },
+        input: sql,
+        encoding: "utf8",
+      },
+    );
+    assert.equal(result.status, 0, result.stderr);
+  };
+  await admin.$executeRawUnsafe(`CREATE DATABASE "${databaseName}"`);
+  try {
+    execute(migrationSql(migrations.slice(0, firstProductMigration)));
+    execute(`
+      INSERT INTO "User" (id, "updatedAt") VALUES ('migration-user', now());
+      INSERT INTO "Household" (id, name, slug, "updatedAt", "aiImportSpendAttributionKey")
+      VALUES ('migration-household', 'Migration', 'migration-household', now(), 'migration-spend');
+      INSERT INTO "Membership" ("householdId", "userId", role, "updatedAt", "aiImportSpendAttributionKey")
+      VALUES ('migration-household', 'migration-user', 'MEMBER', now(), 'migration-member-spend');
+      INSERT INTO "ShoppingItem" (id, "householdId", name, "normalizedName", amount, unit, note)
+      VALUES ('measured', 'migration-household', 'Olive  oil', 'olive  oil', 500, 'ml', 'For salad'),
+             ('bare', 'migration-household', 'OLIVE OIL', 'olive oil', NULL, NULL, 'Organic');
+      INSERT INTO "RecentShoppingItem" (id, "householdId", name, "normalizedName", amount, unit, note, "recentlyUsedAt", revision)
+      VALUES ('older', 'migration-household', 'Brown  rice', 'brown  rice', 1, 'kg', 'Old note', '2026-01-01', 'old-revision'),
+             ('latest', 'migration-household', 'Brown rice', 'brown rice', 2, 'kg', 'For curry', '2026-02-01', 'latest-revision');
+      INSERT INTO "UsuallyHave" ("householdId", name, "normalizedName")
+      VALUES ('migration-household', 'Olive oil', 'olive oil'),
+             ('migration-household', 'Olive  oil', 'olive  oil'),
+             ('migration-household', 'Salt', 'salt');
+    `);
+    execute(migrationSql(migrations.slice(firstProductMigration)));
+    const caller = shoppingListRouter.createCaller({
+      db,
+      auth: { userId: "migration-user" },
+    } as Parameters<typeof shoppingListRouter.createCaller>[0]);
+    const items = await caller.list();
+    assert.deepEqual(
+      items.map(({ id, name, amount, unit, note }) => ({
+        id,
+        name,
+        amount,
+        unit,
+        note,
+      })),
+      [
+        {
+          id: "bare",
+          name: "OLIVE OIL",
+          amount: null,
+          unit: null,
+          note: "Organic",
+        },
+        {
+          id: "measured",
+          name: "Olive  oil",
+          amount: 500,
+          unit: "ml",
+          note: "For salad",
+        },
+      ],
+    );
+    const [oil, salt] = await caller.usuallyHave();
+    assert.equal(oil?.normalizedName, "olive oil");
+    assert.equal(salt?.normalizedName, "salt");
+    assert.ok(oil?.productId);
+    assert.ok(items.every((item) => item.productId === oil.productId));
+    const recent = await caller.recent();
+    assert.equal(recent.length, 1);
+    assert.deepEqual(
+      recent.map(({ id, amount, unit, note, recentlyUsedAt, revision }) => ({
+        id,
+        amount,
+        unit,
+        note,
+        recentlyUsedAt,
+        revision,
+      })),
+      [
+        {
+          id: "latest",
+          amount: 2,
+          unit: "kg",
+          note: "For curry",
+          recentlyUsedAt: new Date("2026-02-01"),
+          revision: "latest-revision",
+        },
+      ],
+    );
+    const restored = await caller.addRecent({ id: "latest" });
+    assert.equal(restored.productId, recent[0]!.productId);
+    await caller.clear();
+    for (const item of await caller.recent())
+      await caller.removeRecent({ id: item.id });
+    await caller.setUsuallyHave({ name: "Olive oil", excluded: false });
+    assert.equal(
+      (await caller.addManual({ name: "Olive oil" })).productId,
+      oil.productId,
+    );
+  } finally {
+    await db.$disconnect();
+    await admin.$executeRawUnsafe(`DROP DATABASE "${databaseName}"`);
+    await admin.$disconnect();
+  }
+});
