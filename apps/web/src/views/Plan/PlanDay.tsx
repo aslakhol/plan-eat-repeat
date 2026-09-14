@@ -37,12 +37,6 @@ type Props = {
 
 type DinnerSummary = RouterOutputs["dinner"]["summaries"]["dinners"][number];
 
-const pickerSortOptions = [
-  { value: "az" as const, label: "A–Z" },
-  { value: "not-lately" as const, label: "Haven't had lately" },
-  { value: "favourites" as const, label: "Favourites" },
-];
-
 export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   const posthog = usePostHog();
   const { openAddDinner } = useDinnerCreation();
@@ -133,7 +127,6 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
           sort={sort}
           onSortChange={setSort}
           placeholder="Search the cookbook…"
-          sortOptions={pickerSortOptions}
           className="shrink-0"
         />
       )}

@@ -44,12 +44,6 @@ type PeekLine = {
   truncate?: boolean;
 };
 
-const sortOptions = [
-  { value: "az" as const, label: "A–Z" },
-  { value: "not-lately" as const, label: "Haven't had lately" },
-  { value: "favourites" as const, label: "Favourites" },
-];
-
 const plural = (count: number, singular: string, pluralForm = `${singular}s`) =>
   `${count} ${count === 1 ? singular : pluralForm}`;
 
@@ -293,7 +287,6 @@ const PickerContent = ({
         sort={sort}
         onSortChange={onSortChange}
         placeholder="Search dinners…"
-        sortOptions={sortOptions}
         className="shrink-0"
       />
 
