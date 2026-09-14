@@ -1,10 +1,10 @@
 import {
+  Bookmark,
   Bot,
   Calendar,
   Plus,
   Settings,
-  ShoppingBasket,
-  UtensilsCrossed,
+  ShoppingCart,
 } from "lucide-react";
 import {
   Sidebar,
@@ -31,12 +31,12 @@ const items = [
   {
     title: "Dinners",
     url: "/dinners",
-    icon: UtensilsCrossed,
+    icon: Bookmark,
   },
   {
     title: "Shopping list",
     url: "/shopping-list",
-    icon: ShoppingBasket,
+    icon: ShoppingCart,
   },
   {
     title: "Settings",

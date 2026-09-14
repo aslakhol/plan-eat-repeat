@@ -1,10 +1,10 @@
 import { Fragment } from "react";
 import {
-  Book,
+  Bookmark,
   Calendar,
   Plus,
-  ShoppingBasket,
-  SlidersHorizontal,
+  ShoppingCart,
+  Settings,
 } from "lucide-react";
 import { useRouter } from "next/router";
 import { cn } from "../lib/utils";
@@ -24,9 +24,9 @@ export const BottomNav = ({ onAddDinner }: { onAddDinner: () => void }) => {
 
   const items = [
     { title: "Plan", url: "/", icon: Calendar },
-    { title: "Cookbook", url: "/dinners", icon: Book },
-    { title: "Shopping list", url: "/shopping-list", icon: ShoppingBasket },
-    { title: "Settings", url: "/settings", icon: SlidersHorizontal },
+    { title: "Cookbook", url: "/dinners", icon: Bookmark },
+    { title: "Shopping list", url: "/shopping-list", icon: ShoppingCart },
+    { title: "Settings", url: "/settings", icon: Settings },
   ];
 
   return (
