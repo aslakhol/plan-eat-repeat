@@ -355,3 +355,72 @@ void test("Dinner summaries expose content presence without loading recipe parts
       dinners.every((dinner) => !("parts" in dinner) && !("_count" in dinner)),
     );
   }));
+
+void test("publication APIs cannot change another Household's Dinner", () =>
+  withDinnerCaller(async ({ caller, db, marker }) => {
+    const foreign = await db.household.create({
+      data: {
+        name: "Foreign Household",
+        slug: `foreign-publication-${marker}`,
+        Dinners: { create: { name: "Private Dinner" } },
+      },
+      include: { Dinners: true },
+    });
+    const dinner = foreign.Dinners[0]!;
+    try {
+      for (const mutate of [caller.publish, caller.stopPublication]) {
+        await assert.rejects(mutate({ dinnerId: dinner.id }), {
+          code: "NOT_FOUND",
+        });
+      }
+      assert.deepEqual(
+        await db.dinner.findUniqueOrThrow({
+          where: { id: dinner.id },
+          select: { publicSlug: true, publishedAt: true },
+        }),
+        { publicSlug: null, publishedAt: null },
+      );
+    } finally {
+      await db.dinner.deleteMany({ where: { householdId: foreign.id } });
+      await db.household.delete({ where: { id: foreign.id } });
+    }
+  }));
+
+void test("concurrent saves across different sources respect the Household burst limit", () =>
+  withDinnerCaller(async ({ caller, db, householdId, marker }) => {
+    const source = await db.household.create({
+      data: { name: "Shared recipes", slug: `save-burst-source-${marker}` },
+    });
+    const slugs = Array.from(
+      { length: 21 },
+      (_, i) => `save-burst-${marker}-${i}`,
+    );
+    try {
+      await db.dinner.createMany({
+        data: slugs.map((publicSlug) => ({
+          householdId: source.id,
+          name: publicSlug,
+          publicSlug,
+          publishedAt: new Date(),
+        })),
+      });
+      const results = await Promise.allSettled(
+        slugs.map((publicSlug) => caller.savePublished({ publicSlug })),
+      );
+      assert.equal(
+        results.filter((result) => result.status === "fulfilled").length,
+        20,
+      );
+      const failures = results.filter((result) => result.status === "rejected");
+      assert.equal(failures.length, 1);
+      assert.ok(failures[0]?.reason instanceof Error);
+      assert.equal(
+        "code" in failures[0].reason && failures[0].reason.code,
+        "TOO_MANY_REQUESTS",
+      );
+      assert.equal(await db.dinner.count({ where: { householdId } }), 20);
+    } finally {
+      await db.dinner.deleteMany({ where: { householdId: source.id } });
+      await db.household.delete({ where: { id: source.id } });
+    }
+  }));
