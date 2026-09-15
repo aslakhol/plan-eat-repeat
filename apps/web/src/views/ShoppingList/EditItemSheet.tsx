@@ -23,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Textarea } from "~/components/ui/textarea";
 import { cn } from "~/lib/utils";
 import { api, type RouterOutputs } from "~/utils/api";
 
@@ -132,11 +131,11 @@ export function EditItemSheet({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="edit-shopping-note">Note</Label>
-              <Textarea
+              <Input
                 id="edit-shopping-note"
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
-                className="bg-background min-h-12 rounded-xl"
+                className="bg-background h-12 rounded-xl"
               />
             </div>
             <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,132px)] gap-2.5">
