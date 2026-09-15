@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   ResponsiveModal,
   ResponsiveModalContent,
@@ -24,9 +24,35 @@ export function AddItemSheet({
   onOpenChange: (open: boolean) => void;
   onSelectDinners: (source: ShoppingDinnerSource) => void;
 }) {
+  const [mobileStyle, setMobileStyle] = useState<CSSProperties>();
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!open || !viewport) return;
+
+    const updateViewport = () => {
+      // Safari can pan the visual viewport as well as shrink it for the keyboard.
+      setMobileStyle({
+        bottom: Math.max(
+          0,
+          window.innerHeight - viewport.height - viewport.offsetTop,
+        ),
+        maxHeight: Math.min(600, viewport.height - 16),
+      });
+    };
+    updateViewport();
+    viewport.addEventListener("resize", updateViewport);
+    viewport.addEventListener("scroll", updateViewport);
+    return () => {
+      viewport.removeEventListener("resize", updateViewport);
+      viewport.removeEventListener("scroll", updateViewport);
+    };
+  }, [open]);
+
   return (
-    <ResponsiveModal open={open} onOpenChange={onOpenChange} repositionInputs>
+    <ResponsiveModal open={open} onOpenChange={onOpenChange}>
       <ResponsiveModalContent
+        mobileStyle={mobileStyle}
         onOpenAutoFocus={(event) => event.preventDefault()}
         className="flex h-auto flex-col gap-0 rounded-t-3xl bg-white p-5 pb-8 has-[[data-typing=true]]:h-[65dvh] has-[[data-typing=true]]:max-h-[600px] md:rounded-2xl md:pt-10"
       >
