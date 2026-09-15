@@ -59,7 +59,8 @@ export const api = createTRPCNext<AppRouter>({
           },
         }),
         mutationCache: new MutationCache({
-          onError: (error) => {
+          onError: (error, _variables, _context, mutation) => {
+            if (mutation.meta?.handlesError) return;
             toast({
               variant: "destructive",
               title: "Something went wrong",

@@ -28,7 +28,7 @@ test("the navigation plus follows the current page", async ({ page }) => {
   await navigation.getByRole("link", { name: "Shopping list" }).click();
   await navigation.getByRole("button", { name: "Add shopping item" }).click();
   await expect(
-    addItemSheet.getByRole("textbox", { name: "Item name" }),
+    addItemSheet.getByRole("combobox", { name: "Item name" }),
   ).toBeVisible();
   await expect(addDinnerSheet).not.toBeVisible();
   await page.keyboard.press("Escape");
@@ -397,7 +397,7 @@ test("shopping previews keep typing through blur, scroll to choices, and support
     const refresh = Promise.withResolvers<void>();
     const refreshRequested = Promise.withResolvers<void>();
     await page.route("**/api/trpc/**", async (route) => {
-      if (route.request().url().includes("shoppingList.list")) {
+      if (route.request().url().includes("shoppingList.addSelection")) {
         refreshRequested.resolve();
         await refresh.promise;
       }
@@ -406,10 +406,12 @@ test("shopping previews keep typing through blur, scroll to choices, and support
     try {
       await last.click();
       await refreshRequested.promise;
-      await expect(drawer).toBeVisible();
-      await expect(last).toBeDisabled();
-      await page.keyboard.press("Escape");
       await expect(drawer).not.toBeVisible();
+      await expect(
+        page
+          .getByRole("list", { name: "Shopping items", exact: true })
+          .getByText(`${marker} 29`, { exact: true }),
+      ).toBeVisible();
       await open.click();
       await input.fill("Next purchase");
     } finally {
@@ -491,5 +493,77 @@ test("shopping previews update without disappearing while requests are delayed",
     await expect(drawer.getByRole("option")).toHaveCount(0);
   } finally {
     gate.resolve();
+  }
+});
+
+test("a failed optimistic shopping add preserves overlapping successful adds", async ({
+  page,
+}) => {
+  await ensureSignedIn(page);
+  const response = await page.request.post("/api/dev/auth-bypass");
+  const { userId } = (await response.json()) as { userId: string };
+  const { householdId } = await db.membership.findUniqueOrThrow({
+    where: { userId },
+  });
+  const marker = `Optimistic${crypto.randomUUID()}`;
+  const failedName = `${marker} failed`;
+  const savedName = `${marker} saved`;
+  const gate = Promise.withResolvers<void>();
+  const requested = Promise.withResolvers<void>();
+  await page.route("**/api/trpc/shoppingList.addSelection*", async (route) => {
+    if (route.request().postData()?.includes(failedName)) {
+      requested.resolve();
+      await gate.promise;
+      await route.abort("failed");
+    } else await route.continue();
+  });
+  const drawer = page.getByRole("dialog", { name: "Add an item", exact: true });
+  const items = page.getByRole("list", { name: "Shopping items", exact: true });
+  const add = async (name: string) => {
+    await page
+      .getByRole("button", { name: "Add an item", exact: true })
+      .click();
+    await drawer.getByRole("combobox", { name: "Item name" }).fill(name);
+    await drawer.getByRole("combobox", { name: "Item name" }).press("Enter");
+    await expect(drawer).not.toBeVisible();
+  };
+  try {
+    await page.goto("/shopping-list");
+    await add(failedName);
+    await requested.promise;
+    await expect(items.getByText(failedName, { exact: true })).toBeVisible();
+    await add(savedName);
+    const saved = page.getByRole("button", {
+      name: `Remove ${savedName} from list`,
+      exact: true,
+    });
+    await expect(saved).toBeEnabled();
+    // Force a server refresh while the first add remains in flight.
+    await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+    await expect(items.getByText(failedName, { exact: true })).toBeVisible();
+    await add(savedName);
+    await expect(items.getByText(savedName, { exact: true })).toHaveCount(1);
+    await expect(saved).toBeEnabled();
+    gate.resolve();
+    await expect(items.getByText(failedName, { exact: true })).toHaveCount(0);
+    await expect(
+      page.getByText(`Could not add ${failedName}`, { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Something went wrong", { exact: true }),
+    ).toHaveCount(0);
+    await expect(saved).toBeVisible();
+    await page.reload();
+    await expect(items.getByText(savedName, { exact: true })).toHaveCount(1);
+    await expect(items.getByText(failedName, { exact: true })).toHaveCount(0);
+  } finally {
+    gate.resolve();
+    await page.unrouteAll({ behavior: "wait" });
+    await db.ownItem.deleteMany({
+      where: {
+        householdId,
+        normalizedName: { startsWith: marker.toLowerCase() },
+      },
+    });
   }
 });
