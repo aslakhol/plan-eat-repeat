@@ -307,14 +307,28 @@ test("shopping previews keep typing through blur, scroll to choices, and support
       exact: true,
     });
     const input = drawer.getByRole("combobox", { name: "Item name" });
-    await open.click();
-    await expect(input).not.toBeFocused();
-    await input.fill(marker);
+    const sourcesReady = Promise.withResolvers<void>();
+    await page.route("**/api/trpc/shoppingList.sources*", async (route) => {
+      await sourcesReady.promise;
+      await route.continue();
+    });
+    try {
+      await open.click();
+      await expect(input).not.toBeFocused();
+      await input.fill(marker);
+      await input.press("ArrowDown");
+    } finally {
+      sourcesReady.resolve();
+      await page.unrouteAll({ behavior: "wait" });
+    }
     const last = drawer.getByRole("option", {
       name: `${marker} 29`,
       exact: true,
     });
     await expect(last).toHaveCount(1);
+    await expect(
+      drawer.getByRole("option", { name: marker, exact: true }),
+    ).toHaveAttribute("aria-selected", "true");
     await input.blur();
     await expect(
       drawer.getByRole("button", { name: "From the cookbook" }),

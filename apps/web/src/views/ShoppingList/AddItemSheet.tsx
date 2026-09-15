@@ -7,7 +7,10 @@ import {
   ResponsiveModalTitle,
 } from "~/components/ResponsiveModal";
 import { Input } from "~/components/ui/input";
-import { suggestShoppingItems } from "~/lib/shopping-matching";
+import {
+  shoppingIdentity,
+  suggestShoppingItems,
+} from "~/lib/shopping-matching";
 import { api } from "~/utils/api";
 import { DinnerSourceActions } from "./DinnerSourceActions";
 import { type ShoppingDinnerSource } from "./DinnerPicker";
@@ -45,11 +48,14 @@ function AddItemContent({
 }) {
   const [query, setQuery] = useState("");
   const [typing, setTyping] = useState(false);
-  const [highlighted, setHighlighted] = useState<number | null>(null);
+  const [highlighted, setHighlighted] = useState<string | null>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const utils = api.useUtils();
   const sources = api.shoppingList.sources.useQuery();
   const previews = suggestShoppingItems(query, sources.data ?? []);
+  const highlightedIndex = previews.findIndex(
+    (preview) => shoppingIdentity(preview.name, preview.note) === highlighted,
+  );
   const add = api.shoppingList.addSelection.useMutation({
     networkMode: "always",
     retry: false,
@@ -76,14 +82,14 @@ function AddItemContent({
         >
           {previews.map((preview, index) => (
             <button
-              key={JSON.stringify([preview.name, preview.note])}
+              key={shoppingIdentity(preview.name, preview.note)}
               id={`shopping-suggestion-${index}`}
               ref={(element) => {
                 optionRefs.current[index] = element;
               }}
               type="button"
               role="option"
-              aria-selected={highlighted === index}
+              aria-selected={highlightedIndex === index}
               aria-label={
                 preview.note ? `${preview.name}, ${preview.note}` : preview.name
               }
@@ -108,9 +114,7 @@ function AddItemContent({
           event.preventDefault();
           if (query.trim() && !add.isPending)
             add.mutate(
-              (highlighted === null
-                ? undefined
-                : previews[highlighted]?.selection) ?? {
+              previews[highlightedIndex]?.selection ?? {
                 name: query,
                 note: null,
               },
@@ -127,9 +131,9 @@ function AddItemContent({
           aria-expanded={typing && previews.length > 0}
           aria-controls="shopping-suggestions"
           aria-activedescendant={
-            highlighted === null
+            highlightedIndex < 0
               ? undefined
-              : `shopping-suggestion-${highlighted}`
+              : `shopping-suggestion-${highlightedIndex}`
           }
           autoComplete="off"
           enterKeyHint="done"
@@ -153,15 +157,17 @@ function AddItemContent({
             ) {
               event.preventDefault();
               const next =
-                highlighted === null
+                highlightedIndex < 0
                   ? event.key === "ArrowDown"
                     ? 0
                     : previews.length - 1
-                  : (highlighted +
+                  : (highlightedIndex +
                       (event.key === "ArrowDown" ? 1 : -1) +
                       previews.length) %
                     previews.length;
-              setHighlighted(next);
+              const preview = previews[next];
+              if (preview)
+                setHighlighted(shoppingIdentity(preview.name, preview.note));
               optionRefs.current[next]?.scrollIntoView({ block: "nearest" });
             }
           }}
