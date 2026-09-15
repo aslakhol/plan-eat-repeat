@@ -80,13 +80,12 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
       .getByRole("button", { name: "Add an item", exact: true })
       .click();
     await page
-      .getByRole("textbox", { name: "Item name", exact: true })
+      .getByRole("combobox", { name: "Item name", exact: true })
       .fill(manualName);
-    await page.getByRole("button", { name: "Add", exact: true }).click();
+    await page.getByRole("option", { name: manualName, exact: true }).click();
     await expect(
-      page.getByRole("textbox", { name: "Item name", exact: true }),
-    ).toBeEmpty();
-    await page.keyboard.press("Escape");
+      page.getByRole("dialog", { name: "Add an item", exact: true }),
+    ).not.toBeVisible();
     await expect(removeItem(manualName)).toBeVisible();
     await page.reload();
     await expect(removeItem(manualName)).toBeVisible();
@@ -173,13 +172,14 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
       .getByRole("button", { name: "Add an item", exact: true })
       .click();
     await page
-      .getByRole("textbox", { name: "Item name", exact: true })
+      .getByRole("combobox", { name: "Item name", exact: true })
       .fill(ingredientName);
-    await page.getByRole("button", { name: "Add", exact: true }).click();
+    await page
+      .getByRole("combobox", { name: "Item name", exact: true })
+      .press("Enter");
     await expect(
-      page.getByRole("textbox", { name: "Item name", exact: true }),
-    ).toBeEmpty();
-    await page.keyboard.press("Escape");
+      page.getByRole("dialog", { name: "Add an item", exact: true }),
+    ).not.toBeVisible();
     await page
       .getByRole("button", { name: `Edit ${ingredientName}`, exact: true })
       .click();
@@ -264,5 +264,89 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
       where: { householdId, name: { in: [manualName, ingredientName] } },
     });
     await db.dinner.delete({ where: { id: dinner.id } });
+  }
+});
+
+test("shopping previews keep typing through blur, scroll to choices, and support keyboard selection", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 900 });
+  await ensureSignedIn(page);
+  const response = await page.request.post("/api/dev/auth-bypass");
+  const { userId } = (await response.json()) as { userId: string };
+  const { householdId } = await db.membership.findUniqueOrThrow({
+    where: { userId },
+  });
+  const marker = `Preview${crypto.randomUUID()}`;
+  await db.ownItem.createMany({
+    data: Array.from({ length: 30 }, (_, index) => ({
+      householdId,
+      name: `${marker} ${String(index).padStart(2, "0")}`,
+      normalizedName: `${marker.toLowerCase()} ${String(index).padStart(2, "0")}`,
+      normalizedNote: "",
+      category: "OWN_ITEMS",
+    })),
+  });
+  try {
+    await page.goto("/shopping-list");
+    const open = page.getByRole("button", { name: "Add an item", exact: true });
+    const drawer = page.getByRole("dialog", {
+      name: "Add an item",
+      exact: true,
+    });
+    const input = drawer.getByRole("combobox", { name: "Item name" });
+    await open.click();
+    await expect(input).not.toBeFocused();
+    await input.fill(marker);
+    const last = drawer.getByRole("option", {
+      name: `${marker} 29`,
+      exact: true,
+    });
+    await expect(last).toHaveCount(1);
+    await input.blur();
+    await expect(
+      drawer.getByRole("button", { name: "From the cookbook" }),
+    ).not.toBeVisible();
+    await last.scrollIntoViewIfNeeded();
+    await last.click();
+    await expect(drawer).not.toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: `Remove ${marker} 29 from list`,
+        exact: true,
+      }),
+    ).toBeVisible();
+    await open.click();
+    await expect(input).toBeEmpty();
+    await expect(input).not.toBeFocused();
+    await input.fill(marker);
+    await expect(drawer.getByRole("option").first()).toBeVisible();
+    await input.press("ArrowDown");
+    await input.press("ArrowDown");
+    await input.press("Enter");
+    await expect(drawer).not.toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: `Remove ${marker} 01 from list`,
+        exact: true,
+      }),
+    ).toBeVisible();
+    await open.click();
+    await input.fill(marker);
+    await input.press("Enter");
+    await expect(drawer).not.toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: `Remove ${marker} from list`,
+        exact: true,
+      }),
+    ).toBeVisible();
+  } finally {
+    await db.ownItem.deleteMany({
+      where: {
+        householdId,
+        normalizedName: { startsWith: marker.toLowerCase() },
+      },
+    });
   }
 });

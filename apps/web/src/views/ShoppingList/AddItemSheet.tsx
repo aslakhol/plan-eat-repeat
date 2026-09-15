@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ResponsiveModal,
   ResponsiveModalContent,
@@ -41,6 +41,8 @@ function AddItemContent({
 }) {
   const [query, setQuery] = useState("");
   const [typing, setTyping] = useState(false);
+  const [highlighted, setHighlighted] = useState<number | null>(null);
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const utils = api.useUtils();
   const suggestions = api.shoppingList.suggest.useQuery(
     { query },
@@ -70,19 +72,24 @@ function AddItemContent({
       {typing && (
         <ResponsiveModalScrollViewport
           className="mb-3 flex-1"
+          id="shopping-suggestions"
           role="listbox"
           aria-label="Shopping suggestions"
         >
           {previews.map((preview, index) => (
             <button
-              key={index}
+              key={JSON.stringify([preview.name, preview.note])}
+              id={`shopping-suggestion-${index}`}
+              ref={(element) => {
+                optionRefs.current[index] = element;
+              }}
               type="button"
               role="option"
-              aria-selected={false}
+              aria-selected={highlighted === index}
               aria-label={
                 preview.note ? `${preview.name}, ${preview.note}` : preview.name
               }
-              className="hover:bg-accent focus-visible:bg-accent flex w-full flex-col rounded-lg px-3 py-3 text-left focus-visible:outline-none"
+              className="aria-selected:bg-accent hover:bg-accent focus-visible:bg-accent flex w-full flex-col rounded-lg px-3 py-3 text-left focus-visible:outline-none"
               disabled={add.isPending}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => add.mutate(preview.selection)}
@@ -102,7 +109,14 @@ function AddItemContent({
         onSubmit={(event) => {
           event.preventDefault();
           if (query.trim() && !add.isPending)
-            add.mutate({ name: query, note: null });
+            add.mutate(
+              (highlighted === null
+                ? undefined
+                : previews[highlighted]?.selection) ?? {
+                name: query,
+                note: null,
+              },
+            );
         }}
       >
         <label htmlFor="shopping-item-name" className="sr-only">
@@ -110,6 +124,15 @@ function AddItemContent({
         </label>
         <Input
           id="shopping-item-name"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={typing && previews.length > 0}
+          aria-controls="shopping-suggestions"
+          aria-activedescendant={
+            highlighted === null
+              ? undefined
+              : `shopping-suggestion-${highlighted}`
+          }
           autoComplete="off"
           enterKeyHint="done"
           placeholder="Add an item"
@@ -117,7 +140,33 @@ function AddItemContent({
           value={query}
           readOnly={add.isPending}
           onFocus={() => setTyping(true)}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setHighlighted(null);
+          }}
+          onKeyDown={(event) => {
+            if (event.nativeEvent.isComposing) {
+              if (event.key === "Enter") event.preventDefault();
+              return;
+            }
+            if (
+              (event.key === "ArrowDown" || event.key === "ArrowUp") &&
+              previews.length
+            ) {
+              event.preventDefault();
+              const next =
+                highlighted === null
+                  ? event.key === "ArrowDown"
+                    ? 0
+                    : previews.length - 1
+                  : (highlighted +
+                      (event.key === "ArrowDown" ? 1 : -1) +
+                      previews.length) %
+                    previews.length;
+              setHighlighted(next);
+              optionRefs.current[next]?.scrollIntoView({ block: "nearest" });
+            }
+          }}
         />
       </form>
       {add.isError && (

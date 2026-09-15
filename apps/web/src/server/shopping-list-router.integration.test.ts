@@ -1530,9 +1530,18 @@ void test("selecting previews remembers destinations, inherits categories once, 
         (item) => item.name === "Ost" && "source" in item.selection,
       ),
     );
-    assert.deepEqual((await caller.suggest({ query: "Cheese" })).filter((item) => item.name === "Cheese"), [
-      { name: "Cheese", note: null, selection: { name: "Cheese", note: null } },
-    ]);
+    assert.deepEqual(
+      (await caller.suggest({ query: "Cheese" })).filter(
+        (item) => item.name === "Cheese",
+      ),
+      [
+        {
+          name: "Cheese",
+          note: null,
+          selection: { name: "Cheese", note: null },
+        },
+      ],
+    );
     await withShoppingList(async ({ caller: other }) => {
       assert.equal(
         (await other.suggest({ query: "Eggs" })).filter(
