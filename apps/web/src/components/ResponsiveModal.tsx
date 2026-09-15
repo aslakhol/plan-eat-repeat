@@ -22,16 +22,22 @@ export const ResponsiveModal = ({
   children,
   open,
   onOpenChange,
+  repositionInputs = false,
 }: {
   children: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  repositionInputs?: boolean;
 }) => {
   const isMobile = useIsMobile();
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
+      <Drawer
+        open={open}
+        onOpenChange={onOpenChange}
+        repositionInputs={repositionInputs}
+      >
         {children}
       </Drawer>
     );
@@ -65,17 +71,22 @@ export const ResponsiveModalContent = ({
   className,
   scrollViewport = false,
   scrollViewportClassName,
+  onOpenAutoFocus,
 }: {
   children: React.ReactNode;
   className?: string;
   scrollViewport?: boolean;
   scrollViewportClassName?: string;
+  onOpenAutoFocus?: (event: Event) => void;
 }) => {
   const isMobile = useIsMobile();
 
   if (isMobile) {
     return (
-      <DrawerContent className={cn(className, "!overflow-visible")}>
+      <DrawerContent
+        className={cn(className, "!overflow-visible")}
+        onOpenAutoFocus={onOpenAutoFocus}
+      >
         {scrollViewport ? (
           <ResponsiveModalScrollViewport className={scrollViewportClassName}>
             {children}
@@ -95,6 +106,7 @@ export const ResponsiveModalContent = ({
         scrollViewport && "flex flex-col overflow-hidden",
       )}
       showCloseButton={false}
+      onOpenAutoFocus={onOpenAutoFocus}
     >
       {scrollViewport ? (
         <ResponsiveModalScrollViewport className={scrollViewportClassName}>
