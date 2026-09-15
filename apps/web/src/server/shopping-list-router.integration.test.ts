@@ -491,6 +491,43 @@ void test("Shopping Products survive clearing, dismissal, and Usually Have remov
     });
   }));
 
+void test("deleting a Shopping Product forgets its category and collections only for its Household", () =>
+  withShoppingList(async ({ caller, member }) => {
+    const rice = await caller.addManual({ name: "Rice" });
+    await caller.edit({ ...rice, category: "PETS" });
+    await caller.remove({ id: rice.id });
+    const [recent] = await member.recent();
+    const restored = await member.addRecent({ id: recent!.id });
+    await member.edit({ ...restored, amount: 1, unit: "kg" });
+    await caller.addManual({ name: " RICE " });
+    await caller.setUsuallyHave({ name: "Rice", excluded: true });
+    const inherited = await caller.addManual({ name: "Rice special" });
+    assert.equal(inherited.product.category, "PETS");
+    assert.equal((await caller.list()).length, 3);
+
+    await withShoppingList(async ({ caller: other }) => {
+      const otherRice = await other.addManual({ name: "Rice" });
+      await other.edit({ ...otherRice, category: "SNACKS" });
+      await other.deleteProduct({ id: rice.productId });
+      assert.equal((await caller.list()).length, 3);
+
+      await member.deleteProduct({ id: rice.productId });
+      assert.deepEqual(
+        (await caller.list()).map(({ name, product }) => ({
+          name,
+          category: product.category,
+        })),
+        [{ name: "Rice special", category: "PETS" }],
+      );
+      assert.deepEqual(await caller.recent(), []);
+      assert.deepEqual(await caller.usuallyHave(), []);
+      const addedAgain = await caller.addManual({ name: "rice" });
+      assert.equal(addedAgain.product.category, "GRAINS");
+      assert.notEqual(addedAgain.productId, rice.productId);
+      assert.equal((await other.list())[0]!.product.category, "SNACKS");
+    });
+  }));
+
 void test("Recently Used keeps the latest details per name, hides active names, and restores items for the Household", () =>
   withShoppingList(async ({ caller, member }) => {
     assert.deepEqual(await caller.recent(), []);

@@ -167,7 +167,7 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
       editor.getByRole("textbox", { name: "Note", exact: true }),
     ).toHaveValue("Red lentils");
     await editor
-      .getByRole("button", { name: "Remove from recently used", exact: true })
+      .getByRole("button", { name: "Delete product", exact: true })
       .click();
     await expect(editor).not.toBeVisible();
     await expect(addRecent).toHaveCount(0);

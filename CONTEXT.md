@@ -49,7 +49,7 @@ The Household's shared collection of items still to buy, added manually or from 
 A named requirement on the Shopping List, with an optional Amount, Unit, and shopping note. It is independent of the Dinner or Recipe Ingredient it may have come from.
 
 **Shopping Product**:
-A Household's remembered shopping name and its category, shared by Shopping Items with that name, Recently Used, and Usually Have. It exists even when there is no current requirement to buy it.
+A Household's remembered shopping name and its category, shared by Shopping Items with that name, Recently Used, and Usually Have. It exists even when there is no current requirement to buy it. Explicitly deleting the product removes its active requirements, Recently Used entry, Usually Have membership, and category memory. Adding the name again categorizes it afresh.
 
 **Shopping Category**:
 A store-oriented grouping of Shopping Items used to order the Shopping List.

@@ -75,11 +75,9 @@ export function EditItemSheet({
   };
   const editActive = api.shoppingList.edit.useMutation(options);
   const editRecent = api.shoppingList.editRecent.useMutation(options);
-  const removeActive = api.shoppingList.remove.useMutation(options);
-  const removeRecent = api.shoppingList.removeRecent.useMutation(options);
+  const deleteProduct = api.shoppingList.deleteProduct.useMutation(options);
   const edit = recent ? editRecent : editActive;
-  const remove = recent ? removeRecent : removeActive;
-  const pending = edit.isPending || remove.isPending;
+  const pending = edit.isPending || deleteProduct.isPending;
   const parsedAmount = parseAmount(amount);
   const amountValid =
     amountInputSchema.safeParse(amount).success &&
@@ -277,10 +275,11 @@ export function EditItemSheet({
                 again.
               </p>
             )}
-            {(edit.isError || remove.isError) && (
+            {(edit.isError || deleteProduct.isError) && (
               <p role="alert" className="text-destructive text-sm">
-                Could not {remove.isError ? "remove" : "save"} the item. Check
-                your connection and try again.
+                Could not{" "}
+                {deleteProduct.isError ? "delete the product" : "save the item"}.
+                Check your connection and try again.
               </p>
             )}
             <div className="flex gap-2.5 pt-1">
@@ -296,14 +295,9 @@ export function EditItemSheet({
                 type="button"
                 variant="outline"
                 className="text-destructive hover:bg-destructive/5 hover:text-destructive h-12 rounded-xl px-3"
-                aria-label={recent ? "Remove from recently used" : undefined}
-                onClick={() => remove.mutate({ id: item.id })}
+                onClick={() => deleteProduct.mutate({ id: item.productId })}
               >
-                {remove.isPending
-                  ? "Removing…"
-                  : recent
-                    ? "Remove"
-                    : "Remove from list"}
+                {deleteProduct.isPending ? "Deleting…" : "Delete product"}
               </Button>
               <Button
                 type="submit"

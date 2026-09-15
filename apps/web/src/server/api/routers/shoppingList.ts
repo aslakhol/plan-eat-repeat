@@ -351,6 +351,21 @@ export const shoppingListRouter = createTRPCRouter({
       }),
     ),
 
+  deleteProduct: protectedProcedureWithHousehold
+    .input(z.object({ id: z.string() }))
+    .mutation(({ ctx, input }) =>
+      ctx.db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
+        const where = { productId: input.id, householdId: ctx.householdId };
+        await tx.shoppingItem.deleteMany({ where });
+        await tx.recentShoppingItem.deleteMany({ where });
+        await tx.usuallyHave.deleteMany({ where });
+        return tx.shoppingProduct.deleteMany({
+          where: { id: input.id, householdId: ctx.householdId },
+        });
+      }),
+    ),
+
   remove: protectedProcedureWithHousehold
     .input(z.object({ id: z.string() }))
     .mutation(({ ctx, input }) =>
