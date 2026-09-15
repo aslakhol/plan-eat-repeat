@@ -87,14 +87,14 @@ function AddItemContent({
               aria-label={
                 preview.note ? `${preview.name}, ${preview.note}` : preview.name
               }
-              className="aria-selected:bg-accent hover:bg-accent focus-visible:bg-accent flex w-full flex-col rounded-lg px-3 py-3 text-left focus-visible:outline-none"
+              className="aria-selected:bg-accent hover:bg-accent focus-visible:bg-accent block w-full rounded-lg px-3 py-3 text-left focus-visible:outline-none"
               disabled={add.isPending}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => add.mutate(preview.selection)}
             >
               <span className="font-medium">{preview.name}</span>
               {preview.note && (
-                <span className="text-muted-foreground text-sm">
+                <span className="text-muted-foreground ml-1 text-sm">
                   {preview.note}
                 </span>
               )}
