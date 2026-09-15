@@ -12,6 +12,7 @@ import {
 } from "~/views/Dinners/DinnerCreationContext";
 import { useRouter } from "next/router";
 import { KeepScreenAwakeProvider } from "~/hooks/use-keep-screen-awake";
+import { ShoppingItemCreationContext } from "~/views/ShoppingList/ShoppingItemCreationContext";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useUser();
@@ -19,10 +20,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const showNav = isLoaded && isSignedIn;
   const showMobileNavigation = showNav && router.pathname !== "/dinners/new";
   const [addDinnerOpen, setAddDinnerOpen] = useState(false);
+  const [addShoppingItemOpen, setAddShoppingItemOpen] = useState(false);
+  const isShoppingList = router.pathname === "/shopping-list";
   const [addDinnerNavigation, setAddDinnerNavigation] =
     useState<DinnerCreationNavigation>({ origin: "cookbook" });
   const [importedDraft, setImportedDraft] =
     useState<ImportedDinnerDraft | null>(null);
+
+  if (!isShoppingList && addShoppingItemOpen) {
+    setAddShoppingItemOpen(false);
+  }
 
   const openAddDinner = (navigation: DinnerCreationNavigation) => {
     setAddDinnerNavigation(navigation);
@@ -54,16 +61,28 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 showMobileNavigation && "pb-24 md:pb-8",
               )}
             >
-              {children}
+              <ShoppingItemCreationContext.Provider
+                value={{
+                  addOpen: addShoppingItemOpen,
+                  setAddOpen: setAddShoppingItemOpen,
+                }}
+              >
+                {children}
+              </ShoppingItemCreationContext.Provider>
             </div>
 
             {showMobileNavigation && (
               <div className="md:hidden">
                 <BottomNav
-                  onAddDinner={() =>
-                    openAddDinner({
-                      origin: router.pathname === "/" ? "week" : "cookbook",
-                    })
+                  addLabel={isShoppingList ? "Add shopping item" : "Add Dinner"}
+                  onAdd={
+                    isShoppingList
+                      ? () => setAddShoppingItemOpen(true)
+                      : () =>
+                          openAddDinner({
+                            origin:
+                              router.pathname === "/" ? "week" : "cookbook",
+                          })
                   }
                 />
               </div>

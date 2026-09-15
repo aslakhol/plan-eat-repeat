@@ -11,7 +11,13 @@ import { cn } from "../lib/utils";
 import Link from "next/link";
 import { useClerk } from "@clerk/nextjs";
 
-export const BottomNav = ({ onAddDinner }: { onAddDinner: () => void }) => {
+export const BottomNav = ({
+  onAdd,
+  addLabel,
+}: {
+  onAdd: () => void;
+  addLabel: string;
+}) => {
   const router = useRouter();
   const { user } = useClerk();
 
@@ -60,9 +66,9 @@ export const BottomNav = ({ onAddDinner }: { onAddDinner: () => void }) => {
               {item.url === "/dinners" && (
                 <button
                   type="button"
-                  aria-label="Add Dinner"
+                  aria-label={addLabel}
                   className="bg-primary text-primary-foreground focus-visible:ring-ring relative -top-3 mx-auto flex size-[52px] items-center justify-center rounded-full shadow-[0_6px_18px_rgba(194,85,47,0.3)] transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                  onClick={onAddDinner}
+                  onClick={onAdd}
                 >
                   <Plus aria-hidden="true" className="size-7" />
                 </button>

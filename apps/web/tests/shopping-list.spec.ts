@@ -11,6 +11,59 @@ if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
 const db = createPrismaClient(process.env.DATABASE_URL);
 test.afterAll(async () => db.$disconnect());
 
+test("the navigation plus follows the current page", async ({ page }) => {
+  await ensureSignedIn(page);
+  const navigation = page.getByRole("navigation", {
+    name: "Primary navigation",
+  });
+  const addItemSheet = page.getByRole("dialog", {
+    name: "Add an item",
+    exact: true,
+  });
+  const addDinnerSheet = page.getByRole("dialog", {
+    name: "Add a dinner",
+    exact: true,
+  });
+
+  await navigation.getByRole("link", { name: "Shopping list" }).click();
+  await navigation.getByRole("button", { name: "Add shopping item" }).click();
+  await expect(
+    addItemSheet.getByRole("textbox", { name: "Item name" }),
+  ).toBeVisible();
+  await expect(addDinnerSheet).not.toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(addItemSheet).not.toBeVisible();
+
+  for (const [name, pathname] of [
+    ["Plan", "/"],
+    ["Cookbook", "/dinners"],
+    ["Settings", "/settings"],
+  ] as const) {
+    await navigation.getByRole("link", { name, exact: true }).press("Enter");
+    await expect(page).toHaveURL(new URL(pathname, page.url()).href);
+    await navigation
+      .getByRole("button", { name: "Add Dinner", exact: true })
+      .click();
+    await expect(addDinnerSheet).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(addDinnerSheet).not.toBeVisible();
+  }
+
+  await navigation.getByRole("link", { name: "Shopping list" }).click();
+  await expect(addItemSheet).not.toBeVisible();
+  await navigation.getByRole("button", { name: "Add shopping item" }).click();
+  await expect(addItemSheet).toBeVisible();
+  await page.goBack();
+  await expect(page).toHaveURL(/\/settings$/);
+  await expect(
+    page.getByRole("heading", { name: "Settings", exact: true }),
+  ).toBeVisible();
+  await expect(addItemSheet).not.toBeVisible();
+  await page.goForward();
+  await expect(page).toHaveURL(/\/shopping-list$/);
+  await expect(addItemSheet).not.toBeVisible();
+});
+
 test("add shopping items, remove them, and edit and restore Recently Used", async ({
   page,
 }) => {
@@ -73,7 +126,8 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
       .getByRole("link", { name: "Shopping list", exact: true })
       .click();
     await page
-      .getByRole("button", { name: "Add an item", exact: true })
+      .getByRole("navigation", { name: "Primary navigation" })
+      .getByRole("button", { name: "Add shopping item", exact: true })
       .click();
     await page
       .getByRole("textbox", { name: "Item name", exact: true })

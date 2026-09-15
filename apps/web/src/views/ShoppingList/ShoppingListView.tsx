@@ -18,6 +18,7 @@ import { AddItemSheet } from "./AddItemSheet";
 import { EditItemSheet } from "./EditItemSheet";
 import { DinnerPicker, type ShoppingDinnerSource } from "./DinnerPicker";
 import { DinnerSourceActions } from "./DinnerSourceActions";
+import { useShoppingItemCreation } from "./ShoppingItemCreationContext";
 
 type ShoppingItem = RouterOutputs["shoppingList"]["list"][number];
 const RECENT_OPEN_KEY = "plan-eat-repeat:recently-used-open";
@@ -94,7 +95,7 @@ function ShoppingItemRow({
 }
 
 export function ShoppingListView() {
-  const [addOpen, setAddOpen] = useState(false);
+  const { addOpen, setAddOpen } = useShoppingItemCreation();
   const [pickerSource, setPickerSource] = useState<ShoppingDinnerSource | null>(
     null,
   );
