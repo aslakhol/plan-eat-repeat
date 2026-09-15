@@ -1,3 +1,4 @@
+import { suggestShoppingItems } from "../lib/shopping-matching";
 import { spawnSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import assert from "node:assert/strict";
@@ -1146,7 +1147,7 @@ void test("Household members manage Usually Have, add Dinner and manual items, e
         note,
       })),
       [
-        { name: "2 kg potatoes", amount: null, unit: null, note: null },
+        { name: "2 Kg potatoes", amount: null, unit: null, note: null },
         { name: "Apples", amount: null, unit: null, note: null },
         { name: "Carrots", amount: 500, unit: "g", note: null },
         { name: "Zucchini", amount: null, unit: null, note: null },
@@ -1661,12 +1662,13 @@ void test("selecting previews remembers destinations, inherits categories once, 
     await caller.remove({ id: source.id });
     for (const recent of await caller.recent())
       await caller.removeRecent({ id: recent.id });
-    const preview = (await caller.suggest({ query: "Eggs duck" })).find(
-      (item) => item.name === "Eggs" && item.note === "duck",
-    )!;
+    const preview = suggestShoppingItems(
+      "Eggs duck",
+      await caller.sources(),
+    ).find((item) => item.name === "Eggs" && item.note === "duck")!;
     assert.ok(preview);
     assert.equal(
-      (await caller.suggest({ query: "Eggs" })).filter(
+      suggestShoppingItems("Eggs", await caller.sources()).filter(
         (item) => item.note === "duck",
       ).length,
       0,
@@ -1685,17 +1687,17 @@ void test("selecting previews remembers destinations, inherits categories once, 
     assert.equal(reused.ownItem.usuallyHave, true);
     await settings.updateHousehold({ shoppingLanguage: "no" });
     assert.ok(
-      (await caller.suggest({ query: "Eggs" })).some(
+      suggestShoppingItems("Eggs", await caller.sources()).some(
         (item) => item.note === "duck",
       ),
     );
     assert.ok(
-      (await caller.suggest({ query: "Ost" })).some(
+      suggestShoppingItems("Ost", await caller.sources()).some(
         (item) => item.name === "Ost" && "source" in item.selection,
       ),
     );
     assert.deepEqual(
-      (await caller.suggest({ query: "Cheese" })).filter(
+      suggestShoppingItems("Cheese", await caller.sources()).filter(
         (item) => item.name === "Cheese",
       ),
       [
@@ -1708,7 +1710,7 @@ void test("selecting previews remembers destinations, inherits categories once, 
     );
     await withShoppingList(async ({ caller: other }) => {
       assert.equal(
-        (await other.suggest({ query: "Eggs" })).filter(
+        suggestShoppingItems("Eggs", await other.sources()).filter(
           (item) => item.note === "duck",
         ).length,
         0,

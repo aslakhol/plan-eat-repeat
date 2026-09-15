@@ -3,14 +3,20 @@ import { TRPCError } from "@trpc/server";
 import { normalizeShoppingName } from "@planeatrepeat/shared";
 import { rememberOwnItem } from "./own-items";
 import { shoppingCatalog } from "./shopping-catalog";
-import type { ShoppingSelection, ShoppingSource } from "./shopping-matching";
+import type {
+  ShoppingSelection,
+  ShoppingSource,
+} from "~/lib/shopping-matching";
 
 export async function shoppingSources(
   tx: Prisma.TransactionClient,
   householdId: string,
 ): Promise<ShoppingSource[]> {
   const [ownItems, household] = await Promise.all([
-    tx.ownItem.findMany({ where: { householdId } }),
+    tx.ownItem.findMany({
+      where: { householdId },
+      select: { id: true, name: true, note: true, category: true },
+    }),
     tx.household.findUniqueOrThrow({
       where: { id: householdId },
       select: { shoppingLanguage: true },

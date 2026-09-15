@@ -1,7 +1,4 @@
-import {
-  selectRecipeIngredient,
-  suggestShoppingItems,
-} from "../../shopping-matching";
+import { selectRecipeIngredient } from "~/lib/shopping-matching";
 import {
   shoppingSources,
   resolveShoppingSelection,
@@ -161,14 +158,9 @@ export const shoppingListRouter = createTRPCRouter({
       ),
     ),
 
-  suggest: protectedProcedureWithHousehold
-    .input(z.object({ query: z.string() }))
-    .query(async ({ ctx, input }) =>
-      suggestShoppingItems(
-        input.query,
-        await shoppingSources(ctx.db, ctx.householdId),
-      ),
-    ),
+  sources: protectedProcedureWithHousehold.query(({ ctx }) =>
+    shoppingSources(ctx.db, ctx.householdId),
+  ),
 
   addSelection: protectedProcedureWithHousehold
     .input(

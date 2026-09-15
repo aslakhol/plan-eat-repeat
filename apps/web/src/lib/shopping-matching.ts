@@ -153,7 +153,7 @@ export function selectRecipeIngredient(
     ({ source }) =>
       normalizeShoppingName(source.name) === normalizeShoppingName(name),
   );
-  let chosen = exact.find(({ source }) => source.id) ?? exact[0];
+  let chosen = exact.find(({ source }) => source.id) ?? exact.at(0);
   if (!chosen) {
     const mostWords = Math.max(...candidates.map(({ matched }) => matched));
     const best = new Map<string, (typeof candidates)[number]>();

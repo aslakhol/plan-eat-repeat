@@ -362,3 +362,36 @@ test("shopping previews keep typing through blur, scroll to choices, and support
     });
   }
 });
+
+test("shopping previews update without disappearing while requests are delayed", async ({
+  page,
+}) => {
+  await ensureSignedIn(page);
+  await page.goto("/shopping-list");
+  await page.getByRole("button", { name: "Add an item", exact: true }).click();
+  const drawer = page.getByRole("dialog", { name: "Add an item", exact: true });
+  const input = drawer.getByRole("combobox", { name: "Item name" });
+  await input.fill("Che");
+  await expect(
+    drawer.getByRole("option", { name: "Cheese", exact: true }),
+  ).toBeVisible();
+  const gate = Promise.withResolvers<void>();
+  await page.route("**/api/trpc/**", async (route) => {
+    await gate.promise;
+    await route.continue();
+  });
+  try {
+    await input.fill("Chee");
+    await expect(
+      drawer.getByRole("option", { name: "Cheese", exact: true }),
+    ).toBeVisible({ timeout: 500 });
+    await input.fill("Cheese bags");
+    await expect(
+      drawer.getByRole("option", { name: "Cheese, bags", exact: true }),
+    ).toBeVisible();
+    await input.fill("");
+    await expect(drawer.getByRole("option")).toHaveCount(0);
+  } finally {
+    gate.resolve();
+  }
+});

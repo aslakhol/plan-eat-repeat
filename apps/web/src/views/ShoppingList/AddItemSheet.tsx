@@ -7,6 +7,7 @@ import {
   ResponsiveModalTitle,
 } from "~/components/ResponsiveModal";
 import { Input } from "~/components/ui/input";
+import { suggestShoppingItems } from "~/lib/shopping-matching";
 import { api } from "~/utils/api";
 import { DinnerSourceActions } from "./DinnerSourceActions";
 import { type ShoppingDinnerSource } from "./DinnerPicker";
@@ -44,11 +45,8 @@ function AddItemContent({
   const [highlighted, setHighlighted] = useState<number | null>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const utils = api.useUtils();
-  const suggestions = api.shoppingList.suggest.useQuery(
-    { query },
-    { enabled: Boolean(query.trim()) },
-  );
-  const previews = query.trim() ? (suggestions.data ?? []) : [];
+  const sources = api.shoppingList.sources.useQuery();
+  const previews = suggestShoppingItems(query, sources.data ?? []);
   const add = api.shoppingList.addSelection.useMutation({
     networkMode: "always",
     retry: false,
@@ -174,7 +172,7 @@ function AddItemContent({
           Could not add the item. Check your connection and try again.
         </p>
       )}
-      {suggestions.isError && query.trim() && (
+      {sources.isError && query.trim() && (
         <p role="alert" className="text-destructive mt-3 shrink-0 text-sm">
           Could not load suggestions. Try again.
         </p>
