@@ -121,13 +121,11 @@ export function ShoppingListView() {
     refetchInterval: 2000,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
-    retry: false,
   });
   const recent = api.shoppingList.recent.useQuery(undefined, {
     refetchInterval: 2000,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
-    retry: false,
   });
   const activeIds = new Set(list.data?.map((item) => item.ownItemId));
   const recentItems =
