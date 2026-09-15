@@ -194,7 +194,7 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
     await editor
       .getByRole("textbox", { name: "Note", exact: true })
       .fill("Red lentils");
-    await page.keyboard.press("Escape");
+    await editor.getByRole("button", { name: "Done", exact: true }).click();
     await expect(editor).not.toBeVisible();
     await moveWithoutFlashing(addRecent, "addRecent");
     await expect(removeItem(ingredientName)).toBeVisible();

@@ -115,7 +115,7 @@ export function EditItemSheet({
       }}
     >
       <ResponsiveModalContent
-        className="h-auto max-h-[90dvh] rounded-t-3xl bg-white p-5 pb-8 md:rounded-2xl md:pt-10"
+        className="h-auto max-h-[90dvh] rounded-t-3xl bg-white p-5 pb-8 md:rounded-2xl"
         scrollViewport
       >
         <ResponsiveModalTitle className="sr-only">
@@ -133,16 +133,28 @@ export function EditItemSheet({
         >
           <fieldset disabled={pending} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="edit-shopping-name">Item</Label>
-              <Input
-                id="edit-shopping-name"
-                required
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                aria-invalid={!nameValid}
-                aria-describedby={!nameValid ? "shopping-name-error" : undefined}
-                className="bg-background h-12 rounded-xl font-serif text-xl"
-              />
+              <div className="flex items-center gap-2">
+                <Label htmlFor="edit-shopping-name" className="sr-only">
+                  Item
+                </Label>
+                <Input
+                  id="edit-shopping-name"
+                  required
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  aria-invalid={!nameValid}
+                  aria-describedby={!nameValid ? "shopping-name-error" : undefined}
+                  className="bg-background h-12 min-w-0 flex-1 rounded-xl font-serif text-xl"
+                />
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  disabled={!nameValid || !amountValid}
+                  className="text-primary h-12 shrink-0 rounded-xl px-3"
+                >
+                  {edit.isPending ? "Saving…" : "Done"}
+                </Button>
+              </div>
               {!nameValid && (
                 <p
                   id="shopping-name-error"
