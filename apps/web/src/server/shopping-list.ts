@@ -9,16 +9,19 @@ export type ShoppingRequirement = {
   unit: string | null;
 };
 
-// Keep the oldest compatible row and its unit when definitions collide.
+// Keep destination requirements and their units ahead of reassigned or edited rows.
 export async function combineShoppingRequirements(
   tx: Prisma.TransactionClient,
   householdId: string,
   ownItemId: string,
+  editedRequirementIds: string[] = [],
 ) {
   const items = await tx.shoppingItem.findMany({
     where: { householdId, ownItemId },
     orderBy: { id: "asc" },
   });
+  const edited = new Set(editedRequirementIds);
+  items.sort((a, b) => Number(edited.has(a.id)) - Number(edited.has(b.id)));
   const kept: typeof items = [];
   const destinations = new Map<string, string>();
   for (const item of items) {
@@ -67,9 +70,12 @@ export const saveShoppingItem = async (
         where: { id: input.id, householdId },
       })
     : null;
-  const ownItem = original
+  const { ownItem, reassignedRequirementIds } = original
     ? await editOwnItem(tx, householdId, original.ownItemId, input)
-    : await rememberOwnItem(tx, householdId, input.name, input.note);
+    : {
+        ownItem: await rememberOwnItem(tx, householdId, input.name, input.note),
+        reassignedRequirementIds: [],
+      };
   const quantity = { amount: input.amount, unit: normalizeUnit(input.unit) };
   const item = original
     ? await tx.shoppingItem.update({
@@ -89,6 +95,7 @@ export const saveShoppingItem = async (
     tx,
     householdId,
     ownItem.id,
+    [...reassignedRequirementIds, item.id],
   );
   return shoppingItemDetails(
     await tx.shoppingItem.findUniqueOrThrow({
@@ -111,8 +118,9 @@ export const setUsuallyHave = async (
           where: { id: selection.id, householdId },
         })
       : await rememberOwnItem(tx, householdId, selection.name, selection.note);
-  return editOwnItem(tx, householdId, item.id, {
+  const { ownItem } = await editOwnItem(tx, householdId, item.id, {
     ...item,
     usuallyHave: excluded,
   });
+  return ownItem;
 };

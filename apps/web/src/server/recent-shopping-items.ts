@@ -53,8 +53,18 @@ export async function editRecentShoppingItem(
   const original = await tx.recentShoppingItem.findUniqueOrThrow({
     where: { id: input.id, householdId },
   });
-  const ownItem = await editOwnItem(tx, householdId, original.ownItemId, input);
-  await combineShoppingRequirements(tx, householdId, ownItem.id);
+  const { ownItem, reassignedRequirementIds } = await editOwnItem(
+    tx,
+    householdId,
+    original.ownItemId,
+    input,
+  );
+  await combineShoppingRequirements(
+    tx,
+    householdId,
+    ownItem.id,
+    reassignedRequirementIds,
+  );
   return shoppingItemDetails(
     await tx.recentShoppingItem.update({
       where: { ownItemId: ownItem.id, householdId },

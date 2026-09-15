@@ -249,6 +249,27 @@ void test("recent edits that collide keep the edited settings and combine every 
     assert.equal(recent?.amount, 18);
   }));
 
+void test("an older source requirement converts into the destination unit when Own Items collide", () =>
+  withShoppingList(async ({ caller }) => {
+    const source = await caller.addManual({ name: "Spuds" });
+    const measured = await caller.edit({ ...source, amount: 1, unit: "kg" });
+    const destination = await caller.addManual({ name: "Potatoes" });
+    await caller.edit({
+      ...destination,
+      amount: 500,
+      unit: "g",
+      note: "For roasting",
+    });
+    const merged = await caller.edit({
+      ...measured,
+      name: "Potatoes",
+      note: "For roasting",
+    });
+    assert.equal(merged.id, destination.id);
+    assert.equal(merged.amount, 1500);
+    assert.equal(merged.unit, "g");
+  }));
+
 void test("Shopping Language defaults to English and ordinary members update only their Household", () =>
   withShoppingList(async ({ settings, memberSettings }) => {
     assert.equal(

@@ -28,7 +28,8 @@ export const rememberOwnItem = async (
   note: string | null = null,
   initialCategory?: ShoppingCategory,
 ) => {
-  note = note?.trim() || null;
+  note = note?.trim() ?? null;
+  if (note === "") note = null;
   const normalizedNote = normalizeShoppingName(note ?? "");
   const normalizedName = normalizeShoppingName(name);
   const existing = await tx.ownItem.findUnique({
@@ -118,7 +119,8 @@ export async function editOwnItem(
     where: { id, householdId },
   });
   const name = input.name.trim();
-  const note = input.note?.trim() || null;
+  const trimmedNote = input.note?.trim() ?? "";
+  const note = trimmedNote.length > 0 ? trimmedNote : null;
   const normalizedName = normalizeShoppingName(name);
   const normalizedNote = normalizeShoppingName(note ?? "");
   const destination = await tx.ownItem.findUnique({
@@ -131,7 +133,13 @@ export async function editOwnItem(
     },
   });
   const ownItemId = destination?.id ?? original.id;
+  const reassignedRequirementIds: string[] = [];
   if (ownItemId !== original.id) {
+    const requirements = await tx.shoppingItem.findMany({
+      where: { householdId, ownItemId: original.id },
+      select: { id: true },
+    });
+    reassignedRequirementIds.push(...requirements.map(({ id }) => id));
     await tx.shoppingItem.updateMany({
       where: { householdId, ownItemId: original.id },
       data: { ownItemId },
@@ -180,5 +188,5 @@ export async function editOwnItem(
       data: { revision: crypto.randomUUID() },
     });
   }
-  return saved;
+  return { ownItem: saved, reassignedRequirementIds };
 }
