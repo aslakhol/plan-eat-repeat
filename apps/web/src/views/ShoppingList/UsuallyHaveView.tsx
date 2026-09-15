@@ -20,7 +20,7 @@ export function UsuallyHaveView() {
     retry: false,
     onSuccess: async (_, input) => {
       await utils.shoppingList.usuallyHave.invalidate();
-      if (input.excluded) {
+      if (input.excluded && "name" in input) {
         setName("");
         inputRef.current?.focus();
       }
@@ -85,19 +85,24 @@ export function UsuallyHaveView() {
         >
           {preferences.data.map((preference) => (
             <li
-              key={preference.normalizedName}
+              key={preference.id}
               className="flex min-h-14 items-center gap-3 pl-3.5 pr-1.5"
             >
               <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
                 {preference.name}
+                {preference.note && (
+                  <span className="text-muted-foreground ml-1 text-sm">
+                    {preference.note}
+                  </span>
+                )}
               </span>
               <button
                 type="button"
-                aria-label={`Remove ${preference.name} from Usually have`}
+                aria-label={`Remove ${[preference.name, preference.note].filter(Boolean).join(", ")} from Usually have`}
                 disabled={setPreference.isPending}
                 onClick={() =>
                   setPreference.mutate({
-                    name: preference.name,
+                    id: preference.id,
                     excluded: false,
                   })
                 }
