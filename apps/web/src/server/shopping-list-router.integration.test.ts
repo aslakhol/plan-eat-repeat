@@ -82,6 +82,173 @@ const withShoppingList = async (
   }
 };
 
+void test("Own Items distinguish normalized notes and an edit collision keeps the edited settings and quantities", () =>
+  withShoppingList(async ({ caller }) => {
+    const duck = await caller.addManual({ name: "Eggs" });
+    await caller.edit({
+      ...duck,
+      amount: 12,
+      note: "duck",
+      category: "DAIRY",
+      usuallyHave: true,
+    });
+    const hen = await caller.addManual({ name: "Eggs" });
+    const edited = await caller.edit({
+      ...hen,
+      amount: 6,
+      note: "hen",
+      category: "MEAT",
+    });
+    assert.equal((await caller.list()).length, 2);
+    const merged = await caller.edit({
+      ...edited,
+      name: " EGGS ",
+      note: " DUCK ",
+    });
+    assert.equal(merged.amount, 18);
+    assert.equal(merged.ownItem.category, "MEAT");
+    assert.equal((await caller.list()).length, 1);
+    assert.deepEqual(await caller.usuallyHave(), []);
+    await caller.clear();
+    const [recent] = await caller.recent();
+    assert.equal(recent?.amount, 18);
+    assert.equal(recent?.note, "DUCK");
+  }));
+
+void test("Own Item edits update all referring quantities and deletion preserves other note variants", () =>
+  withShoppingList(async ({ caller }) => {
+    const plain = await caller.addManual({ name: "Eggs" });
+    await caller.edit({
+      ...plain,
+      amount: 6,
+      category: "MEAT",
+      usuallyHave: true,
+    });
+    const unspecified = await caller.addManual({ name: "EGGS" });
+    await caller.edit({ ...unspecified, note: "duck", name: "Duck eggs" });
+    const edited = await caller.list();
+    assert.deepEqual(
+      edited.map(({ name, amount, note }) => ({ name, amount, note })),
+      [
+        { name: "Duck eggs", amount: 6, note: "duck" },
+        { name: "Duck eggs", amount: null, note: "duck" },
+      ],
+    );
+    await caller.remove({ id: plain.id });
+    const source = edited[1]!;
+    await caller.edit({ ...source, category: "SNACKS", amount: 2 });
+    await caller.remove({ id: source.id });
+    const [recent] = await caller.recent();
+    assert.equal(recent?.amount, 2);
+    assert.equal(recent?.ownItem.category, "SNACKS");
+    assert.equal((await caller.usuallyHave())[0]?.note, "duck");
+    const hen = await caller.addManual({ name: "Duck eggs" });
+    await caller.edit({
+      ...hen,
+      note: "hen",
+      usuallyHave: true,
+      category: "DAIRY",
+    });
+    await withShoppingList(async ({ caller: other }) => {
+      await assert.rejects(
+        other.setUsuallyHave({ id: hen.ownItemId, excluded: false }),
+      );
+      await other.deleteOwnItem({ id: source.ownItemId });
+      assert.equal((await caller.recent()).length, 1);
+    });
+    await caller.deleteOwnItem({ id: source.ownItemId });
+    assert.deepEqual(await caller.recent(), []);
+    assert.deepEqual(
+      (await caller.usuallyHave()).map(({ note }) => note),
+      ["hen"],
+    );
+    assert.deepEqual(
+      (await caller.list()).map(({ note }) => note),
+      ["hen"],
+    );
+    const forgotten = await caller.addManual({ name: "Duck eggs" });
+    assert.equal(forgotten.ownItem.usuallyHave, false);
+  }));
+
+void test("Dinner additions check the literal Own Item and Undo protects later definition edits", () =>
+  withShoppingList(async ({ caller, createDinner }) => {
+    const eggs = await caller.addManual({ name: "Eggs" });
+    await caller.edit({ ...eggs, note: "duck", usuallyHave: true, amount: 6 });
+    const dinner = await createDinner({
+      name: "Breakfast",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: {
+            create: [
+              { order: 0, name: "Eggs", amount: 12, note: "Beaten" },
+              {
+                order: 1,
+                name: "Car",
+                amount: 1,
+                unit: "handful",
+                note: "Chopped",
+              },
+            ],
+          },
+        },
+      },
+    });
+    const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
+    const added = await caller.list();
+    const plain = added.find(
+      ({ name, note }) => name === "Eggs" && note === null,
+    )!;
+    assert.equal(plain.amount, 12);
+    assert.equal(plain.ownItem.usuallyHave, false);
+    assert.equal(added.find(({ name }) => name === "Car")?.unit, "handful");
+    await caller.edit({ ...plain, category: "MEAT" });
+    await caller.undo(addition.undo);
+    assert.equal((await caller.list()).length, 2);
+    assert.equal(
+      (await caller.list()).find(
+        ({ ownItemId }) => ownItemId === plain.ownItemId,
+      )?.ownItem.category,
+      "MEAT",
+    );
+    await caller.clear();
+    for (const item of await caller.recent())
+      await caller.removeRecent({ id: item.id });
+    assert.equal(
+      (await caller.addManual({ name: "Eggs" })).ownItemId,
+      plain.ownItemId,
+    );
+  }));
+
+void test("recent edits that collide keep the edited settings and combine every compatible active quantity", () =>
+  withShoppingList(async ({ caller }) => {
+    const duck = await caller.addManual({ name: "Eggs" });
+    await caller.edit({
+      ...duck,
+      note: "duck",
+      amount: 12,
+      category: "DAIRY",
+      usuallyHave: true,
+    });
+    await caller.remove({ id: duck.id });
+    const [recentDuck] = await caller.recent();
+    await caller.addRecent({ id: recentDuck!.id });
+    const hen = await caller.addManual({ name: "Eggs" });
+    await caller.edit({ ...hen, note: "hen", amount: 6, category: "MEAT" });
+    await caller.remove({ id: hen.id });
+    const [recentHen] = await caller.recent();
+    await caller.addRecent({ id: recentHen!.id });
+    await caller.editRecent({ ...recentHen!, note: " DUCK ", amount: 3 });
+    const [active] = await caller.list();
+    assert.equal(active?.amount, 18);
+    assert.equal(active?.ownItem.category, "MEAT");
+    assert.deepEqual(await caller.usuallyHave(), []);
+    assert.deepEqual(await caller.recent(), []);
+    await caller.clear();
+    const [recent] = await caller.recent();
+    assert.equal(recent?.amount, 18);
+  }));
+
 void test("Shopping Language defaults to English and ordinary members update only their Household", () =>
   withShoppingList(async ({ settings, memberSettings }) => {
     assert.equal(
@@ -115,21 +282,21 @@ void test("only the selected standard catalog categorizes new names", () =>
       ["Te", "BEVERAGES"],
     ] as const) {
       assert.equal(
-        (await caller.addManual({ name })).product.category,
+        (await caller.addManual({ name })).ownItem.category,
         category,
       );
     }
     await memberSettings.updateHousehold({ shoppingLanguage: "en" });
     assert.equal(
-      (await caller.addManual({ name: "Milk" })).product.category,
+      (await caller.addManual({ name: "Milk" })).ownItem.category,
       "OWN_ITEMS",
     );
     assert.equal(
-      (await caller.addManual({ name: "Egg" })).product.category,
+      (await caller.addManual({ name: "Egg" })).ownItem.category,
       "OWN_ITEMS",
     );
     assert.equal(
-      (await caller.addManual({ name: "Eggs" })).product.category,
+      (await caller.addManual({ name: "Eggs" })).ownItem.category,
       "DAIRY",
     );
   }));
@@ -142,9 +309,9 @@ void test("language changes preserve entered names and remembered assignments wi
     await caller.edit({ ...beef, category: "SNACKS" });
     await settings.updateHousehold({ shoppingLanguage: "no" });
     assert.deepEqual(
-      (await caller.list()).map(({ name, product }) => [
+      (await caller.list()).map(({ name, ownItem }) => [
         name,
-        product.category,
+        ownItem.category,
       ]),
       [
         ["Milk", "DAIRY"],
@@ -153,19 +320,19 @@ void test("language changes preserve entered names and remembered assignments wi
       ],
     );
     assert.equal(
-      (await caller.addManual({ name: "Fresh milk" })).product.category,
+      (await caller.addManual({ name: "Fresh milk" })).ownItem.category,
       "DAIRY",
     );
     assert.equal(
-      (await caller.addManual({ name: "Beef balls" })).product.category,
+      (await caller.addManual({ name: "Beef balls" })).ownItem.category,
       "SNACKS",
     );
     assert.equal(
-      (await caller.addManual({ name: "Storfekjøtt" })).product.category,
+      (await caller.addManual({ name: "Storfekjøtt" })).ownItem.category,
       "MEAT",
     );
     assert.equal(
-      (await caller.addManual({ name: "Bread" })).product.category,
+      (await caller.addManual({ name: "Bread" })).ownItem.category,
       "OWN_ITEMS",
     );
     await caller.remove({ id: milk.id });
@@ -173,7 +340,7 @@ void test("language changes preserve entered names and remembered assignments wi
     for (const recent of await caller.recent())
       await caller.addRecent({ id: recent.id });
     assert.equal(
-      (await caller.list()).find((item) => item.name === "Melk")?.product
+      (await caller.list()).find((item) => item.name === "Melk")?.ownItem
         .category,
       "OWN_ITEMS",
     );
@@ -188,17 +355,17 @@ void test("language changes preserve entered names and remembered assignments wi
     });
     await caller.addDinners({ dinnerIds: [dinner.id] });
     assert.equal(
-      (await caller.list()).find((item) => item.name === "Brød")?.product
+      (await caller.list()).find((item) => item.name === "Brød")?.ownItem
         .category,
       "BAKERY",
     );
     await withShoppingList(async ({ caller: other }) => {
       assert.equal(
-        (await other.addManual({ name: "Milk" })).product.category,
+        (await other.addManual({ name: "Milk" })).ownItem.category,
         "DAIRY",
       );
       assert.equal(
-        (await other.addManual({ name: "Melk" })).product.category,
+        (await other.addManual({ name: "Melk" })).ownItem.category,
         "OWN_ITEMS",
       );
     });
@@ -246,7 +413,7 @@ void test("first shopping names use exact catalog matches, longest whole phrases
       Object.fromEntries(
         (await caller.list()).map((item) => [
           item.normalizedName,
-          item.product.category,
+          item.ownItem.category,
         ]),
       ),
       {
@@ -275,11 +442,11 @@ void test("Household category edits affect same-name requirements while inherite
     await caller.removeRecent({ id: recentSteak!.id });
     await member.edit({ ...beef, amount: 1, unit: "kg", category: "SNACKS" });
     assert.ok(
-      (await caller.list()).every((item) => item.product.category === "SNACKS"),
+      (await caller.list()).every((item) => item.ownItem.category === "SNACKS"),
     );
     await caller.addManual({ name: "Beef steak" });
     const balls = await caller.addManual({ name: "Beef balls" });
-    assert.equal(balls.product.category, "SNACKS");
+    assert.equal(balls.ownItem.category, "SNACKS");
     await caller.edit({
       ...beef,
       amount: 1,
@@ -287,11 +454,11 @@ void test("Household category edits affect same-name requirements while inherite
       category: "HOUSEHOLD",
     });
     const freshBalls = await caller.addManual({ name: "Fresh beef balls" });
-    assert.equal(freshBalls.product.category, "SNACKS");
+    assert.equal(freshBalls.ownItem.category, "SNACKS");
     const newBeef = await caller.addManual({ name: "New beef" });
-    assert.equal(newBeef.product.category, "HOUSEHOLD");
+    assert.equal(newBeef.ownItem.category, "HOUSEHOLD");
     assert.equal(
-      (await caller.list()).find((item) => item.name === "Beef steak")!.product
+      (await caller.list()).find((item) => item.name === "Beef steak")!.ownItem
         .category,
       "MEAT",
     );
@@ -299,16 +466,16 @@ void test("Household category edits affect same-name requirements while inherite
     for (const item of await caller.recent())
       await caller.removeRecent({ id: item.id });
     assert.equal(
-      (await member.addManual({ name: "Beef steak" })).product.category,
+      (await member.addManual({ name: "Beef steak" })).ownItem.category,
       "MEAT",
     );
     assert.equal(
-      (await member.addManual({ name: "Beef" })).product.category,
+      (await member.addManual({ name: "Beef" })).ownItem.category,
       "HOUSEHOLD",
     );
     await withShoppingList(async ({ caller: other }) => {
       assert.equal(
-        (await other.addManual({ name: "Beef" })).product.category,
+        (await other.addManual({ name: "Beef" })).ownItem.category,
         "MEAT",
       );
       await assert.rejects(other.edit({ ...beef, category: "DAIRY" }));
@@ -318,7 +485,7 @@ void test("Household category edits affect same-name requirements while inherite
 void test("Own Items blocks only its exact name and Usually Have remembers categories without a purchase", () =>
   withShoppingList(async ({ caller, member }) => {
     const party = await caller.addManual({ name: "Party supplies" });
-    assert.equal(party.product.category, "OWN_ITEMS");
+    assert.equal(party.ownItem.category, "OWN_ITEMS");
     await caller.clear();
     const supplies = await caller.addManual({ name: "supplies" });
     await member.edit({ ...supplies, category: "HOUSEHOLD" });
@@ -327,22 +494,22 @@ void test("Own Items blocks only its exact name and Usually Have remembers categ
     assert.equal(
       (await caller.list()).find(
         (item) => item.normalizedName === "party supplies",
-      )!.product.category,
+      )!.ownItem.category,
       "OWN_ITEMS",
     );
     assert.equal(
-      (await caller.addManual({ name: "Party supplies bucket" })).product
+      (await caller.addManual({ name: "Party supplies bucket" })).ownItem
         .category,
       "HOUSEHOLD",
     );
     const milk = await caller.addManual({ name: "Milk" });
     await caller.edit({ ...milk, category: "OWN_ITEMS" });
     assert.equal(
-      (await caller.addManual({ name: "Fresh milk" })).product.category,
+      (await caller.addManual({ name: "Fresh milk" })).ownItem.category,
       "OWN_ITEMS",
     );
     assert.equal(
-      (await caller.addManual({ name: "Coconut milk" })).product.category,
+      (await caller.addManual({ name: "Coconut milk" })).ownItem.category,
       "INGREDIENTS",
     );
     await caller.setUsuallyHave({ name: "Daily supplies", excluded: true });
@@ -359,46 +526,46 @@ void test("Own Items blocks only its exact name and Usually Have remembers categ
     await caller.edit({ ...supplies, category: "CARE" });
     await caller.setUsuallyHave({ name: "Daily supplies", excluded: false });
     assert.equal(
-      (await member.addManual({ name: "Daily supplies" })).product.category,
+      (await member.addManual({ name: "Daily supplies" })).ownItem.category,
       "HOUSEHOLD",
     );
   }));
 
-void test("active and recent renames preserve new-name categories, respect known destinations, and apply explicit selections", () =>
+void test("active and recent renames keep the edited definition when identities collide", () =>
   withShoppingList(async ({ caller, member }) => {
     const milk = await caller.addManual({ name: "Milk" });
     const oat = await caller.addManual({ name: "Oat drink" });
     const renamed = await caller.edit({ ...oat, name: "Special beef" });
-    assert.equal(renamed.product.category, "OWN_ITEMS");
+    assert.equal(renamed.ownItem.category, "OWN_ITEMS");
     const merged = await member.edit({ ...renamed, name: "Milk" });
     assert.equal(merged.id, milk.id);
-    assert.equal(merged.product.category, "DAIRY");
+    assert.equal(merged.ownItem.category, "OWN_ITEMS");
     const paper = await caller.addManual({ name: "Paper bundle" });
     const selected = await caller.edit({
       ...paper,
       name: "Milk",
       category: "HOUSEHOLD",
     });
-    assert.equal(selected.product.category, "HOUSEHOLD");
+    assert.equal(selected.ownItem.category, "HOUSEHOLD");
     await caller.clear();
     const [recentMilk] = await caller.recent();
     await caller.editRecent({ ...recentMilk!, category: "CARE" });
-    assert.equal((await caller.recent())[0]!.product.category, "CARE");
+    assert.equal((await caller.recent())[0]!.ownItem.category, "CARE");
     const renamedRecent = await member.editRecent({
       ...recentMilk!,
       name: "Bread",
     });
-    assert.equal(renamedRecent.product.category, "CARE");
+    assert.equal(renamedRecent.ownItem.category, "CARE");
     const newOat = await caller.addManual({ name: "Oat drink" });
     await caller.remove({ id: newOat.id });
     const recentOat = (await caller.recent()).find(
       (item) => item.name === "Oat drink",
     )!;
     const known = await member.editRecent({ ...recentOat, name: "Bread" });
-    assert.equal(known.product.category, "CARE");
+    assert.equal(known.ownItem.category, "OWN_ITEMS");
     await member.editRecent({ ...known, name: "Milk", category: "SNACKS" });
     assert.equal(
-      (await caller.addManual({ name: "Milk" })).product.category,
+      (await caller.addManual({ name: "Milk" })).ownItem.category,
       "SNACKS",
     );
   }));
@@ -439,59 +606,57 @@ void test("the active list sorts by category then name while Recently Used and U
     );
   }));
 
-void test("Shopping Products survive clearing, dismissal, and Usually Have removal across shopping trips", () =>
+void test("Own Items survive clearing, dismissal, and Usually Have removal across shopping trips", () =>
   withShoppingList(async ({ caller, member, createDinner }) => {
     await caller.setUsuallyHave({ name: " Olive  oil ", excluded: true });
     const [preference] = await member.usuallyHave();
-    assert.ok(preference?.productId);
+    assert.ok(preference?.id);
     assert.deepEqual(await caller.list(), []);
     assert.deepEqual(await caller.recent(), []);
 
     const dinner = await createDinner({ name: "OLIVE\tOIL" });
     const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
     const [recent] = await member.recent();
-    assert.equal(recent?.productId, preference.productId);
+    assert.equal(recent?.ownItemId, preference.id);
     await member.undo(addition.undo);
     assert.deepEqual(await caller.recent(), []);
     await member.setUsuallyHave({ name: "olive oil", excluded: false });
     assert.deepEqual(await caller.usuallyHave(), []);
 
     const manual = await caller.addManual({ name: "olive oil" });
-    assert.equal(manual.productId, preference.productId);
+    assert.equal(manual.ownItemId, preference.id);
     const measured = await member.edit({
       ...manual,
       amount: 1,
       unit: "l",
-      note: "For salad",
+      note: null,
     });
     await caller.addDinners({ dinnerIds: [dinner.id] });
     const active = await member.list();
     assert.equal(active.length, 2);
-    assert.ok(active.every((item) => item.productId === preference.productId));
+    assert.ok(active.every((item) => item.ownItemId === preference.id));
     assert.ok(
-      active.some(
-        (item) => item.id === measured.id && item.note === "For salad",
-      ),
+      active.some((item) => item.id === measured.id && item.note === null),
     );
     await caller.clear();
     const [cleared] = await member.recent();
-    assert.equal(cleared?.productId, preference.productId);
+    assert.equal(cleared?.ownItemId, preference.id);
     const restored = await member.addRecent({ id: cleared.id });
-    assert.equal(restored.productId, preference.productId);
+    assert.equal(restored.ownItemId, preference.id);
     await member.remove({ id: restored.id });
     const [removed] = await caller.recent();
     await caller.removeRecent({ id: removed!.id });
     assert.deepEqual(await caller.recent(), []);
     const nextTrip = await member.addManual({ name: "OLIVE   OIL" });
-    assert.equal(nextTrip.productId, preference.productId);
+    assert.equal(nextTrip.ownItemId, preference.id);
 
     await withShoppingList(async ({ caller: other }) => {
       const otherOil = await other.addManual({ name: "Olive oil" });
-      assert.notEqual(otherOil.productId, preference.productId);
+      assert.notEqual(otherOil.ownItemId, preference.id);
     });
   }));
 
-void test("deleting a Shopping Product forgets its category and collections only for its Household", () =>
+void test("deleting an Own Item forgets its category and collections only for its Household", () =>
   withShoppingList(async ({ caller, member }) => {
     const rice = await caller.addManual({ name: "Rice" });
     await caller.edit({ ...rice, category: "PETS" });
@@ -502,40 +667,39 @@ void test("deleting a Shopping Product forgets its category and collections only
     await caller.addManual({ name: " RICE " });
     await caller.setUsuallyHave({ name: "Rice", excluded: true });
     const inherited = await caller.addManual({ name: "Rice special" });
-    assert.equal(inherited.product.category, "PETS");
+    assert.equal(inherited.ownItem.category, "PETS");
     assert.equal((await caller.list()).length, 3);
 
     await withShoppingList(async ({ caller: other }) => {
       const otherRice = await other.addManual({ name: "Rice" });
       await other.edit({ ...otherRice, category: "SNACKS" });
-      await other.deleteProduct({ id: rice.productId });
+      await other.deleteOwnItem({ id: rice.ownItemId });
       assert.equal((await caller.list()).length, 3);
 
-      await member.deleteProduct({ id: rice.productId });
+      await member.deleteOwnItem({ id: rice.ownItemId });
       assert.deepEqual(
-        (await caller.list()).map(({ name, product }) => ({
+        (await caller.list()).map(({ name, ownItem }) => ({
           name,
-          category: product.category,
+          category: ownItem.category,
         })),
         [{ name: "Rice special", category: "PETS" }],
       );
       assert.deepEqual(await caller.recent(), []);
       assert.deepEqual(await caller.usuallyHave(), []);
       const addedAgain = await caller.addManual({ name: "rice" });
-      assert.equal(addedAgain.product.category, "GRAINS");
-      assert.notEqual(addedAgain.productId, rice.productId);
-      assert.equal((await other.list())[0]!.product.category, "SNACKS");
+      assert.equal(addedAgain.ownItem.category, "GRAINS");
+      assert.notEqual(addedAgain.ownItemId, rice.ownItemId);
+      assert.equal((await other.list())[0]!.ownItem.category, "SNACKS");
     });
   }));
 
-void test("Recently Used keeps the latest details per name, hides active names, and restores items for the Household", () =>
+void test("Recently Used distinguishes variants and restores each latest quantity while other variants are active", () =>
   withShoppingList(async ({ caller, member }) => {
-    assert.deepEqual(await caller.recent(), []);
     const milk = await caller.addManual({ name: "Milk" });
     await caller.edit({ ...milk, amount: 1, unit: "l", note: "Whole milk" });
     const extra = await member.addManual({ name: " MILK " });
     await caller.remove({ id: milk.id });
-    assert.deepEqual(await member.recent(), []);
+    assert.equal((await member.recent())[0]?.note, "Whole milk");
     await member.edit({
       ...extra,
       amount: 200,
@@ -544,22 +708,24 @@ void test("Recently Used keeps the latest details per name, hides active names, 
     });
     await member.remove({ id: extra.id });
     const recent = await caller.recent();
-    assert.equal(recent.length, 1);
     assert.deepEqual(
       recent.map(({ amount, unit, note }) => ({ amount, unit, note })),
-      [{ amount: 200, unit: "ml", note: "For coffee" }],
+      [
+        { amount: 200, unit: "ml", note: "For coffee" },
+        { amount: 1, unit: "l", note: "Whole milk" },
+      ],
     );
     await member.addRecent({ id: recent[0]!.id });
     await caller.addRecent({ id: recent[0]!.id });
+    assert.equal((await member.recent())[0]?.note, "Whole milk");
+    const restored = await member.addRecent({ id: recent[1]!.id });
+    assert.equal(restored.amount, 1);
+    assert.equal(restored.unit, "l");
     assert.deepEqual(await member.recent(), []);
-    assert.deepEqual(
-      (await caller.list()).map(({ amount, unit, note }) => ({
-        amount,
-        unit,
-        note,
-      })),
-      [{ amount: 200, unit: "ml", note: "For coffee" }],
-    );
+    assert.equal((await caller.list()).length, 2);
+    await caller.edit({ ...restored, amount: 2 });
+    await caller.remove({ id: restored.id });
+    assert.equal((await caller.recent())[0]?.amount, 2);
   }));
 
 void test("clearing the Shopping List remembers at most 25 displayed names and adding one leaves 24", () =>
@@ -595,7 +761,7 @@ void test("editing, merging, and dismissing recent entries preserves recency and
       name: "BREAD",
       amount: 2,
       unit: "pcs",
-      note: "Wholemeal",
+      note: null,
       usuallyHave: true,
     });
     const recent = await caller.recent();
@@ -608,7 +774,7 @@ void test("editing, merging, and dismissing recent entries preserves recency and
       bread.recentlyUsedAt.getTime(),
     );
     assert.equal(recent[1]!.amount, 2);
-    assert.equal(recent[1]!.note, "Wholemeal");
+    assert.equal(recent[1]!.note, null);
     assert.deepEqual(await caller.list(), []);
     assert.deepEqual(
       (await member.usuallyHave()).map((item) => item.normalizedName),
@@ -624,7 +790,7 @@ void test("editing, merging, and dismissing recent entries preserves recency and
 void test("excluded Dinner ingredients replace recent details and Undo restores the previous history", () =>
   withShoppingList(async ({ caller, member, createDinner }) => {
     const milk = await caller.addManual({ name: "Milk" });
-    await caller.edit({ ...milk, amount: 1, unit: "l", note: "Whole milk" });
+    await caller.edit({ ...milk, amount: 1, unit: "l", note: null });
     await caller.remove({ id: milk.id });
     const bread = await caller.addManual({ name: "Bread" });
     await caller.remove({ id: bread.id });
@@ -708,7 +874,9 @@ void test("Undo leaves recent entries edited, dismissed, restored, or removed ag
     assert.equal(bread.name, "Bread");
     // Restoring also protects the hidden recent entry from the earlier Undo.
     await member.edit({ ...bread, name: "Toast" });
-    assert.ok((await member.recent()).some((item) => item.name === "Bread"));
+    assert.ok(!(await member.recent()).some((item) => item.name === "Bread"));
+    await member.remove({ id: bread.id });
+    assert.ok((await member.recent()).some((item) => item.name === "Toast"));
   }));
 
 void test("recent entry operations and Dinner Undo stay within their Household", () =>
@@ -770,7 +938,14 @@ void test("Household members manage Usually Have, add Dinner and manual items, e
     await caller.setUsuallyHave({ name: "  OIL  ", excluded: true });
     await member.setUsuallyHave({ name: "oil", excluded: true });
     assert.equal((await member.usuallyHave()).length, 1);
-    assert.deepEqual(await caller.list(), [oil]);
+    assert.deepEqual(
+      (await caller.list()).map(({ id, amount, unit }) => ({
+        id,
+        amount,
+        unit,
+      })),
+      [{ id: oil.id, amount: null, unit: null }],
+    );
     await caller.remove({ id: oil.id });
     await caller.addDinners({ dinnerIds: [dinner.id] });
     assert.deepEqual(
@@ -959,7 +1134,7 @@ void test("manual additions combine names regardless of capitalization and extra
     );
   }));
 
-void test("saving a compatible edit combines quantities in the destination unit and preserves distinct notes", () =>
+void test("saving compatible quantities for the same normalized note combines in the destination unit", () =>
   withShoppingList(async ({ caller, member }) => {
     const potatoes = await caller.addManual({ name: "Potatoes" });
     await caller.edit({
@@ -975,7 +1150,7 @@ void test("saving a compatible edit combines quantities in the destination unit 
       name: " POTATOES ",
       amount: 1,
       unit: "kilograms",
-      note: "Organic; For roasting",
+      note: "for  ROASTING",
     });
     assert.equal(merged.id, potatoes.id);
     assert.deepEqual(
@@ -987,10 +1162,10 @@ void test("saving a compatible edit combines quantities in the destination unit 
       })),
       [
         {
-          name: "Potatoes",
+          name: "POTATOES",
           amount: 1500,
           unit: "g",
-          note: "For roasting; Organic",
+          note: "for  ROASTING",
         },
       ],
     );
@@ -1003,10 +1178,10 @@ void test("saving a compatible edit combines quantities in the destination unit 
       name: "Potatoes",
       amount: 250,
       unit: "grams",
-      note: "Organic",
+      note: "For roasting",
     });
     assert.equal(final.amount, 1750);
-    assert.equal(final.note, "For roasting; Organic");
+    assert.equal(final.note, "For roasting");
     assert.equal((await member.list()).length, 1);
   }));
 
@@ -1018,7 +1193,7 @@ void test("Undo reverses a repeated Dinner batch while retaining pre-existing nu
       name: "Flour",
       amount: 500,
       unit: "g",
-      note: "Bread flour",
+      note: null,
     });
     await member.addManual({ name: "Salt" });
     const before = await caller.list();
@@ -1057,7 +1232,7 @@ void test("Undo reverses a repeated Dinner batch while retaining pre-existing nu
       [
         { name: "Salt", amount: null, unit: null, note: null },
         { name: "Yeast", amount: 14, unit: "g", note: null },
-        { name: "Flour", amount: 2500, unit: "g", note: "Bread flour" },
+        { name: "Flour", amount: 2500, unit: "g", note: null },
         { name: "Water", amount: null, unit: null, note: null },
       ],
     );
@@ -1113,7 +1288,7 @@ void test("ingredientless Dinners use their names, and Undo leaves intervening e
     );
   }));
 
-void test("existing shopping details and reusable state survive the Shopping Product migration", async () => {
+void test("existing shopping details and reusable state survive the Own Item migration", async () => {
   // A disposable database exercises the actual historical migrations without
   // changing the development Household or depending on today's Prisma schema.
   const migrationRoot = new URL(
@@ -1195,7 +1370,9 @@ void test("existing shopping details and reusable state survive the Shopping Pro
       (await settings.household()).household?.shoppingLanguage,
       "en",
     );
-    const items = await caller.list();
+    const items = (await caller.list()).sort((a, b) =>
+      a.id.localeCompare(b.id),
+    );
     assert.deepEqual(
       items.map(({ id, name, amount, unit, note }) => ({
         id,
@@ -1221,12 +1398,23 @@ void test("existing shopping details and reusable state survive the Shopping Pro
         },
       ],
     );
-    const [oil, salt] = await caller.usuallyHave();
-    assert.equal(oil?.normalizedName, "olive oil");
-    assert.equal(salt?.normalizedName, "salt");
-    assert.ok(oil?.productId);
-    assert.ok(items.every((item) => item.productId === oil.productId));
-    assert.ok(items.every((item) => item.product.category === "INGREDIENTS"));
+    const preferences = await caller.usuallyHave();
+    const oil = preferences.find(
+      (item) => item.normalizedName === "olive oil" && item.note === null,
+    )!;
+    assert.deepEqual(
+      preferences.map(({ normalizedName, note }) => [normalizedName, note]),
+      [
+        ["olive oil", null],
+        ["olive oil", "For salad"],
+        ["olive oil", "Organic"],
+        ["salt", null],
+      ],
+    );
+    assert.ok(oil.id);
+    assert.equal(new Set(items.map((item) => item.ownItemId)).size, 2);
+    assert.ok(items.every((item) => item.ownItem.usuallyHave));
+    assert.ok(items.every((item) => item.ownItem.category === "INGREDIENTS"));
     const recent = await caller.recent();
     assert.equal(recent.length, 1);
     assert.deepEqual(
@@ -1249,16 +1437,16 @@ void test("existing shopping details and reusable state survive the Shopping Pro
         },
       ],
     );
-    assert.equal(recent[0]!.product.category, "GRAINS");
+    assert.equal(recent[0]!.ownItem.category, "GRAINS");
     const restored = await caller.addRecent({ id: "latest" });
-    assert.equal(restored.productId, recent[0]!.productId);
+    assert.equal(restored.ownItemId, recent[0]!.ownItemId);
     await caller.clear();
     for (const item of await caller.recent())
       await caller.removeRecent({ id: item.id });
     await caller.setUsuallyHave({ name: "Olive oil", excluded: false });
     assert.equal(
-      (await caller.addManual({ name: "Olive oil" })).productId,
-      oil.productId,
+      (await caller.addManual({ name: "Olive oil" })).ownItemId,
+      oil.id,
     );
   } finally {
     await db.$disconnect();
