@@ -225,7 +225,7 @@ export function EditItemSheet({
               >
                 <SelectTrigger
                   id="edit-shopping-category"
-                  className="h-12 rounded-xl"
+                  className="h-12 rounded-xl text-black data-[placeholder]:text-black"
                 >
                   <SelectValue
                     placeholder={
