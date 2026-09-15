@@ -23,7 +23,16 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
   const marker = crypto.randomUUID();
   const manualName = `Apples ${marker}`;
   const ingredientName = `Lentils ${marker}`;
-  let ingredientLabel = ingredientName;
+  let ingredientLabel = `${ingredientName}, organic`;
+  await db.ownItem.create({
+    data: {
+      householdId,
+      name: ingredientName,
+      normalizedName: ingredientName.toLowerCase(),
+      normalizedNote: "",
+      category: "INGREDIENTS",
+    },
+  });
   const dinner = await db.dinner.create({
     data: {
       householdId,
@@ -34,9 +43,10 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
           ingredients: {
             create: {
               order: 0,
-              name: ingredientName,
+              name: `${ingredientName} organic`,
               amount: 200,
               unit: "g",
+              note: "Rinse before cooking",
             },
           },
         },
@@ -133,6 +143,8 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
       name: "Note",
       exact: true,
     });
+    await expect(nameInput).toHaveValue(ingredientName);
+    await expect(noteInput).toHaveValue("organic");
     await nameInput.fill(" ");
     await page.keyboard.press("Escape");
     await expect(editor).toBeVisible();
