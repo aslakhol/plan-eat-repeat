@@ -55,9 +55,8 @@ export const ModelName = {
   RecipePart: 'RecipePart',
   RecipeIngredient: 'RecipeIngredient',
   RecipeStep: 'RecipeStep',
-  ShoppingProduct: 'ShoppingProduct',
+  OwnItem: 'OwnItem',
   ShoppingItem: 'ShoppingItem',
-  UsuallyHave: 'UsuallyHave',
   RecentShoppingItem: 'RecentShoppingItem',
   Tag: 'Tag',
   Plan: 'Plan',
@@ -135,50 +134,38 @@ export const RecipeStepScalarFieldEnum = {
 export type RecipeStepScalarFieldEnum = (typeof RecipeStepScalarFieldEnum)[keyof typeof RecipeStepScalarFieldEnum]
 
 
-export const ShoppingProductScalarFieldEnum = {
+export const OwnItemScalarFieldEnum = {
   id: 'id',
   householdId: 'householdId',
   name: 'name',
   normalizedName: 'normalizedName',
-  category: 'category'
+  note: 'note',
+  normalizedNote: 'normalizedNote',
+  category: 'category',
+  usuallyHave: 'usuallyHave'
 } as const
 
-export type ShoppingProductScalarFieldEnum = (typeof ShoppingProductScalarFieldEnum)[keyof typeof ShoppingProductScalarFieldEnum]
+export type OwnItemScalarFieldEnum = (typeof OwnItemScalarFieldEnum)[keyof typeof OwnItemScalarFieldEnum]
 
 
 export const ShoppingItemScalarFieldEnum = {
-  productId: 'productId',
+  ownItemId: 'ownItemId',
   id: 'id',
   householdId: 'householdId',
-  name: 'name',
-  normalizedName: 'normalizedName',
   amount: 'amount',
   unit: 'unit',
-  note: 'note'
+  revision: 'revision'
 } as const
 
 export type ShoppingItemScalarFieldEnum = (typeof ShoppingItemScalarFieldEnum)[keyof typeof ShoppingItemScalarFieldEnum]
 
 
-export const UsuallyHaveScalarFieldEnum = {
-  productId: 'productId',
-  householdId: 'householdId',
-  name: 'name',
-  normalizedName: 'normalizedName'
-} as const
-
-export type UsuallyHaveScalarFieldEnum = (typeof UsuallyHaveScalarFieldEnum)[keyof typeof UsuallyHaveScalarFieldEnum]
-
-
 export const RecentShoppingItemScalarFieldEnum = {
-  productId: 'productId',
+  ownItemId: 'ownItemId',
   id: 'id',
   householdId: 'householdId',
-  name: 'name',
-  normalizedName: 'normalizedName',
   amount: 'amount',
   unit: 'unit',
-  note: 'note',
   recentlyUsedAt: 'recentlyUsedAt',
   revision: 'revision'
 } as const
