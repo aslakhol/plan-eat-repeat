@@ -1489,3 +1489,65 @@ void test("existing shopping details and reusable state survive the Own Item mig
     await admin.$disconnect();
   }
 });
+
+void test("selecting previews remembers destinations, inherits categories once, and retains saved settings", () =>
+  withShoppingList(async ({ caller, settings }) => {
+    const source = await caller.addManual({ name: "Eggs" });
+    await caller.edit({ ...source, category: "MEAT", usuallyHave: true });
+    await caller.remove({ id: source.id });
+    for (const recent of await caller.recent())
+      await caller.removeRecent({ id: recent.id });
+    const preview = (await caller.suggest({ query: "Eggs duck" })).find(
+      (item) => item.name === "Eggs" && item.note === "duck",
+    )!;
+    assert.ok(preview);
+    assert.equal(
+      (await caller.suggest({ query: "Eggs" })).filter(
+        (item) => item.note === "duck",
+      ).length,
+      0,
+    );
+    const duck = await caller.addSelection(preview.selection);
+    assert.equal(duck.ownItem.category, "MEAT");
+    assert.equal(duck.ownItem.usuallyHave, false);
+    assert.equal(duck.amount, null);
+    assert.equal(duck.unit, null);
+    await caller.edit({ ...duck, category: "PETS", usuallyHave: true });
+    const plain = await caller.addSelection({ ownItemId: source.ownItemId });
+    await caller.edit({ ...plain, category: "DAIRY" });
+    const reused = await caller.addSelection(preview.selection);
+    assert.equal(reused.id, duck.id);
+    assert.equal(reused.ownItem.category, "PETS");
+    assert.equal(reused.ownItem.usuallyHave, true);
+    await settings.updateHousehold({ shoppingLanguage: "no" });
+    assert.ok(
+      (await caller.suggest({ query: "Eggs" })).some(
+        (item) => item.note === "duck",
+      ),
+    );
+    assert.ok(
+      (await caller.suggest({ query: "Ost" })).some(
+        (item) => item.name === "Ost" && "source" in item.selection,
+      ),
+    );
+    assert.deepEqual((await caller.suggest({ query: "Cheese" })).filter((item) => item.name === "Cheese"), [
+      { name: "Cheese", note: null, selection: { name: "Cheese", note: null } },
+    ]);
+    await withShoppingList(async ({ caller: other }) => {
+      assert.equal(
+        (await other.suggest({ query: "Eggs" })).filter(
+          (item) => item.note === "duck",
+        ).length,
+        0,
+      );
+      await assert.rejects(other.addSelection({ ownItemId: duck.ownItemId }));
+      await assert.rejects(
+        other.addSelection({
+          name: "Eggs",
+          note: "fresh",
+          source: { ownItemId: source.ownItemId },
+        }),
+      );
+      assert.deepEqual(await other.list(), []);
+    });
+  }));

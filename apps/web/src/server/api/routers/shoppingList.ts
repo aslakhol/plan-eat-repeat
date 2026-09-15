@@ -1,3 +1,8 @@
+import { suggestShoppingItems } from "../../shopping-matching";
+import {
+  shoppingSources,
+  resolveShoppingSelection,
+} from "../../shopping-suggestions";
 import {
   shoppingCategoryOrder,
   shoppingCategories,
@@ -151,6 +156,48 @@ export const shoppingListRouter = createTRPCRouter({
       ctx.db.$transaction((tx) =>
         setUsuallyHave(tx, ctx.householdId, input, input.excluded),
       ),
+    ),
+
+  suggest: protectedProcedureWithHousehold
+    .input(z.object({ query: z.string() }))
+    .query(async ({ ctx, input }) =>
+      suggestShoppingItems(
+        input.query,
+        await shoppingSources(ctx.db, ctx.householdId),
+      ),
+    ),
+
+  addSelection: protectedProcedureWithHousehold
+    .input(
+      z.union([
+        z.object({ ownItemId: z.string() }),
+        z.object({
+          name: z.string().trim().min(1),
+          note: z.string().nullable(),
+          source: z
+            .union([
+              z.object({ ownItemId: z.string() }),
+              z.object({ standardName: z.string() }),
+            ])
+            .optional(),
+        }),
+      ]),
+    )
+    .mutation(({ ctx, input }) =>
+      ctx.db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
+        const ownItem = await resolveShoppingSelection(
+          tx,
+          ctx.householdId,
+          input,
+        );
+        return saveShoppingItem(tx, ctx.householdId, {
+          name: ownItem.name,
+          note: ownItem.note,
+          amount: null,
+          unit: null,
+        });
+      }),
     ),
 
   addManual: protectedProcedureWithHousehold
