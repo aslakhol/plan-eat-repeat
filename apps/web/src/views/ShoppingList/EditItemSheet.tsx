@@ -1,7 +1,6 @@
 import {
   amountInputSchema,
   formatAmount,
-  normalizeShoppingName,
   parseAmount,
   UNITS,
 } from "@planeatrepeat/shared";
@@ -47,7 +46,7 @@ export function EditItemSheet({
   const [amount, setAmount] = useState(initialAmount);
   const [unit, setUnit] = useState(item.unit ?? "");
   const [categoryDraft, setCategoryDraft] =
-    useState<typeof item.product.category>();
+    useState<typeof item.ownItem.category>();
   const [excludedDraft, setExcludedDraft] = useState<boolean>();
   const preferences = api.shoppingList.usuallyHave.useQuery(undefined, {
     refetchInterval: 2000,
@@ -57,9 +56,7 @@ export function EditItemSheet({
   });
   const excluded =
     excludedDraft ??
-    preferences.data?.some(
-      (preference) => preference.normalizedName === normalizeShoppingName(name),
-    ) ??
+    preferences.data?.some((preference) => preference.id === item.ownItemId) ??
     false;
   const ingredientNames = api.dinner.ingredientNames.useQuery();
   const utils = api.useUtils();
@@ -74,9 +71,9 @@ export function EditItemSheet({
   };
   const editActive = api.shoppingList.edit.useMutation(options);
   const editRecent = api.shoppingList.editRecent.useMutation(options);
-  const deleteProduct = api.shoppingList.deleteProduct.useMutation(options);
+  const deleteOwnItem = api.shoppingList.deleteOwnItem.useMutation(options);
   const edit = recent ? editRecent : editActive;
-  const pending = edit.isPending || deleteProduct.isPending;
+  const pending = edit.isPending || deleteOwnItem.isPending;
   const parsedAmount = parseAmount(amount);
   const amountValid =
     amountInputSchema.safeParse(amount).success &&
@@ -143,7 +140,9 @@ export function EditItemSheet({
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   aria-invalid={!nameValid}
-                  aria-describedby={!nameValid ? "shopping-name-error" : undefined}
+                  aria-describedby={
+                    !nameValid ? "shopping-name-error" : undefined
+                  }
                   className="bg-background h-12 min-w-0 flex-1 rounded-xl font-serif text-xl"
                 />
                 <Button
@@ -265,7 +264,7 @@ export function EditItemSheet({
                   <SelectValue
                     placeholder={
                       categories.data?.find(
-                        (category) => category.id === item.product.category,
+                        (category) => category.id === item.ownItem.category,
                       )?.label
                     }
                   />
@@ -313,10 +312,10 @@ export function EditItemSheet({
                 again.
               </p>
             )}
-            {(edit.isError || deleteProduct.isError) && (
+            {(edit.isError || deleteOwnItem.isError) && (
               <p role="alert" className="text-destructive text-sm">
                 Could not{" "}
-                {deleteProduct.isError ? "delete the product" : "save the item"}.
+                {deleteOwnItem.isError ? "delete the item" : "save the item"}.
                 Check your connection and try again.
               </p>
             )}
@@ -325,9 +324,9 @@ export function EditItemSheet({
                 type="button"
                 variant="outline"
                 className="text-destructive hover:bg-destructive/5 hover:text-destructive h-12 w-full rounded-xl px-3"
-                onClick={() => deleteProduct.mutate({ id: item.productId })}
+                onClick={() => deleteOwnItem.mutate({ id: item.ownItemId })}
               >
-                {deleteProduct.isPending ? "Deleting…" : "Delete own item"}
+                {deleteOwnItem.isPending ? "Deleting…" : "Delete own item"}
               </Button>
             </div>
           </fieldset>

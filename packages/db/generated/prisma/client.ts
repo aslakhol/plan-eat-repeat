@@ -60,20 +60,15 @@ export type RecipeIngredient = Prisma.RecipeIngredientModel
  */
 export type RecipeStep = Prisma.RecipeStepModel
 /**
- * Model ShoppingProduct
+ * Model OwnItem
  * 
  */
-export type ShoppingProduct = Prisma.ShoppingProductModel
+export type OwnItem = Prisma.OwnItemModel
 /**
  * Model ShoppingItem
  * 
  */
 export type ShoppingItem = Prisma.ShoppingItemModel
-/**
- * Model UsuallyHave
- * 
- */
-export type UsuallyHave = Prisma.UsuallyHaveModel
 /**
  * Model RecentShoppingItem
  * 

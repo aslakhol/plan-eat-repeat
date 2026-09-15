@@ -90,61 +90,47 @@ enum ShoppingCategory {
     OWN_ITEMS
 }
 
-model ShoppingProduct {
+model OwnItem {
     id             String               @id @default(cuid())
     household      Household            @relation(fields: [householdId], references: [id], onDelete: Cascade)
     householdId    String
     name           String
     normalizedName String
+    note           String?
+    normalizedNote String               @default("")
     category       ShoppingCategory
+    usuallyHave    Boolean              @default(false)
     items          ShoppingItem[]
     recentItems    RecentShoppingItem[]
-    usuallyHave    UsuallyHave[]
 
-    @@unique([householdId, normalizedName])
+    @@unique([householdId, normalizedName, normalizedNote])
+    @@unique([id, householdId])
 }
 
 model ShoppingItem {
-    product        ShoppingProduct @relation(fields: [productId], references: [id])
-    productId      String
-    id             String          @id @default(cuid())
-    household      Household       @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    ownItem        OwnItem   @relation(fields: [ownItemId, householdId], references: [id, householdId], onDelete: Cascade)
+    ownItemId      String
+    id             String    @id @default(cuid())
+    household      Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
     householdId    String
-    name           String
-    normalizedName String
     amount         Float?
     unit           String?
-    note           String?
+    revision       String    @default(uuid())
 
-    @@index([householdId, normalizedName])
-}
-
-model UsuallyHave {
-    product        ShoppingProduct @relation(fields: [productId], references: [id])
-    productId      String
-    household      Household       @relation(fields: [householdId], references: [id], onDelete: Cascade)
-    householdId    String
-    name           String
-    normalizedName String
-
-    @@id([householdId, normalizedName])
+    @@index([householdId, ownItemId])
 }
 
 model RecentShoppingItem {
-    product        ShoppingProduct @relation(fields: [productId], references: [id])
-    productId      String
-    id             String          @id @default(cuid())
-    household      Household       @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    ownItem        OwnItem   @relation(fields: [ownItemId, householdId], references: [id, householdId], onDelete: Cascade)
+    ownItemId      String    @unique
+    id             String    @id @default(cuid())
+    household      Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
     householdId    String
-    name           String
-    normalizedName String
     amount         Float?
     unit           String?
-    note           String?
-    recentlyUsedAt DateTime        @default(now())
-    revision       String          @default(uuid())
+    recentlyUsedAt DateTime  @default(now())
+    revision       String    @default(uuid())
 
-    @@unique([householdId, normalizedName])
     @@index([householdId, recentlyUsedAt])
 }
 
@@ -191,10 +177,9 @@ model Household {
     Members                     Membership[]
     Invite                      Invite[]
     AiImportAttempts            AiImportAttempt[]
-    ShoppingProducts            ShoppingProduct[]
+    OwnItems                    OwnItem[]
     ShoppingItems               ShoppingItem[]
     RecentShoppingItems         RecentShoppingItem[]
-    UsuallyHave                 UsuallyHave[]
 }
 
 model Membership {

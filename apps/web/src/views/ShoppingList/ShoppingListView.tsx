@@ -45,15 +45,14 @@ function ShoppingItemRow({
   const remove = api.shoppingList.remove.useMutation(options);
   const add = api.shoppingList.addRecent.useMutation(options);
   const action = recent ? add : remove;
+  const label = [item.name, item.note].filter(Boolean).join(", ");
 
   return (
     <li className="bg-secondary/70 flex items-center rounded-[14px]">
       <button
         type="button"
         aria-label={
-          recent
-            ? `Add ${item.name} to shopping list`
-            : `Remove ${item.name} from list`
+          recent ? `Add ${label} to shopping list` : `Remove ${label} from list`
         }
         disabled={action.isPending}
         onClick={() => action.mutate({ id: item.id })}
@@ -72,7 +71,7 @@ function ShoppingItemRow({
       {(item.amount !== null || item.unit !== null) && (
         <button
           type="button"
-          aria-label={`Edit quantity for ${item.name}`}
+          aria-label={`Edit quantity for ${label}`}
           disabled={action.isPending}
           onClick={onEdit}
           className="bg-background border-border hover:bg-accent focus-visible:ring-ring max-w-[35%] rounded-lg border px-2 py-1 text-sm font-semibold outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
@@ -82,7 +81,7 @@ function ShoppingItemRow({
       )}
       <button
         type="button"
-        aria-label={`Edit ${item.name}`}
+        aria-label={`Edit ${label}`}
         disabled={action.isPending}
         onClick={onEdit}
         className="text-muted-foreground border-border hover:bg-accent focus-visible:ring-ring mx-2 flex size-8 shrink-0 items-center justify-center rounded-lg border bg-white outline-none focus-visible:ring-2"
@@ -129,9 +128,9 @@ export function ShoppingListView() {
     refetchOnReconnect: "always",
     retry: false,
   });
-  const activeNames = new Set(list.data?.map((item) => item.normalizedName));
+  const activeIds = new Set(list.data?.map((item) => item.ownItemId));
   const recentItems =
-    recent.data?.filter((item) => !activeNames.has(item.normalizedName)) ?? [];
+    recent.data?.filter((item) => !activeIds.has(item.ownItemId)) ?? [];
   const clear = api.shoppingList.clear.useMutation({
     networkMode: "always",
     retry: false,

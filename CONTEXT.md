@@ -46,13 +46,17 @@ _Avoid_: Dinner library, Dinners
 The Household's shared collection of items still to buy, added manually or from Dinners. Items leave the list when taken into the basket.
 
 **Shopping Item**:
-A named requirement on the Shopping List, with an optional Amount, Unit, and shopping note. It is independent of the Dinner or Recipe Ingredient it may have come from.
+A requirement to buy an Own Item, with an optional Amount and Unit. It is independent of the Dinner or Recipe Ingredient it may have come from.
 
-**Shopping Product**:
-A Household's remembered shopping name and its category, shared by Shopping Items with that name, Recently Used, and Usually Have. It exists even when there is no current requirement to buy it. Explicitly deleting the product removes its active requirements, Recently Used entry, Usually Have membership, and category memory. Adding the name again categorizes it afresh.
+**Shopping Note**:
+Optional wording qualifying an Own Item without changing its product name, such as "duck" for Eggs.
 
 **Shopping Category**:
 A store-oriented grouping of Shopping Items used to order the Shopping List.
+
+**Own Item**:
+A Household's saved combination of a product name and optional Shopping Note, with its own Shopping Category and Usually Have setting, whether the name originated in the standard catalog or was entered by the Household. It remains available for reuse independently of the Shopping List and Recently Used; Amount and Unit belong to requirements to buy it, not to the Own Item.
+_Avoid_: Shopping Product
 
 **Standard Shopping Item**:
 A predefined product name with a Shopping Category, supplied in the English or Norwegian shopping catalog.
@@ -61,19 +65,19 @@ A predefined product name with a Shopping Category, supplied in the English or N
 The Household's selected language for Standard Shopping Item matching and Shopping Category labels, either English or Norwegian.
 
 **Remembered Shopping Category**:
-The Household's category for a Shopping Product, whether chosen manually or assigned automatically, including Own Items. It survives the item's removal and applies to existing and future Shopping Items with that same name.
+The Household's category for an Own Item, whether chosen manually or assigned automatically, including the Own Items Category. It survives removal from the Shopping List and is independent of categories assigned to other Own Items with the same name and different notes.
 
 **Category Inheritance**:
-The initial assignment of a Shopping Category from a matching product name contained within a longer name. The longer name keeps its own Remembered Shopping Category when the matching product's category later changes.
+The initial assignment of a new Own Item's Shopping Category from a matching Own Item or Standard Shopping Item. The new Own Item keeps its Remembered Shopping Category when the source item's category later changes.
 
-**Own Items**:
-The Shopping Category for names without a category match, ordered after all other Shopping Categories.
+**Own Items Category**:
+The fallback Shopping Category for names without a category match, labelled "Own Items" and ordered after all other Shopping Categories. Own Items can belong to any Shopping Category.
 
 **Usually Have**:
-The Household's set of ingredient names to place in Recently Used instead of its Shopping List when adding from Dinners. Membership in this set neither prevents manual additions nor removes existing Shopping Items.
+The Household's set of Own Items to place in Recently Used instead of its Shopping List when adding from Dinners. Each name-and-note combination has its own setting; membership neither prevents manual additions nor removes existing Shopping Items.
 
 **Recently Used**:
-The Household's reusable items from Shopping List removals and Usually Have exclusions when adding from Dinners, shown most recent first without time-based expiry, with at most 25 names and none currently on the Shopping List. Names match regardless of capitalisation and extra whitespace; each entry holds the latest item's Amount, Unit, and shopping note unless edited for reuse.
+The Household's reusable Own Items from Shopping List removals and Usually Have exclusions when adding from Dinners, shown most recent first without time-based expiry, with at most 25 Own Items and none currently on the Shopping List. Each entry retains its latest Amount and Unit for restoration; different Shopping Notes distinguish entries even when their product names match.
 
 **Plan Slot**:
 The assignment of one Dinner to one Household calendar date. A Plan Slot identifies a date, not an instant in time.
