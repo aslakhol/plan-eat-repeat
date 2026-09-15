@@ -1,14 +1,15 @@
+import { editOwnItem, shoppingItemDetails } from "./own-items";
 import {
-  editShoppingProduct,
-  rememberShoppingProduct,
-} from "./shopping-products";
-import type { Prisma, ShoppingCategory, ShoppingItem } from "@planeatrepeat/db";
-import { normalizeShoppingName, normalizeUnit } from "@planeatrepeat/shared";
+  combineShoppingRequirements,
+  type ShoppingRequirement,
+} from "./shopping-list";
+import type { Prisma, ShoppingCategory } from "@planeatrepeat/db";
+import { normalizeUnit } from "@planeatrepeat/shared";
 
 export async function rememberShoppingItems(
   tx: Prisma.TransactionClient,
   householdId: string,
-  items: Pick<ShoppingItem, "name" | "amount" | "unit" | "note">[],
+  items: { ownItemId: string; amount: number | null; unit: string | null }[],
 ) {
   if (items.length === 0) return [];
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
@@ -16,31 +17,22 @@ export async function rememberShoppingItems(
     where: { householdId },
     orderBy: { recentlyUsedAt: "desc" },
   });
-  // Separate operations remain ordered even if they happen in the same millisecond.
   const recentlyUsedAt = new Date(
     Math.max(Date.now(), (latest?.recentlyUsedAt.getTime() ?? 0) + 1),
   );
-  const distinct = new Map(
-    items.map((item) => [normalizeShoppingName(item.name), item]),
-  );
+  const distinct = new Map(items.map((item) => [item.ownItemId, item]));
   const saved = [];
-  for (const [normalizedName, item] of distinct) {
-    const name = item.name.trim();
-    const product = await rememberShoppingProduct(tx, householdId, name);
+  for (const [ownItemId, item] of distinct) {
     const data = {
-      productId: product.id,
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-      normalizedName,
       amount: item.amount,
       unit: normalizeUnit(item.unit),
-      note: item.note,
       recentlyUsedAt,
       revision: crypto.randomUUID(),
     };
     saved.push(
       await tx.recentShoppingItem.upsert({
-        where: { householdId_normalizedName: { householdId, normalizedName } },
-        create: { householdId, ...data },
+        where: { ownItemId, householdId },
+        create: { householdId, ownItemId, ...data },
         update: data,
       }),
     );
@@ -51,49 +43,27 @@ export async function rememberShoppingItems(
 export async function editRecentShoppingItem(
   tx: Prisma.TransactionClient,
   householdId: string,
-  input: Pick<ShoppingItem, "id" | "name" | "amount" | "unit" | "note"> & {
+  input: ShoppingRequirement & {
+    id: string;
     category?: ShoppingCategory;
+    usuallyHave?: boolean;
   },
 ) {
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
   const original = await tx.recentShoppingItem.findUniqueOrThrow({
     where: { id: input.id, householdId },
-    include: { product: { select: { category: true } } },
   });
-  const name = input.name.trim();
-  const normalizedName = normalizeShoppingName(name);
-  const product = await editShoppingProduct(
-    tx,
-    householdId,
-    name,
-    original.product.category,
-    input.category,
+  const ownItem = await editOwnItem(tx, householdId, original.ownItemId, input);
+  await combineShoppingRequirements(tx, householdId, ownItem.id);
+  return shoppingItemDetails(
+    await tx.recentShoppingItem.update({
+      where: { ownItemId: ownItem.id, householdId },
+      include: { ownItem: true },
+      data: {
+        amount: input.amount,
+        unit: normalizeUnit(input.unit),
+        revision: crypto.randomUUID(),
+      },
+    }),
   );
-  const destination = await tx.recentShoppingItem.findUnique({
-    where: { householdId_normalizedName: { householdId, normalizedName } },
-  });
-  if (destination && destination.id !== original.id) {
-    await tx.recentShoppingItem.delete({
-      where: { id: original.id, householdId },
-    });
-  }
-  return tx.recentShoppingItem.update({
-    include: { product: { select: { category: true } } },
-    where: { id: destination?.id ?? original.id, householdId },
-    data: {
-      productId: product.id,
-      name,
-      normalizedName,
-      amount: input.amount,
-      unit: normalizeUnit(input.unit),
-      note: input.note,
-      recentlyUsedAt: new Date(
-        Math.max(
-          original.recentlyUsedAt.getTime(),
-          destination?.recentlyUsedAt.getTime() ?? 0,
-        ),
-      ),
-      revision: crypto.randomUUID(),
-    },
-  });
 }
