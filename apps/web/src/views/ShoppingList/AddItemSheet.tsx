@@ -59,10 +59,7 @@ function AddItemContent({
   const add = api.shoppingList.addSelection.useMutation({
     networkMode: "always",
     retry: false,
-    onSuccess: async () => {
-      await utils.shoppingList.invalidate();
-      onAdded();
-    },
+    onSuccess: () => utils.shoppingList.invalidate(),
   });
 
   return (
@@ -96,7 +93,9 @@ function AddItemContent({
               className="aria-selected:bg-accent hover:bg-accent focus-visible:bg-accent block w-full rounded-lg px-3 py-3 text-left focus-visible:outline-none"
               disabled={add.isPending}
               onMouseDown={(event) => event.preventDefault()}
-              onClick={() => add.mutate(preview.selection)}
+              onClick={() =>
+                add.mutate(preview.selection, { onSuccess: onAdded })
+              }
             >
               <span className="font-medium">{preview.name}</span>
               {preview.note && (
@@ -118,6 +117,7 @@ function AddItemContent({
                 name: query,
                 note: null,
               },
+              { onSuccess: onAdded },
             );
         }}
       >

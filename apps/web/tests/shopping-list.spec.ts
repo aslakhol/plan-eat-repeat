@@ -308,15 +308,21 @@ test("shopping previews keep typing through blur, scroll to choices, and support
     });
     const input = drawer.getByRole("combobox", { name: "Item name" });
     const sourcesReady = Promise.withResolvers<void>();
-    await page.route("**/api/trpc/shoppingList.sources*", async (route) => {
-      await sourcesReady.promise;
+    await page.route("**/api/trpc/**", async (route) => {
+      if (route.request().url().includes("shoppingList.sources"))
+        await sourcesReady.promise;
       await route.continue();
     });
     try {
       await open.click();
       await expect(input).not.toBeFocused();
       await input.fill(marker);
+      await expect(drawer.getByRole("option")).toHaveCount(1);
       await input.press("ArrowDown");
+      await expect(drawer.getByRole("option")).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
     } finally {
       sourcesReady.resolve();
       await page.unrouteAll({ behavior: "wait" });
@@ -348,10 +354,17 @@ test("shopping previews keep typing through blur, scroll to choices, and support
       await refreshRequested.promise;
       await expect(drawer).toBeVisible();
       await expect(last).toBeDisabled();
+      await page.keyboard.press("Escape");
+      await expect(drawer).not.toBeVisible();
+      await open.click();
+      await input.fill("Next purchase");
     } finally {
       refresh.resolve();
       await page.unrouteAll({ behavior: "wait" });
     }
+    await page.waitForLoadState("networkidle");
+    await expect(input).toHaveValue("Next purchase");
+    await page.keyboard.press("Escape");
     await expect(drawer).not.toBeVisible();
     await expect(
       page.getByRole("button", {
