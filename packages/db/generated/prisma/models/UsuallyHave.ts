@@ -25,18 +25,21 @@ export type AggregateUsuallyHave = {
 }
 
 export type UsuallyHaveMinAggregateOutputType = {
+  productId: string | null
   householdId: string | null
   name: string | null
   normalizedName: string | null
 }
 
 export type UsuallyHaveMaxAggregateOutputType = {
+  productId: string | null
   householdId: string | null
   name: string | null
   normalizedName: string | null
 }
 
 export type UsuallyHaveCountAggregateOutputType = {
+  productId: number
   householdId: number
   name: number
   normalizedName: number
@@ -45,18 +48,21 @@ export type UsuallyHaveCountAggregateOutputType = {
 
 
 export type UsuallyHaveMinAggregateInputType = {
+  productId?: true
   householdId?: true
   name?: true
   normalizedName?: true
 }
 
 export type UsuallyHaveMaxAggregateInputType = {
+  productId?: true
   householdId?: true
   name?: true
   normalizedName?: true
 }
 
 export type UsuallyHaveCountAggregateInputType = {
+  productId?: true
   householdId?: true
   name?: true
   normalizedName?: true
@@ -136,6 +142,7 @@ export type UsuallyHaveGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inte
 }
 
 export type UsuallyHaveGroupByOutputType = {
+  productId: string
   householdId: string
   name: string
   normalizedName: string
@@ -163,16 +170,20 @@ export type UsuallyHaveWhereInput = {
   AND?: Prisma.UsuallyHaveWhereInput | Prisma.UsuallyHaveWhereInput[]
   OR?: Prisma.UsuallyHaveWhereInput[]
   NOT?: Prisma.UsuallyHaveWhereInput | Prisma.UsuallyHaveWhereInput[]
+  productId?: Prisma.StringFilter<"UsuallyHave"> | string
   householdId?: Prisma.StringFilter<"UsuallyHave"> | string
   name?: Prisma.StringFilter<"UsuallyHave"> | string
   normalizedName?: Prisma.StringFilter<"UsuallyHave"> | string
+  product?: Prisma.XOR<Prisma.ShoppingProductScalarRelationFilter, Prisma.ShoppingProductWhereInput>
   household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
 }
 
 export type UsuallyHaveOrderByWithRelationInput = {
+  productId?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   normalizedName?: Prisma.SortOrder
+  product?: Prisma.ShoppingProductOrderByWithRelationInput
   household?: Prisma.HouseholdOrderByWithRelationInput
 }
 
@@ -181,13 +192,16 @@ export type UsuallyHaveWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.UsuallyHaveWhereInput | Prisma.UsuallyHaveWhereInput[]
   OR?: Prisma.UsuallyHaveWhereInput[]
   NOT?: Prisma.UsuallyHaveWhereInput | Prisma.UsuallyHaveWhereInput[]
+  productId?: Prisma.StringFilter<"UsuallyHave"> | string
   householdId?: Prisma.StringFilter<"UsuallyHave"> | string
   name?: Prisma.StringFilter<"UsuallyHave"> | string
   normalizedName?: Prisma.StringFilter<"UsuallyHave"> | string
+  product?: Prisma.XOR<Prisma.ShoppingProductScalarRelationFilter, Prisma.ShoppingProductWhereInput>
   household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
 }, "householdId_normalizedName">
 
 export type UsuallyHaveOrderByWithAggregationInput = {
+  productId?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   normalizedName?: Prisma.SortOrder
@@ -200,6 +214,7 @@ export type UsuallyHaveScalarWhereWithAggregatesInput = {
   AND?: Prisma.UsuallyHaveScalarWhereWithAggregatesInput | Prisma.UsuallyHaveScalarWhereWithAggregatesInput[]
   OR?: Prisma.UsuallyHaveScalarWhereWithAggregatesInput[]
   NOT?: Prisma.UsuallyHaveScalarWhereWithAggregatesInput | Prisma.UsuallyHaveScalarWhereWithAggregatesInput[]
+  productId?: Prisma.StringWithAggregatesFilter<"UsuallyHave"> | string
   householdId?: Prisma.StringWithAggregatesFilter<"UsuallyHave"> | string
   name?: Prisma.StringWithAggregatesFilter<"UsuallyHave"> | string
   normalizedName?: Prisma.StringWithAggregatesFilter<"UsuallyHave"> | string
@@ -208,10 +223,12 @@ export type UsuallyHaveScalarWhereWithAggregatesInput = {
 export type UsuallyHaveCreateInput = {
   name: string
   normalizedName: string
+  product: Prisma.ShoppingProductCreateNestedOneWithoutUsuallyHaveInput
   household: Prisma.HouseholdCreateNestedOneWithoutUsuallyHaveInput
 }
 
 export type UsuallyHaveUncheckedCreateInput = {
+  productId: string
   householdId: string
   name: string
   normalizedName: string
@@ -220,16 +237,19 @@ export type UsuallyHaveUncheckedCreateInput = {
 export type UsuallyHaveUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  product?: Prisma.ShoppingProductUpdateOneRequiredWithoutUsuallyHaveNestedInput
   household?: Prisma.HouseholdUpdateOneRequiredWithoutUsuallyHaveNestedInput
 }
 
 export type UsuallyHaveUncheckedUpdateInput = {
+  productId?: Prisma.StringFieldUpdateOperationsInput | string
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type UsuallyHaveCreateManyInput = {
+  productId: string
   householdId: string
   name: string
   normalizedName: string
@@ -241,32 +261,10 @@ export type UsuallyHaveUpdateManyMutationInput = {
 }
 
 export type UsuallyHaveUncheckedUpdateManyInput = {
+  productId?: Prisma.StringFieldUpdateOperationsInput | string
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
-}
-
-export type UsuallyHaveHouseholdIdNormalizedNameCompoundUniqueInput = {
-  householdId: string
-  normalizedName: string
-}
-
-export type UsuallyHaveCountOrderByAggregateInput = {
-  householdId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
-  normalizedName?: Prisma.SortOrder
-}
-
-export type UsuallyHaveMaxOrderByAggregateInput = {
-  householdId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
-  normalizedName?: Prisma.SortOrder
-}
-
-export type UsuallyHaveMinOrderByAggregateInput = {
-  householdId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
-  normalizedName?: Prisma.SortOrder
 }
 
 export type UsuallyHaveListRelationFilter = {
@@ -277,6 +275,74 @@ export type UsuallyHaveListRelationFilter = {
 
 export type UsuallyHaveOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type UsuallyHaveHouseholdIdNormalizedNameCompoundUniqueInput = {
+  householdId: string
+  normalizedName: string
+}
+
+export type UsuallyHaveCountOrderByAggregateInput = {
+  productId?: Prisma.SortOrder
+  householdId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  normalizedName?: Prisma.SortOrder
+}
+
+export type UsuallyHaveMaxOrderByAggregateInput = {
+  productId?: Prisma.SortOrder
+  householdId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  normalizedName?: Prisma.SortOrder
+}
+
+export type UsuallyHaveMinOrderByAggregateInput = {
+  productId?: Prisma.SortOrder
+  householdId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  normalizedName?: Prisma.SortOrder
+}
+
+export type UsuallyHaveCreateNestedManyWithoutProductInput = {
+  create?: Prisma.XOR<Prisma.UsuallyHaveCreateWithoutProductInput, Prisma.UsuallyHaveUncheckedCreateWithoutProductInput> | Prisma.UsuallyHaveCreateWithoutProductInput[] | Prisma.UsuallyHaveUncheckedCreateWithoutProductInput[]
+  connectOrCreate?: Prisma.UsuallyHaveCreateOrConnectWithoutProductInput | Prisma.UsuallyHaveCreateOrConnectWithoutProductInput[]
+  createMany?: Prisma.UsuallyHaveCreateManyProductInputEnvelope
+  connect?: Prisma.UsuallyHaveWhereUniqueInput | Prisma.UsuallyHaveWhereUniqueInput[]
+}
+
+export type UsuallyHaveUncheckedCreateNestedManyWithoutProductInput = {
+  create?: Prisma.XOR<Prisma.UsuallyHaveCreateWithoutProductInput, Prisma.UsuallyHaveUncheckedCreateWithoutProductInput> | Prisma.UsuallyHaveCreateWithoutProductInput[] | Prisma.UsuallyHaveUncheckedCreateWithoutProductInput[]
+  connectOrCreate?: Prisma.UsuallyHaveCreateOrConnectWithoutProductInput | Prisma.UsuallyHaveCreateOrConnectWithoutProductInput[]
+  createMany?: Prisma.UsuallyHaveCreateManyProductInputEnvelope
+  connect?: Prisma.UsuallyHaveWhereUniqueInput | Prisma.UsuallyHaveWhereUniqueInput[]
+}
+
+export type UsuallyHaveUpdateManyWithoutProductNestedInput = {
+  create?: Prisma.XOR<Prisma.UsuallyHaveCreateWithoutProductInput, Prisma.UsuallyHaveUncheckedCreateWithoutProductInput> | Prisma.UsuallyHaveCreateWithoutProductInput[] | Prisma.UsuallyHaveUncheckedCreateWithoutProductInput[]
+  connectOrCreate?: Prisma.UsuallyHaveCreateOrConnectWithoutProductInput | Prisma.UsuallyHaveCreateOrConnectWithoutProductInput[]
+  upsert?: Prisma.UsuallyHaveUpsertWithWhereUniqueWithoutProductInput | Prisma.UsuallyHaveUpsertWithWhereUniqueWithoutProductInput[]
+  createMany?: Prisma.UsuallyHaveCreateManyProductInputEnvelope
+  set?: Prisma.UsuallyHaveWhereUniqueInput | Prisma.UsuallyHaveWhereUniqueInput[]
+  disconnect?: Prisma.UsuallyHaveWhereUniqueInput | Prisma.UsuallyHaveWhereUniqueInput[]
+  delete?: Prisma.UsuallyHaveWhereUniqueInput | Prisma.UsuallyHaveWhereUniqueInput[]
+  connect?: Prisma.UsuallyHaveWhereUniqueInput | Prisma.UsuallyHaveWhereUniqueInput[]
+  update?: Prisma.UsuallyHaveUpdateWithWhereUniqueWithoutProductInput | Prisma.UsuallyHaveUpdateWithWhereUniqueWithoutProductInput[]
+  updateMany?: Prisma.UsuallyHaveUpdateManyWithWhereWithoutProductInput | Prisma.UsuallyHaveUpdateManyWithWhereWithoutProductInput[]
+  deleteMany?: Prisma.UsuallyHaveScalarWhereInput | Prisma.UsuallyHaveScalarWhereInput[]
+}
+
+export type UsuallyHaveUncheckedUpdateManyWithoutProductNestedInput = {
+  create?: Prisma.XOR<Prisma.UsuallyHaveCreateWithoutProductInput, Prisma.UsuallyHaveUncheckedCreateWithoutProductInput> | Prisma.UsuallyHaveCreateWithoutProductInput[] | Prisma.UsuallyHaveUncheckedCreateWithoutProductInput[]
+  connectOrCreate?: Prisma.UsuallyHaveCreateOrConnectWithoutProductInput | Prisma.UsuallyHaveCreateOrConnectWithoutProductInput[]
+  upsert?: Prisma.UsuallyHaveUpsertWithWhereUniqueWithoutProductInput | Prisma.UsuallyHaveUpsertWithWhereUniqueWithoutProductInput[]
+  createMany?: Prisma.UsuallyHaveCreateManyProductInputEnvelope
+  set?: Prisma.UsuallyHaveWhereUniqueInput | Prisma.UsuallyHaveWhereUniqueInput[]
+  disconnect?: Prisma.UsuallyHaveWhereUniqueInput | Prisma.UsuallyHaveWhereUniqueInput[]
+  delete?: Prisma.UsuallyHaveWhereUniqueInput | Prisma.UsuallyHaveWhereUniqueInput[]
+  connect?: Prisma.UsuallyHaveWhereUniqueInput | Prisma.UsuallyHaveWhereUniqueInput[]
+  update?: Prisma.UsuallyHaveUpdateWithWhereUniqueWithoutProductInput | Prisma.UsuallyHaveUpdateWithWhereUniqueWithoutProductInput[]
+  updateMany?: Prisma.UsuallyHaveUpdateManyWithWhereWithoutProductInput | Prisma.UsuallyHaveUpdateManyWithWhereWithoutProductInput[]
+  deleteMany?: Prisma.UsuallyHaveScalarWhereInput | Prisma.UsuallyHaveScalarWhereInput[]
 }
 
 export type UsuallyHaveCreateNestedManyWithoutHouseholdInput = {
@@ -321,12 +387,62 @@ export type UsuallyHaveUncheckedUpdateManyWithoutHouseholdNestedInput = {
   deleteMany?: Prisma.UsuallyHaveScalarWhereInput | Prisma.UsuallyHaveScalarWhereInput[]
 }
 
-export type UsuallyHaveCreateWithoutHouseholdInput = {
+export type UsuallyHaveCreateWithoutProductInput = {
+  name: string
+  normalizedName: string
+  household: Prisma.HouseholdCreateNestedOneWithoutUsuallyHaveInput
+}
+
+export type UsuallyHaveUncheckedCreateWithoutProductInput = {
+  householdId: string
   name: string
   normalizedName: string
 }
 
+export type UsuallyHaveCreateOrConnectWithoutProductInput = {
+  where: Prisma.UsuallyHaveWhereUniqueInput
+  create: Prisma.XOR<Prisma.UsuallyHaveCreateWithoutProductInput, Prisma.UsuallyHaveUncheckedCreateWithoutProductInput>
+}
+
+export type UsuallyHaveCreateManyProductInputEnvelope = {
+  data: Prisma.UsuallyHaveCreateManyProductInput | Prisma.UsuallyHaveCreateManyProductInput[]
+  skipDuplicates?: boolean
+}
+
+export type UsuallyHaveUpsertWithWhereUniqueWithoutProductInput = {
+  where: Prisma.UsuallyHaveWhereUniqueInput
+  update: Prisma.XOR<Prisma.UsuallyHaveUpdateWithoutProductInput, Prisma.UsuallyHaveUncheckedUpdateWithoutProductInput>
+  create: Prisma.XOR<Prisma.UsuallyHaveCreateWithoutProductInput, Prisma.UsuallyHaveUncheckedCreateWithoutProductInput>
+}
+
+export type UsuallyHaveUpdateWithWhereUniqueWithoutProductInput = {
+  where: Prisma.UsuallyHaveWhereUniqueInput
+  data: Prisma.XOR<Prisma.UsuallyHaveUpdateWithoutProductInput, Prisma.UsuallyHaveUncheckedUpdateWithoutProductInput>
+}
+
+export type UsuallyHaveUpdateManyWithWhereWithoutProductInput = {
+  where: Prisma.UsuallyHaveScalarWhereInput
+  data: Prisma.XOR<Prisma.UsuallyHaveUpdateManyMutationInput, Prisma.UsuallyHaveUncheckedUpdateManyWithoutProductInput>
+}
+
+export type UsuallyHaveScalarWhereInput = {
+  AND?: Prisma.UsuallyHaveScalarWhereInput | Prisma.UsuallyHaveScalarWhereInput[]
+  OR?: Prisma.UsuallyHaveScalarWhereInput[]
+  NOT?: Prisma.UsuallyHaveScalarWhereInput | Prisma.UsuallyHaveScalarWhereInput[]
+  productId?: Prisma.StringFilter<"UsuallyHave"> | string
+  householdId?: Prisma.StringFilter<"UsuallyHave"> | string
+  name?: Prisma.StringFilter<"UsuallyHave"> | string
+  normalizedName?: Prisma.StringFilter<"UsuallyHave"> | string
+}
+
+export type UsuallyHaveCreateWithoutHouseholdInput = {
+  name: string
+  normalizedName: string
+  product: Prisma.ShoppingProductCreateNestedOneWithoutUsuallyHaveInput
+}
+
 export type UsuallyHaveUncheckedCreateWithoutHouseholdInput = {
+  productId: string
   name: string
   normalizedName: string
 }
@@ -357,16 +473,32 @@ export type UsuallyHaveUpdateManyWithWhereWithoutHouseholdInput = {
   data: Prisma.XOR<Prisma.UsuallyHaveUpdateManyMutationInput, Prisma.UsuallyHaveUncheckedUpdateManyWithoutHouseholdInput>
 }
 
-export type UsuallyHaveScalarWhereInput = {
-  AND?: Prisma.UsuallyHaveScalarWhereInput | Prisma.UsuallyHaveScalarWhereInput[]
-  OR?: Prisma.UsuallyHaveScalarWhereInput[]
-  NOT?: Prisma.UsuallyHaveScalarWhereInput | Prisma.UsuallyHaveScalarWhereInput[]
-  householdId?: Prisma.StringFilter<"UsuallyHave"> | string
-  name?: Prisma.StringFilter<"UsuallyHave"> | string
-  normalizedName?: Prisma.StringFilter<"UsuallyHave"> | string
+export type UsuallyHaveCreateManyProductInput = {
+  householdId: string
+  name: string
+  normalizedName: string
+}
+
+export type UsuallyHaveUpdateWithoutProductInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  household?: Prisma.HouseholdUpdateOneRequiredWithoutUsuallyHaveNestedInput
+}
+
+export type UsuallyHaveUncheckedUpdateWithoutProductInput = {
+  householdId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+}
+
+export type UsuallyHaveUncheckedUpdateManyWithoutProductInput = {
+  householdId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type UsuallyHaveCreateManyHouseholdInput = {
+  productId: string
   name: string
   normalizedName: string
 }
@@ -374,14 +506,17 @@ export type UsuallyHaveCreateManyHouseholdInput = {
 export type UsuallyHaveUpdateWithoutHouseholdInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  product?: Prisma.ShoppingProductUpdateOneRequiredWithoutUsuallyHaveNestedInput
 }
 
 export type UsuallyHaveUncheckedUpdateWithoutHouseholdInput = {
+  productId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type UsuallyHaveUncheckedUpdateManyWithoutHouseholdInput = {
+  productId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
 }
@@ -389,49 +524,61 @@ export type UsuallyHaveUncheckedUpdateManyWithoutHouseholdInput = {
 
 
 export type UsuallyHaveSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  productId?: boolean
   householdId?: boolean
   name?: boolean
   normalizedName?: boolean
+  product?: boolean | Prisma.ShoppingProductDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["usuallyHave"]>
 
 export type UsuallyHaveSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  productId?: boolean
   householdId?: boolean
   name?: boolean
   normalizedName?: boolean
+  product?: boolean | Prisma.ShoppingProductDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["usuallyHave"]>
 
 export type UsuallyHaveSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  productId?: boolean
   householdId?: boolean
   name?: boolean
   normalizedName?: boolean
+  product?: boolean | Prisma.ShoppingProductDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["usuallyHave"]>
 
 export type UsuallyHaveSelectScalar = {
+  productId?: boolean
   householdId?: boolean
   name?: boolean
   normalizedName?: boolean
 }
 
-export type UsuallyHaveOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"householdId" | "name" | "normalizedName", ExtArgs["result"]["usuallyHave"]>
+export type UsuallyHaveOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"productId" | "householdId" | "name" | "normalizedName", ExtArgs["result"]["usuallyHave"]>
 export type UsuallyHaveInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  product?: boolean | Prisma.ShoppingProductDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }
 export type UsuallyHaveIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  product?: boolean | Prisma.ShoppingProductDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }
 export type UsuallyHaveIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  product?: boolean | Prisma.ShoppingProductDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }
 
 export type $UsuallyHavePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "UsuallyHave"
   objects: {
+    product: Prisma.$ShoppingProductPayload<ExtArgs>
     household: Prisma.$HouseholdPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    productId: string
     householdId: string
     name: string
     normalizedName: string
@@ -518,8 +665,8 @@ export interface UsuallyHaveDelegate<ExtArgs extends runtime.Types.Extensions.In
    * // Get first 10 UsuallyHaves
    * const usuallyHaves = await prisma.usuallyHave.findMany({ take: 10 })
    * 
-   * // Only select the `householdId`
-   * const usuallyHaveWithHouseholdIdOnly = await prisma.usuallyHave.findMany({ select: { householdId: true } })
+   * // Only select the `productId`
+   * const usuallyHaveWithProductIdOnly = await prisma.usuallyHave.findMany({ select: { productId: true } })
    * 
    */
   findMany<T extends UsuallyHaveFindManyArgs>(args?: Prisma.SelectSubset<T, UsuallyHaveFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UsuallyHavePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
@@ -563,9 +710,9 @@ export interface UsuallyHaveDelegate<ExtArgs extends runtime.Types.Extensions.In
    *   ]
    * })
    * 
-   * // Create many UsuallyHaves and only return the `householdId`
-   * const usuallyHaveWithHouseholdIdOnly = await prisma.usuallyHave.createManyAndReturn({
-   *   select: { householdId: true },
+   * // Create many UsuallyHaves and only return the `productId`
+   * const usuallyHaveWithProductIdOnly = await prisma.usuallyHave.createManyAndReturn({
+   *   select: { productId: true },
    *   data: [
    *     // ... provide data here
    *   ]
@@ -654,9 +801,9 @@ export interface UsuallyHaveDelegate<ExtArgs extends runtime.Types.Extensions.In
    *   ]
    * })
    * 
-   * // Update zero or more UsuallyHaves and only return the `householdId`
-   * const usuallyHaveWithHouseholdIdOnly = await prisma.usuallyHave.updateManyAndReturn({
-   *   select: { householdId: true },
+   * // Update zero or more UsuallyHaves and only return the `productId`
+   * const usuallyHaveWithProductIdOnly = await prisma.usuallyHave.updateManyAndReturn({
+   *   select: { productId: true },
    *   where: {
    *     // ... provide filter here
    *   },
@@ -829,6 +976,7 @@ readonly fields: UsuallyHaveFieldRefs;
  */
 export interface Prisma__UsuallyHaveClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  product<T extends Prisma.ShoppingProductDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ShoppingProductDefaultArgs<ExtArgs>>): Prisma.Prisma__ShoppingProductClient<runtime.Types.Result.GetResult<Prisma.$ShoppingProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   household<T extends Prisma.HouseholdDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.HouseholdDefaultArgs<ExtArgs>>): Prisma.Prisma__HouseholdClient<runtime.Types.Result.GetResult<Prisma.$HouseholdPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -859,6 +1007,7 @@ export interface Prisma__UsuallyHaveClient<T, Null = never, ExtArgs extends runt
  * Fields of the UsuallyHave model
  */
 export interface UsuallyHaveFieldRefs {
+  readonly productId: Prisma.FieldRef<"UsuallyHave", 'String'>
   readonly householdId: Prisma.FieldRef<"UsuallyHave", 'String'>
   readonly name: Prisma.FieldRef<"UsuallyHave", 'String'>
   readonly normalizedName: Prisma.FieldRef<"UsuallyHave", 'String'>

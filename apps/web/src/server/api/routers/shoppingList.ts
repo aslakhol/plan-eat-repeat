@@ -1,5 +1,10 @@
+import {
+  normalizeShoppingName,
+  shoppingCategoryOrder,
+  shoppingCategories,
+} from "@planeatrepeat/shared";
 import { z } from "zod";
-import type { ShoppingItem } from "@planeatrepeat/db";
+import { ShoppingCategory, type ShoppingItem } from "@planeatrepeat/db";
 import { saveShoppingItem, setUsuallyHave } from "../../shopping-list";
 import {
   editRecentShoppingItem,
@@ -19,11 +24,23 @@ const itemFields = z.object({
 });
 
 export const shoppingListRouter = createTRPCRouter({
+  categories: protectedProcedureWithHousehold.query(async ({ ctx }) => {
+    const { shoppingLanguage } = await ctx.db.household.findUniqueOrThrow({
+      where: { id: ctx.householdId },
+      select: { shoppingLanguage: true },
+    });
+    return shoppingCategoryOrder.map((id) => ({
+      id,
+      label: shoppingCategories[id][shoppingLanguage],
+    }));
+  }),
+
   editRecent: protectedProcedureWithHousehold
     .input(
       itemFields.extend({
         id: z.string(),
         usuallyHave: z.boolean().optional(),
+        category: z.nativeEnum(ShoppingCategory).optional(),
       }),
     )
     .mutation(({ ctx, input }) =>
@@ -58,6 +75,7 @@ export const shoppingListRouter = createTRPCRouter({
         where: { householdId: ctx.householdId },
         orderBy: [{ recentlyUsedAt: "desc" }, { normalizedName: "asc" }],
         take: 25,
+        include: { product: { select: { category: true } } },
       }),
       ctx.db.shoppingItem.findMany({
         where: { householdId: ctx.householdId },
@@ -102,9 +120,12 @@ export const shoppingListRouter = createTRPCRouter({
   list: protectedProcedureWithHousehold.query(async ({ ctx }) => {
     const items = await ctx.db.shoppingItem.findMany({
       where: { householdId: ctx.householdId },
+      include: { product: { select: { category: true } } },
     });
     return items.sort(
       (a, b) =>
+        shoppingCategoryOrder.indexOf(a.product.category) -
+          shoppingCategoryOrder.indexOf(b.product.category) ||
         a.normalizedName.localeCompare(b.normalizedName) ||
         a.id.localeCompare(b.id),
     );
@@ -193,7 +214,7 @@ export const shoppingListRouter = createTRPCRouter({
               ? ingredients
               : [{ name: dinner.name, amount: null, unit: null }];
           for (const item of requirements) {
-            if (excludedNames.has(item.name.trim().toLowerCase())) {
+            if (excludedNames.has(normalizeShoppingName(item.name))) {
               skipped.push({
                 name: item.name,
                 amount: item.amount,
@@ -301,7 +322,7 @@ export const shoppingListRouter = createTRPCRouter({
               where,
               data: {
                 ...before,
-                normalizedName: before.name.trim().toLowerCase(),
+                normalizedName: normalizeShoppingName(before.name),
               },
             });
           } else {
@@ -316,6 +337,7 @@ export const shoppingListRouter = createTRPCRouter({
       itemFields.extend({
         id: z.string(),
         usuallyHave: z.boolean().optional(),
+        category: z.nativeEnum(ShoppingCategory).optional(),
       }),
     )
     .mutation(({ ctx, input }) =>
@@ -326,6 +348,21 @@ export const shoppingListRouter = createTRPCRouter({
           await setUsuallyHave(tx, ctx.householdId, saved.name, usuallyHave);
         }
         return saved;
+      }),
+    ),
+
+  deleteProduct: protectedProcedureWithHousehold
+    .input(z.object({ id: z.string() }))
+    .mutation(({ ctx, input }) =>
+      ctx.db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
+        const where = { productId: input.id, householdId: ctx.householdId };
+        await tx.shoppingItem.deleteMany({ where });
+        await tx.recentShoppingItem.deleteMany({ where });
+        await tx.usuallyHave.deleteMany({ where });
+        return tx.shoppingProduct.deleteMany({
+          where: { id: input.id, householdId: ctx.householdId },
+        });
       }),
     ),
 

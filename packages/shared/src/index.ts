@@ -2,6 +2,7 @@
 export * from "./types";
 export * from "./recipe";
 export * from "./units";
+export * from "./shopping";
 export * from "./recipeImport";
 export * from "./dinnerLink";
 
@@ -9,3 +10,5 @@ export * from "./dinnerLink";
 import type {} from "./clerk-types";
 
 export { IMPORT_PROMPT_MAX_LENGTH, importPromptSchema } from "./importPrompt";
+
+export * from "./shopping-categories";

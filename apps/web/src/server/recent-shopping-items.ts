@@ -1,5 +1,9 @@
-import type { Prisma, ShoppingItem } from "@planeatrepeat/db";
-import { normalizeUnit } from "@planeatrepeat/shared";
+import {
+  editShoppingProduct,
+  rememberShoppingProduct,
+} from "./shopping-products";
+import type { Prisma, ShoppingCategory, ShoppingItem } from "@planeatrepeat/db";
+import { normalizeShoppingName, normalizeUnit } from "@planeatrepeat/shared";
 
 export async function rememberShoppingItems(
   tx: Prisma.TransactionClient,
@@ -17,12 +21,14 @@ export async function rememberShoppingItems(
     Math.max(Date.now(), (latest?.recentlyUsedAt.getTime() ?? 0) + 1),
   );
   const distinct = new Map(
-    items.map((item) => [item.name.trim().toLowerCase(), item]),
+    items.map((item) => [normalizeShoppingName(item.name), item]),
   );
   const saved = [];
   for (const [normalizedName, item] of distinct) {
     const name = item.name.trim();
+    const product = await rememberShoppingProduct(tx, householdId, name);
     const data = {
+      productId: product.id,
       name: name.charAt(0).toUpperCase() + name.slice(1),
       normalizedName,
       amount: item.amount,
@@ -45,14 +51,24 @@ export async function rememberShoppingItems(
 export async function editRecentShoppingItem(
   tx: Prisma.TransactionClient,
   householdId: string,
-  input: Pick<ShoppingItem, "id" | "name" | "amount" | "unit" | "note">,
+  input: Pick<ShoppingItem, "id" | "name" | "amount" | "unit" | "note"> & {
+    category?: ShoppingCategory;
+  },
 ) {
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
   const original = await tx.recentShoppingItem.findUniqueOrThrow({
     where: { id: input.id, householdId },
+    include: { product: { select: { category: true } } },
   });
   const name = input.name.trim();
-  const normalizedName = name.toLowerCase();
+  const normalizedName = normalizeShoppingName(name);
+  const product = await editShoppingProduct(
+    tx,
+    householdId,
+    name,
+    original.product.category,
+    input.category,
+  );
   const destination = await tx.recentShoppingItem.findUnique({
     where: { householdId_normalizedName: { householdId, normalizedName } },
   });
@@ -62,8 +78,10 @@ export async function editRecentShoppingItem(
     });
   }
   return tx.recentShoppingItem.update({
+    include: { product: { select: { category: true } } },
     where: { id: destination?.id ?? original.id, householdId },
     data: {
+      productId: product.id,
       name,
       normalizedName,
       amount: input.amount,

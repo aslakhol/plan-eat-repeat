@@ -55,6 +55,7 @@ export const ModelName = {
   RecipePart: 'RecipePart',
   RecipeIngredient: 'RecipeIngredient',
   RecipeStep: 'RecipeStep',
+  ShoppingProduct: 'ShoppingProduct',
   ShoppingItem: 'ShoppingItem',
   UsuallyHave: 'UsuallyHave',
   RecentShoppingItem: 'RecentShoppingItem',
@@ -134,7 +135,19 @@ export const RecipeStepScalarFieldEnum = {
 export type RecipeStepScalarFieldEnum = (typeof RecipeStepScalarFieldEnum)[keyof typeof RecipeStepScalarFieldEnum]
 
 
+export const ShoppingProductScalarFieldEnum = {
+  id: 'id',
+  householdId: 'householdId',
+  name: 'name',
+  normalizedName: 'normalizedName',
+  category: 'category'
+} as const
+
+export type ShoppingProductScalarFieldEnum = (typeof ShoppingProductScalarFieldEnum)[keyof typeof ShoppingProductScalarFieldEnum]
+
+
 export const ShoppingItemScalarFieldEnum = {
+  productId: 'productId',
   id: 'id',
   householdId: 'householdId',
   name: 'name',
@@ -148,6 +161,7 @@ export type ShoppingItemScalarFieldEnum = (typeof ShoppingItemScalarFieldEnum)[k
 
 
 export const UsuallyHaveScalarFieldEnum = {
+  productId: 'productId',
   householdId: 'householdId',
   name: 'name',
   normalizedName: 'normalizedName'
@@ -157,6 +171,7 @@ export type UsuallyHaveScalarFieldEnum = (typeof UsuallyHaveScalarFieldEnum)[key
 
 
 export const RecentShoppingItemScalarFieldEnum = {
+  productId: 'productId',
   id: 'id',
   householdId: 'householdId',
   name: 'name',
@@ -204,6 +219,7 @@ export const HouseholdScalarFieldEnum = {
   name: 'name',
   slug: 'slug',
   publicSlug: 'publicSlug',
+  shoppingLanguage: 'shoppingLanguage',
   importInstructions: 'importInstructions',
   aiImportSpendAttributionKey: 'aiImportSpendAttributionKey',
   createdAt: 'createdAt',

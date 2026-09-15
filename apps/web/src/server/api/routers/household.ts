@@ -9,7 +9,7 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 import { addDays } from "date-fns";
-import { MembershipRole } from "@planeatrepeat/db";
+import { MembershipRole, ShoppingLanguage } from "@planeatrepeat/db";
 import { env } from "~/env";
 import { TRPCError } from "@trpc/server";
 import { randomUUID } from "node:crypto";
@@ -115,6 +115,7 @@ export const householdRouter = createTRPCRouter({
       z.object({
         name: z.string().trim().min(1).max(100).optional(),
         slug: z.string().trim().min(1).max(100).optional(),
+        shoppingLanguage: z.nativeEnum(ShoppingLanguage).optional(),
         importInstructions: importInstructionsSchema,
       }),
     )
@@ -122,6 +123,9 @@ export const householdRouter = createTRPCRouter({
       const household = await ctx.db.household.update({
         where: { id: ctx.householdId },
         data: {
+          ...(input.shoppingLanguage !== undefined && {
+            shoppingLanguage: input.shoppingLanguage,
+          }),
           ...(input.name !== undefined && { name: input.name }),
           ...(input.slug !== undefined && { slug: input.slug }),
           ...(input.importInstructions !== undefined && {

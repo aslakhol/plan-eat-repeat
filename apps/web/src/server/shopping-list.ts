@@ -1,24 +1,46 @@
-import type { Prisma, ShoppingItem } from "@planeatrepeat/db";
-import { convertUnitAmount, normalizeUnit } from "@planeatrepeat/shared";
+import {
+  editShoppingProduct,
+  rememberShoppingProduct,
+} from "./shopping-products";
+import type { Prisma, ShoppingCategory, ShoppingItem } from "@planeatrepeat/db";
+import {
+  convertUnitAmount,
+  normalizeShoppingName,
+  normalizeUnit,
+} from "@planeatrepeat/shared";
 
 export const saveShoppingItem = async (
   tx: Prisma.TransactionClient,
   householdId: string,
   input: Pick<ShoppingItem, "name" | "amount" | "unit" | "note"> & {
     id?: string;
+    category?: ShoppingCategory;
   },
 ) => {
   // Serialize combining writes so two members cannot both create the same row.
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
-  const { id, ...fields } = input;
-  if (id) {
-    await tx.shoppingItem.findUniqueOrThrow({ where: { id, householdId } });
-  }
+  const { id, category, ...fields } = input;
+  const original = id
+    ? await tx.shoppingItem.findUniqueOrThrow({
+        where: { id, householdId },
+        include: { product: { select: { category: true } } },
+      })
+    : null;
   const name = input.name.trim();
+  const product = original
+    ? await editShoppingProduct(
+        tx,
+        householdId,
+        name,
+        original.product.category,
+        category,
+      )
+    : await rememberShoppingProduct(tx, householdId, name);
   const item = {
+    productId: product.id,
     ...fields,
     name: id ? name : name.charAt(0).toUpperCase() + name.slice(1),
-    normalizedName: name.toLowerCase(),
+    normalizedName: normalizeShoppingName(name),
     unit: normalizeUnit(input.unit),
   };
   const candidates = await tx.shoppingItem.findMany({
@@ -44,6 +66,7 @@ export const saveShoppingItem = async (
       .map((note) => note.trim())
       .filter(Boolean);
     const combined = await tx.shoppingItem.update({
+      include: { product: { select: { category: true } } },
       where: { id: destination.id, householdId },
       data: {
         amount:
@@ -57,11 +80,13 @@ export const saveShoppingItem = async (
 
   if (id) {
     return tx.shoppingItem.update({
+      include: { product: { select: { category: true } } },
       where: { id, householdId },
       data: item,
     });
   }
   return tx.shoppingItem.create({
+    include: { product: { select: { category: true } } },
     data: { householdId, ...item },
   });
 };
@@ -73,11 +98,17 @@ export const setUsuallyHave = async (
   excluded: boolean,
 ) => {
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
-  const normalizedName = name.trim().toLowerCase();
+  const normalizedName = normalizeShoppingName(name);
   if (excluded) {
+    const product = await rememberShoppingProduct(tx, householdId, name);
     await tx.usuallyHave.upsert({
       where: { householdId_normalizedName: { householdId, normalizedName } },
-      create: { householdId, name: name.trim(), normalizedName },
+      create: {
+        householdId,
+        name: name.trim(),
+        normalizedName,
+        productId: product.id,
+      },
       update: {},
     });
   } else {

@@ -1,3 +1,5 @@
+import { spawnSync } from "node:child_process";
+import { readFileSync, readdirSync } from "node:fs";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { mock, test } from "node:test";
@@ -19,12 +21,15 @@ mock.module("@clerk/nextjs/server", {
 });
 const { shoppingListRouter } = await import("./api/routers/shoppingList");
 const { dinnerRouter } = await import("./api/routers/dinner");
+const { householdRouter } = await import("./api/routers/household");
 
 const withShoppingList = async (
   run: (fixture: {
     caller: ReturnType<typeof shoppingListRouter.createCaller>;
     member: ReturnType<typeof shoppingListRouter.createCaller>;
     dinners: ReturnType<typeof dinnerRouter.createCaller>;
+    settings: ReturnType<typeof householdRouter.createCaller>;
+    memberSettings: ReturnType<typeof householdRouter.createCaller>;
     createDinner: (
       data: Omit<Prisma.DinnerUncheckedCreateInput, "householdId">,
     ) => Promise<{ id: number }>;
@@ -48,10 +53,20 @@ const withShoppingList = async (
       db,
       auth: { userId },
     } as Parameters<typeof shoppingListRouter.createCaller>[0]);
+  const settingsFor = (userId: string) =>
+    householdRouter.createCaller({
+      db,
+      auth: {
+        userId,
+        sessionClaims: { metadata: { householdId: household.id } },
+      },
+    } as Parameters<typeof householdRouter.createCaller>[0]);
   try {
     await run({
       caller: callerFor(userIds[0]!),
       member: callerFor(userIds[1]!),
+      settings: settingsFor(userIds[0]!),
+      memberSettings: settingsFor(userIds[1]!),
       dinners: dinnerRouter.createCaller({
         db,
         auth: { userId: userIds[0]! },
@@ -66,6 +81,452 @@ const withShoppingList = async (
     await db.$disconnect();
   }
 };
+
+void test("Shopping Language defaults to English and ordinary members update only their Household", () =>
+  withShoppingList(async ({ settings, memberSettings }) => {
+    assert.equal(
+      (await settings.household()).household?.shoppingLanguage,
+      "en",
+    );
+    await memberSettings.updateHousehold({ shoppingLanguage: "no" });
+    assert.equal(
+      (await settings.household()).household?.shoppingLanguage,
+      "no",
+    );
+    await withShoppingList(async ({ settings: other }) => {
+      assert.equal((await other.household()).household?.shoppingLanguage, "en");
+    });
+    await settings.updateHousehold({ shoppingLanguage: "en" });
+    assert.equal(
+      (await memberSettings.household()).household?.shoppingLanguage,
+      "en",
+    );
+  }));
+
+void test("only the selected standard catalog categorizes new names", () =>
+  withShoppingList(async ({ caller, memberSettings }) => {
+    await memberSettings.updateHousehold({ shoppingLanguage: "no" });
+    for (const [name, category] of [
+      ["Milk", "OWN_ITEMS"],
+      ["Melk", "DAIRY"],
+      ["Fersk  KJØTTDEIG", "MEAT"],
+      ["Poteter", "OWN_ITEMS"],
+      ["Potet", "PRODUCE"],
+      ["Te", "BEVERAGES"],
+    ] as const) {
+      assert.equal(
+        (await caller.addManual({ name })).product.category,
+        category,
+      );
+    }
+    await memberSettings.updateHousehold({ shoppingLanguage: "en" });
+    assert.equal(
+      (await caller.addManual({ name: "Milk" })).product.category,
+      "OWN_ITEMS",
+    );
+    assert.equal(
+      (await caller.addManual({ name: "Egg" })).product.category,
+      "OWN_ITEMS",
+    );
+    assert.equal(
+      (await caller.addManual({ name: "Eggs" })).product.category,
+      "DAIRY",
+    );
+  }));
+
+void test("language changes preserve entered names and remembered assignments without translating overrides", () =>
+  withShoppingList(async ({ caller, settings, createDinner }) => {
+    const milk = await caller.addManual({ name: "Milk" });
+    const mystery = await caller.addManual({ name: "Melk" });
+    const beef = await caller.addManual({ name: "Beef" });
+    await caller.edit({ ...beef, category: "SNACKS" });
+    await settings.updateHousehold({ shoppingLanguage: "no" });
+    assert.deepEqual(
+      (await caller.list()).map(({ name, product }) => [
+        name,
+        product.category,
+      ]),
+      [
+        ["Milk", "DAIRY"],
+        ["Beef", "SNACKS"],
+        ["Melk", "OWN_ITEMS"],
+      ],
+    );
+    assert.equal(
+      (await caller.addManual({ name: "Fresh milk" })).product.category,
+      "DAIRY",
+    );
+    assert.equal(
+      (await caller.addManual({ name: "Beef balls" })).product.category,
+      "SNACKS",
+    );
+    assert.equal(
+      (await caller.addManual({ name: "Storfekjøtt" })).product.category,
+      "MEAT",
+    );
+    assert.equal(
+      (await caller.addManual({ name: "Bread" })).product.category,
+      "OWN_ITEMS",
+    );
+    await caller.remove({ id: milk.id });
+    await caller.remove({ id: mystery.id });
+    for (const recent of await caller.recent())
+      await caller.addRecent({ id: recent.id });
+    assert.equal(
+      (await caller.list()).find((item) => item.name === "Melk")?.product
+        .category,
+      "OWN_ITEMS",
+    );
+    const dinner = await createDinner({
+      name: "Breakfast",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: { create: { order: 0, name: "Brød" } },
+        },
+      },
+    });
+    await caller.addDinners({ dinnerIds: [dinner.id] });
+    assert.equal(
+      (await caller.list()).find((item) => item.name === "Brød")?.product
+        .category,
+      "BAKERY",
+    );
+    await withShoppingList(async ({ caller: other }) => {
+      assert.equal(
+        (await other.addManual({ name: "Milk" })).product.category,
+        "DAIRY",
+      );
+      assert.equal(
+        (await other.addManual({ name: "Melk" })).product.category,
+        "OWN_ITEMS",
+      );
+    });
+  }));
+
+void test("category labels follow Shopping Language while category identity and order stay stable", () =>
+  withShoppingList(async ({ caller, member, memberSettings }) => {
+    const english = await caller.categories();
+    assert.deepEqual(english[0], {
+      id: "PRODUCE",
+      label: "Fruits & Vegetables",
+    });
+    assert.deepEqual(english.at(-1), { id: "OWN_ITEMS", label: "Own Items" });
+    await memberSettings.updateHousehold({ shoppingLanguage: "no" });
+    const norwegian = await member.categories();
+    assert.deepEqual(
+      norwegian.map(({ id }) => id),
+      english.map(({ id }) => id),
+    );
+    assert.deepEqual(norwegian[0], { id: "PRODUCE", label: "Frukt og grønt" });
+    assert.deepEqual(norwegian[2], { id: "DAIRY", label: "Meieriprodukter" });
+    assert.deepEqual(norwegian.at(-1), {
+      id: "OWN_ITEMS",
+      label: "Egne varer",
+    });
+  }));
+
+void test("first shopping names use exact catalog matches, longest whole phrases, and Own Items", () =>
+  withShoppingList(async ({ caller }) => {
+    for (const name of [
+      "Coconut milk",
+      "Chocolate milk",
+      "Fresh  BEEF\tsteak",
+      "Potato",
+      "Oat drink",
+      "Tea towels",
+      "Milkshake",
+      "(Milk)",
+      "Beef milk",
+      "Milk beef",
+    ]) {
+      await caller.addManual({ name });
+    }
+    assert.deepEqual(
+      Object.fromEntries(
+        (await caller.list()).map((item) => [
+          item.normalizedName,
+          item.product.category,
+        ]),
+      ),
+      {
+        "coconut milk": "INGREDIENTS",
+        "chocolate milk": "SNACKS",
+        "fresh beef steak": "MEAT",
+        potato: "OWN_ITEMS",
+        "oat drink": "OWN_ITEMS",
+        "tea towels": "BEVERAGES",
+        milkshake: "OWN_ITEMS",
+        "(milk)": "DAIRY",
+        "beef milk": "MEAT",
+        "milk beef": "DAIRY",
+      },
+    );
+  }));
+
+void test("Household category edits affect same-name requirements while inherited names keep their memory", () =>
+  withShoppingList(async ({ caller, member }) => {
+    const steak = await caller.addManual({ name: "Beef steak" });
+    const beef = await caller.addManual({ name: "Beef" });
+    await member.edit({ ...beef, amount: 1, unit: "kg" });
+    await caller.addManual({ name: " BEEF " });
+    await caller.remove({ id: steak.id });
+    const [recentSteak] = await caller.recent();
+    await caller.removeRecent({ id: recentSteak!.id });
+    await member.edit({ ...beef, amount: 1, unit: "kg", category: "SNACKS" });
+    assert.ok(
+      (await caller.list()).every((item) => item.product.category === "SNACKS"),
+    );
+    await caller.addManual({ name: "Beef steak" });
+    const balls = await caller.addManual({ name: "Beef balls" });
+    assert.equal(balls.product.category, "SNACKS");
+    await caller.edit({
+      ...beef,
+      amount: 1,
+      unit: "kg",
+      category: "HOUSEHOLD",
+    });
+    const freshBalls = await caller.addManual({ name: "Fresh beef balls" });
+    assert.equal(freshBalls.product.category, "SNACKS");
+    const newBeef = await caller.addManual({ name: "New beef" });
+    assert.equal(newBeef.product.category, "HOUSEHOLD");
+    assert.equal(
+      (await caller.list()).find((item) => item.name === "Beef steak")!.product
+        .category,
+      "MEAT",
+    );
+    await caller.clear();
+    for (const item of await caller.recent())
+      await caller.removeRecent({ id: item.id });
+    assert.equal(
+      (await member.addManual({ name: "Beef steak" })).product.category,
+      "MEAT",
+    );
+    assert.equal(
+      (await member.addManual({ name: "Beef" })).product.category,
+      "HOUSEHOLD",
+    );
+    await withShoppingList(async ({ caller: other }) => {
+      assert.equal(
+        (await other.addManual({ name: "Beef" })).product.category,
+        "MEAT",
+      );
+      await assert.rejects(other.edit({ ...beef, category: "DAIRY" }));
+    });
+  }));
+
+void test("Own Items blocks only its exact name and Usually Have remembers categories without a purchase", () =>
+  withShoppingList(async ({ caller, member }) => {
+    const party = await caller.addManual({ name: "Party supplies" });
+    assert.equal(party.product.category, "OWN_ITEMS");
+    await caller.clear();
+    const supplies = await caller.addManual({ name: "supplies" });
+    await member.edit({ ...supplies, category: "HOUSEHOLD" });
+    const [recent] = await caller.recent();
+    await member.addRecent({ id: recent!.id });
+    assert.equal(
+      (await caller.list()).find(
+        (item) => item.normalizedName === "party supplies",
+      )!.product.category,
+      "OWN_ITEMS",
+    );
+    assert.equal(
+      (await caller.addManual({ name: "Party supplies bucket" })).product
+        .category,
+      "HOUSEHOLD",
+    );
+    const milk = await caller.addManual({ name: "Milk" });
+    await caller.edit({ ...milk, category: "OWN_ITEMS" });
+    assert.equal(
+      (await caller.addManual({ name: "Fresh milk" })).product.category,
+      "OWN_ITEMS",
+    );
+    assert.equal(
+      (await caller.addManual({ name: "Coconut milk" })).product.category,
+      "INGREDIENTS",
+    );
+    await caller.setUsuallyHave({ name: "Daily supplies", excluded: true });
+    assert.ok(
+      !(await caller.list()).some(
+        (item) => item.normalizedName === "daily supplies",
+      ),
+    );
+    assert.ok(
+      !(await caller.recent()).some(
+        (item) => item.normalizedName === "daily supplies",
+      ),
+    );
+    await caller.edit({ ...supplies, category: "CARE" });
+    await caller.setUsuallyHave({ name: "Daily supplies", excluded: false });
+    assert.equal(
+      (await member.addManual({ name: "Daily supplies" })).product.category,
+      "HOUSEHOLD",
+    );
+  }));
+
+void test("active and recent renames preserve new-name categories, respect known destinations, and apply explicit selections", () =>
+  withShoppingList(async ({ caller, member }) => {
+    const milk = await caller.addManual({ name: "Milk" });
+    const oat = await caller.addManual({ name: "Oat drink" });
+    const renamed = await caller.edit({ ...oat, name: "Special beef" });
+    assert.equal(renamed.product.category, "OWN_ITEMS");
+    const merged = await member.edit({ ...renamed, name: "Milk" });
+    assert.equal(merged.id, milk.id);
+    assert.equal(merged.product.category, "DAIRY");
+    const paper = await caller.addManual({ name: "Paper bundle" });
+    const selected = await caller.edit({
+      ...paper,
+      name: "Milk",
+      category: "HOUSEHOLD",
+    });
+    assert.equal(selected.product.category, "HOUSEHOLD");
+    await caller.clear();
+    const [recentMilk] = await caller.recent();
+    await caller.editRecent({ ...recentMilk!, category: "CARE" });
+    assert.equal((await caller.recent())[0]!.product.category, "CARE");
+    const renamedRecent = await member.editRecent({
+      ...recentMilk!,
+      name: "Bread",
+    });
+    assert.equal(renamedRecent.product.category, "CARE");
+    const newOat = await caller.addManual({ name: "Oat drink" });
+    await caller.remove({ id: newOat.id });
+    const recentOat = (await caller.recent()).find(
+      (item) => item.name === "Oat drink",
+    )!;
+    const known = await member.editRecent({ ...recentOat, name: "Bread" });
+    assert.equal(known.product.category, "CARE");
+    await member.editRecent({ ...known, name: "Milk", category: "SNACKS" });
+    assert.equal(
+      (await caller.addManual({ name: "Milk" })).product.category,
+      "SNACKS",
+    );
+  }));
+
+void test("the active list sorts by category then name while Recently Used and Usually Have keep their order", () =>
+  withShoppingList(async ({ caller, member }) => {
+    for (const name of [
+      "Milk",
+      "Beans",
+      "Bread",
+      "Carrots",
+      "Apples",
+      "A mystery",
+    ]) {
+      const item = await caller.addManual({ name });
+      await caller.remove({ id: item.id });
+      await caller.setUsuallyHave({ name, excluded: true });
+    }
+    assert.deepEqual(
+      (await caller.recent()).map((item) => item.name),
+      ["A mystery", "Apples", "Carrots", "Bread", "Beans", "Milk"],
+    );
+    assert.deepEqual(
+      (await caller.usuallyHave()).map((item) => item.name),
+      ["A mystery", "Apples", "Beans", "Bread", "Carrots", "Milk"],
+    );
+    for (const recent of await caller.recent())
+      await caller.addRecent({ id: recent.id });
+    assert.deepEqual(
+      (await member.list()).map((item) => item.name),
+      ["Apples", "Carrots", "Bread", "Milk", "Beans", "A mystery"],
+    );
+    const milk = (await caller.list()).find((item) => item.name === "Milk")!;
+    await member.edit({ ...milk, category: "PRODUCE" });
+    assert.deepEqual(
+      (await caller.list()).map((item) => item.name),
+      ["Apples", "Carrots", "Milk", "Bread", "Beans", "A mystery"],
+    );
+  }));
+
+void test("Shopping Products survive clearing, dismissal, and Usually Have removal across shopping trips", () =>
+  withShoppingList(async ({ caller, member, createDinner }) => {
+    await caller.setUsuallyHave({ name: " Olive  oil ", excluded: true });
+    const [preference] = await member.usuallyHave();
+    assert.ok(preference?.productId);
+    assert.deepEqual(await caller.list(), []);
+    assert.deepEqual(await caller.recent(), []);
+
+    const dinner = await createDinner({ name: "OLIVE\tOIL" });
+    const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
+    const [recent] = await member.recent();
+    assert.equal(recent?.productId, preference.productId);
+    await member.undo(addition.undo);
+    assert.deepEqual(await caller.recent(), []);
+    await member.setUsuallyHave({ name: "olive oil", excluded: false });
+    assert.deepEqual(await caller.usuallyHave(), []);
+
+    const manual = await caller.addManual({ name: "olive oil" });
+    assert.equal(manual.productId, preference.productId);
+    const measured = await member.edit({
+      ...manual,
+      amount: 1,
+      unit: "l",
+      note: "For salad",
+    });
+    await caller.addDinners({ dinnerIds: [dinner.id] });
+    const active = await member.list();
+    assert.equal(active.length, 2);
+    assert.ok(active.every((item) => item.productId === preference.productId));
+    assert.ok(
+      active.some(
+        (item) => item.id === measured.id && item.note === "For salad",
+      ),
+    );
+    await caller.clear();
+    const [cleared] = await member.recent();
+    assert.equal(cleared?.productId, preference.productId);
+    const restored = await member.addRecent({ id: cleared.id });
+    assert.equal(restored.productId, preference.productId);
+    await member.remove({ id: restored.id });
+    const [removed] = await caller.recent();
+    await caller.removeRecent({ id: removed!.id });
+    assert.deepEqual(await caller.recent(), []);
+    const nextTrip = await member.addManual({ name: "OLIVE   OIL" });
+    assert.equal(nextTrip.productId, preference.productId);
+
+    await withShoppingList(async ({ caller: other }) => {
+      const otherOil = await other.addManual({ name: "Olive oil" });
+      assert.notEqual(otherOil.productId, preference.productId);
+    });
+  }));
+
+void test("deleting a Shopping Product forgets its category and collections only for its Household", () =>
+  withShoppingList(async ({ caller, member }) => {
+    const rice = await caller.addManual({ name: "Rice" });
+    await caller.edit({ ...rice, category: "PETS" });
+    await caller.remove({ id: rice.id });
+    const [recent] = await member.recent();
+    const restored = await member.addRecent({ id: recent!.id });
+    await member.edit({ ...restored, amount: 1, unit: "kg" });
+    await caller.addManual({ name: " RICE " });
+    await caller.setUsuallyHave({ name: "Rice", excluded: true });
+    const inherited = await caller.addManual({ name: "Rice special" });
+    assert.equal(inherited.product.category, "PETS");
+    assert.equal((await caller.list()).length, 3);
+
+    await withShoppingList(async ({ caller: other }) => {
+      const otherRice = await other.addManual({ name: "Rice" });
+      await other.edit({ ...otherRice, category: "SNACKS" });
+      await other.deleteProduct({ id: rice.productId });
+      assert.equal((await caller.list()).length, 3);
+
+      await member.deleteProduct({ id: rice.productId });
+      assert.deepEqual(
+        (await caller.list()).map(({ name, product }) => ({
+          name,
+          category: product.category,
+        })),
+        [{ name: "Rice special", category: "PETS" }],
+      );
+      assert.deepEqual(await caller.recent(), []);
+      assert.deepEqual(await caller.usuallyHave(), []);
+      const addedAgain = await caller.addManual({ name: "rice" });
+      assert.equal(addedAgain.product.category, "GRAINS");
+      assert.notEqual(addedAgain.productId, rice.productId);
+      assert.equal((await other.list())[0]!.product.category, "SNACKS");
+    });
+  }));
 
 void test("Recently Used keeps the latest details per name, hides active names, and restores items for the Household", () =>
   withShoppingList(async ({ caller, member }) => {
@@ -332,8 +793,8 @@ void test("Household members manage Usually Have, add Dinner and manual items, e
         { name: "2 kg potatoes", amount: null, unit: null, note: null },
         { name: "Apples", amount: null, unit: null, note: null },
         { name: "Carrots", amount: 500, unit: "g", note: null },
-        { name: "Oil", amount: null, unit: null, note: null },
         { name: "Zucchini", amount: null, unit: null, note: null },
+        { name: "Oil", amount: null, unit: null, note: null },
       ],
     );
     await member.edit({
@@ -347,7 +808,7 @@ void test("Household members manage Usually Have, add Dinner and manual items, e
     const edited = await caller.list();
     assert.deepEqual(
       edited.map(({ name }) => name),
-      ["Apples", "Carrots", "Oil", "Yukon potatoes", "Zucchini"],
+      ["Apples", "Carrots", "Yukon potatoes", "Zucchini", "Oil"],
     );
     assert.deepEqual(
       edited
@@ -369,7 +830,7 @@ void test("Household members manage Usually Have, add Dinner and manual items, e
     await member.remove({ id: potatoes.id });
     assert.deepEqual(
       (await caller.list()).map(({ name }) => name),
-      ["Apples", "Carrots", "Oil", "Zucchini"],
+      ["Apples", "Carrots", "Zucchini", "Oil"],
     );
     await caller.setUsuallyHave({ name: "Carrots", excluded: true });
     await caller.clear();
@@ -453,7 +914,7 @@ void test("incompatible and unspecified quantities stay adjacent and independent
     const items = await caller.list();
     assert.deepEqual(
       items.map(({ name }) => name),
-      ["Apples", ...Array<string>(7).fill("Tomatoes"), "Zucchini"],
+      ["Apples", "Zucchini", ...Array<string>(7).fill("Tomatoes")],
     );
     const tomatoes = items.filter(({ name }) => name === "Tomatoes");
     assert.deepEqual(
@@ -475,18 +936,20 @@ void test("incompatible and unspecified quantities stay adjacent and independent
     );
   }));
 
-void test("manual additions combine bare names using only case and surrounding whitespace", () =>
+void test("manual additions combine names regardless of capitalization and extra whitespace", () =>
   withShoppingList(async ({ caller, member }) => {
     const [original, duplicate] = await Promise.all([
       caller.addManual({ name: "Green apples" }),
       member.addManual({ name: "  GREEN APPLES  " }),
     ]);
     assert.equal(duplicate.id, original.id);
-    for (const name of ["Green  apples", "Green apple", "Gréen apples"]) {
+    const spaced = await caller.addManual({ name: " Green \t apples " });
+    assert.equal(spaced.id, original.id);
+    for (const name of ["Green apple", "Gréen apples"]) {
       await caller.addManual({ name });
     }
     const items = await member.list();
-    assert.equal(items.length, 4);
+    assert.equal(items.length, 3);
     assert.deepEqual(
       items.find(({ id }) => id === original.id),
       original,
@@ -592,10 +1055,10 @@ void test("Undo reverses a repeated Dinner batch while retaining pre-existing nu
         note,
       })),
       [
-        { name: "Flour", amount: 2500, unit: "g", note: "Bread flour" },
         { name: "Salt", amount: null, unit: null, note: null },
-        { name: "Water", amount: null, unit: null, note: null },
         { name: "Yeast", amount: 14, unit: "g", note: null },
+        { name: "Flour", amount: 2500, unit: "g", note: "Bread flour" },
+        { name: "Water", amount: null, unit: null, note: null },
       ],
     );
     // Shopping requirements and Undo survive deletion of the source Recipe.
@@ -635,9 +1098,9 @@ void test("ingredientless Dinners use their names, and Undo leaves intervening e
         note,
       })),
       [
+        { name: "Toast", amount: null, unit: null, note: null },
         { name: "Soup", amount: null, unit: null, note: null },
         { name: "Takeaway", amount: null, unit: null, note: null },
-        { name: "Toast", amount: null, unit: null, note: null },
       ],
     );
     const takeaway = items.find(({ name }) => name === "Takeaway")!;
@@ -649,3 +1112,157 @@ void test("ingredientless Dinners use their names, and Undo leaves intervening e
       ["Pizza"],
     );
   }));
+
+void test("existing shopping details and reusable state survive the Shopping Product migration", async () => {
+  // A disposable database exercises the actual historical migrations without
+  // changing the development Household or depending on today's Prisma schema.
+  const migrationRoot = new URL(
+    "../../../../packages/db/prisma/migrations/",
+    import.meta.url,
+  );
+  const migrations = readdirSync(migrationRoot)
+    .filter((name) => name !== "migration_lock.toml")
+    .sort();
+  const firstProductMigration = migrations.indexOf(
+    "20260915100000_normalize_shopping_names",
+  );
+  assert.ok(firstProductMigration > 0);
+  const migrationSql = (names: string[]) =>
+    names
+      .map((name) =>
+        readFileSync(new URL(`${name}/migration.sql`, migrationRoot), "utf8"),
+      )
+      .join("\n");
+  const admin = createPrismaClient(databaseUrl);
+  const databaseName = `shopping_migration_${crypto.randomUUID().replaceAll("-", "")}`;
+  const url = new URL(databaseUrl);
+  url.pathname = `/${databaseName}`;
+  const db = createPrismaClient(url.toString());
+  const execute = (sql: string) => {
+    const result = spawnSync(
+      "pnpm",
+      [
+        "--filter",
+        "@planeatrepeat/db",
+        "exec",
+        "prisma",
+        "db",
+        "execute",
+        "--stdin",
+      ],
+      {
+        cwd: new URL("../../../..", import.meta.url),
+        env: { ...process.env, DATABASE_URL: url.toString() },
+        input: sql,
+        encoding: "utf8",
+      },
+    );
+    assert.equal(result.status, 0, result.stderr);
+  };
+  await admin.$executeRawUnsafe(`CREATE DATABASE "${databaseName}"`);
+  try {
+    execute(migrationSql(migrations.slice(0, firstProductMigration)));
+    execute(`
+      INSERT INTO "User" (id, "updatedAt") VALUES ('migration-user', now());
+      INSERT INTO "Household" (id, name, slug, "updatedAt", "aiImportSpendAttributionKey")
+      VALUES ('migration-household', 'Migration', 'migration-household', now(), 'migration-spend');
+      INSERT INTO "Membership" ("householdId", "userId", role, "updatedAt", "aiImportSpendAttributionKey")
+      VALUES ('migration-household', 'migration-user', 'MEMBER', now(), 'migration-member-spend');
+      INSERT INTO "ShoppingItem" (id, "householdId", name, "normalizedName", amount, unit, note)
+      VALUES ('measured', 'migration-household', 'Olive  oil', 'olive  oil', 500, 'ml', 'For salad'),
+             ('bare', 'migration-household', 'OLIVE OIL', 'olive oil', NULL, NULL, 'Organic');
+      INSERT INTO "RecentShoppingItem" (id, "householdId", name, "normalizedName", amount, unit, note, "recentlyUsedAt", revision)
+      VALUES ('older', 'migration-household', 'Brown  rice', 'brown  rice', 1, 'kg', 'Old note', '2026-01-01', 'old-revision'),
+             ('latest', 'migration-household', 'Brown rice', 'brown rice', 2, 'kg', 'For curry', '2026-02-01', 'latest-revision');
+      INSERT INTO "UsuallyHave" ("householdId", name, "normalizedName")
+      VALUES ('migration-household', 'Olive oil', 'olive oil'),
+             ('migration-household', 'Olive  oil', 'olive  oil'),
+             ('migration-household', 'Salt', 'salt');
+    `);
+    execute(migrationSql(migrations.slice(firstProductMigration)));
+    const caller = shoppingListRouter.createCaller({
+      db,
+      auth: { userId: "migration-user" },
+    } as Parameters<typeof shoppingListRouter.createCaller>[0]);
+    const settings = householdRouter.createCaller({
+      db,
+      auth: {
+        userId: "migration-user",
+        sessionClaims: { metadata: { householdId: "migration-household" } },
+      },
+    } as Parameters<typeof householdRouter.createCaller>[0]);
+    assert.equal(
+      (await settings.household()).household?.shoppingLanguage,
+      "en",
+    );
+    const items = await caller.list();
+    assert.deepEqual(
+      items.map(({ id, name, amount, unit, note }) => ({
+        id,
+        name,
+        amount,
+        unit,
+        note,
+      })),
+      [
+        {
+          id: "bare",
+          name: "OLIVE OIL",
+          amount: null,
+          unit: null,
+          note: "Organic",
+        },
+        {
+          id: "measured",
+          name: "Olive  oil",
+          amount: 500,
+          unit: "ml",
+          note: "For salad",
+        },
+      ],
+    );
+    const [oil, salt] = await caller.usuallyHave();
+    assert.equal(oil?.normalizedName, "olive oil");
+    assert.equal(salt?.normalizedName, "salt");
+    assert.ok(oil?.productId);
+    assert.ok(items.every((item) => item.productId === oil.productId));
+    assert.ok(items.every((item) => item.product.category === "INGREDIENTS"));
+    const recent = await caller.recent();
+    assert.equal(recent.length, 1);
+    assert.deepEqual(
+      recent.map(({ id, amount, unit, note, recentlyUsedAt, revision }) => ({
+        id,
+        amount,
+        unit,
+        note,
+        recentlyUsedAt,
+        revision,
+      })),
+      [
+        {
+          id: "latest",
+          amount: 2,
+          unit: "kg",
+          note: "For curry",
+          recentlyUsedAt: new Date("2026-02-01"),
+          revision: "latest-revision",
+        },
+      ],
+    );
+    assert.equal(recent[0]!.product.category, "GRAINS");
+    const restored = await caller.addRecent({ id: "latest" });
+    assert.equal(restored.productId, recent[0]!.productId);
+    await caller.clear();
+    for (const item of await caller.recent())
+      await caller.removeRecent({ id: item.id });
+    await caller.setUsuallyHave({ name: "Olive oil", excluded: false });
+    assert.equal(
+      (await caller.addManual({ name: "Olive oil" })).productId,
+      oil.productId,
+    );
+  } finally {
+    await db.$disconnect();
+    await admin.$executeRawUnsafe(`DROP DATABASE "${databaseName}"`);
+    await admin.$disconnect();
+  }
+});

@@ -1,6 +1,7 @@
 import {
   amountInputSchema,
   formatAmount,
+  normalizeShoppingName,
   parseAmount,
   UNITS,
 } from "@planeatrepeat/shared";
@@ -15,7 +16,13 @@ import {
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { Textarea } from "~/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { cn } from "~/lib/utils";
 import { api, type RouterOutputs } from "~/utils/api";
 
@@ -28,12 +35,19 @@ export function EditItemSheet({
   onClose: () => void;
   recent?: boolean;
 }) {
+  const categories = api.shoppingList.categories.useQuery(undefined, {
+    refetchInterval: 2000,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
+    retry: false,
+  });
   const [name, setName] = useState(item.name);
   const [note, setNote] = useState(item.note ?? "");
-  const [amount, setAmount] = useState(
-    item.amount === null ? "" : formatAmount(item.amount),
-  );
+  const initialAmount = item.amount === null ? "" : formatAmount(item.amount);
+  const [amount, setAmount] = useState(initialAmount);
   const [unit, setUnit] = useState(item.unit ?? "");
+  const [categoryDraft, setCategoryDraft] =
+    useState<typeof item.product.category>();
   const [excludedDraft, setExcludedDraft] = useState<boolean>();
   const preferences = api.shoppingList.usuallyHave.useQuery(undefined, {
     refetchInterval: 2000,
@@ -44,7 +58,7 @@ export function EditItemSheet({
   const excluded =
     excludedDraft ??
     preferences.data?.some(
-      (preference) => preference.normalizedName === name.trim().toLowerCase(),
+      (preference) => preference.normalizedName === normalizeShoppingName(name),
     ) ??
     false;
   const ingredientNames = api.dinner.ingredientNames.useQuery();
@@ -60,25 +74,48 @@ export function EditItemSheet({
   };
   const editActive = api.shoppingList.edit.useMutation(options);
   const editRecent = api.shoppingList.editRecent.useMutation(options);
-  const removeActive = api.shoppingList.remove.useMutation(options);
-  const removeRecent = api.shoppingList.removeRecent.useMutation(options);
+  const deleteProduct = api.shoppingList.deleteProduct.useMutation(options);
   const edit = recent ? editRecent : editActive;
-  const remove = recent ? removeRecent : removeActive;
-  const pending = edit.isPending || remove.isPending;
+  const pending = edit.isPending || deleteProduct.isPending;
   const parsedAmount = parseAmount(amount);
   const amountValid =
     amountInputSchema.safeParse(amount).success &&
     (parsedAmount === null || Number.isFinite(parsedAmount));
+  const nameValid = name.trim().length > 0;
+  const saveAndClose = () => {
+    if (pending) return;
+    const changed =
+      name !== item.name ||
+      note !== (item.note ?? "") ||
+      amount !== initialAmount ||
+      unit !== (item.unit ?? "") ||
+      categoryDraft !== undefined ||
+      excludedDraft !== undefined;
+    if (!changed) {
+      onClose();
+      return;
+    }
+    if (!nameValid || !amountValid) return;
+    edit.mutate({
+      id: item.id,
+      name,
+      note,
+      amount: parsedAmount,
+      unit,
+      usuallyHave: excludedDraft,
+      category: categoryDraft,
+    });
+  };
 
   return (
     <ResponsiveModal
       open
       onOpenChange={(open) => {
-        if (!open && !pending) onClose();
+        if (!open) saveAndClose();
       }}
     >
       <ResponsiveModalContent
-        className="h-auto max-h-[90dvh] rounded-t-3xl bg-white p-5 pb-8 md:rounded-2xl md:pt-10"
+        className="h-auto max-h-[90dvh] rounded-t-3xl bg-white p-5 pb-8 md:rounded-2xl"
         scrollViewport
       >
         <ResponsiveModalTitle className="sr-only">
@@ -91,35 +128,50 @@ export function EditItemSheet({
           className="space-y-4"
           onSubmit={(event) => {
             event.preventDefault();
-            if (name.trim() && amountValid && !pending && preferences.isSuccess)
-              edit.mutate({
-                id: item.id,
-                name,
-                note,
-                amount: parsedAmount,
-                unit,
-                usuallyHave: excluded,
-              });
+            saveAndClose();
           }}
         >
           <fieldset disabled={pending} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="edit-shopping-name">Item</Label>
-              <Input
-                id="edit-shopping-name"
-                required
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                className="bg-background h-12 rounded-xl font-serif text-xl"
-              />
+              <div className="flex items-center gap-2">
+                <Label htmlFor="edit-shopping-name" className="sr-only">
+                  Item
+                </Label>
+                <Input
+                  id="edit-shopping-name"
+                  required
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  aria-invalid={!nameValid}
+                  aria-describedby={!nameValid ? "shopping-name-error" : undefined}
+                  className="bg-background h-12 min-w-0 flex-1 rounded-xl font-serif text-xl"
+                />
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  disabled={!nameValid || !amountValid}
+                  className="text-primary h-12 shrink-0 rounded-xl px-3"
+                >
+                  {edit.isPending ? "Saving…" : "Done"}
+                </Button>
+              </div>
+              {!nameValid && (
+                <p
+                  id="shopping-name-error"
+                  role="alert"
+                  className="text-destructive text-sm"
+                >
+                  Enter an item name
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="edit-shopping-note">Note</Label>
-              <Textarea
+              <Input
                 id="edit-shopping-note"
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
-                className="bg-background min-h-12 rounded-xl"
+                className="bg-background h-12 rounded-xl"
               />
             </div>
             <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,132px)] gap-2.5">
@@ -194,6 +246,39 @@ export function EditItemSheet({
                 Amount must be a number more than 0
               </p>
             )}
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-shopping-category">Category</Label>
+              <Select
+                value={categoryDraft ?? ""}
+                disabled={!categories.isSuccess || pending}
+                onValueChange={(value) =>
+                  setCategoryDraft(
+                    categories.data?.find((category) => category.id === value)
+                      ?.id,
+                  )
+                }
+              >
+                <SelectTrigger
+                  id="edit-shopping-category"
+                  className="h-12 rounded-xl text-black data-[placeholder]:text-black"
+                >
+                  <SelectValue
+                    placeholder={
+                      categories.data?.find(
+                        (category) => category.id === item.product.category,
+                      )?.label
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.data?.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="border-border flex items-center justify-between gap-4 rounded-xl border p-3.5">
               <Label
                 htmlFor="edit-shopping-excluded"
@@ -228,42 +313,21 @@ export function EditItemSheet({
                 again.
               </p>
             )}
-            {(edit.isError || remove.isError) && (
+            {(edit.isError || deleteProduct.isError) && (
               <p role="alert" className="text-destructive text-sm">
-                Could not {remove.isError ? "remove" : "save"} the item. Check
-                your connection and try again.
+                Could not{" "}
+                {deleteProduct.isError ? "delete the product" : "save the item"}.
+                Check your connection and try again.
               </p>
             )}
-            <div className="flex gap-2.5 pt-1">
+            <div className="pt-1">
               <Button
                 type="button"
                 variant="outline"
-                className="h-12 rounded-xl px-3"
-                onClick={onClose}
+                className="text-destructive hover:bg-destructive/5 hover:text-destructive h-12 w-full rounded-xl px-3"
+                onClick={() => deleteProduct.mutate({ id: item.productId })}
               >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="text-destructive hover:bg-destructive/5 hover:text-destructive h-12 rounded-xl px-3"
-                aria-label={recent ? "Remove from recently used" : undefined}
-                onClick={() => remove.mutate({ id: item.id })}
-              >
-                {remove.isPending
-                  ? "Removing…"
-                  : recent
-                    ? "Remove"
-                    : "Remove from list"}
-              </Button>
-              <Button
-                type="submit"
-                className="h-12 min-w-0 flex-1 rounded-xl px-3"
-                disabled={
-                  !name.trim() || !amountValid || !preferences.isSuccess
-                }
-              >
-                {edit.isPending ? "Saving…" : "Save"}
+                {deleteProduct.isPending ? "Deleting…" : "Delete own item"}
               </Button>
             </div>
           </fieldset>

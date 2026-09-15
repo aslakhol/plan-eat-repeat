@@ -7,6 +7,7 @@ import { api } from "../../utils/api";
 import { useClerk } from "@clerk/nextjs";
 import { Account } from "./Account";
 import { Cooking } from "./Cooking";
+import { ShoppingList } from "./ShoppingList";
 
 type Props = { household: Household | null; systemDefaultPrompt: string };
 
@@ -36,6 +37,7 @@ export const SettingsView = ({ household, systemDefaultPrompt }: Props) => {
           <>
             <Account />
             <Cooking />
+            <ShoppingList language={household.shoppingLanguage} />
             <EditHousehold
               key={household.id}
               household={household}

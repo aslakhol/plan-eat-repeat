@@ -229,6 +229,40 @@ export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedFloatNullableFilter<$PrismaModel>
 }
 
+export type EnumShoppingCategoryFilter<$PrismaModel = never> = {
+  equals?: $Enums.ShoppingCategory | Prisma.EnumShoppingCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.ShoppingCategory[] | Prisma.ListEnumShoppingCategoryFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ShoppingCategory[] | Prisma.ListEnumShoppingCategoryFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumShoppingCategoryFilter<$PrismaModel> | $Enums.ShoppingCategory
+}
+
+export type EnumShoppingCategoryWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ShoppingCategory | Prisma.EnumShoppingCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.ShoppingCategory[] | Prisma.ListEnumShoppingCategoryFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ShoppingCategory[] | Prisma.ListEnumShoppingCategoryFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumShoppingCategoryWithAggregatesFilter<$PrismaModel> | $Enums.ShoppingCategory
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumShoppingCategoryFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumShoppingCategoryFilter<$PrismaModel>
+}
+
+export type EnumShoppingLanguageFilter<$PrismaModel = never> = {
+  equals?: $Enums.ShoppingLanguage | Prisma.EnumShoppingLanguageFieldRefInput<$PrismaModel>
+  in?: $Enums.ShoppingLanguage[] | Prisma.ListEnumShoppingLanguageFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ShoppingLanguage[] | Prisma.ListEnumShoppingLanguageFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumShoppingLanguageFilter<$PrismaModel> | $Enums.ShoppingLanguage
+}
+
+export type EnumShoppingLanguageWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ShoppingLanguage | Prisma.EnumShoppingLanguageFieldRefInput<$PrismaModel>
+  in?: $Enums.ShoppingLanguage[] | Prisma.ListEnumShoppingLanguageFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ShoppingLanguage[] | Prisma.ListEnumShoppingLanguageFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumShoppingLanguageWithAggregatesFilter<$PrismaModel> | $Enums.ShoppingLanguage
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumShoppingLanguageFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumShoppingLanguageFilter<$PrismaModel>
+}
+
 export type EnumMembershipRoleFilter<$PrismaModel = never> = {
   equals?: $Enums.MembershipRole | Prisma.EnumMembershipRoleFieldRefInput<$PrismaModel>
   in?: $Enums.MembershipRole[] | Prisma.ListEnumMembershipRoleFieldRefInput<$PrismaModel>
@@ -495,6 +529,40 @@ export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
   _sum?: Prisma.NestedFloatNullableFilter<$PrismaModel>
   _min?: Prisma.NestedFloatNullableFilter<$PrismaModel>
   _max?: Prisma.NestedFloatNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumShoppingCategoryFilter<$PrismaModel = never> = {
+  equals?: $Enums.ShoppingCategory | Prisma.EnumShoppingCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.ShoppingCategory[] | Prisma.ListEnumShoppingCategoryFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ShoppingCategory[] | Prisma.ListEnumShoppingCategoryFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumShoppingCategoryFilter<$PrismaModel> | $Enums.ShoppingCategory
+}
+
+export type NestedEnumShoppingCategoryWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ShoppingCategory | Prisma.EnumShoppingCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.ShoppingCategory[] | Prisma.ListEnumShoppingCategoryFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ShoppingCategory[] | Prisma.ListEnumShoppingCategoryFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumShoppingCategoryWithAggregatesFilter<$PrismaModel> | $Enums.ShoppingCategory
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumShoppingCategoryFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumShoppingCategoryFilter<$PrismaModel>
+}
+
+export type NestedEnumShoppingLanguageFilter<$PrismaModel = never> = {
+  equals?: $Enums.ShoppingLanguage | Prisma.EnumShoppingLanguageFieldRefInput<$PrismaModel>
+  in?: $Enums.ShoppingLanguage[] | Prisma.ListEnumShoppingLanguageFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ShoppingLanguage[] | Prisma.ListEnumShoppingLanguageFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumShoppingLanguageFilter<$PrismaModel> | $Enums.ShoppingLanguage
+}
+
+export type NestedEnumShoppingLanguageWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ShoppingLanguage | Prisma.EnumShoppingLanguageFieldRefInput<$PrismaModel>
+  in?: $Enums.ShoppingLanguage[] | Prisma.ListEnumShoppingLanguageFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ShoppingLanguage[] | Prisma.ListEnumShoppingLanguageFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumShoppingLanguageWithAggregatesFilter<$PrismaModel> | $Enums.ShoppingLanguage
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumShoppingLanguageFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumShoppingLanguageFilter<$PrismaModel>
 }
 
 export type NestedEnumMembershipRoleFilter<$PrismaModel = never> = {
