@@ -3,7 +3,10 @@ import type {
   ShoppingCategory,
   ShoppingLanguage,
 } from "@planeatrepeat/db";
-import { normalizeShoppingName } from "@planeatrepeat/shared";
+import {
+  capitalizeShoppingName,
+  normalizeShoppingName,
+} from "@planeatrepeat/shared";
 import { shoppingCatalog } from "./shopping-catalog";
 
 const catalogs = {
@@ -81,7 +84,7 @@ export const rememberOwnItem = async (
   return tx.ownItem.create({
     data: {
       householdId,
-      name: name.trim().charAt(0).toUpperCase() + name.trim().slice(1),
+      name: capitalizeShoppingName(name),
       note,
       normalizedNote,
       normalizedName,

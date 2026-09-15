@@ -1724,3 +1724,42 @@ void test("selecting previews remembers destinations, inherits categories once, 
       assert.deepEqual(await other.list(), []);
     });
   }));
+
+void test("autocomplete and Dinner additions capitalize new names but keep existing spelling", () =>
+  withShoppingList(async ({ caller, createDinner }) => {
+    const fresh = await caller.addSelection({ name: "mIXED cASE", note: null });
+    assert.equal(fresh.name, "Mixed case");
+    await caller.edit({
+      id: fresh.id,
+      name: "mIXED cASE",
+      note: null,
+      amount: null,
+      unit: null,
+    });
+    assert.equal(
+      (await caller.addSelection({ name: "MIXED CASE", note: null })).name,
+      "mIXED cASE",
+    );
+    const dinner = await createDinner({
+      name: "Capitalization",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: {
+            create: [
+              { order: 0, name: "MIXED CASE", amount: 2 },
+              { order: 1, name: "fRESH sUPPLIES", amount: 3 },
+            ],
+          },
+        },
+      },
+    });
+    await caller.addDinners({ dinnerIds: [dinner.id] });
+    const list = await caller.list();
+    assert.ok(
+      list.some((item) => item.name === "mIXED cASE" && item.amount === 2),
+    );
+    assert.ok(
+      list.some((item) => item.name === "Fresh supplies" && item.amount === 3),
+    );
+  }));

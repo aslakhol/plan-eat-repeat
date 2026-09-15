@@ -1,5 +1,8 @@
 import type { ShoppingCategory } from "@planeatrepeat/db";
-import { normalizeShoppingName } from "@planeatrepeat/shared";
+import {
+  capitalizeShoppingName,
+  normalizeShoppingName,
+} from "@planeatrepeat/shared";
 
 export type ShoppingSource = {
   id?: string;
@@ -89,7 +92,7 @@ export function suggestShoppingItems(
       normalizeShoppingName(query) === normalizeShoppingName(source.name);
     return [
       {
-        name: destination?.name ?? source.name,
+        name: destination?.name ?? capitalizeShoppingName(source.name),
         note: destination?.note ?? note,
         selection,
         group: exact ? (note ? 1 : 0) : match.prefix ? 3 : 2,
@@ -116,7 +119,7 @@ export function suggestShoppingItems(
     const key = shoppingIdentity(name, note);
     if (!previews.has(key)) previews.set(key, { name, note, selection });
   }
-  const literal = query.trim();
+  const literal = capitalizeShoppingName(query);
   const key = shoppingIdentity(literal, null);
   if (!previews.has(key))
     previews.set(key, {

@@ -187,3 +187,13 @@ void test("recipe selection prefers exact Own Items, then exact catalog items, a
     },
   );
 });
+
+void test("new preview names are capitalized while existing destinations keep their spelling", () => {
+  assert.equal(suggestShoppingItems("mIXED cASE", [])[0]?.name, "Mixed case");
+  const saved = [
+    { id: "saved", name: "iPhone", note: null, category: "OWN_ITEMS" },
+  ] as const;
+  assert.equal(suggestShoppingItems("IPHONE", saved)[0]?.name, "iPhone");
+  assert.equal(suggestShoppingItems("IPHONE cover", saved)[0]?.name, "Iphone");
+  assert.equal(suggestShoppingItems("2% MILK", [])[0]?.name, "2% Milk");
+});
