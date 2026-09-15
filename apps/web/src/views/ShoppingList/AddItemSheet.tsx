@@ -14,14 +14,17 @@ import {
 import { api } from "~/utils/api";
 import { DinnerSourceActions } from "./DinnerSourceActions";
 import { type ShoppingDinnerSource } from "./DinnerPicker";
+import { type ShoppingPreview } from "./use-add-shopping-item";
 
 export function AddItemSheet({
   open,
   onOpenChange,
   onSelectDinners,
+  onAdd,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAdd: (preview: ShoppingPreview) => void;
   onSelectDinners: (source: ShoppingDinnerSource) => void;
 }) {
   return (
@@ -31,7 +34,10 @@ export function AddItemSheet({
         className="flex h-auto flex-col gap-0 rounded-t-3xl bg-white p-5 pb-8 has-[[data-typing=true]]:h-[65dvh] has-[[data-typing=true]]:max-h-[600px] md:rounded-2xl md:pt-10"
       >
         <AddItemContent
-          onAdded={() => onOpenChange(false)}
+          onAdd={(preview) => {
+            onAdd(preview);
+            onOpenChange(false);
+          }}
           onSelectDinners={onSelectDinners}
         />
       </ResponsiveModalContent>
@@ -40,27 +46,21 @@ export function AddItemSheet({
 }
 
 function AddItemContent({
-  onAdded,
+  onAdd,
   onSelectDinners,
 }: {
-  onAdded: () => void;
+  onAdd: (preview: ShoppingPreview) => void;
   onSelectDinners: (source: ShoppingDinnerSource) => void;
 }) {
   const [query, setQuery] = useState("");
   const [typing, setTyping] = useState(false);
   const [highlighted, setHighlighted] = useState<string | null>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const utils = api.useUtils();
   const sources = api.shoppingList.sources.useQuery();
   const previews = suggestShoppingItems(query, sources.data ?? []);
   const highlightedIndex = previews.findIndex(
     (preview) => shoppingIdentity(preview.name, preview.note) === highlighted,
   );
-  const add = api.shoppingList.addSelection.useMutation({
-    networkMode: "always",
-    retry: false,
-    onSuccess: () => utils.shoppingList.invalidate(),
-  });
 
   return (
     <div data-typing={typing} className="flex min-h-0 flex-1 flex-col">
@@ -91,11 +91,8 @@ function AddItemContent({
                 preview.note ? `${preview.name}, ${preview.note}` : preview.name
               }
               className="aria-selected:bg-accent hover:bg-accent focus-visible:bg-accent block w-full rounded-lg px-3 py-3 text-left focus-visible:outline-none"
-              disabled={add.isPending}
               onMouseDown={(event) => event.preventDefault()}
-              onClick={() =>
-                add.mutate(preview.selection, { onSuccess: onAdded })
-              }
+              onClick={() => onAdd(preview)}
             >
               <span className="font-medium">{preview.name}</span>
               {preview.note && (
@@ -111,13 +108,13 @@ function AddItemContent({
         className="shrink-0"
         onSubmit={(event) => {
           event.preventDefault();
-          if (query.trim() && !add.isPending)
-            add.mutate(
-              previews[highlightedIndex]?.selection ?? {
-                name: query,
+          if (query.trim())
+            onAdd(
+              previews[highlightedIndex] ?? {
+                name: query.trim(),
                 note: null,
+                selection: { name: query, note: null },
               },
-              { onSuccess: onAdded },
             );
         }}
       >
@@ -140,7 +137,6 @@ function AddItemContent({
           placeholder="Add an item"
           className="h-[50px] min-w-0 rounded-xl bg-white text-base"
           value={query}
-          readOnly={add.isPending}
           onFocus={() => setTyping(true)}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -173,11 +169,6 @@ function AddItemContent({
           }}
         />
       </form>
-      {add.isError && (
-        <p role="alert" className="text-destructive mt-3 shrink-0 text-sm">
-          Could not add the item. Check your connection and try again.
-        </p>
-      )}
       {sources.isError && query.trim() && (
         <p role="alert" className="text-destructive mt-3 shrink-0 text-sm">
           Could not load suggestions. Try again.

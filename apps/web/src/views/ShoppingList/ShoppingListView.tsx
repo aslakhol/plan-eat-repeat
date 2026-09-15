@@ -14,6 +14,8 @@ import {
 import { api, type RouterOutputs } from "~/utils/api";
 import { toast } from "~/components/ui/use-toast";
 import { cn } from "~/lib/utils";
+import { shoppingIdentity } from "~/lib/shopping-matching";
+import { useAddShoppingItem } from "./use-add-shopping-item";
 import { AddItemSheet } from "./AddItemSheet";
 import { EditItemSheet } from "./EditItemSheet";
 import { DinnerPicker, type ShoppingDinnerSource } from "./DinnerPicker";
@@ -27,10 +29,12 @@ function ShoppingItemRow({
   item,
   onEdit,
   recent = false,
+  pending = false,
 }: {
   item: ShoppingItem;
   onEdit: () => void;
   recent?: boolean;
+  pending?: boolean;
 }) {
   const utils = api.useUtils();
   const options = {
@@ -55,7 +59,7 @@ function ShoppingItemRow({
         aria-label={
           recent ? `Add ${label} to shopping list` : `Remove ${label} from list`
         }
-        disabled={action.isPending}
+        disabled={pending || action.isPending}
         onClick={() => action.mutate({ id: item.id })}
         className="hover:bg-secondary focus-visible:ring-ring flex min-h-14 min-w-0 flex-1 items-center gap-2 rounded-[14px] px-3.5 py-3 text-left outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
       >
@@ -73,7 +77,7 @@ function ShoppingItemRow({
         <button
           type="button"
           aria-label={`Edit quantity for ${label}`}
-          disabled={action.isPending}
+          disabled={pending || action.isPending}
           onClick={onEdit}
           className="bg-background border-border hover:bg-accent focus-visible:ring-ring max-w-[35%] rounded-lg border px-2 py-1 text-sm font-semibold outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
         >
@@ -83,7 +87,7 @@ function ShoppingItemRow({
       <button
         type="button"
         aria-label={`Edit ${label}`}
-        disabled={action.isPending}
+        disabled={pending || action.isPending}
         onClick={onEdit}
         className="text-muted-foreground border-border hover:bg-accent focus-visible:ring-ring mx-2 flex size-8 shrink-0 items-center justify-center rounded-lg border bg-white outline-none focus-visible:ring-2"
       >
@@ -95,6 +99,10 @@ function ShoppingItemRow({
 
 export function ShoppingListView() {
   const { addOpen, setAddOpen } = useShoppingItemCreation();
+  const { addItem, pendingItems } = useAddShoppingItem();
+  const pendingIdentities = new Set(
+    pendingItems.map((item) => shoppingIdentity(item.name, item.note)),
+  );
   const [pickerSource, setPickerSource] = useState<ShoppingDinnerSource | null>(
     null,
   );
@@ -129,9 +137,30 @@ export function ShoppingListView() {
     refetchOnReconnect: "always",
     retry: false,
   });
+  // Keep pending additions separate so polling cannot erase them, and only
+  // deduplicate the unspecified requirements created by autocomplete.
+  const optimisticItems = pendingItems.filter((item, index) => {
+    const identity = shoppingIdentity(item.name, item.note);
+    return (
+      pendingItems.findIndex(
+        (other) => shoppingIdentity(other.name, other.note) === identity,
+      ) === index &&
+      !list.data?.some(
+        (saved) =>
+          saved.amount === null &&
+          saved.unit === null &&
+          shoppingIdentity(saved.name, saved.note) === identity,
+      )
+    );
+  });
+  const hasItems = (list.data?.length ?? 0) > 0 || optimisticItems.length > 0;
   const activeIds = new Set(list.data?.map((item) => item.ownItemId));
   const recentItems =
-    recent.data?.filter((item) => !activeIds.has(item.ownItemId)) ?? [];
+    recent.data?.filter(
+      (item) =>
+        !activeIds.has(item.ownItemId) &&
+        !pendingIdentities.has(shoppingIdentity(item.name, item.note)),
+    ) ?? [];
   const clear = api.shoppingList.clear.useMutation({
     networkMode: "always",
     retry: false,
@@ -168,7 +197,7 @@ export function ShoppingListView() {
             <button
               type="button"
               className="hover:bg-muted w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold disabled:opacity-50"
-              disabled={!list.data?.length}
+              disabled={!list.data?.length || pendingItems.length > 0}
               onClick={() => {
                 menuRef.current?.removeAttribute("open");
                 setClearOpen(true);
@@ -190,8 +219,8 @@ export function ShoppingListView() {
           Could not refresh the list. Check your connection.
         </p>
       )}
-      {list.data &&
-        (list.data.length === 0 ? (
+      {(list.data !== undefined || optimisticItems.length > 0) &&
+        (!hasItems ? (
           <div
             className={cn(
               "flex flex-col items-center justify-center gap-5 px-4",
@@ -220,12 +249,31 @@ export function ShoppingListView() {
               <Plus className="size-4" /> Add an item
             </button>
             <ul className="space-y-2" aria-label="Shopping items">
-              {list.data.map((item) => (
+              {list.data?.map((item) => (
                 <ShoppingItemRow
                   key={item.id}
                   item={item}
+                  pending={pendingIdentities.has(
+                    shoppingIdentity(item.name, item.note),
+                  )}
                   onEdit={() => setEditingItem({ item, recent: false })}
                 />
+              ))}
+              {optimisticItems.map((item) => (
+                <li
+                  key={item.id}
+                  aria-busy="true"
+                  className="bg-secondary/70 flex min-h-14 items-center rounded-[14px] px-3.5 py-3 [overflow-wrap:anywhere]"
+                >
+                  <span>
+                    <span className="font-serif text-[17px]">{item.name}</span>
+                    {item.note && (
+                      <span className="text-muted-foreground ml-1 text-[13px]">
+                        {item.note}
+                      </span>
+                    )}
+                  </span>
+                </li>
               ))}
             </ul>
           </>
@@ -284,6 +332,7 @@ export function ShoppingListView() {
       <AddItemSheet
         open={addOpen}
         onOpenChange={setAddOpen}
+        onAdd={addItem}
         onSelectDinners={openPicker}
       />
       {pickerSource && (
