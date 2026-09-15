@@ -126,3 +126,51 @@ export function suggestShoppingItems(
     });
   return [...previews.values()];
 }
+
+// Recipe names are complete input. Keep this decision independent of the
+// interactive preview ordering: ambiguity must not silently choose a product.
+export function selectRecipeIngredient(
+  name: string,
+  sources: readonly ShoppingSource[],
+): ShoppingSelection {
+  const literal = { name: name.trim(), note: null };
+  const candidates = sources.flatMap((source) => {
+    if (source.note) return [];
+    const match = matchShoppingWords(name, source.name, "complete");
+    if (!match.matched || match.introduced) return [];
+    return [
+      {
+        source,
+        note: match.unmatched.join(" ") || null,
+        matched: match.matched,
+      },
+    ];
+  });
+  const exact = candidates.filter(
+    ({ source }) =>
+      normalizeShoppingName(source.name) === normalizeShoppingName(name),
+  );
+  let chosen = exact.find(({ source }) => source.id) ?? exact[0];
+  if (!chosen) {
+    const mostWords = Math.max(...candidates.map(({ matched }) => matched));
+    const best = new Map<string, (typeof candidates)[number]>();
+    for (const candidate of candidates) {
+      if (candidate.matched !== mostWords) continue;
+      const identity = shoppingIdentity(candidate.source.name, candidate.note);
+      if (!best.has(identity) || candidate.source.id)
+        best.set(identity, candidate);
+    }
+    if (best.size !== 1) return literal;
+    chosen = best.values().next().value;
+  }
+  if (!chosen) return literal;
+  const { source, note } = chosen;
+  if (source.id && note === null) return { ownItemId: source.id };
+  return {
+    name: source.name,
+    note,
+    source: source.id
+      ? { ownItemId: source.id }
+      : { standardName: source.name },
+  };
+}

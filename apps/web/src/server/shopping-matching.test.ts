@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { suggestShoppingItems } from "./shopping-matching";
+import {
+  selectRecipeIngredient,
+  suggestShoppingItems,
+} from "./shopping-matching";
 
 const sources = [
   { name: "Cheese", note: null, category: "DAIRY" },
@@ -96,5 +99,91 @@ void test("previews deduplicate normalized destinations and prefer coverage, few
       { id: "duck-eggs", name: "Duck eggs", note: "fresh", category: "DAIRY" },
     ])[0]?.selection,
     { ownItemId: "duck-eggs" },
+  );
+});
+
+void test("recipe selection uses complete product words and preserves ambiguous ingredient names", () => {
+  const recipeSources = [
+    ...sources,
+    { name: "Carrots", note: null, category: "PRODUCE" },
+    { id: "grated", name: "Cheese", note: "grated", category: "SNACKS" },
+  ] as const;
+  for (const [name, expected] of [
+    ["Car", { name: "Car", note: null }],
+    [
+      "Cheese",
+      { name: "Cheese", note: null, source: { standardName: "Cheese" } },
+    ],
+    [
+      "Cheese balls",
+      { name: "Cheese", note: "balls", source: { standardName: "Cheese" } },
+    ],
+    [
+      "Duck eggs",
+      { name: "Eggs", note: "Duck", source: { standardName: "Eggs" } },
+    ],
+    ["Duck egg", { name: "Duck egg", note: null }],
+    [
+      "Blue cheese balls",
+      {
+        name: "Blue cheese",
+        note: "balls",
+        source: { standardName: "Blue cheese" },
+      },
+    ],
+    ["Cheese bread", { name: "Cheese bread", note: null }],
+  ] as const) {
+    assert.deepEqual(
+      selectRecipeIngredient(name, recipeSources),
+      expected,
+      name,
+    );
+    assert.deepEqual(
+      selectRecipeIngredient(name, [...recipeSources].reverse()),
+      expected,
+      name,
+    );
+  }
+});
+
+void test("recipe selection prefers exact Own Items, then exact catalog items, and deduplicates identical interpretations", () => {
+  const ownCheese = {
+    id: "own-cheese",
+    name: "CHEESE",
+    note: null,
+    category: "SNACKS",
+  } as const;
+  const exact = {
+    id: "corrected",
+    name: " Cheese  balls ",
+    note: null,
+    category: "SNACKS",
+  } as const;
+  assert.deepEqual(
+    selectRecipeIngredient("cheese balls", [...sources, exact]),
+    { ownItemId: "corrected" },
+  );
+  assert.deepEqual(selectRecipeIngredient("cheese", [...sources, ownCheese]), {
+    ownItemId: "own-cheese",
+  });
+  assert.deepEqual(
+    selectRecipeIngredient("cheese balls", [...sources, ownCheese]),
+    {
+      name: "CHEESE",
+      note: "balls",
+      source: { ownItemId: "own-cheese" },
+    },
+  );
+  assert.deepEqual(
+    selectRecipeIngredient("Cream cheese", [
+      ...sources,
+      { name: "Cream cheese", note: null, category: "DAIRY" },
+      { id: "cream", name: "Cream", note: null, category: "DAIRY" },
+    ]),
+    {
+      name: "Cream cheese",
+      note: null,
+      source: { standardName: "Cream cheese" },
+    },
   );
 });
