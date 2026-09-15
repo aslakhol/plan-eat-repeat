@@ -1354,7 +1354,17 @@ void test("existing shopping details and reusable state survive the Own Item mig
              ('migration-household', 'Olive  oil', 'olive  oil'),
              ('migration-household', 'Salt', 'salt');
     `);
-    execute(migrationSql(migrations.slice(firstProductMigration)));
+    const ownItemMigration = migrations.indexOf("20260915120000_own_items");
+    execute(
+      migrationSql(migrations.slice(firstProductMigration, ownItemMigration)),
+    );
+    execute(`
+      UPDATE "ShoppingProduct" SET category = 'PETS' WHERE "normalizedName" = 'olive oil';
+      UPDATE "ShoppingProduct" SET category = 'CARE' WHERE "normalizedName" = 'brown rice';
+      INSERT INTO "ShoppingProduct" (id, "householdId", name, "normalizedName", category)
+      VALUES ('remembered-only', 'migration-household', 'Spare bulbs', 'spare bulbs', 'HOUSEHOLD');
+    `);
+    execute(migrationSql(migrations.slice(ownItemMigration)));
     const caller = shoppingListRouter.createCaller({
       db,
       auth: { userId: "migration-user" },
@@ -1414,7 +1424,7 @@ void test("existing shopping details and reusable state survive the Own Item mig
     assert.ok(oil.id);
     assert.equal(new Set(items.map((item) => item.ownItemId)).size, 2);
     assert.ok(items.every((item) => item.ownItem.usuallyHave));
-    assert.ok(items.every((item) => item.ownItem.category === "INGREDIENTS"));
+    assert.ok(items.every((item) => item.ownItem.category === "PETS"));
     const recent = await caller.recent();
     assert.equal(recent.length, 1);
     assert.deepEqual(
@@ -1437,7 +1447,11 @@ void test("existing shopping details and reusable state survive the Own Item mig
         },
       ],
     );
-    assert.equal(recent[0]!.ownItem.category, "GRAINS");
+    assert.equal(recent[0]!.ownItem.category, "CARE");
+    assert.equal(
+      (await caller.addManual({ name: "Spare bulbs" })).ownItem.category,
+      "HOUSEHOLD",
+    );
     const restored = await caller.addRecent({ id: "latest" });
     assert.equal(restored.ownItemId, recent[0]!.ownItemId);
     await caller.clear();
