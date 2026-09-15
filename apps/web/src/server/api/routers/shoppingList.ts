@@ -1,4 +1,7 @@
-import { suggestShoppingItems } from "../../shopping-matching";
+import {
+  selectRecipeIngredient,
+  suggestShoppingItems,
+} from "../../shopping-matching";
 import {
   shoppingSources,
   resolveShoppingSelection,
@@ -238,6 +241,7 @@ export const shoppingListRouter = createTRPCRouter({
           amount: number | null;
           unit: string | null;
         }[] = [];
+        const sources = await shoppingSources(tx, ctx.householdId);
         for (const dinnerId of input.dinnerIds) {
           const dinner = await tx.dinner.findUniqueOrThrow({
             where: { id: dinnerId, householdId: ctx.householdId },
@@ -254,11 +258,16 @@ export const shoppingListRouter = createTRPCRouter({
               ? ingredients
               : [{ name: dinner.name, amount: null, unit: null }];
           for (const item of requirements) {
-            const ownItem = await rememberOwnItem(
-              tx,
-              ctx.householdId,
-              item.name,
-            );
+            const ownItem =
+              ingredients.length > 0
+                ? await resolveShoppingSelection(
+                    tx,
+                    ctx.householdId,
+                    selectRecipeIngredient(item.name, sources),
+                  )
+                : await rememberOwnItem(tx, ctx.householdId, item.name);
+            if (!sources.some(({ id }) => id === ownItem.id))
+              sources.push(ownItem);
             if (ownItem.usuallyHave) {
               skipped.push({
                 ownItemId: ownItem.id,
@@ -268,10 +277,10 @@ export const shoppingListRouter = createTRPCRouter({
               continue;
             }
             const saved = await saveShoppingItem(tx, ctx.householdId, {
-              name: item.name,
+              name: ownItem.name,
               amount: item.amount,
               unit: item.unit,
-              note: null,
+              note: ownItem.note,
             });
             addedIds.add(saved.id);
           }

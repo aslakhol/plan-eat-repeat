@@ -170,7 +170,167 @@ void test("Own Item edits update all referring quantities and deletion preserves
     assert.equal(forgotten.ownItem.usuallyHave, false);
   }));
 
-void test("Dinner additions check the literal Own Item and Undo protects later definition edits", () =>
+void test("Dinner ingredients resolve to remembered variants and a corrected exact name wins on re-import", () =>
+  withShoppingList(async ({ caller, createDinner }) => {
+    const dinner = await createDinner({
+      name: "Duck egg breakfast",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: {
+            create: [
+              {
+                order: 0,
+                name: "Duck eggs",
+                amount: 6,
+                note: "Unwrap before serving",
+              },
+              { order: 1, name: "Cheese bread", amount: 1 },
+            ],
+          },
+        },
+      },
+    });
+    await caller.addDinners({ dinnerIds: [dinner.id] });
+    const items = await caller.list();
+    const eggs = items.find(({ name }) => name === "Eggs")!;
+    assert.ok(eggs);
+    assert.equal(eggs.note, "Duck");
+    assert.equal(eggs.amount, 6);
+    assert.equal(eggs.ownItem.category, "DAIRY");
+    const ambiguous = items.find(({ name }) => name === "Cheese bread")!;
+    assert.equal(ambiguous.note, null);
+    const corrected = await caller.edit({
+      ...eggs,
+      name: "Duck eggs",
+      note: null,
+      category: "SNACKS",
+    });
+    await caller.clear();
+    const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
+    const imported = (await caller.list()).find(
+      ({ name }) => name === "Duck eggs",
+    )!;
+    assert.equal(imported.ownItemId, corrected.ownItemId);
+    assert.equal(imported.note, null);
+    assert.equal(imported.ownItem.category, "SNACKS");
+    assert.equal(imported.amount, 6);
+    await caller.undo(addition.undo);
+    assert.deepEqual(await caller.list(), []);
+  }));
+
+void test("Dinner resolution checks the destination variant's Usually Have and category, and Undo restores its recent quantity", () =>
+  withShoppingList(async ({ caller, member, createDinner }) => {
+    const cheese = await caller.addManual({ name: "Cheese" });
+    await caller.edit({ ...cheese, category: "MEAT", usuallyHave: true });
+    await caller.remove({ id: cheese.id });
+    const dinner = await createDinner({
+      name: "Cheese snacks",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: {
+            create: {
+              order: 0,
+              name: "Cheese balls",
+              amount: 2,
+              unit: "handful",
+              note: "Crumble finely",
+            },
+          },
+        },
+      },
+    });
+    const first = await caller.addDinners({ dinnerIds: [dinner.id] });
+    const variant = (await caller.list())[0]!;
+    assert.equal(variant.name, "Cheese");
+    assert.equal(variant.note, "balls");
+    assert.equal(variant.ownItem.category, "MEAT");
+    assert.equal(variant.ownItem.usuallyHave, false);
+    await member.edit({
+      ...variant,
+      amount: 7,
+      category: "SNACKS",
+      usuallyHave: true,
+    });
+    await caller.undo(first.undo);
+    assert.equal((await caller.list())[0]?.amount, 7);
+    await member.remove({ id: variant.id });
+    const before = await caller.recent();
+    const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
+    assert.deepEqual(await caller.list(), []);
+    const resolved = (await caller.recent()).find(
+      ({ ownItemId }) => ownItemId === variant.ownItemId,
+    )!;
+    assert.equal(resolved.amount, 2);
+    assert.equal(resolved.unit, "handful");
+    assert.equal(resolved.note, "balls");
+    assert.equal(resolved.ownItem.category, "SNACKS");
+    await member.undo(addition.undo);
+    assert.deepEqual(await caller.recent(), before);
+    const later = await caller.addDinners({ dinnerIds: [dinner.id] });
+    await member.removeRecent({ id: resolved.id });
+    await caller.undo(later.undo);
+    assert.ok(
+      !(await caller.recent()).some(
+        ({ ownItemId }) => ownItemId === variant.ownItemId,
+      ),
+    );
+  }));
+
+void test("recipe sources follow Shopping Language and keep saved names within their Household", () =>
+  withShoppingList(async ({ caller, settings, createDinner }) => {
+    await settings.updateHousehold({ shoppingLanguage: "no" });
+    const oats = await caller.addManual({ name: "Oats" });
+    await caller.edit({ ...oats, category: "SNACKS" });
+    await caller.remove({ id: oats.id });
+    const data = {
+      name: "Breakfast",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: {
+            create: [
+              { order: 0, name: "Økologisk gulrot" },
+              { order: 1, name: "Oats organic" },
+              { order: 2, name: "Duck eggs" },
+            ],
+          },
+        },
+      },
+    };
+    const dinner = await createDinner(data);
+    await caller.addDinners({ dinnerIds: [dinner.id] });
+    assert.deepEqual(
+      (await caller.list()).map(({ name, note }) => [name, note]),
+      [
+        ["Gulrot", "Økologisk"],
+        ["Oats", "organic"],
+        ["Duck eggs", null],
+      ],
+    );
+    await withShoppingList(
+      async ({ caller: other, createDinner: createOtherDinner }) => {
+        const otherDinner = await createOtherDinner(data);
+        await other.addDinners({ dinnerIds: [otherDinner.id] });
+        const otherItems = await other.list();
+        assert.equal(
+          otherItems.find(({ name }) => name === "Økologisk gulrot")?.note,
+          null,
+        );
+        assert.equal(
+          otherItems.find(({ name }) => name === "Oats organic")?.note,
+          null,
+        );
+        assert.equal(
+          otherItems.find(({ name }) => name === "Eggs")?.note,
+          "Duck",
+        );
+      },
+    );
+  }));
+
+void test("Dinner additions ignore saved notes absent from the ingredient name and Undo protects later definition edits", () =>
   withShoppingList(async ({ caller, createDinner }) => {
     const eggs = await caller.addManual({ name: "Eggs" });
     await caller.edit({ ...eggs, note: "duck", usuallyHave: true, amount: 6 });
@@ -1206,7 +1366,7 @@ void test("saving compatible quantities for the same normalized note combines in
     assert.equal((await member.list()).length, 1);
   }));
 
-void test("Undo reverses a repeated Dinner batch while retaining pre-existing numeric and unquantified requirements", () =>
+void test("Undo reverses a repeated resolved Dinner batch while retaining pre-existing numeric and unquantified requirements", () =>
   withShoppingList(async ({ caller, member, createDinner, dinners }) => {
     const flour = await caller.addManual({ name: "Flour" });
     await caller.edit({
@@ -1214,7 +1374,7 @@ void test("Undo reverses a repeated Dinner batch while retaining pre-existing nu
       name: "Flour",
       amount: 500,
       unit: "g",
-      note: null,
+      note: "organic",
     });
     await member.addManual({ name: "Salt" });
     const before = await caller.list();
@@ -1227,7 +1387,7 @@ void test("Undo reverses a repeated Dinner batch while retaining pre-existing nu
             create: [
               {
                 order: 0,
-                name: " FLOUR ",
+                name: " FLOUR organic ",
                 amount: 1,
                 unit: "kg",
                 note: "Sifted",
@@ -1235,6 +1395,8 @@ void test("Undo reverses a repeated Dinner batch while retaining pre-existing nu
               { order: 1, name: "salt" },
               { order: 2, name: "Yeast", amount: 7, unit: "g" },
               { order: 3, name: "Water" },
+              { order: 4, name: "Organic flour", amount: 2, unit: "handful" },
+              { order: 5, name: "Organic flour" },
             ],
           },
         },
@@ -1253,13 +1415,15 @@ void test("Undo reverses a repeated Dinner batch while retaining pre-existing nu
       [
         { name: "Salt", amount: null, unit: null, note: null },
         { name: "Yeast", amount: 14, unit: "g", note: null },
-        { name: "Flour", amount: 2500, unit: "g", note: null },
+        { name: "Flour", amount: 2500, unit: "g", note: "organic" },
+        { name: "Flour", amount: 4, unit: "handful", note: "organic" },
+        { name: "Flour", amount: null, unit: null, note: "organic" },
         { name: "Water", amount: null, unit: null, note: null },
       ],
     );
     // Shopping requirements and Undo survive deletion of the source Recipe.
     await dinners.delete({ dinnerId: dinner.id });
-    assert.equal((await member.list()).length, 4);
+    assert.equal((await member.list()).length, 6);
     await member.undo(addition.undo);
     assert.deepEqual(await caller.list(), before);
     await member.undo(addition.undo);
