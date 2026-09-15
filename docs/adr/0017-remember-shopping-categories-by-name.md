@@ -6,4 +6,4 @@ Category assignment happens when a Shopping Product first enters the Shopping Li
 
 Renaming to a new name preserves the category without running automatic category inference again. Renaming to an already remembered name uses the destination's category as part of merging, so a rename does not overwrite that name's established category.
 
-The item drawer's Delete product action explicitly forgets a Shopping Product, including its active requirements, Recently Used entry, Usually Have membership, and category memory. Adding the name again uses the current matching rules. Other products that inherited its category keep their own assignments. Checking off items and clearing the Shopping List continue to preserve product memory.
+The item drawer's Delete own item action explicitly forgets a Shopping Product, including its active requirements, Recently Used entry, Usually Have membership, and category memory. Adding the name again uses the current matching rules. Other products that inherited its category keep their own assignments. Checking off items and clearing the Shopping List continue to preserve product memory.

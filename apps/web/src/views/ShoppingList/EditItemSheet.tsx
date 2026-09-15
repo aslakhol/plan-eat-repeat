@@ -43,9 +43,8 @@ export function EditItemSheet({
   });
   const [name, setName] = useState(item.name);
   const [note, setNote] = useState(item.note ?? "");
-  const [amount, setAmount] = useState(
-    item.amount === null ? "" : formatAmount(item.amount),
-  );
+  const initialAmount = item.amount === null ? "" : formatAmount(item.amount);
+  const [amount, setAmount] = useState(initialAmount);
   const [unit, setUnit] = useState(item.unit ?? "");
   const [categoryDraft, setCategoryDraft] =
     useState<typeof item.product.category>();
@@ -82,12 +81,37 @@ export function EditItemSheet({
   const amountValid =
     amountInputSchema.safeParse(amount).success &&
     (parsedAmount === null || Number.isFinite(parsedAmount));
+  const nameValid = name.trim().length > 0;
+  const saveAndClose = () => {
+    if (pending) return;
+    const changed =
+      name !== item.name ||
+      note !== (item.note ?? "") ||
+      amount !== initialAmount ||
+      unit !== (item.unit ?? "") ||
+      categoryDraft !== undefined ||
+      excludedDraft !== undefined;
+    if (!changed) {
+      onClose();
+      return;
+    }
+    if (!nameValid || !amountValid) return;
+    edit.mutate({
+      id: item.id,
+      name,
+      note,
+      amount: parsedAmount,
+      unit,
+      usuallyHave: excludedDraft,
+      category: categoryDraft,
+    });
+  };
 
   return (
     <ResponsiveModal
       open
       onOpenChange={(open) => {
-        if (!open && !pending) onClose();
+        if (!open) saveAndClose();
       }}
     >
       <ResponsiveModalContent
@@ -104,16 +128,7 @@ export function EditItemSheet({
           className="space-y-4"
           onSubmit={(event) => {
             event.preventDefault();
-            if (name.trim() && amountValid && !pending && preferences.isSuccess)
-              edit.mutate({
-                id: item.id,
-                name,
-                note,
-                amount: parsedAmount,
-                unit,
-                usuallyHave: excluded,
-                category: categoryDraft,
-              });
+            saveAndClose();
           }}
         >
           <fieldset disabled={pending} className="space-y-4">
@@ -124,8 +139,19 @@ export function EditItemSheet({
                 required
                 value={name}
                 onChange={(event) => setName(event.target.value)}
+                aria-invalid={!nameValid}
+                aria-describedby={!nameValid ? "shopping-name-error" : undefined}
                 className="bg-background h-12 rounded-xl font-serif text-xl"
               />
+              {!nameValid && (
+                <p
+                  id="shopping-name-error"
+                  role="alert"
+                  className="text-destructive text-sm"
+                >
+                  Enter an item name
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="edit-shopping-note">Note</Label>
@@ -282,31 +308,14 @@ export function EditItemSheet({
                 Check your connection and try again.
               </p>
             )}
-            <div className="flex gap-2.5 pt-1">
+            <div className="pt-1">
               <Button
                 type="button"
                 variant="outline"
-                className="h-12 rounded-xl px-3"
-                onClick={onClose}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="text-destructive hover:bg-destructive/5 hover:text-destructive h-12 rounded-xl px-3"
+                className="text-destructive hover:bg-destructive/5 hover:text-destructive h-12 w-full rounded-xl px-3"
                 onClick={() => deleteProduct.mutate({ id: item.productId })}
               >
-                {deleteProduct.isPending ? "Deleting…" : "Delete product"}
-              </Button>
-              <Button
-                type="submit"
-                className="h-12 min-w-0 flex-1 rounded-xl px-3"
-                disabled={
-                  !name.trim() || !amountValid || !preferences.isSuccess
-                }
-              >
-                {edit.isPending ? "Saving…" : "Save"}
+                {deleteProduct.isPending ? "Deleting…" : "Delete own item"}
               </Button>
             </div>
           </fieldset>

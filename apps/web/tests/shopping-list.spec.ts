@@ -44,6 +44,7 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
   });
   const removeItem = (name: string) =>
     page.getByRole("button", { name: `Remove ${name} from list`, exact: true });
+  const editor = page.getByRole("dialog", { name: "Edit item", exact: true });
   const moveWithoutFlashing = async (
     action: Locator,
     procedure: "addRecent" | "remove",
@@ -110,6 +111,52 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
         exact: true,
       }),
     ).toHaveText("200 g");
+
+    await page
+      .getByRole("button", {
+        name: `Edit quantity for ${ingredientName}`,
+        exact: true,
+      })
+      .click();
+    const nameInput = editor.getByRole("textbox", { name: "Item", exact: true });
+    const amountInput = editor.getByRole("textbox", {
+      name: "Amount",
+      exact: true,
+    });
+    const noteInput = editor.getByRole("textbox", { name: "Note", exact: true });
+    await nameInput.fill(" ");
+    await page.keyboard.press("Escape");
+    await expect(editor).toBeVisible();
+    await expect(editor.getByRole("alert")).toHaveText("Enter an item name");
+    await nameInput.fill(ingredientName);
+    await amountInput.fill("-1");
+    await page.mouse.click(5, 5);
+    await expect(editor).toBeVisible();
+    await expect(amountInput).toHaveValue("-1");
+    await amountInput.fill("250");
+    await noteInput.fill("For dinner");
+
+    const saveUrl = "**/api/trpc/shoppingList.edit*";
+    await page.route(saveUrl, (route) => route.abort("failed"));
+    await page.mouse.click(5, 5);
+    await expect(editor.getByRole("alert")).toContainText(
+      "Could not save the item",
+    );
+    await expect(noteInput).toHaveValue("For dinner");
+    await page.unroute(saveUrl);
+    // Tap the backdrop below the error notification.
+    const drawer = await editor.boundingBox();
+    if (!drawer) throw new Error("Item drawer not visible");
+    await page.mouse.click(5, drawer.y - 10);
+    await expect(editor).not.toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByRole("button", {
+        name: `Edit quantity for ${ingredientName}`,
+        exact: true,
+      }),
+    ).toHaveText("250 g");
+
     await removeItem(manualName).click();
     await expect(removeItem(manualName)).toHaveCount(0);
     await removeItem(ingredientName).click();
@@ -140,14 +187,14 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
         exact: true,
       })
       .click();
-    const editor = page.getByRole("dialog", { name: "Edit item", exact: true });
+    await expect(noteInput).toHaveValue("For dinner");
     await editor
       .getByRole("textbox", { name: "Amount", exact: true })
       .fill("300");
     await editor
       .getByRole("textbox", { name: "Note", exact: true })
       .fill("Red lentils");
-    await editor.getByRole("button", { name: "Save", exact: true }).click();
+    await page.keyboard.press("Escape");
     await expect(editor).not.toBeVisible();
     await moveWithoutFlashing(addRecent, "addRecent");
     await expect(removeItem(ingredientName)).toBeVisible();
@@ -167,7 +214,7 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
       editor.getByRole("textbox", { name: "Note", exact: true }),
     ).toHaveValue("Red lentils");
     await editor
-      .getByRole("button", { name: "Delete product", exact: true })
+      .getByRole("button", { name: "Delete own item", exact: true })
       .click();
     await expect(editor).not.toBeVisible();
     await expect(addRecent).toHaveCount(0);
