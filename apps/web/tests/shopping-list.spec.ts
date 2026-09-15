@@ -320,7 +320,24 @@ test("shopping previews keep typing through blur, scroll to choices, and support
       drawer.getByRole("button", { name: "From the cookbook" }),
     ).not.toBeVisible();
     await last.scrollIntoViewIfNeeded();
-    await last.click();
+    const refresh = Promise.withResolvers<void>();
+    const refreshRequested = Promise.withResolvers<void>();
+    await page.route("**/api/trpc/**", async (route) => {
+      if (route.request().url().includes("shoppingList.list")) {
+        refreshRequested.resolve();
+        await refresh.promise;
+      }
+      await route.continue();
+    });
+    try {
+      await last.click();
+      await refreshRequested.promise;
+      await expect(drawer).toBeVisible();
+      await expect(last).toBeDisabled();
+    } finally {
+      refresh.resolve();
+      await page.unrouteAll({ behavior: "wait" });
+    }
     await expect(drawer).not.toBeVisible();
     await expect(
       page.getByRole("button", {

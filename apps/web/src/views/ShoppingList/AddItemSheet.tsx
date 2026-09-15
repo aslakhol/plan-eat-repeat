@@ -23,12 +23,15 @@ export function AddItemSheet({
 }) {
   return (
     <ResponsiveModal open={open} onOpenChange={onOpenChange} repositionInputs>
-      {open && (
+      <ResponsiveModalContent
+        onOpenAutoFocus={(event) => event.preventDefault()}
+        className="flex h-auto flex-col gap-0 rounded-t-3xl bg-white p-5 pb-8 has-[[data-typing=true]]:h-[65dvh] has-[[data-typing=true]]:max-h-[600px] md:rounded-2xl md:pt-10"
+      >
         <AddItemContent
           onAdded={() => onOpenChange(false)}
           onSelectDinners={onSelectDinners}
         />
-      )}
+      </ResponsiveModalContent>
     </ResponsiveModal>
   );
 }
@@ -50,17 +53,14 @@ function AddItemContent({
   const add = api.shoppingList.addSelection.useMutation({
     networkMode: "always",
     retry: false,
-    onSuccess: () => {
-      void utils.shoppingList.invalidate();
+    onSuccess: async () => {
+      await utils.shoppingList.invalidate();
       onAdded();
     },
   });
 
   return (
-    <ResponsiveModalContent
-      onOpenAutoFocus={(event) => event.preventDefault()}
-      className={`flex flex-col gap-0 rounded-t-3xl bg-white p-5 pb-8 md:rounded-2xl md:pt-10 ${typing ? "h-[65dvh] max-h-[600px]" : "h-auto"}`}
-    >
+    <div data-typing={typing} className="flex min-h-0 flex-1 flex-col">
       <ResponsiveModalTitle className="sr-only">
         Add an item
       </ResponsiveModalTitle>
@@ -182,6 +182,6 @@ function AddItemContent({
           <DinnerSourceActions onSelect={onSelectDinners} />
         </div>
       )}
-    </ResponsiveModalContent>
+    </div>
   );
 }
