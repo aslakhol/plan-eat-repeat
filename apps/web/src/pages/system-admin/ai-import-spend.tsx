@@ -3,12 +3,12 @@ import { getAuth } from "@clerk/nextjs/server";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
 
+import { LoadingIndicator } from "~/components/LoadingIndicator";
 import { DailySpendCard } from "~/components/ai-import-spend/daily-spend-card";
 import { HouseholdsCard } from "~/components/ai-import-spend/households-card";
 import { ImportSourcesCard } from "~/components/ai-import-spend/import-sources-card";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
-import { Skeleton } from "~/components/ui/skeleton";
 import { env } from "~/env";
 import {
   AI_IMPORT_SPEND_PERIOD_KEYS,
@@ -65,7 +65,10 @@ export default function AiImportSpendPage() {
               }
             />
           ) : (
-            <DashboardLoading />
+            <LoadingIndicator
+              label="Loading AI import spend"
+              className="min-h-48"
+            />
           )}
         </main>
       </div>
@@ -420,18 +423,6 @@ const HeroMetric = ({
     </p>
     <p className="mt-0.5 text-[17px] font-semibold">{value}</p>
     <p className="text-xs font-semibold text-[hsl(150_18%_32%)]">{detail}</p>
-  </div>
-);
-
-const DashboardLoading = () => (
-  <div className="space-y-5" role="status">
-    <Skeleton className="h-16 rounded-lg" />
-    <div className="grid gap-5 lg:grid-cols-2">
-      <Skeleton className="h-72 rounded-lg" />
-      <Skeleton className="h-72 rounded-lg" />
-    </div>
-    <Skeleton className="h-48 rounded-lg" />
-    <span className="sr-only">Loading AI import spend</span>
   </div>
 );
 

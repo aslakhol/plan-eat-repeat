@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+  ActivityIndicator,
   Alert,
   BackHandler,
   Image,
@@ -60,8 +61,11 @@ export function SettingsScreen({ leaveGuard }: SettingsProps) {
     );
   if (!householdQuery.data)
     return (
-      <Screen>
-        <Text>Loading settings...</Text>
+      <Screen contentClassName="items-center justify-center">
+        <ActivityIndicator
+          color={colors.primary}
+          accessibilityLabel="Loading settings"
+        />
       </Screen>
     );
   return (

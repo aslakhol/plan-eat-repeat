@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useRef } from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
+import { LoadingIndicator } from "~/components/LoadingIndicator";
 import { Button } from "~/components/ui/button";
 import { toast } from "~/components/ui/use-toast";
 import { env } from "~/env";
@@ -101,9 +102,7 @@ export const SharedDinnerDetail = () => {
 
   if (!dinner) {
     return (
-      <div className="flex min-h-48 items-center justify-center">
-        <Loader2 className="text-primary animate-spin" />
-      </div>
+      <LoadingIndicator label="Loading shared dinner…" className="min-h-48" />
     );
   }
 
