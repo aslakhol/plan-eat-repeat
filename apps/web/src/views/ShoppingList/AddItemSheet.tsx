@@ -34,12 +34,10 @@ export function AddItemSheet({
     if (!open || !viewport) return;
 
     const updateViewport = () => {
-      // Safari can pan the visual viewport as well as shrink it for the keyboard.
+      // Use the fixed containing block's height, not innerHeight: iOS browser
+      // chrome can make the two differ. Include any visual viewport panning.
       setMobileStyle({
-        bottom: Math.max(
-          0,
-          window.innerHeight - viewport.height - viewport.offsetTop,
-        ),
+        bottom: `max(0px, calc(100% - ${viewport.height + viewport.offsetTop}px))`,
         maxHeight: Math.min(600, viewport.height - 16),
       });
     };
@@ -96,40 +94,6 @@ function AddItemContent({
       <ResponsiveModalDescription className="sr-only">
         Add to your shopping list
       </ResponsiveModalDescription>
-      {typing && (
-        <ResponsiveModalScrollViewport
-          className="mb-3 flex-1 space-y-2"
-          id="shopping-suggestions"
-          role="listbox"
-          aria-label="Shopping suggestions"
-        >
-          {previews.map((preview, index) => (
-            <button
-              key={shoppingIdentity(preview.name, preview.note)}
-              id={`shopping-suggestion-${index}`}
-              ref={(element) => {
-                optionRefs.current[index] = element;
-              }}
-              type="button"
-              role="option"
-              aria-selected={highlightedIndex === index}
-              aria-label={
-                preview.note ? `${preview.name}, ${preview.note}` : preview.name
-              }
-              className="bg-secondary/70 aria-selected:bg-secondary hover:bg-secondary focus-visible:bg-secondary block w-full rounded-[14px] px-3.5 py-3 text-left focus-visible:outline-none"
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => onAdd(preview)}
-            >
-              <span className="font-medium">{preview.name}</span>
-              {preview.note && (
-                <span className="text-muted-foreground ml-1 text-sm">
-                  {preview.note}
-                </span>
-              )}
-            </button>
-          ))}
-        </ResponsiveModalScrollViewport>
-      )}
       <form
         className="shrink-0"
         onSubmit={(event) => {
@@ -195,6 +159,40 @@ function AddItemContent({
           }}
         />
       </form>
+      {typing && (
+        <ResponsiveModalScrollViewport
+          className="mt-3 flex-1 space-y-2 md:order-first md:mb-3 md:mt-0"
+          id="shopping-suggestions"
+          role="listbox"
+          aria-label="Shopping suggestions"
+        >
+          {previews.map((preview, index) => (
+            <button
+              key={shoppingIdentity(preview.name, preview.note)}
+              id={`shopping-suggestion-${index}`}
+              ref={(element) => {
+                optionRefs.current[index] = element;
+              }}
+              type="button"
+              role="option"
+              aria-selected={highlightedIndex === index}
+              aria-label={
+                preview.note ? `${preview.name}, ${preview.note}` : preview.name
+              }
+              className="bg-secondary/70 aria-selected:bg-secondary hover:bg-secondary focus-visible:bg-secondary block w-full rounded-[14px] px-3.5 py-3 text-left focus-visible:outline-none"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => onAdd(preview)}
+            >
+              <span className="font-medium">{preview.name}</span>
+              {preview.note && (
+                <span className="text-muted-foreground ml-1 text-sm">
+                  {preview.note}
+                </span>
+              )}
+            </button>
+          ))}
+        </ResponsiveModalScrollViewport>
+      )}
       {sources.isError && query.trim() && (
         <p role="alert" className="text-destructive mt-3 shrink-0 text-sm">
           Could not load suggestions. Try again.
