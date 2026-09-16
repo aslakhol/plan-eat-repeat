@@ -129,13 +129,11 @@ export function ShoppingListView() {
     refetchInterval: 2000,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
-    retry: false,
   });
   const recent = api.shoppingList.recent.useQuery(undefined, {
     refetchInterval: 2000,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
-    retry: false,
   });
   // Keep pending additions separate so polling cannot erase them, and only
   // deduplicate the unspecified requirements created by autocomplete.

@@ -47,7 +47,11 @@ export const api = createTRPCNext<AppRouter>({
       ],
       queryClientConfig: {
         queryCache: new QueryCache({
-          onError: (error) => {
+          onError: (error, query) => {
+            // Refresh failures remain in query state for inline feedback.
+            // Resuming a phone or polling must not repeatedly interrupt the user.
+            if (query.state.data !== undefined) return;
+
             toast({
               variant: "destructive",
               title: "Something went wrong",
