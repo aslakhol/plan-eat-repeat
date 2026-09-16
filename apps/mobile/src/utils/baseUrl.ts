@@ -14,13 +14,13 @@ export const getBaseUrl = () => {
     null;
   const host = hostUri?.split(":")[0];
   if (host) {
-    return `http://${host}:3000`;
+    return `http://${host}:9000`;
   }
 
   // iOS Simulator can use localhost
   if (Platform.OS === "ios") {
-    return "http://localhost:3000";
+    return "http://localhost:9000";
   }
   // Android Emulator uses 10.0.2.2 for host's localhost
-  return "http://10.0.2.2:3000";
+  return "http://10.0.2.2:9000";
 };

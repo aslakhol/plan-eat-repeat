@@ -54,7 +54,11 @@ The project was Bootstrapped with [create-t3-app](https://create.t3.gg/).
 ```bash
 pnpm install
 cp .env.example .env
+cp apps/web/.env.example apps/web/.env
 ```
+
+Fill in the web app's keys in `apps/web/.env`. Start it with `pnpm dev:web`
+and open `http://localhost:9000`. `pnpm dev` uses the same port.
 
 ### Database
 
@@ -113,9 +117,9 @@ You should land on the Weekly Plan with the seeded dinners available. Changes yo
 
 ### Gotchas
 
-- **Web must run on port 3000.** The app assumes the API is at `http://<your-mac-ip>:3000`. If something else is squatting on port 3000, Next.js silently picks another port and the app can't reach the API — either free up the port, or uncomment `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` and set it to `http://<your-mac-ip>:<actual-port>` (find your IP with `ipconfig getifaddr en0`), then restart the mobile dev server.
+- The mobile app expects the web API at `http://<your-mac-ip>:9000`. The web server fails if that port is occupied. To use another port, run `pnpm dev:web -- --port <port>`, update `NEXT_PUBLIC_APP_URL` in `apps/web/.env`, and set `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` to `http://<your-mac-ip>:<port>`. Find your IP with `ipconfig getifaddr en0`, then restart the mobile dev server.
 - **macOS firewall**: accept the "allow incoming connections" prompt for Node the first time, or the phone can't reach Metro or the API.
-- **"local login" fails with 403/404**: the web server is not in dev mode, or the phone isn't hitting it over the local network. Check that opening `http://<your-mac-ip>:3000` in the phone's browser shows the web app.
+- **"local login" fails with 403/404**: the web server is not in dev mode, or the phone isn't hitting it over the local network. Check that opening `http://<your-mac-ip>:9000` in the phone's browser shows the web app.
 
 ## Commands
 
@@ -124,7 +128,8 @@ You should land on the Weekly Plan with the seeded dinners available. Changes yo
 pnpm dev:web              # web
 pnpm dev:mobile           # mobile (QR code, for Expo Go on a physical phone)
 pnpm dev:mobile:android   # mobile (Android emulator/device via adb)
-pnpm dev                  # all dev tasks
+pnpm dev                  # web
+pnpm dev:all              # web + mobile
 
 # quality/build
 pnpm lint
@@ -148,7 +153,7 @@ Use these commands to capture screenshots and compose side-by-side images.
 
 ### Prerequisites
 
-- `pnpm dev:web` is running on `http://localhost:3000`
+- `pnpm dev:web` is running on `http://localhost:9000`
 - `pnpm dev:mobile:android` is running on `http://localhost:8081`
 - Mobile app is logged in (tap `local login` once after startup)
 - `adb` and ImageMagick (`magick`) are installed
