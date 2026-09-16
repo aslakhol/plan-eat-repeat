@@ -1,4 +1,9 @@
-import { ChevronDown, MoreHorizontal, Plus } from "lucide-react";
+import {
+  ChevronDown,
+  MoreHorizontal,
+  Plus,
+  UtensilsCrossed,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -208,9 +213,13 @@ export function ShoppingListView() {
       </header>
 
       {list.isPending && (
-        <p role="status" className="text-muted-foreground py-8 text-center">
-          Loading shopping list…
-        </p>
+        <div role="status" className="flex items-center justify-center py-8">
+          <UtensilsCrossed
+            aria-hidden="true"
+            className="text-primary animate-spin"
+          />
+          <span className="sr-only">Loading shopping list…</span>
+        </div>
       )}
       {list.isError && (
         <p role="alert" className="text-destructive mb-4 text-sm">
