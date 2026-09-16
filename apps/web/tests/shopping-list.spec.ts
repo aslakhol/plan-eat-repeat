@@ -112,7 +112,7 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
       exact: true,
     });
   const editor = page.getByRole("dialog", { name: "Edit item", exact: true });
-  const moveWithoutFlashing = async (
+  const moveBeforeResponse = async (
     action: Locator,
     procedure: "addRecent" | "remove",
   ) => {
@@ -127,8 +127,8 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
     try {
       await action.click();
       await request;
-      // Keep the row in place until the transfer can be reflected in both lists.
-      await expect(action).toBeVisible({ timeout: 500 });
+      // The source row must disappear before the server responds.
+      await expect(action).not.toBeVisible({ timeout: 500 });
     } finally {
       gate.resolve();
       await response;
@@ -302,7 +302,7 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
     await expect(editor).not.toBeVisible();
     ingredientLabel = `${ingredientName}, Red lentils`;
     await expect(otherVariant).toBeVisible();
-    await moveWithoutFlashing(addRecent(), "addRecent");
+    await moveBeforeResponse(addRecent(), "addRecent");
     await expect(removeItem(ingredientName)).toBeVisible();
     await expect(addRecent()).toHaveCount(0);
     await expect(
@@ -311,7 +311,7 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
         exact: true,
       }),
     ).toHaveText("300 g");
-    await moveWithoutFlashing(removeItem(ingredientName), "remove");
+    await moveBeforeResponse(removeItem(ingredientName), "remove");
     await expect(addRecent()).toBeVisible();
     await page
       .getByRole("button", { name: `Edit ${ingredientLabel}`, exact: true })
@@ -567,3 +567,107 @@ test("a failed optimistic shopping add preserves overlapping successful adds", a
     });
   }
 });
+
+for (const procedure of ["remove", "addRecent"] as const) {
+  test(`optimistic ${procedure} survives polling and rolls back only the failed item`, async ({
+    page,
+  }) => {
+    await ensureSignedIn(page);
+    const response = await page.request.post("/api/dev/auth-bypass");
+    const { userId } = (await response.json()) as { userId: string };
+    const { householdId } = await db.membership.findUniqueOrThrow({
+      where: { userId },
+    });
+    const marker = `Move${crypto.randomUUID()}`;
+    const failedName = `${marker} failed`;
+    const savedName = `${marker} saved`;
+    const ownItems = await Promise.all(
+      [failedName, savedName].map((name) =>
+        db.ownItem.create({
+          data: {
+            householdId,
+            name,
+            normalizedName: name.toLowerCase(),
+            category: "OWN_ITEMS",
+          },
+        }),
+      ),
+    );
+    const records = await Promise.all(
+      ownItems.map((item) => {
+        const data = { ownItemId: item.id, householdId, amount: 2, unit: "kg" };
+        return procedure === "remove"
+          ? db.shoppingItem.create({ data })
+          : db.recentShoppingItem.create({ data });
+      }),
+    );
+    const gate = Promise.withResolvers<void>();
+    const requested = Promise.withResolvers<void>();
+    await page.route(
+      `**/api/trpc/shoppingList.${procedure}*`,
+      async (route) => {
+        if (route.request().postData()?.includes(records[0]!.id)) {
+          requested.resolve();
+          await gate.promise;
+          await route.abort("failed");
+        } else await route.continue();
+      },
+    );
+    const action = (name: string, recent: boolean) =>
+      page.getByRole("button", {
+        name: recent
+          ? `Add ${name} to shopping list`
+          : `Remove ${name} from list`,
+        exact: true,
+      });
+    const fromRecent = procedure === "addRecent";
+    try {
+      await page.goto("/shopping-list");
+      await action(failedName, fromRecent).click();
+      await requested.promise;
+      await expect(action(failedName, fromRecent)).not.toBeVisible({
+        timeout: 500,
+      });
+      await expect(action(failedName, !fromRecent)).toBeVisible({
+        timeout: 500,
+      });
+      await expect(action(failedName, !fromRecent)).toBeDisabled();
+      await expect(
+        page.getByRole("button", {
+          name: `Edit quantity for ${failedName}`,
+          exact: true,
+        }),
+      ).toHaveText("2 kg");
+      await action(savedName, fromRecent).click();
+      await expect(action(savedName, !fromRecent)).toBeEnabled();
+
+      // Wait for a real poll returning the unchanged server state of the blocked item.
+      await page.waitForResponse(
+        (response) =>
+          response.request().method() === "GET" &&
+          response.url().includes("shoppingList.list"),
+      );
+      await expect(action(failedName, fromRecent)).not.toBeVisible();
+      await expect(action(failedName, !fromRecent)).toBeVisible();
+      gate.resolve();
+      await expect(action(failedName, fromRecent)).toBeEnabled();
+      await expect(action(failedName, !fromRecent)).not.toBeVisible();
+      await expect(action(savedName, !fromRecent)).toBeEnabled();
+      await expect(
+        page.getByText("Could not update shopping list", { exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByText("Something went wrong", { exact: true }),
+      ).toHaveCount(0);
+      await page.reload();
+      await expect(action(failedName, fromRecent)).toBeEnabled();
+      await expect(action(savedName, !fromRecent)).toBeEnabled();
+    } finally {
+      gate.resolve();
+      await page.unrouteAll({ behavior: "wait" });
+      await db.ownItem.deleteMany({
+        where: { id: { in: ownItems.map((item) => item.id) } },
+      });
+    }
+  });
+}
