@@ -36,6 +36,7 @@ import {
 
 import { api } from "~/utils/api";
 import { Button } from "~/components/ui/button";
+import { LoadingIndicator } from "~/components/LoadingIndicator";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
 import { cn } from "~/lib/utils";
@@ -206,15 +207,19 @@ export function AddDinnerSheet(props: Props) {
     return (
       <ResponsiveModal open onOpenChange={onOpenChange}>
         <ResponsiveModalContent className="p-6">
-          <ResponsiveModalTitle>
+          <ResponsiveModalTitle
+            className={householdQuery.isPending ? "sr-only" : undefined}
+          >
             {householdQuery.isPending
-              ? "Loading"
+              ? "Import prompt"
               : "Couldn't load import prompt"}
           </ResponsiveModalTitle>
           <ResponsiveModalDescription className="sr-only">
             Recipe import settings
           </ResponsiveModalDescription>
-          {!householdQuery.isPending && (
+          {householdQuery.isPending ? (
+            <LoadingIndicator label="Loading import prompt…" />
+          ) : (
             <Button onClick={() => void householdQuery.refetch()}>
               Try again
             </Button>

@@ -1,6 +1,7 @@
 import { ChevronLeft, X } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
+import { LoadingIndicator } from "~/components/LoadingIndicator";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { api } from "~/utils/api";
@@ -68,9 +69,7 @@ export function UsuallyHaveView() {
         </Button>
       </form>
       {preferences.isPending && (
-        <p role="status" className="text-muted-foreground py-8 text-center">
-          Loading Usually have…
-        </p>
+        <LoadingIndicator label="Loading Usually have…" />
       )}
       {(preferences.isError || setPreference.isError) && (
         <p role="alert" className="text-destructive mb-3 text-sm">

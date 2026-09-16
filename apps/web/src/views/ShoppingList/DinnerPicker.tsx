@@ -1,6 +1,7 @@
 import { addWeeks, isSameDay } from "date-fns";
 import { Check } from "lucide-react";
 import { Fragment, useState, type ReactNode } from "react";
+import { LoadingIndicator } from "~/components/LoadingIndicator";
 import {
   ResponsiveModal,
   ResponsiveModalContent,
@@ -118,7 +119,7 @@ export function DinnerPicker({
         <ResponsiveModalScrollViewport className="min-h-0 flex-1 space-y-2.5">
           {source === "plan" ? (
             plans.isPending ? (
-              <p role="status">Loading week plan…</p>
+              <LoadingIndicator label="Loading week plan…" />
             ) : plans.isError ? (
               <p role="alert" className="text-destructive text-sm">
                 Could not load the week plan. Try again.
@@ -164,7 +165,7 @@ export function DinnerPicker({
               })
             )
           ) : dinners.isPending ? (
-            <p role="status">Loading Cookbook…</p>
+            <LoadingIndicator label="Loading Cookbook…" />
           ) : dinners.isError ? (
             <p role="alert" className="text-destructive text-sm">
               Could not load Cookbook. Try again.

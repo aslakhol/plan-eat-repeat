@@ -1,6 +1,7 @@
 import { addWeeks, isSameDay } from "date-fns";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { LoadingIndicator } from "~/components/LoadingIndicator";
 
 import {
   ResponsiveModal,
@@ -134,10 +135,7 @@ export const DinnerPlanningSheet = ({
         </div>
 
         {plansQuery.isPending ? (
-          <div className="text-muted-foreground flex min-h-56 items-center justify-center gap-2 text-sm">
-            <Loader2 className="size-4 animate-spin" />
-            Loading week…
-          </div>
+          <LoadingIndicator label="Loading week…" className="min-h-56" />
         ) : plansQuery.isError ? (
           <div className="flex min-h-56 flex-col items-center justify-center gap-3 text-center">
             <p className="text-destructive text-sm font-semibold">
