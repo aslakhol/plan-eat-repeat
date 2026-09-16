@@ -23,7 +23,7 @@ fi
 root_dir="$(git rev-parse --show-toplevel)"
 output_path="${2:-$root_dir/capture/mobile/${screen_name}.png}"
 expo_port=8081
-web_port=3000
+web_port=9000
 max_wait_seconds=90
 reopen_every_seconds=12
 

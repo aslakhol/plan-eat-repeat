@@ -5,7 +5,7 @@ root_dir="$(git rev-parse --show-toplevel)"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 screens=(plan dinners)
 expo_port=8081
-web_port=3000
+web_port=9000
 host_loopback="localhost"
 skip_sbs=false
 

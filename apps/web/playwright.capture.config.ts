@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFilePath);
-const webPort = 3000;
+const webPort = 9000;
 const baseURL = process.env.CAPTURE_BASE_URL ?? `http://127.0.0.1:${webPort}`;
 const viewportWidth = Number(process.env.CAPTURE_VIEWPORT_WIDTH ?? 430);
 const viewportHeight = Number(process.env.CAPTURE_VIEWPORT_HEIGHT ?? 932);

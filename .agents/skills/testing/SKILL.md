@@ -19,4 +19,4 @@ Use focused assertions in mixed tests. Remove low-value assertions without disca
 
 The Node suites use controlled provider responses. Browser tests reuse the existing local dev server and local login; they require the local database and Clerk development setup. Keep full third-party signup and live-provider checks as manual smoke verification.
 
-Run `pnpm test` for unit tests, `pnpm test:integration` for database tests, and `pnpm test:e2e` for Playwright. The browser runner uses the existing server at `http://127.0.0.1:3000` (override with `PLAYWRIGHT_BASE_URL`); it does not start a server. Use `pnpm capture:web` separately for screenshots.
+Run `pnpm test` for unit tests, `pnpm test:integration` for database tests, and `pnpm test:e2e` for Playwright. The browser runner uses the existing server at `http://127.0.0.1:9000` (override with `PLAYWRIGHT_BASE_URL`); it does not start a server. Use `pnpm capture:web` separately for screenshots.

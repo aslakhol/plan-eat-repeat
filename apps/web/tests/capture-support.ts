@@ -17,7 +17,7 @@ export async function ensureSignedIn(page: Page) {
     const status = response?.status() ?? 0;
     if (status >= 400) {
       throw new Error(
-        `GET / returned ${status}. The web server on port 3000 is not healthy for capture. Restart it with "pnpm dev:web" and check the server logs.`,
+        `GET / returned ${status}. The web server at ${page.url()} is not healthy for capture. Restart it with "pnpm dev:web" and check the server logs.`,
       );
     }
 
