@@ -38,12 +38,14 @@ function ShoppingItemRow({
   onMove,
   recent = false,
   pending = false,
+  moveDisabled = false,
 }: {
   item: ShoppingItem;
   onEdit: () => void;
   onMove: () => void;
   recent?: boolean;
   pending?: boolean;
+  moveDisabled?: boolean;
 }) {
   const label = [item.name, item.note].filter(Boolean).join(", ");
 
@@ -54,7 +56,7 @@ function ShoppingItemRow({
         aria-label={
           recent ? `Add ${label} to shopping list` : `Remove ${label} from list`
         }
-        disabled={pending}
+        disabled={moveDisabled}
         onClick={onMove}
         className="hover:bg-secondary focus-visible:ring-ring flex min-h-14 min-w-0 flex-1 items-center gap-2 rounded-[14px] px-3.5 py-3 text-left outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
       >
@@ -333,6 +335,9 @@ export function ShoppingListView() {
                       shoppingIdentity(item.name, item.note),
                     )
                   }
+                  moveDisabled={pendingIdentities.has(
+                    shoppingIdentity(item.name, item.note),
+                  )}
                   onMove={() => moveItem({ item, recent: false })}
                   onEdit={() => setEditingItem({ item, recent: false })}
                 />

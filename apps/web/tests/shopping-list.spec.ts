@@ -631,7 +631,7 @@ for (const procedure of ["remove", "addRecent"] as const) {
       await expect(action(failedName, !fromRecent)).toBeVisible({
         timeout: 500,
       });
-      await expect(action(failedName, !fromRecent)).toBeDisabled();
+      await expect(action(failedName, !fromRecent)).toBeEnabled();
       await expect(
         page.getByRole("button", {
           name: `Edit quantity for ${failedName}`,
@@ -671,3 +671,208 @@ for (const procedure of ["remove", "addRecent"] as const) {
     }
   });
 }
+
+test("the same shopping item can be moved repeatedly before earlier requests finish", async ({
+  page,
+}) => {
+  await ensureSignedIn(page);
+  const response = await page.request.post("/api/dev/auth-bypass");
+  const { userId } = (await response.json()) as { userId: string };
+  const { householdId } = await db.membership.findUniqueOrThrow({
+    where: { userId },
+  });
+  const name = `Repeated ${crypto.randomUUID()}`;
+  const ownItem = await db.ownItem.create({
+    data: {
+      householdId,
+      name,
+      normalizedName: name.toLowerCase(),
+      category: "OWN_ITEMS",
+    },
+  });
+  await db.shoppingItem.create({
+    data: { householdId, ownItemId: ownItem.id, amount: 2, unit: "kg" },
+  });
+  const removeGate = Promise.withResolvers<void>();
+  const removeRequested = Promise.withResolvers<void>();
+  const addGate = Promise.withResolvers<void>();
+  const addSaved = Promise.withResolvers<void>();
+  const refreshGate = Promise.withResolvers<void>();
+  let blockRefresh = false;
+  await page.route("**/api/trpc/**", async (route) => {
+    const request = route.request();
+    if (
+      request.url().includes("shoppingList.remove") &&
+      request.method() === "POST"
+    ) {
+      removeRequested.resolve();
+      await removeGate.promise;
+    }
+    if (
+      request.url().includes("shoppingList.addRecent") &&
+      request.method() === "POST"
+    ) {
+      // The server has saved a new shopping row, but its response is still in transit.
+      const response = await route.fetch();
+      addSaved.resolve();
+      await addGate.promise;
+      await route.fulfill({ response });
+      return;
+    }
+    if (blockRefresh && request.method() === "GET") await refreshGate.promise;
+    await route.continue();
+  });
+  const remove = page.getByRole("button", {
+    name: `Remove ${name} from list`,
+    exact: true,
+  });
+  const restore = page.getByRole("button", {
+    name: `Add ${name} to shopping list`,
+    exact: true,
+  });
+  const edit = page.getByRole("button", { name: `Edit ${name}`, exact: true });
+  try {
+    await page.goto("/shopping-list");
+    await remove.click();
+    await removeRequested.promise;
+    await expect(restore).toBeEnabled({ timeout: 500 });
+    await restore.click();
+    await expect(remove).toBeEnabled({ timeout: 500 });
+    await remove.click();
+    await expect(restore).toBeEnabled({ timeout: 500 });
+    await restore.click();
+    await expect(remove).toBeEnabled({ timeout: 500 });
+    removeGate.resolve();
+    await addSaved.promise;
+    // A poll can now return the new server ID before the delayed add response.
+    await page.waitForResponse(
+      (response) =>
+        response.request().method() === "GET" &&
+        response.url().includes("shoppingList.list"),
+    );
+    await expect(remove).toHaveCount(1);
+    await expect(remove).toBeEnabled({ timeout: 500 });
+    await remove.click();
+    await expect(restore).toBeEnabled({ timeout: 500 });
+    await restore.click();
+    await expect(remove).toBeEnabled({ timeout: 500 });
+    await remove.click();
+    await expect(restore).toBeEnabled({ timeout: 500 });
+    blockRefresh = true;
+    addGate.resolve();
+    // Even a blocked refresh must not keep the item pending after its saves finish.
+    await expect(edit).toBeEnabled();
+    await expect(restore).toBeEnabled();
+    expect(
+      await db.shoppingItem.count({ where: { ownItemId: ownItem.id } }),
+    ).toBe(0);
+    await restore.click();
+    await expect(remove).toBeEnabled({ timeout: 500 });
+    await expect(edit).toBeEnabled();
+    expect(
+      await db.shoppingItem.count({ where: { ownItemId: ownItem.id } }),
+    ).toBe(1);
+    refreshGate.resolve();
+    await page.unrouteAll({ behavior: "wait" });
+    await page.reload();
+    await expect(remove).toBeEnabled();
+    await expect(restore).not.toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: `Edit quantity for ${name}`,
+        exact: true,
+      }),
+    ).toHaveText("2 kg");
+  } finally {
+    removeGate.resolve();
+    addGate.resolve();
+    refreshGate.resolve();
+    await page.unrouteAll({ behavior: "wait" });
+    await db.ownItem.delete({ where: { id: ownItem.id } });
+  }
+});
+
+test("a failed queued move returns to the last saved state and can be retried", async ({
+  page,
+}) => {
+  await ensureSignedIn(page);
+  const response = await page.request.post("/api/dev/auth-bypass");
+  const { userId } = (await response.json()) as { userId: string };
+  const { householdId } = await db.membership.findUniqueOrThrow({
+    where: { userId },
+  });
+  const name = `Queued ${crypto.randomUUID()}`;
+  const ownItem = await db.ownItem.create({
+    data: {
+      householdId,
+      name,
+      normalizedName: name.toLowerCase(),
+      category: "OWN_ITEMS",
+    },
+  });
+  await db.recentShoppingItem.create({
+    data: { householdId, ownItemId: ownItem.id, amount: 3, unit: "kg" },
+  });
+  const addGate = Promise.withResolvers<void>();
+  const addRequested = Promise.withResolvers<void>();
+  const removeGate = Promise.withResolvers<void>();
+  const removeRequested = Promise.withResolvers<void>();
+  let failRemove = true;
+  await page.route("**/api/trpc/shoppingList.addRecent*", async (route) => {
+    addRequested.resolve();
+    await addGate.promise;
+    await route.continue();
+  });
+  await page.route("**/api/trpc/shoppingList.remove*", async (route) => {
+    if (failRemove) {
+      failRemove = false;
+      removeRequested.resolve();
+      await removeGate.promise;
+      await route.abort("failed");
+    } else await route.continue();
+  });
+  const remove = page.getByRole("button", {
+    name: `Remove ${name} from list`,
+    exact: true,
+  });
+  const restore = page.getByRole("button", {
+    name: `Add ${name} to shopping list`,
+    exact: true,
+  });
+  const edit = page.getByRole("button", { name: `Edit ${name}`, exact: true });
+  try {
+    await page.goto("/shopping-list");
+    await restore.click();
+    await addRequested.promise;
+    await expect(remove).toBeEnabled({ timeout: 500 });
+    await remove.click();
+    await expect(restore).toBeEnabled({ timeout: 500 });
+    addGate.resolve();
+    await removeRequested.promise;
+    await expect(restore).toBeEnabled();
+    removeGate.resolve();
+    await expect(remove).toBeEnabled();
+    await expect(restore).not.toBeVisible();
+    await expect(edit).toBeEnabled();
+    await expect(
+      page.getByText("Could not update shopping list", { exact: true }),
+    ).toBeVisible();
+    await remove.click();
+    await expect(restore).toBeEnabled({ timeout: 500 });
+    await expect(edit).toBeEnabled();
+    await page.reload();
+    await expect(restore).toBeEnabled();
+    await expect(remove).not.toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: `Edit quantity for ${name}`,
+        exact: true,
+      }),
+    ).toHaveText("3 kg");
+  } finally {
+    addGate.resolve();
+    removeGate.resolve();
+    await page.unrouteAll({ behavior: "wait" });
+    await db.ownItem.delete({ where: { id: ownItem.id } });
+  }
+});
