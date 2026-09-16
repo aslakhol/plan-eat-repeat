@@ -98,7 +98,7 @@ function AddItemContent({
       </ResponsiveModalDescription>
       {typing && (
         <ResponsiveModalScrollViewport
-          className="mb-3 flex-1"
+          className="mb-3 flex-1 space-y-2"
           id="shopping-suggestions"
           role="listbox"
           aria-label="Shopping suggestions"
@@ -116,7 +116,7 @@ function AddItemContent({
               aria-label={
                 preview.note ? `${preview.name}, ${preview.note}` : preview.name
               }
-              className="aria-selected:bg-accent hover:bg-accent focus-visible:bg-accent block w-full rounded-lg px-3 py-3 text-left focus-visible:outline-none"
+              className="bg-secondary/70 aria-selected:bg-secondary hover:bg-secondary focus-visible:bg-secondary block w-full rounded-[14px] px-3.5 py-3 text-left focus-visible:outline-none"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => onAdd(preview)}
             >
