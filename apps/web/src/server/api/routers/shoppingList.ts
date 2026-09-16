@@ -397,9 +397,21 @@ export const shoppingListRouter = createTRPCRouter({
       ctx.db.$transaction(async (tx) => {
         await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
         const where = { id: input.id, householdId: ctx.householdId };
-        const item = await tx.shoppingItem.findUnique({ where });
-        if (item) await rememberShoppingItems(tx, ctx.householdId, [item]);
-        return tx.shoppingItem.deleteMany({ where });
+        const item = await tx.shoppingItem.findUnique({
+          where,
+          include: { ownItem: true },
+        });
+        const [recent] = item
+          ? await rememberShoppingItems(tx, ctx.householdId, [item])
+          : [];
+        const removed = await tx.shoppingItem.deleteMany({ where });
+        return {
+          ...removed,
+          recentItem:
+            item && recent
+              ? shoppingItemDetails({ ...recent, ownItem: item.ownItem })
+              : null,
+        };
       }),
     ),
 

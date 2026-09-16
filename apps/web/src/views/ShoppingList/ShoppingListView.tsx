@@ -22,6 +22,7 @@ import { toast } from "~/components/ui/use-toast";
 import { cn } from "~/lib/utils";
 import { shoppingIdentity } from "~/lib/shopping-matching";
 import { useAddShoppingItem } from "./use-add-shopping-item";
+import { useMoveShoppingItem } from "./use-move-shopping-item";
 import { AddItemSheet } from "./AddItemSheet";
 import { EditItemSheet } from "./EditItemSheet";
 import { DinnerPicker, type ShoppingDinnerSource } from "./DinnerPicker";
@@ -34,28 +35,16 @@ const RECENT_OPEN_KEY = "plan-eat-repeat:recently-used-open";
 function ShoppingItemRow({
   item,
   onEdit,
+  onMove,
   recent = false,
   pending = false,
 }: {
   item: ShoppingItem;
   onEdit: () => void;
+  onMove: () => void;
   recent?: boolean;
   pending?: boolean;
 }) {
-  const utils = api.useUtils();
-  const options = {
-    networkMode: "always" as const,
-    retry: false,
-    onSuccess: () => utils.shoppingList.invalidate(),
-    onError: () =>
-      toast({
-        variant: "destructive",
-        title: "Could not update shopping list",
-      }),
-  };
-  const remove = api.shoppingList.remove.useMutation(options);
-  const add = api.shoppingList.addRecent.useMutation(options);
-  const action = recent ? add : remove;
   const label = [item.name, item.note].filter(Boolean).join(", ");
 
   return (
@@ -65,8 +54,8 @@ function ShoppingItemRow({
         aria-label={
           recent ? `Add ${label} to shopping list` : `Remove ${label} from list`
         }
-        disabled={pending || action.isPending}
-        onClick={() => action.mutate({ id: item.id })}
+        disabled={pending}
+        onClick={onMove}
         className="hover:bg-secondary focus-visible:ring-ring flex min-h-14 min-w-0 flex-1 items-center gap-2 rounded-[14px] px-3.5 py-3 text-left outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
       >
         {recent && <Plus className="text-muted-foreground size-4 shrink-0" />}
@@ -83,7 +72,7 @@ function ShoppingItemRow({
         <button
           type="button"
           aria-label={`Edit quantity for ${label}`}
-          disabled={pending || action.isPending}
+          disabled={pending}
           onClick={onEdit}
           className="bg-background border-border hover:bg-accent focus-visible:ring-ring max-w-[35%] rounded-lg border px-2 py-1 text-sm font-semibold outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
         >
@@ -93,7 +82,7 @@ function ShoppingItemRow({
       <button
         type="button"
         aria-label={`Edit ${label}`}
-        disabled={pending || action.isPending}
+        disabled={pending}
         onClick={onEdit}
         className="text-muted-foreground border-border hover:bg-accent focus-visible:ring-ring mx-2 flex size-8 shrink-0 items-center justify-center rounded-lg border bg-white outline-none focus-visible:ring-2"
       >
@@ -142,6 +131,12 @@ export function ShoppingListView() {
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",
   });
+  const {
+    moveItem,
+    items,
+    recentItems: movedRecentItems,
+    pendingOwnIds,
+  } = useMoveShoppingItem(list.data ?? [], recent.data ?? []);
   // Keep pending additions separate so polling cannot erase them, and only
   // deduplicate the unspecified requirements created by autocomplete.
   const optimisticItems = pendingItems.filter((item, index) => {
@@ -150,7 +145,7 @@ export function ShoppingListView() {
       pendingItems.findIndex(
         (other) => shoppingIdentity(other.name, other.note) === identity,
       ) === index &&
-      !list.data?.some(
+      !items.some(
         (saved) =>
           saved.amount === null &&
           saved.unit === null &&
@@ -158,14 +153,10 @@ export function ShoppingListView() {
       )
     );
   });
-  const hasItems = (list.data?.length ?? 0) > 0 || optimisticItems.length > 0;
-  const activeIds = new Set(list.data?.map((item) => item.ownItemId));
-  const recentItems =
-    recent.data?.filter(
-      (item) =>
-        !activeIds.has(item.ownItemId) &&
-        !pendingIdentities.has(shoppingIdentity(item.name, item.note)),
-    ) ?? [];
+  const hasItems = items.length > 0 || optimisticItems.length > 0;
+  const recentItems = movedRecentItems.filter(
+    (item) => !pendingIdentities.has(shoppingIdentity(item.name, item.note)),
+  );
   const clear = api.shoppingList.clear.useMutation({
     networkMode: "always",
     retry: false,
@@ -176,11 +167,14 @@ export function ShoppingListView() {
   });
 
   const shareDisabled =
-    !list.data?.length || pendingItems.length > 0 || sharing;
+    !items.length ||
+    pendingItems.length > 0 ||
+    pendingOwnIds.size > 0 ||
+    sharing;
   const shoppingText = [
     "Shopping list",
     "",
-    ...(list.data ?? []).map((item) => {
+    ...items.map((item) => {
       const quantity = [item.amount, item.unit]
         .filter((value) => value !== null)
         .join(" ");
@@ -269,7 +263,11 @@ export function ShoppingListView() {
             <button
               type="button"
               className="hover:bg-muted w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold disabled:opacity-50"
-              disabled={!list.data?.length || pendingItems.length > 0}
+              disabled={
+                !items.length ||
+                pendingItems.length > 0 ||
+                pendingOwnIds.size > 0
+              }
               onClick={() => {
                 menuRef.current?.removeAttribute("open");
                 setClearOpen(true);
@@ -325,13 +323,17 @@ export function ShoppingListView() {
               <Plus className="size-4" /> Add an item
             </button>
             <ul className="space-y-2" aria-label="Shopping items">
-              {list.data?.map((item) => (
+              {items.map((item) => (
                 <ShoppingItemRow
                   key={item.id}
                   item={item}
-                  pending={pendingIdentities.has(
-                    shoppingIdentity(item.name, item.note),
-                  )}
+                  pending={
+                    pendingOwnIds.has(item.ownItemId) ||
+                    pendingIdentities.has(
+                      shoppingIdentity(item.name, item.note),
+                    )
+                  }
+                  onMove={() => moveItem({ item, recent: false })}
                   onEdit={() => setEditingItem({ item, recent: false })}
                 />
               ))}
@@ -398,6 +400,8 @@ export function ShoppingListView() {
                 key={item.id}
                 item={item}
                 recent
+                pending={pendingOwnIds.has(item.ownItemId)}
+                onMove={() => moveItem({ item, recent: true })}
                 onEdit={() => setEditingItem({ item, recent: true })}
               />
             ))}
