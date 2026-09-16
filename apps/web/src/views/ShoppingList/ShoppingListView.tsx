@@ -2,6 +2,7 @@ import {
   ChevronDown,
   MoreHorizontal,
   Plus,
+  Share2,
   UtensilsCrossed,
 } from "lucide-react";
 import Link from "next/link";
@@ -116,6 +117,7 @@ export function ShoppingListView() {
     setPickerSource(source);
   };
   const [clearOpen, setClearOpen] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [editingItem, setEditingItem] = useState<{
     item: ShoppingItem;
     recent: boolean;
@@ -173,10 +175,66 @@ export function ShoppingListView() {
     },
   });
 
+  const shareDisabled =
+    !list.data?.length || pendingItems.length > 0 || sharing;
+  const shoppingText = [
+    "Shopping list",
+    "",
+    ...(list.data ?? []).map((item) => {
+      const quantity = [item.amount, item.unit]
+        .filter((value) => value !== null)
+        .join(" ");
+      const label = [item.name, item.note].filter(Boolean).join(", ");
+      return [quantity, label].filter(Boolean).join(" ").replace(/\s+/g, " ");
+    }),
+  ].join("\n");
+
+  const copyList = async () => {
+    try {
+      await navigator.clipboard.writeText(shoppingText);
+      toast({ title: "Shopping list copied" });
+    } catch {
+      toast({ variant: "destructive", title: "Could not copy shopping list" });
+    }
+  };
+
+  const shareList = async () => {
+    const data = { text: shoppingText };
+    if (!navigator.share || (navigator.canShare && !navigator.canShare(data))) {
+      await copyList();
+      return;
+    }
+    setSharing(true);
+    try {
+      await navigator.share(data);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      toast({
+        variant: "destructive",
+        title: "Could not share shopping list",
+        description: "Use Copy list in the shopping list menu.",
+      });
+    } finally {
+      setSharing(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-2xl">
-      <header className="mb-4 flex items-center justify-between gap-3">
-        <h1 className="font-serif text-[30px] leading-tight">Shopping list</h1>
+      <header className="mb-4 flex items-center justify-between gap-2">
+        <h1 className="min-w-0 flex-1 font-serif text-[30px] leading-tight max-[360px]:text-[26px]">
+          Shopping list
+        </h1>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 shrink-0 gap-1.5 rounded-full bg-white px-3 max-[360px]:w-9 max-[360px]:px-0"
+          disabled={shareDisabled}
+          onClick={() => void shareList()}
+        >
+          <Share2 aria-hidden="true" className="size-4" />
+          <span className="max-[360px]:sr-only">Share</span>
+        </Button>
         <DetailsMenu ref={menuRef} className="relative">
           <Button
             asChild
@@ -190,6 +248,17 @@ export function ShoppingListView() {
             </summary>
           </Button>
           <div className="border-border absolute right-0 z-20 mt-2 w-44 rounded-xl border bg-white p-1 shadow-lg">
+            <button
+              type="button"
+              className="hover:bg-muted w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold disabled:opacity-50"
+              disabled={shareDisabled}
+              onClick={() => {
+                menuRef.current?.removeAttribute("open");
+                void copyList();
+              }}
+            >
+              Copy list
+            </button>
             <Link
               href="/shopping-list/usually-have"
               className="hover:bg-muted block w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold"
