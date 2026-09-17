@@ -30,6 +30,11 @@ export function OdaTransferActions({ disabled }: { disabled: boolean }) {
     onSuccess,
     onError: () => utils.oda.transfer.invalidate(),
   });
+  const resolve = api.oda.resolve.useMutation({
+    retry: false,
+    onSuccess,
+    onError: () => utils.oda.transfer.invalidate(),
+  });
   const active =
     !transfer.data?.recoverable &&
     (transfer.data?.state === "MATCHING" || transfer.data?.state === "SENDING");
@@ -44,6 +49,7 @@ export function OdaTransferActions({ disabled }: { disabled: boolean }) {
           transfer.isPending ||
           transfer.isError ||
           recover.isPending ||
+          resolve.isPending ||
           active ||
           blocked ||
           send.isPending
@@ -64,7 +70,12 @@ export function OdaTransferActions({ disabled }: { disabled: boolean }) {
       {transfer.data?.recoverable && (
         <Button
           variant="outline"
-          disabled={recover.isPending || send.isPending || pendingChanges > 0}
+          disabled={
+            recover.isPending ||
+            resolve.isPending ||
+            send.isPending ||
+            pendingChanges > 0
+          }
           onClick={() => recover.mutate({ id: transfer.data!.id })}
         >
           {recover.isPending ? "Recovering…" : "Recover transfer"}
@@ -75,7 +86,44 @@ export function OdaTransferActions({ disabled }: { disabled: boolean }) {
           {transfer.data.message}
         </p>
       )}
-      {(send.error ?? recover.error ?? transfer.error) && (
+      {transfer.data?.state === "UNCERTAIN" && transfer.data.recoverable && (
+        <div className="space-y-2">
+          <p className="text-sm">
+            After checking the uncertain additions in Oda:
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              disabled={
+                resolve.isPending ||
+                recover.isPending ||
+                send.isPending ||
+                pendingChanges > 0
+              }
+              onClick={() =>
+                resolve.mutate({ id: transfer.data!.id, outcome: "ADDED" })
+              }
+            >
+              Mark as added
+            </Button>
+            <Button
+              variant="outline"
+              disabled={
+                resolve.isPending ||
+                recover.isPending ||
+                send.isPending ||
+                pendingChanges > 0
+              }
+              onClick={() =>
+                resolve.mutate({ id: transfer.data!.id, outcome: "NOT_ADDED" })
+              }
+            >
+              Mark as not added
+            </Button>
+          </div>
+        </div>
+      )}
+      {(send.error ?? recover.error ?? resolve.error ?? transfer.error) && (
         <p role="alert" className="text-destructive text-sm">
           Could not finish sending. Check the Oda cart before trying again.
         </p>
