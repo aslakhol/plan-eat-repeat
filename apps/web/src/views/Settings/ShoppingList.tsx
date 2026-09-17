@@ -50,7 +50,7 @@ export function ShoppingList({ language }: { language: ShoppingLanguage }) {
             {update.error.message}
           </p>
         )}
-        <OdaConnection settings />
+        <OdaConnection />
       </CardContent>
     </Card>
   );

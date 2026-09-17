@@ -157,12 +157,12 @@ export function OdaTransferProgress({ oda }: { oda: OdaShopping }) {
               </p>
             )}
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
-            {transfer.cartUrl && (
+            {transfer.cartUrl && (finished || transfer.recoverable) && (
               <a
                 href={transfer.cartUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-semibold underline underline-offset-4"
+                className="inline-flex min-h-9 items-center font-semibold underline underline-offset-4"
               >
                 Open Oda cart
               </a>
@@ -170,7 +170,7 @@ export function OdaTransferProgress({ oda }: { oda: OdaShopping }) {
             {transfer.recoverable && (
               <button
                 type="button"
-                className="font-semibold underline underline-offset-4 disabled:opacity-50"
+                className="min-h-9 font-semibold underline underline-offset-4 disabled:opacity-50"
                 disabled={oda.recoveryDisabled}
                 onClick={() => oda.recover.mutate({ id: transfer.id })}
               >
@@ -184,7 +184,7 @@ export function OdaTransferProgress({ oda }: { oda: OdaShopping }) {
                 </span>
                 <button
                   type="button"
-                  className="font-semibold underline underline-offset-4 disabled:opacity-50"
+                  className="min-h-9 font-semibold underline underline-offset-4 disabled:opacity-50"
                   disabled={oda.recoveryDisabled}
                   onClick={() =>
                     oda.resolve.mutate({ id: transfer.id, outcome: "ADDED" })
@@ -194,7 +194,7 @@ export function OdaTransferProgress({ oda }: { oda: OdaShopping }) {
                 </button>
                 <button
                   type="button"
-                  className="font-semibold underline underline-offset-4 disabled:opacity-50"
+                  className="min-h-9 font-semibold underline underline-offset-4 disabled:opacity-50"
                   disabled={oda.recoveryDisabled}
                   onClick={() =>
                     oda.resolve.mutate({

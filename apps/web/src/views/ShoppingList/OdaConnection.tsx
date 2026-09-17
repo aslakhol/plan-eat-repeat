@@ -1,21 +1,10 @@
-import { OdaTransferActions } from "./OdaTransferActions";
-import { useRouter } from "next/router";
-import Link from "next/link";
 import { api } from "~/utils/api";
 import { Button } from "~/components/ui/button";
 import { toast } from "~/components/ui/use-toast";
 
-export function OdaConnection({
-  settings = false,
-  sendDisabled = true,
-}: {
-  settings?: boolean;
-  sendDisabled?: boolean;
-}) {
-  const router = useRouter();
+export function OdaConnection() {
   const utils = api.useUtils();
   const status = api.oda.status.useQuery();
-  const transfer = api.oda.transfer.useQuery();
   const connect = api.oda.connect.useMutation({
     onSuccess: ({ url }) => window.location.assign(url),
     onError: (error) => toast({ title: error.message, variant: "destructive" }),
@@ -24,86 +13,43 @@ export function OdaConnection({
     onSuccess: () => utils.oda.invalidate(),
     onError: (error) => toast({ title: error.message, variant: "destructive" }),
   });
-  const cart = api.oda.cart.useQuery(undefined, {
-    enabled: !!status.data?.connected && !status.data.reconnectRequired,
-    retry: false,
-  });
-  const cartUrl = cart.data?.url ?? transfer.data?.cartUrl;
   return (
     <div className="my-3 space-y-2">
-      {router.query.oda === "failed" && (
-        <p role="alert" className="text-destructive text-sm">
-          Oda login failed. Connect again in{" "}
-          <Link href="/settings">settings</Link>.
-        </p>
-      )}
-      {settings && (
-        <p className="text-sm">
-          Oda:{" "}
-          {status.isPending
-            ? "Loading…"
+      <p className="text-sm">
+        Oda:{" "}
+        {status.isPending
+          ? "Loading…"
+          : status.isError
+            ? "Unavailable"
             : status.data?.reconnectRequired
               ? "Reconnect required"
               : status.data?.connected
                 ? "Connected"
                 : "Not connected"}
-        </p>
-      )}
-      {!settings && (
-        <OdaTransferActions
-          disabled={
-            sendDisabled ||
-            !status.data?.connected ||
-            status.data.reconnectRequired
-          }
-        />
-      )}
+      </p>
       <div className="flex flex-wrap gap-2">
-        {settings ? (
-          <>
-            <Button
-              variant="outline"
-              disabled={
-                status.isPending || connect.isPending || disconnect.isPending
-              }
-              onClick={() => connect.mutate()}
-            >
-              {status.data?.connected ? "Reconnect Oda" : "Connect Oda"}
-            </Button>
-            {status.data?.connected && (
-              <Button
-                variant="outline"
-                disabled={disconnect.isPending || connect.isPending}
-                onClick={() => disconnect.mutate()}
-              >
-                Disconnect Oda
-              </Button>
-            )}
-          </>
-        ) : (
-          (!status.data?.connected || status.data.reconnectRequired) && (
-            <Button asChild variant="outline">
-              <Link href="/settings">
-                {status.data?.reconnectRequired
-                  ? "Reconnect Oda"
-                  : "Connect Oda"}
-              </Link>
-            </Button>
-          )
-        )}
-        {cartUrl && (
-          <Button asChild variant="outline">
-            <a href={cartUrl} target="_blank" rel="noopener noreferrer">
-              Open Oda cart
-            </a>
+        <Button
+          variant="outline"
+          disabled={
+            status.isPending ||
+            status.isError ||
+            connect.isPending ||
+            disconnect.isPending
+          }
+          onClick={() => connect.mutate()}
+        >
+          {status.data?.connected ? "Reconnect Oda" : "Connect Oda"}
+        </Button>
+        {status.data?.connected && (
+          <Button
+            variant="outline"
+            disabled={disconnect.isPending || connect.isPending}
+            onClick={() => disconnect.mutate()}
+          >
+            Disconnect Oda
           </Button>
         )}
       </div>
-      {cart.error && (
-        <p role="alert" className="text-destructive text-sm">
-          {cart.error.message}
-        </p>
-      )}
     </div>
   );
 }

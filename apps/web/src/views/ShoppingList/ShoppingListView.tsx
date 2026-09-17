@@ -1,4 +1,6 @@
-import { OdaConnection } from "./OdaConnection";
+import { OdaShoppingMenu } from "./OdaShoppingMenu";
+import { OdaTransferProgress } from "./OdaTransferProgress";
+import { useOdaShopping } from "./use-oda-shopping";
 import {
   ChevronDown,
   MoreHorizontal,
@@ -123,6 +125,7 @@ export function ShoppingListView() {
     }
   }, []);
   const menuRef = useRef<HTMLDetailsElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const utils = api.useUtils();
   const list = api.shoppingList.list.useQuery(undefined, {
     refetchInterval: 2000,
@@ -157,6 +160,11 @@ export function ShoppingListView() {
     );
   });
   const hasItems = items.length > 0 || optimisticItems.length > 0;
+  const oda = useOdaShopping(
+    items,
+    menuOpen,
+    pendingItems.length > 0 || pendingOwnIds.size > 0,
+  );
   const recentItems = movedRecentItems.filter(
     (item) => !pendingIdentities.has(shoppingIdentity(item.name, item.note)),
   );
@@ -232,7 +240,11 @@ export function ShoppingListView() {
           <Share2 aria-hidden="true" className="size-4" />
           <span className="max-[360px]:sr-only">Share</span>
         </Button>
-        <DetailsMenu ref={menuRef} className="relative">
+        <DetailsMenu
+          ref={menuRef}
+          className="relative"
+          onToggle={(event) => setMenuOpen(event.currentTarget.open)}
+        >
           <Button
             asChild
             variant="outline"
@@ -278,14 +290,14 @@ export function ShoppingListView() {
             >
               Clear the list
             </button>
+            <OdaShoppingMenu
+              oda={oda}
+              onAction={() => menuRef.current?.removeAttribute("open")}
+            />
           </div>
         </DetailsMenu>
       </header>
-      <OdaConnection
-        sendDisabled={
-          !items.length || pendingItems.length > 0 || pendingOwnIds.size > 0
-        }
-      />
+      <OdaTransferProgress oda={oda} />
 
       {list.isPending && (
         <div role="status" className="flex items-center justify-center py-8">
