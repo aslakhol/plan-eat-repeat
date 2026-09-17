@@ -20,6 +20,10 @@ export function useOdaShopping(
   const transfer = api.oda.transfer.useQuery(undefined, {
     refetchInterval: 2000,
   });
+  // Once completion is observed, a later dismissal must not turn this ID
+  // back into a retry of an unacknowledged request.
+  if (request?.id === transfer.data?.id && transfer.data?.state === "COMPLETED")
+    setRequest(null);
   const cart = api.oda.cart.useQuery(undefined, {
     enabled:
       menuOpen && !!status.data?.connected && !status.data.reconnectRequired,
