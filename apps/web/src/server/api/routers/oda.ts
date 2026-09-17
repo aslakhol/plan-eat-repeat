@@ -12,7 +12,7 @@ import {
   connectionStatus,
   disconnect,
 } from "../../oda/connection";
-import { cartSchema, odaTool, productSearchSchema } from "../../oda/provider";
+import { odaTool, productSearchSchema } from "../../oda/provider";
 
 export const odaRouter = createTRPCRouter({
   searchProducts: protectedProcedureWithHousehold
@@ -83,8 +83,4 @@ export const odaRouter = createTRPCRouter({
   disconnect: protectedProcedureWithHousehold.mutation(({ ctx }) =>
     disconnect(ctx.db, ctx.householdId),
   ),
-  cart: protectedProcedureWithHousehold.query(async ({ ctx }) => ({
-    url: cartSchema.parse(await odaTool(ctx.db, ctx.householdId, "get_cart"))
-      .url,
-  })),
 });

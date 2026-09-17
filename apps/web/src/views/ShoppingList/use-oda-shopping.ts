@@ -4,11 +4,7 @@ import { api } from "~/utils/api";
 import { toast } from "~/components/ui/use-toast";
 
 type Item = { id: string; name: string };
-export function useOdaShopping(
-  items: Item[],
-  menuOpen: boolean,
-  disabled: boolean,
-) {
+export function useOdaShopping(items: Item[], disabled: boolean) {
   const utils = api.useUtils();
   const [request, setRequest] = useState<{
     id: string;
@@ -24,12 +20,6 @@ export function useOdaShopping(
   // back into a retry of an unacknowledged request.
   if (request?.id === transfer.data?.id && transfer.data?.state === "COMPLETED")
     setRequest(null);
-  const cart = api.oda.cart.useQuery(undefined, {
-    enabled:
-      menuOpen && !!status.data?.connected && !status.data.reconnectRequired,
-    staleTime: 60_000,
-    retry: false,
-  });
   const connect = api.oda.connect.useMutation({
     onSuccess: ({ url }) => window.location.assign(url),
     onError: (error) => toast({ title: error.message, variant: "destructive" }),
@@ -38,7 +28,6 @@ export function useOdaShopping(
     await Promise.all([
       utils.oda.transfer.invalidate(),
       utils.shoppingList.invalidate(),
-      utils.oda.cart.invalidate(),
       utils.oda.status.invalidate(),
     ]);
     setRequest(null);
@@ -84,7 +73,6 @@ export function useOdaShopping(
   return {
     status,
     transfer,
-    cart,
     connect,
     recover,
     resolve,
@@ -104,7 +92,6 @@ export function useOdaShopping(
       transfer.isPending ||
       transfer.isError ||
       (!!transfer.data && transfer.data.state !== "COMPLETED"),
-    cartUrl: cart.data?.url ?? transfer.data?.cartUrl,
     send() {
       const next =
         request && request.id !== transfer.data?.id

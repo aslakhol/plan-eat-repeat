@@ -39,26 +39,15 @@ export function OdaShoppingMenu({
           >
             Send to Oda
           </button>
-          {oda.cartUrl ? (
-            <a
-              className={menuItem}
-              href={oda.cartUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={onAction}
-            >
-              Open Oda cart
-            </a>
-          ) : (
-            <button
-              type="button"
-              className={menuItem}
-              disabled={oda.cart.isFetching}
-              onClick={() => void oda.cart.refetch()}
-            >
-              {oda.cart.isError ? "Retry Oda cart" : "Open Oda cart"}
-            </button>
-          )}
+          <a
+            className={menuItem}
+            href="https://oda.com/no/cart/"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onAction}
+          >
+            Open Oda cart
+          </a>
           <Link className={menuItem} href="/settings" onClick={onAction}>
             Oda settings
           </Link>

@@ -40,7 +40,6 @@ test("Oda login returns to the list, recovers a transfer after refresh, and leav
     },
   ];
   const startedAt = new Date();
-  let cartReads = 0;
   let connected = false;
   const sends: string[] = [];
   let transferUnavailable = false;
@@ -148,12 +147,6 @@ test("Oda login returns to the list, recovers a transfer after refresh, and leav
               },
             },
           };
-        if (name === "oda.cart") {
-          cartReads += 1;
-          return {
-            result: { data: { json: { url: "https://oda.com/no/cart/" } } },
-          };
-        }
         return original[index];
       });
       await route.fulfill({ json: result });
@@ -172,7 +165,6 @@ test("Oda login returns to the list, recovers a transfer after refresh, and leav
     await expect(
       page.getByRole("region", { name: "Oda transfer progress" }),
     ).not.toBeVisible();
-    expect(cartReads).toBe(0);
     await page
       .locator("summary")
       .filter({ hasText: "Shopping list actions" })
@@ -190,7 +182,6 @@ test("Oda login returns to the list, recovers a transfer after refresh, and leav
     await expect(
       page.getByRole("button", { name: "Send to Oda", exact: true }),
     ).not.toBeVisible();
-    expect(cartReads).toBe(0);
     transferUnavailable = true;
     await page.reload();
     await page
@@ -198,13 +189,13 @@ test("Oda login returns to the list, recovers a transfer after refresh, and leav
       .filter({ hasText: "Shopping list actions" })
       .click();
     await expect(
+      page.getByRole("link", { name: "Open Oda cart" }),
+    ).toHaveAttribute("href", "https://oda.com/no/cart/");
+    await expect(
       page.getByRole("button", { name: "Retry transfer status" }),
     ).toBeVisible({ timeout: 20_000 });
     transferUnavailable = false;
     await page.getByRole("button", { name: "Retry transfer status" }).click();
-    await expect(
-      page.getByRole("link", { name: "Open Oda cart" }),
-    ).toHaveAttribute("href", "https://oda.com/no/cart/");
     await page
       .context()
       .route("https://oda.com/no/cart/", (route) =>

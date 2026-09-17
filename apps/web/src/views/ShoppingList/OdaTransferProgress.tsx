@@ -166,9 +166,9 @@ export function OdaTransferProgress({ oda }: { oda: OdaShopping }) {
               </p>
             )}
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs empty:hidden">
-            {transfer.cartUrl && (finished || transfer.recoverable) && (
+            {(finished || transfer.recoverable) && (
               <a
-                href={transfer.cartUrl}
+                href="https://oda.com/no/cart/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-9 items-center font-semibold underline underline-offset-4"
