@@ -13,3 +13,9 @@ Do not place an order during verification. Transfer testing should use a small r
 On 2026-09-17, the configured real model interpreted a controlled candidate set through the application transfer operation. With one litre of milk already in the simulated cart, an explicit two-litre requirement plus unspecified Milk produced two additional one-litre packs. “Two eggs” produced one six-egg pack. All requirements completed. Oda transport was controlled, so this exercised real model interpretation without changing an Oda cart. It does not establish general matching quality or live stock availability.
 
 A second real-model exercise on the same date checked purchase-history limits. Unspecified Milk chose a single one-litre pack despite a cheaper six-pack in purchase history. A lactose-free Shopping Note selected lactose-free milk despite ordinary milk in purchase history. These calls also used controlled Oda responses and made no real cart changes.
+
+## Interrupted transfers
+
+The Shopping List keeps transfer progress across refreshes. Recover transfer resumes abandoned matching and applies known successful additions locally. It never repeats an uncertain addition. A current cart read can cover an unspecified requirement, but cannot prove that an explicit quantity was added by this request.
+
+If recovery cannot establish the result, open the Oda cart and check the uncertain additions. Mark as added completes unchanged requirements; Mark as not added keeps them on the list. Both record the member's decision and allow a later send. Neither action changes the Oda cart. The message identifies the uncertain requirements and pack count. Recovery stops before another cart write while that addition is uncertain. Edits made after sending remain on the list.
