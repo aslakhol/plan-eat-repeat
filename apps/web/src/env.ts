@@ -20,6 +20,7 @@ export const env = createEnv({
     WEBHOOK_SECRET: z.string().min(1),
     ANTHROPIC_API_KEY: z.string().min(1).optional(),
     AI_EXTRACT_MODEL: z.string().min(1).default("claude-opus-4-8"),
+    ODA_CREDENTIAL_KEY: z.string().optional(),
     SUPADATA_API_KEY: z.string().min(1).optional(),
     SYSTEM_ADMIN_CLERK_USER_IDS: z.string().min(1).optional(),
     VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),

@@ -1,3 +1,4 @@
+import { odaRouter } from "./routers/oda";
 import { createTRPCRouter } from "./trpc";
 import { dinnerRouter } from "./routers/dinner";
 import { planRouter } from "./routers/plan";
@@ -15,6 +16,7 @@ export const appRouter = createTRPCRouter({
   household: householdRouter,
   aiImportSpend: aiImportSpendRouter,
   shoppingList: shoppingListRouter,
+  oda: odaRouter,
 });
 
 // export type definition of API
