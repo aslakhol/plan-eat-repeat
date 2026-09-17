@@ -88,7 +88,7 @@ Return one selection for each requirement ID. The application controls cart writ
   });
   const selections = selectionSchema.parse(output).selections;
   const groups = new Map<
-    number,
+    string,
     {
       productId: number;
       quantity: number;
@@ -115,7 +115,7 @@ Return one selection for each requirement ID. The application controls cart writ
       .flatMap((group) => group.items)
       .filter((line) => line.product.id === product.id)
       .reduce((sum, line) => sum + line.quantity, 0);
-    const existing = groups.get(product.id);
+
     let packs = match.quantity;
     if (match.measurement) {
       const { amount, unit, packAmount, packUnit } = match.measurement;
@@ -140,11 +140,14 @@ Return one selection for each requirement ID. The application controls cart writ
             1,
             Math.ceil(packs - Number.EPSILON * Math.max(1, packs) * 4),
           );
+    // Established cart coverage completes even if a new addition later fails.
+    const groupKey = `${product.id}:${quantity === 0 ? "covered" : "addition"}`;
+    const existing = groups.get(groupKey);
     if (existing) {
       existing.requirementIds.push(item.id);
       existing.quantity = Math.max(existing.quantity, quantity);
     } else
-      groups.set(product.id, {
+      groups.set(groupKey, {
         productId: product.id,
         quantity,
         beforeQuantity,

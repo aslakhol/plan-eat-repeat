@@ -214,7 +214,7 @@ void test("existing cart contents cover matching unspecified items while unavail
     assert.equal((await shopping.recent())[0]?.ownItemId, covered.ownItemId);
   }));
 
-void test("quantity wording and numeric requirements are retained by the unquantified transfer", () =>
+void test("unresolved quantities remain on the list when the model supplies no usable interpretation", () =>
   withHousehold(async ({ oda, shopping }) => {
     cart = new Map();
     added = [];
@@ -408,4 +408,63 @@ void test("text quantities, missing units, and ingredient counts use packs while
     const recent = await shopping.recent();
     assert.equal(recent.find((item) => item.note === "duck")?.amount, 2);
     assert.equal(recent.find((item) => item.note === "hen")?.amount, 2);
+  }));
+
+void test("decimal measurements exactly covering a pack do not round up a second pack", () =>
+  withHousehold(async ({ oda, shopping }) => {
+    const flour = {
+      ...milk,
+      id: 30,
+      name: "Flour",
+      description: "0.7 kg",
+      unitName: "kg",
+    };
+    cart = new Map();
+    added = [];
+    products = [flour];
+    const item = await shopping.addManual({ name: "Flour" });
+    await shopping.edit({ ...item, amount: 700, unit: "g" });
+    selections = [
+      {
+        requirementId: item.id,
+        productId: 30,
+        quantity: 1,
+        measurement: {
+          amount: 700,
+          unit: "g",
+          packAmount: 0.7,
+          packUnit: "kg",
+        },
+      },
+    ];
+    await oda.send({ id: crypto.randomUUID() });
+    assert.deepEqual(added, [{ productId: 30, quantity: 1 }]);
+  }));
+
+void test("existing-cart coverage completes independently of an uncertain explicit addition", () =>
+  withHousehold(async ({ oda, shopping }) => {
+    cart = new Map([[10, 1]]);
+    added = [];
+    products = [milk];
+    const explicit = await shopping.addManual({ name: "Milk" });
+    await shopping.edit({ ...explicit, amount: 2, unit: "l" });
+    const covered = await shopping.addManual({ name: "Milk" });
+    selections = [
+      { requirementId: explicit.id, productId: 10, quantity: 2 },
+      { requirementId: covered.id, productId: 10, quantity: null },
+    ];
+    beforeAdd = () => Promise.reject(new Error("Ambiguous write"));
+    try {
+      assert.equal(
+        (await oda.send({ id: crypto.randomUUID() })).state,
+        "UNCERTAIN",
+      );
+      assert.deepEqual(
+        (await shopping.list()).map((item) => item.id),
+        [explicit.id],
+      );
+      assert.equal(cart.get(10), 1);
+    } finally {
+      beforeAdd = () => Promise.resolve();
+    }
   }));
