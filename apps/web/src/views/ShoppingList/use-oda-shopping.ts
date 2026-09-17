@@ -69,7 +69,7 @@ export function useOdaShopping(
           message: null,
           cartUrl: null,
           recoverable: false,
-          addedProducts: 0,
+          confirmedProducts: 0,
           totalProducts: 0,
         }
       : transfer.data;

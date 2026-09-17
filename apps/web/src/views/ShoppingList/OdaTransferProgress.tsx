@@ -67,7 +67,7 @@ export function OdaTransferProgress({ oda }: { oda: OdaShopping }) {
       : transfer.recoverable
         ? "Oda transfer needs attention"
         : transfer.stage === "ADDING_TO_CART"
-          ? `Added ${transfer.addedProducts} of ${transfer.totalProducts} products`
+          ? `${transfer.confirmedProducts} of ${transfer.totalProducts} products ready in Oda`
           : stages[transfer.stage];
   const feedback =
     router.query.oda === "connected"

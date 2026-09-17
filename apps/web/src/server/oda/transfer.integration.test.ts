@@ -1025,7 +1025,7 @@ void test("members see real transfer stages and independent requirement outcomes
       await writing.promise;
       const adding = await member.transfer();
       assert.equal(adding?.stage, "ADDING_TO_CART");
-      assert.equal(adding?.addedProducts, 1);
+      assert.equal(adding?.confirmedProducts, 1);
       assert.equal(adding?.totalProducts, 2);
       assert.deepEqual(
         adding?.items.map((item) => item.state),

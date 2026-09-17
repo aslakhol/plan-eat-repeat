@@ -63,7 +63,7 @@ export async function currentTransfer(db: PrismaClient, householdId: string) {
     stage: transfer.stage,
     startedAt: transfer.createdAt,
     finishedAt: transfer.state === "COMPLETED" ? transfer.updatedAt : null,
-    addedProducts: transfer.operations.filter(
+    confirmedProducts: transfer.operations.filter(
       (operation) => operation.quantity > 0 && operation.state === "CONFIRMED",
     ).length,
     totalProducts: transfer.operations.filter(
