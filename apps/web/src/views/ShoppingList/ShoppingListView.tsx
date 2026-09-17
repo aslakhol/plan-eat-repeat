@@ -1,3 +1,4 @@
+import { OdaConnection } from "./OdaConnection";
 import {
   ChevronDown,
   MoreHorizontal,
@@ -280,6 +281,7 @@ export function ShoppingListView() {
           </div>
         </DetailsMenu>
       </header>
+      <OdaConnection />
 
       {list.isPending && (
         <div role="status" className="flex items-center justify-center py-8">

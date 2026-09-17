@@ -1,3 +1,4 @@
+import { OdaConnection } from "../ShoppingList/OdaConnection";
 import type { ShoppingLanguage } from "@planeatrepeat/db";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
@@ -49,6 +50,7 @@ export function ShoppingList({ language }: { language: ShoppingLanguage }) {
             {update.error.message}
           </p>
         )}
+        <OdaConnection settings />
       </CardContent>
     </Card>
   );
