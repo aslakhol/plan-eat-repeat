@@ -15,6 +15,18 @@ import {
 import { cartSchema, odaTool } from "../../oda/provider";
 
 export const odaRouter = createTRPCRouter({
+  dismiss: protectedProcedureWithHousehold
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(({ ctx, input }) =>
+      ctx.db.odaTransfer.updateMany({
+        where: {
+          id: input.id,
+          householdId: ctx.householdId,
+          state: "COMPLETED",
+        },
+        data: { dismissed: true },
+      }),
+    ),
   resolve: protectedProcedureWithHousehold
     .input(
       z.object({

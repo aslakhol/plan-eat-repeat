@@ -196,6 +196,7 @@ async function withHousehold(
     });
   } finally {
     fetchMock.mock.restore();
+    await db.dinner.deleteMany({ where: { householdId: household.id } });
     await db.household.delete({ where: { id: household.id } });
     await db.user.deleteMany({ where: { id: { in: users } } });
     await db.$disconnect();
@@ -1005,6 +1006,9 @@ void test("members see real transfer stages and independent requirement outcomes
     try {
       await checking.promise;
       const initial = await member.transfer();
+      await member.dismiss({ id });
+      await shopping.addManual({ name: "Added during transfer" });
+      assert.equal((await member.transfer())?.id, id);
       assert.equal(initial?.stage, "CHECKING_CART");
       assert.deepEqual(
         initial?.items.map((item) => item.state),
@@ -1039,6 +1043,9 @@ void test("members see real transfer stages and independent requirement outcomes
         "UNCERTAIN",
       );
       assert.equal(uncertain?.recoverable, true);
+      await member.dismiss({ id });
+      await shopping.addManual({ name: "Added while uncertain" });
+      assert.equal((await member.transfer())?.id, id);
       await member.resolve({ id, outcome: "NOT_ADDED" });
       const complete = await member.transfer();
       assert.equal(complete?.state, "COMPLETED");
@@ -1059,4 +1066,55 @@ void test("members see real transfer stages and independent requirement outcomes
       beforeAdd = () => Promise.resolve();
       await sending;
     }
+  }));
+
+void test("dismissing a completed result persists for the household and cannot hide another transfer", () =>
+  withHousehold(async ({ oda, member, shopping }) => {
+    cart = new Map();
+    products = [milk, eggs];
+    selections = [];
+    await shopping.addManual({ name: "Bread" });
+    const id = crypto.randomUUID();
+    await oda.send({ id });
+    await withHousehold(async ({ oda: other }) => {
+      await other.dismiss({ id });
+    });
+    assert.equal((await oda.transfer())?.id, id);
+    await member.dismiss({ id });
+    assert.equal(await oda.transfer(), null);
+    assert.equal(await member.transfer(), null);
+    const nextId = crypto.randomUUID();
+    await oda.send({ id: nextId });
+    await member.dismiss({ id });
+    assert.equal((await oda.transfer())?.id, nextId);
+  }));
+
+void test("successful shopping additions dismiss completed results, while edits and rolled-back additions preserve them", () =>
+  withHousehold(async ({ db, householdId, oda, member, shopping }) => {
+    cart = new Map();
+    products = [milk, eggs];
+    selections = [];
+    const item = await shopping.addManual({ name: "Bread" });
+    const id = crypto.randomUUID();
+    await oda.send({ id });
+    await shopping.edit({ ...item, amount: 2, unit: "pcs" });
+    assert.equal((await member.transfer())?.id, id);
+    const dinner = await db.dinner.create({
+      data: { name: "Dinner addition", householdId },
+    });
+    await assert.rejects(
+      shopping.addDinners({ dinnerIds: [dinner.id, 2147483647] }),
+    );
+    assert.equal((await member.transfer())?.id, id);
+    assert.equal((await shopping.list()).length, 1);
+    await shopping.addManual({ name: "Eggs" });
+    assert.equal(await member.transfer(), null);
+    await oda.send({ id: crypto.randomUUID() });
+    await shopping.remove({ id: item.id });
+    assert.ok(await member.transfer());
+    const recent = (await shopping.recent()).find(
+      (entry) => entry.ownItemId === item.ownItemId,
+    )!;
+    await shopping.addRecent({ id: recent.id });
+    assert.equal(await member.transfer(), null);
   }));

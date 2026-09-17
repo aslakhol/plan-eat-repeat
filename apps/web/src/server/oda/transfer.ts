@@ -51,7 +51,8 @@ export async function currentTransfer(db: PrismaClient, householdId: string) {
     orderBy: { createdAt: "desc" },
     include: { operations: true },
   });
-  if (!transfer) return null;
+  if (!transfer || (transfer.state === "COMPLETED" && transfer.dismissed))
+    return null;
   const status = transferStatus(transfer);
   const operations = new Map(
     transfer.operations.flatMap((operation) =>
