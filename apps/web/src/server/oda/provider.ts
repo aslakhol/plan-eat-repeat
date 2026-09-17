@@ -36,7 +36,12 @@ export type Cart = z.infer<typeof cartSchema>;
 export async function odaTool(
   db: PrismaClient,
   householdId: string,
-  name: "get_cart" | "product_search" | "manipulate_cart",
+  name:
+    | "get_cart"
+    | "product_search"
+    | "manipulate_cart"
+    | "likely_to_buy"
+    | "get_orders",
   args: Record<string, unknown> = {},
 ) {
   const credentials = await accessToken(db, householdId);
