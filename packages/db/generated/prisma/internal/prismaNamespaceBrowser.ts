@@ -292,6 +292,8 @@ export type OdaAuthorizationScalarFieldEnum = (typeof OdaAuthorizationScalarFiel
 
 
 export const OdaTransferScalarFieldEnum = {
+  resolvedByUserId: 'resolvedByUserId',
+  resolution: 'resolution',
   runId: 'runId',
   leaseUntil: 'leaseUntil',
   id: 'id',
@@ -309,7 +311,7 @@ export type OdaTransferScalarFieldEnum = (typeof OdaTransferScalarFieldEnum)[key
 
 
 export const OdaTransferOperationScalarFieldEnum = {
-  canUseCartCoverage: 'canUseCartCoverage',
+  unspecifiedRequirementIds: 'unspecifiedRequirementIds',
   id: 'id',
   transferId: 'transferId',
   productId: 'productId',

@@ -103,7 +103,7 @@ Return one selection for each requirement ID. The application controls cart writ
       quantity: number;
       beforeQuantity: number;
       requirementIds: string[];
-      canUseCartCoverage: boolean;
+      unspecifiedRequirementIds: string[];
     }
   >();
   for (const item of requirements) {
@@ -156,14 +156,14 @@ Return one selection for each requirement ID. The application controls cart writ
     if (existing) {
       existing.requirementIds.push(item.id);
       existing.quantity = Math.max(existing.quantity, quantity);
-      existing.canUseCartCoverage &&= packs === null;
+      if (packs === null) existing.unspecifiedRequirementIds.push(item.id);
     } else
       groups.set(groupKey, {
         productId: product.id,
         quantity,
         beforeQuantity,
         requirementIds: [item.id],
-        canUseCartCoverage: packs === null,
+        unspecifiedRequirementIds: packs === null ? [item.id] : [],
       });
   }
   return [...groups.values()];

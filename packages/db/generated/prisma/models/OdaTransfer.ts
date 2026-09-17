@@ -25,6 +25,8 @@ export type AggregateOdaTransfer = {
 }
 
 export type OdaTransferMinAggregateOutputType = {
+  resolvedByUserId: string | null
+  resolution: $Enums.OdaTransferResolution | null
   runId: string | null
   leaseUntil: Date | null
   id: string | null
@@ -38,6 +40,8 @@ export type OdaTransferMinAggregateOutputType = {
 }
 
 export type OdaTransferMaxAggregateOutputType = {
+  resolvedByUserId: string | null
+  resolution: $Enums.OdaTransferResolution | null
   runId: string | null
   leaseUntil: Date | null
   id: string | null
@@ -51,6 +55,8 @@ export type OdaTransferMaxAggregateOutputType = {
 }
 
 export type OdaTransferCountAggregateOutputType = {
+  resolvedByUserId: number
+  resolution: number
   runId: number
   leaseUntil: number
   id: number
@@ -67,6 +73,8 @@ export type OdaTransferCountAggregateOutputType = {
 
 
 export type OdaTransferMinAggregateInputType = {
+  resolvedByUserId?: true
+  resolution?: true
   runId?: true
   leaseUntil?: true
   id?: true
@@ -80,6 +88,8 @@ export type OdaTransferMinAggregateInputType = {
 }
 
 export type OdaTransferMaxAggregateInputType = {
+  resolvedByUserId?: true
+  resolution?: true
   runId?: true
   leaseUntil?: true
   id?: true
@@ -93,6 +103,8 @@ export type OdaTransferMaxAggregateInputType = {
 }
 
 export type OdaTransferCountAggregateInputType = {
+  resolvedByUserId?: true
+  resolution?: true
   runId?: true
   leaseUntil?: true
   id?: true
@@ -180,6 +192,8 @@ export type OdaTransferGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inte
 }
 
 export type OdaTransferGroupByOutputType = {
+  resolvedByUserId: string | null
+  resolution: $Enums.OdaTransferResolution | null
   runId: string | null
   leaseUntil: Date | null
   id: string
@@ -215,6 +229,8 @@ export type OdaTransferWhereInput = {
   AND?: Prisma.OdaTransferWhereInput | Prisma.OdaTransferWhereInput[]
   OR?: Prisma.OdaTransferWhereInput[]
   NOT?: Prisma.OdaTransferWhereInput | Prisma.OdaTransferWhereInput[]
+  resolvedByUserId?: Prisma.StringNullableFilter<"OdaTransfer"> | string | null
+  resolution?: Prisma.EnumOdaTransferResolutionNullableFilter<"OdaTransfer"> | $Enums.OdaTransferResolution | null
   runId?: Prisma.StringNullableFilter<"OdaTransfer"> | string | null
   leaseUntil?: Prisma.DateTimeNullableFilter<"OdaTransfer"> | Date | string | null
   id?: Prisma.StringFilter<"OdaTransfer"> | string
@@ -231,6 +247,8 @@ export type OdaTransferWhereInput = {
 }
 
 export type OdaTransferOrderByWithRelationInput = {
+  resolvedByUserId?: Prisma.SortOrderInput | Prisma.SortOrder
+  resolution?: Prisma.SortOrderInput | Prisma.SortOrder
   runId?: Prisma.SortOrderInput | Prisma.SortOrder
   leaseUntil?: Prisma.SortOrderInput | Prisma.SortOrder
   id?: Prisma.SortOrder
@@ -251,6 +269,8 @@ export type OdaTransferWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.OdaTransferWhereInput | Prisma.OdaTransferWhereInput[]
   OR?: Prisma.OdaTransferWhereInput[]
   NOT?: Prisma.OdaTransferWhereInput | Prisma.OdaTransferWhereInput[]
+  resolvedByUserId?: Prisma.StringNullableFilter<"OdaTransfer"> | string | null
+  resolution?: Prisma.EnumOdaTransferResolutionNullableFilter<"OdaTransfer"> | $Enums.OdaTransferResolution | null
   runId?: Prisma.StringNullableFilter<"OdaTransfer"> | string | null
   leaseUntil?: Prisma.DateTimeNullableFilter<"OdaTransfer"> | Date | string | null
   householdId?: Prisma.StringFilter<"OdaTransfer"> | string
@@ -266,6 +286,8 @@ export type OdaTransferWhereUniqueInput = Prisma.AtLeast<{
 }, "id">
 
 export type OdaTransferOrderByWithAggregationInput = {
+  resolvedByUserId?: Prisma.SortOrderInput | Prisma.SortOrder
+  resolution?: Prisma.SortOrderInput | Prisma.SortOrder
   runId?: Prisma.SortOrderInput | Prisma.SortOrder
   leaseUntil?: Prisma.SortOrderInput | Prisma.SortOrder
   id?: Prisma.SortOrder
@@ -286,6 +308,8 @@ export type OdaTransferScalarWhereWithAggregatesInput = {
   AND?: Prisma.OdaTransferScalarWhereWithAggregatesInput | Prisma.OdaTransferScalarWhereWithAggregatesInput[]
   OR?: Prisma.OdaTransferScalarWhereWithAggregatesInput[]
   NOT?: Prisma.OdaTransferScalarWhereWithAggregatesInput | Prisma.OdaTransferScalarWhereWithAggregatesInput[]
+  resolvedByUserId?: Prisma.StringNullableWithAggregatesFilter<"OdaTransfer"> | string | null
+  resolution?: Prisma.EnumOdaTransferResolutionNullableWithAggregatesFilter<"OdaTransfer"> | $Enums.OdaTransferResolution | null
   runId?: Prisma.StringNullableWithAggregatesFilter<"OdaTransfer"> | string | null
   leaseUntil?: Prisma.DateTimeNullableWithAggregatesFilter<"OdaTransfer"> | Date | string | null
   id?: Prisma.StringWithAggregatesFilter<"OdaTransfer"> | string
@@ -300,6 +324,8 @@ export type OdaTransferScalarWhereWithAggregatesInput = {
 }
 
 export type OdaTransferCreateInput = {
+  resolvedByUserId?: string | null
+  resolution?: $Enums.OdaTransferResolution | null
   runId?: string | null
   leaseUntil?: Date | string | null
   id: string
@@ -315,6 +341,8 @@ export type OdaTransferCreateInput = {
 }
 
 export type OdaTransferUncheckedCreateInput = {
+  resolvedByUserId?: string | null
+  resolution?: $Enums.OdaTransferResolution | null
   runId?: string | null
   leaseUntil?: Date | string | null
   id: string
@@ -330,6 +358,8 @@ export type OdaTransferUncheckedCreateInput = {
 }
 
 export type OdaTransferUpdateInput = {
+  resolvedByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolution?: Prisma.NullableEnumOdaTransferResolutionFieldUpdateOperationsInput | $Enums.OdaTransferResolution | null
   runId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   leaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   id?: Prisma.StringFieldUpdateOperationsInput | string
@@ -345,6 +375,8 @@ export type OdaTransferUpdateInput = {
 }
 
 export type OdaTransferUncheckedUpdateInput = {
+  resolvedByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolution?: Prisma.NullableEnumOdaTransferResolutionFieldUpdateOperationsInput | $Enums.OdaTransferResolution | null
   runId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   leaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   id?: Prisma.StringFieldUpdateOperationsInput | string
@@ -360,6 +392,8 @@ export type OdaTransferUncheckedUpdateInput = {
 }
 
 export type OdaTransferCreateManyInput = {
+  resolvedByUserId?: string | null
+  resolution?: $Enums.OdaTransferResolution | null
   runId?: string | null
   leaseUntil?: Date | string | null
   id: string
@@ -374,6 +408,8 @@ export type OdaTransferCreateManyInput = {
 }
 
 export type OdaTransferUpdateManyMutationInput = {
+  resolvedByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolution?: Prisma.NullableEnumOdaTransferResolutionFieldUpdateOperationsInput | $Enums.OdaTransferResolution | null
   runId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   leaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   id?: Prisma.StringFieldUpdateOperationsInput | string
@@ -387,6 +423,8 @@ export type OdaTransferUpdateManyMutationInput = {
 }
 
 export type OdaTransferUncheckedUpdateManyInput = {
+  resolvedByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolution?: Prisma.NullableEnumOdaTransferResolutionFieldUpdateOperationsInput | $Enums.OdaTransferResolution | null
   runId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   leaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   id?: Prisma.StringFieldUpdateOperationsInput | string
@@ -411,6 +449,8 @@ export type OdaTransferOrderByRelationAggregateInput = {
 }
 
 export type OdaTransferCountOrderByAggregateInput = {
+  resolvedByUserId?: Prisma.SortOrder
+  resolution?: Prisma.SortOrder
   runId?: Prisma.SortOrder
   leaseUntil?: Prisma.SortOrder
   id?: Prisma.SortOrder
@@ -425,6 +465,8 @@ export type OdaTransferCountOrderByAggregateInput = {
 }
 
 export type OdaTransferMaxOrderByAggregateInput = {
+  resolvedByUserId?: Prisma.SortOrder
+  resolution?: Prisma.SortOrder
   runId?: Prisma.SortOrder
   leaseUntil?: Prisma.SortOrder
   id?: Prisma.SortOrder
@@ -438,6 +480,8 @@ export type OdaTransferMaxOrderByAggregateInput = {
 }
 
 export type OdaTransferMinOrderByAggregateInput = {
+  resolvedByUserId?: Prisma.SortOrder
+  resolution?: Prisma.SortOrder
   runId?: Prisma.SortOrder
   leaseUntil?: Prisma.SortOrder
   id?: Prisma.SortOrder
@@ -497,6 +541,10 @@ export type OdaTransferUncheckedUpdateManyWithoutHouseholdNestedInput = {
   deleteMany?: Prisma.OdaTransferScalarWhereInput | Prisma.OdaTransferScalarWhereInput[]
 }
 
+export type NullableEnumOdaTransferResolutionFieldUpdateOperationsInput = {
+  set?: $Enums.OdaTransferResolution | null
+}
+
 export type EnumOdaTransferStateFieldUpdateOperationsInput = {
   set?: $Enums.OdaTransferState
 }
@@ -516,6 +564,8 @@ export type OdaTransferUpdateOneRequiredWithoutOperationsNestedInput = {
 }
 
 export type OdaTransferCreateWithoutHouseholdInput = {
+  resolvedByUserId?: string | null
+  resolution?: $Enums.OdaTransferResolution | null
   runId?: string | null
   leaseUntil?: Date | string | null
   id: string
@@ -530,6 +580,8 @@ export type OdaTransferCreateWithoutHouseholdInput = {
 }
 
 export type OdaTransferUncheckedCreateWithoutHouseholdInput = {
+  resolvedByUserId?: string | null
+  resolution?: $Enums.OdaTransferResolution | null
   runId?: string | null
   leaseUntil?: Date | string | null
   id: string
@@ -573,6 +625,8 @@ export type OdaTransferScalarWhereInput = {
   AND?: Prisma.OdaTransferScalarWhereInput | Prisma.OdaTransferScalarWhereInput[]
   OR?: Prisma.OdaTransferScalarWhereInput[]
   NOT?: Prisma.OdaTransferScalarWhereInput | Prisma.OdaTransferScalarWhereInput[]
+  resolvedByUserId?: Prisma.StringNullableFilter<"OdaTransfer"> | string | null
+  resolution?: Prisma.EnumOdaTransferResolutionNullableFilter<"OdaTransfer"> | $Enums.OdaTransferResolution | null
   runId?: Prisma.StringNullableFilter<"OdaTransfer"> | string | null
   leaseUntil?: Prisma.DateTimeNullableFilter<"OdaTransfer"> | Date | string | null
   id?: Prisma.StringFilter<"OdaTransfer"> | string
@@ -587,6 +641,8 @@ export type OdaTransferScalarWhereInput = {
 }
 
 export type OdaTransferCreateWithoutOperationsInput = {
+  resolvedByUserId?: string | null
+  resolution?: $Enums.OdaTransferResolution | null
   runId?: string | null
   leaseUntil?: Date | string | null
   id: string
@@ -601,6 +657,8 @@ export type OdaTransferCreateWithoutOperationsInput = {
 }
 
 export type OdaTransferUncheckedCreateWithoutOperationsInput = {
+  resolvedByUserId?: string | null
+  resolution?: $Enums.OdaTransferResolution | null
   runId?: string | null
   leaseUntil?: Date | string | null
   id: string
@@ -631,6 +689,8 @@ export type OdaTransferUpdateToOneWithWhereWithoutOperationsInput = {
 }
 
 export type OdaTransferUpdateWithoutOperationsInput = {
+  resolvedByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolution?: Prisma.NullableEnumOdaTransferResolutionFieldUpdateOperationsInput | $Enums.OdaTransferResolution | null
   runId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   leaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   id?: Prisma.StringFieldUpdateOperationsInput | string
@@ -645,6 +705,8 @@ export type OdaTransferUpdateWithoutOperationsInput = {
 }
 
 export type OdaTransferUncheckedUpdateWithoutOperationsInput = {
+  resolvedByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolution?: Prisma.NullableEnumOdaTransferResolutionFieldUpdateOperationsInput | $Enums.OdaTransferResolution | null
   runId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   leaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   id?: Prisma.StringFieldUpdateOperationsInput | string
@@ -659,6 +721,8 @@ export type OdaTransferUncheckedUpdateWithoutOperationsInput = {
 }
 
 export type OdaTransferCreateManyHouseholdInput = {
+  resolvedByUserId?: string | null
+  resolution?: $Enums.OdaTransferResolution | null
   runId?: string | null
   leaseUntil?: Date | string | null
   id: string
@@ -672,6 +736,8 @@ export type OdaTransferCreateManyHouseholdInput = {
 }
 
 export type OdaTransferUpdateWithoutHouseholdInput = {
+  resolvedByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolution?: Prisma.NullableEnumOdaTransferResolutionFieldUpdateOperationsInput | $Enums.OdaTransferResolution | null
   runId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   leaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   id?: Prisma.StringFieldUpdateOperationsInput | string
@@ -686,6 +752,8 @@ export type OdaTransferUpdateWithoutHouseholdInput = {
 }
 
 export type OdaTransferUncheckedUpdateWithoutHouseholdInput = {
+  resolvedByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolution?: Prisma.NullableEnumOdaTransferResolutionFieldUpdateOperationsInput | $Enums.OdaTransferResolution | null
   runId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   leaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   id?: Prisma.StringFieldUpdateOperationsInput | string
@@ -700,6 +768,8 @@ export type OdaTransferUncheckedUpdateWithoutHouseholdInput = {
 }
 
 export type OdaTransferUncheckedUpdateManyWithoutHouseholdInput = {
+  resolvedByUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resolution?: Prisma.NullableEnumOdaTransferResolutionFieldUpdateOperationsInput | $Enums.OdaTransferResolution | null
   runId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   leaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   id?: Prisma.StringFieldUpdateOperationsInput | string
@@ -744,6 +814,8 @@ export type OdaTransferCountOutputTypeCountOperationsArgs<ExtArgs extends runtim
 
 
 export type OdaTransferSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  resolvedByUserId?: boolean
+  resolution?: boolean
   runId?: boolean
   leaseUntil?: boolean
   id?: boolean
@@ -761,6 +833,8 @@ export type OdaTransferSelect<ExtArgs extends runtime.Types.Extensions.InternalA
 }, ExtArgs["result"]["odaTransfer"]>
 
 export type OdaTransferSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  resolvedByUserId?: boolean
+  resolution?: boolean
   runId?: boolean
   leaseUntil?: boolean
   id?: boolean
@@ -776,6 +850,8 @@ export type OdaTransferSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
 }, ExtArgs["result"]["odaTransfer"]>
 
 export type OdaTransferSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  resolvedByUserId?: boolean
+  resolution?: boolean
   runId?: boolean
   leaseUntil?: boolean
   id?: boolean
@@ -791,6 +867,8 @@ export type OdaTransferSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
 }, ExtArgs["result"]["odaTransfer"]>
 
 export type OdaTransferSelectScalar = {
+  resolvedByUserId?: boolean
+  resolution?: boolean
   runId?: boolean
   leaseUntil?: boolean
   id?: boolean
@@ -804,7 +882,7 @@ export type OdaTransferSelectScalar = {
   updatedAt?: boolean
 }
 
-export type OdaTransferOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"runId" | "leaseUntil" | "id" | "householdId" | "connectionId" | "state" | "snapshot" | "cartUrl" | "message" | "createdAt" | "updatedAt", ExtArgs["result"]["odaTransfer"]>
+export type OdaTransferOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"resolvedByUserId" | "resolution" | "runId" | "leaseUntil" | "id" | "householdId" | "connectionId" | "state" | "snapshot" | "cartUrl" | "message" | "createdAt" | "updatedAt", ExtArgs["result"]["odaTransfer"]>
 export type OdaTransferInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
   operations?: boolean | Prisma.OdaTransfer$operationsArgs<ExtArgs>
@@ -824,6 +902,8 @@ export type $OdaTransferPayload<ExtArgs extends runtime.Types.Extensions.Interna
     operations: Prisma.$OdaTransferOperationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    resolvedByUserId: string | null
+    resolution: $Enums.OdaTransferResolution | null
     runId: string | null
     leaseUntil: Date | null
     id: string
@@ -918,8 +998,8 @@ export interface OdaTransferDelegate<ExtArgs extends runtime.Types.Extensions.In
    * // Get first 10 OdaTransfers
    * const odaTransfers = await prisma.odaTransfer.findMany({ take: 10 })
    * 
-   * // Only select the `runId`
-   * const odaTransferWithRunIdOnly = await prisma.odaTransfer.findMany({ select: { runId: true } })
+   * // Only select the `resolvedByUserId`
+   * const odaTransferWithResolvedByUserIdOnly = await prisma.odaTransfer.findMany({ select: { resolvedByUserId: true } })
    * 
    */
   findMany<T extends OdaTransferFindManyArgs>(args?: Prisma.SelectSubset<T, OdaTransferFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OdaTransferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
@@ -963,9 +1043,9 @@ export interface OdaTransferDelegate<ExtArgs extends runtime.Types.Extensions.In
    *   ]
    * })
    * 
-   * // Create many OdaTransfers and only return the `runId`
-   * const odaTransferWithRunIdOnly = await prisma.odaTransfer.createManyAndReturn({
-   *   select: { runId: true },
+   * // Create many OdaTransfers and only return the `resolvedByUserId`
+   * const odaTransferWithResolvedByUserIdOnly = await prisma.odaTransfer.createManyAndReturn({
+   *   select: { resolvedByUserId: true },
    *   data: [
    *     // ... provide data here
    *   ]
@@ -1054,9 +1134,9 @@ export interface OdaTransferDelegate<ExtArgs extends runtime.Types.Extensions.In
    *   ]
    * })
    * 
-   * // Update zero or more OdaTransfers and only return the `runId`
-   * const odaTransferWithRunIdOnly = await prisma.odaTransfer.updateManyAndReturn({
-   *   select: { runId: true },
+   * // Update zero or more OdaTransfers and only return the `resolvedByUserId`
+   * const odaTransferWithResolvedByUserIdOnly = await prisma.odaTransfer.updateManyAndReturn({
+   *   select: { resolvedByUserId: true },
    *   where: {
    *     // ... provide filter here
    *   },
@@ -1260,6 +1340,8 @@ export interface Prisma__OdaTransferClient<T, Null = never, ExtArgs extends runt
  * Fields of the OdaTransfer model
  */
 export interface OdaTransferFieldRefs {
+  readonly resolvedByUserId: Prisma.FieldRef<"OdaTransfer", 'String'>
+  readonly resolution: Prisma.FieldRef<"OdaTransfer", 'OdaTransferResolution'>
   readonly runId: Prisma.FieldRef<"OdaTransfer", 'String'>
   readonly leaseUntil: Prisma.FieldRef<"OdaTransfer", 'DateTime'>
   readonly id: Prisma.FieldRef<"OdaTransfer", 'String'>

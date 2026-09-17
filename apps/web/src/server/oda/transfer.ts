@@ -155,7 +155,8 @@ async function runTransfer(
     // Unspecified demand is different: current presence establishes coverage.
     const uncertain = transfer.operations.filter(
       (operation) =>
-        operation.state === "WRITING" && operation.canUseCartCoverage,
+        operation.state === "WRITING" &&
+        operation.unspecifiedRequirementIds.length > 0,
     );
     if (sameConnection && uncertain.length) {
       try {
@@ -175,19 +176,42 @@ async function runTransfer(
             current?.connectionId !== owned.connectionId
           )
             return;
-          await tx.odaTransferOperation.updateMany({
-            where: {
-              id: {
-                in: uncertain
-                  .filter(
-                    (operation) => cartQuantity(cart, operation.productId) > 0,
-                  )
-                  .map((operation) => operation.id),
-              },
-              state: "WRITING",
-            },
-            data: { state: "CONFIRMED" },
-          });
+          for (const operation of uncertain) {
+            if (cartQuantity(cart, operation.productId) <= 0) continue;
+            const current = await tx.odaTransferOperation.findUniqueOrThrow({
+              where: { id: operation.id },
+            });
+            if (current.state !== "WRITING") continue;
+            const covered = current.unspecifiedRequirementIds;
+            const remaining = current.requirementIds.filter(
+              (id) => !covered.includes(id),
+            );
+            if (!remaining.length) {
+              await tx.odaTransferOperation.update({
+                where: { id: current.id },
+                data: { state: "CONFIRMED" },
+              });
+            } else {
+              await tx.odaTransferOperation.update({
+                where: { id: current.id },
+                data: {
+                  requirementIds: remaining,
+                  unspecifiedRequirementIds: [],
+                },
+              });
+              await tx.odaTransferOperation.create({
+                data: {
+                  transferId: id,
+                  productId: current.productId,
+                  quantity: 0,
+                  beforeQuantity: cartQuantity(cart, current.productId),
+                  requirementIds: covered,
+                  unspecifiedRequirementIds: covered,
+                  state: "CONFIRMED",
+                },
+              });
+            }
+          }
         });
       } catch {
         /* Confirmed parts can still finish when Oda is unreachable. */

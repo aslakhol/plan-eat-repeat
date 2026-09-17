@@ -281,6 +281,8 @@ model OdaAuthorization {
 }
 
 model OdaTransfer {
+    resolvedByUserId String?
+    resolution OdaTransferResolution?
     runId String?
     leaseUntil DateTime?
     id String @id
@@ -306,7 +308,7 @@ enum OdaTransferState {
 }
 
 model OdaTransferOperation {
-    canUseCartCoverage Boolean @default(false)
+    unspecifiedRequirementIds String[] @default([])
     id String @id @default(cuid())
     transferId String
     transfer OdaTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
@@ -324,4 +326,9 @@ enum OdaOperationState {
     WRITING
     CONFIRMED
     FAILED
+}
+
+enum OdaTransferResolution {
+    ADDED
+    NOT_ADDED
 }

@@ -314,6 +314,13 @@ export type EnumAiImportInferenceStateWithAggregatesFilter<$PrismaModel = never>
   _max?: Prisma.NestedEnumAiImportInferenceStateFilter<$PrismaModel>
 }
 
+export type EnumOdaTransferResolutionNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.OdaTransferResolution | Prisma.EnumOdaTransferResolutionFieldRefInput<$PrismaModel> | null
+  in?: $Enums.OdaTransferResolution[] | Prisma.ListEnumOdaTransferResolutionFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.OdaTransferResolution[] | Prisma.ListEnumOdaTransferResolutionFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumOdaTransferResolutionNullableFilter<$PrismaModel> | $Enums.OdaTransferResolution | null
+}
+
 export type EnumOdaTransferStateFilter<$PrismaModel = never> = {
   equals?: $Enums.OdaTransferState | Prisma.EnumOdaTransferStateFieldRefInput<$PrismaModel>
   in?: $Enums.OdaTransferState[] | Prisma.ListEnumOdaTransferStateFieldRefInput<$PrismaModel>
@@ -343,6 +350,16 @@ export type JsonFilterBase<$PrismaModel = never> = {
   gt?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel>
   gte?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel>
   not?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel> | Prisma.JsonNullValueFilter
+}
+
+export type EnumOdaTransferResolutionNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.OdaTransferResolution | Prisma.EnumOdaTransferResolutionFieldRefInput<$PrismaModel> | null
+  in?: $Enums.OdaTransferResolution[] | Prisma.ListEnumOdaTransferResolutionFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.OdaTransferResolution[] | Prisma.ListEnumOdaTransferResolutionFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumOdaTransferResolutionNullableWithAggregatesFilter<$PrismaModel> | $Enums.OdaTransferResolution | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumOdaTransferResolutionNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumOdaTransferResolutionNullableFilter<$PrismaModel>
 }
 
 export type EnumOdaTransferStateWithAggregatesFilter<$PrismaModel = never> = {
@@ -701,11 +718,28 @@ export type NestedEnumAiImportInferenceStateWithAggregatesFilter<$PrismaModel = 
   _max?: Prisma.NestedEnumAiImportInferenceStateFilter<$PrismaModel>
 }
 
+export type NestedEnumOdaTransferResolutionNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.OdaTransferResolution | Prisma.EnumOdaTransferResolutionFieldRefInput<$PrismaModel> | null
+  in?: $Enums.OdaTransferResolution[] | Prisma.ListEnumOdaTransferResolutionFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.OdaTransferResolution[] | Prisma.ListEnumOdaTransferResolutionFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumOdaTransferResolutionNullableFilter<$PrismaModel> | $Enums.OdaTransferResolution | null
+}
+
 export type NestedEnumOdaTransferStateFilter<$PrismaModel = never> = {
   equals?: $Enums.OdaTransferState | Prisma.EnumOdaTransferStateFieldRefInput<$PrismaModel>
   in?: $Enums.OdaTransferState[] | Prisma.ListEnumOdaTransferStateFieldRefInput<$PrismaModel>
   notIn?: $Enums.OdaTransferState[] | Prisma.ListEnumOdaTransferStateFieldRefInput<$PrismaModel>
   not?: Prisma.NestedEnumOdaTransferStateFilter<$PrismaModel> | $Enums.OdaTransferState
+}
+
+export type NestedEnumOdaTransferResolutionNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.OdaTransferResolution | Prisma.EnumOdaTransferResolutionFieldRefInput<$PrismaModel> | null
+  in?: $Enums.OdaTransferResolution[] | Prisma.ListEnumOdaTransferResolutionFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.OdaTransferResolution[] | Prisma.ListEnumOdaTransferResolutionFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumOdaTransferResolutionNullableWithAggregatesFilter<$PrismaModel> | $Enums.OdaTransferResolution | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumOdaTransferResolutionNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumOdaTransferResolutionNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumOdaTransferStateWithAggregatesFilter<$PrismaModel = never> = {

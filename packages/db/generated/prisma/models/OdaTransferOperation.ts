@@ -39,7 +39,6 @@ export type OdaTransferOperationSumAggregateOutputType = {
 }
 
 export type OdaTransferOperationMinAggregateOutputType = {
-  canUseCartCoverage: boolean | null
   id: string | null
   transferId: string | null
   productId: number | null
@@ -49,7 +48,6 @@ export type OdaTransferOperationMinAggregateOutputType = {
 }
 
 export type OdaTransferOperationMaxAggregateOutputType = {
-  canUseCartCoverage: boolean | null
   id: string | null
   transferId: string | null
   productId: number | null
@@ -59,7 +57,7 @@ export type OdaTransferOperationMaxAggregateOutputType = {
 }
 
 export type OdaTransferOperationCountAggregateOutputType = {
-  canUseCartCoverage: number
+  unspecifiedRequirementIds: number
   id: number
   transferId: number
   productId: number
@@ -84,7 +82,6 @@ export type OdaTransferOperationSumAggregateInputType = {
 }
 
 export type OdaTransferOperationMinAggregateInputType = {
-  canUseCartCoverage?: true
   id?: true
   transferId?: true
   productId?: true
@@ -94,7 +91,6 @@ export type OdaTransferOperationMinAggregateInputType = {
 }
 
 export type OdaTransferOperationMaxAggregateInputType = {
-  canUseCartCoverage?: true
   id?: true
   transferId?: true
   productId?: true
@@ -104,7 +100,7 @@ export type OdaTransferOperationMaxAggregateInputType = {
 }
 
 export type OdaTransferOperationCountAggregateInputType = {
-  canUseCartCoverage?: true
+  unspecifiedRequirementIds?: true
   id?: true
   transferId?: true
   productId?: true
@@ -202,7 +198,7 @@ export type OdaTransferOperationGroupByArgs<ExtArgs extends runtime.Types.Extens
 }
 
 export type OdaTransferOperationGroupByOutputType = {
-  canUseCartCoverage: boolean
+  unspecifiedRequirementIds: string[]
   id: string
   transferId: string
   productId: number
@@ -236,7 +232,7 @@ export type OdaTransferOperationWhereInput = {
   AND?: Prisma.OdaTransferOperationWhereInput | Prisma.OdaTransferOperationWhereInput[]
   OR?: Prisma.OdaTransferOperationWhereInput[]
   NOT?: Prisma.OdaTransferOperationWhereInput | Prisma.OdaTransferOperationWhereInput[]
-  canUseCartCoverage?: Prisma.BoolFilter<"OdaTransferOperation"> | boolean
+  unspecifiedRequirementIds?: Prisma.StringNullableListFilter<"OdaTransferOperation">
   id?: Prisma.StringFilter<"OdaTransferOperation"> | string
   transferId?: Prisma.StringFilter<"OdaTransferOperation"> | string
   productId?: Prisma.IntFilter<"OdaTransferOperation"> | number
@@ -248,7 +244,7 @@ export type OdaTransferOperationWhereInput = {
 }
 
 export type OdaTransferOperationOrderByWithRelationInput = {
-  canUseCartCoverage?: Prisma.SortOrder
+  unspecifiedRequirementIds?: Prisma.SortOrder
   id?: Prisma.SortOrder
   transferId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
@@ -264,7 +260,7 @@ export type OdaTransferOperationWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.OdaTransferOperationWhereInput | Prisma.OdaTransferOperationWhereInput[]
   OR?: Prisma.OdaTransferOperationWhereInput[]
   NOT?: Prisma.OdaTransferOperationWhereInput | Prisma.OdaTransferOperationWhereInput[]
-  canUseCartCoverage?: Prisma.BoolFilter<"OdaTransferOperation"> | boolean
+  unspecifiedRequirementIds?: Prisma.StringNullableListFilter<"OdaTransferOperation">
   transferId?: Prisma.StringFilter<"OdaTransferOperation"> | string
   productId?: Prisma.IntFilter<"OdaTransferOperation"> | number
   quantity?: Prisma.IntFilter<"OdaTransferOperation"> | number
@@ -275,7 +271,7 @@ export type OdaTransferOperationWhereUniqueInput = Prisma.AtLeast<{
 }, "id">
 
 export type OdaTransferOperationOrderByWithAggregationInput = {
-  canUseCartCoverage?: Prisma.SortOrder
+  unspecifiedRequirementIds?: Prisma.SortOrder
   id?: Prisma.SortOrder
   transferId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
@@ -294,7 +290,7 @@ export type OdaTransferOperationScalarWhereWithAggregatesInput = {
   AND?: Prisma.OdaTransferOperationScalarWhereWithAggregatesInput | Prisma.OdaTransferOperationScalarWhereWithAggregatesInput[]
   OR?: Prisma.OdaTransferOperationScalarWhereWithAggregatesInput[]
   NOT?: Prisma.OdaTransferOperationScalarWhereWithAggregatesInput | Prisma.OdaTransferOperationScalarWhereWithAggregatesInput[]
-  canUseCartCoverage?: Prisma.BoolWithAggregatesFilter<"OdaTransferOperation"> | boolean
+  unspecifiedRequirementIds?: Prisma.StringNullableListFilter<"OdaTransferOperation">
   id?: Prisma.StringWithAggregatesFilter<"OdaTransferOperation"> | string
   transferId?: Prisma.StringWithAggregatesFilter<"OdaTransferOperation"> | string
   productId?: Prisma.IntWithAggregatesFilter<"OdaTransferOperation"> | number
@@ -305,7 +301,7 @@ export type OdaTransferOperationScalarWhereWithAggregatesInput = {
 }
 
 export type OdaTransferOperationCreateInput = {
-  canUseCartCoverage?: boolean
+  unspecifiedRequirementIds?: Prisma.OdaTransferOperationCreateunspecifiedRequirementIdsInput | string[]
   id?: string
   productId: number
   quantity: number
@@ -316,7 +312,7 @@ export type OdaTransferOperationCreateInput = {
 }
 
 export type OdaTransferOperationUncheckedCreateInput = {
-  canUseCartCoverage?: boolean
+  unspecifiedRequirementIds?: Prisma.OdaTransferOperationCreateunspecifiedRequirementIdsInput | string[]
   id?: string
   transferId: string
   productId: number
@@ -327,7 +323,7 @@ export type OdaTransferOperationUncheckedCreateInput = {
 }
 
 export type OdaTransferOperationUpdateInput = {
-  canUseCartCoverage?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  unspecifiedRequirementIds?: Prisma.OdaTransferOperationUpdateunspecifiedRequirementIdsInput | string[]
   id?: Prisma.StringFieldUpdateOperationsInput | string
   productId?: Prisma.IntFieldUpdateOperationsInput | number
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
@@ -338,7 +334,7 @@ export type OdaTransferOperationUpdateInput = {
 }
 
 export type OdaTransferOperationUncheckedUpdateInput = {
-  canUseCartCoverage?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  unspecifiedRequirementIds?: Prisma.OdaTransferOperationUpdateunspecifiedRequirementIdsInput | string[]
   id?: Prisma.StringFieldUpdateOperationsInput | string
   transferId?: Prisma.StringFieldUpdateOperationsInput | string
   productId?: Prisma.IntFieldUpdateOperationsInput | number
@@ -349,7 +345,7 @@ export type OdaTransferOperationUncheckedUpdateInput = {
 }
 
 export type OdaTransferOperationCreateManyInput = {
-  canUseCartCoverage?: boolean
+  unspecifiedRequirementIds?: Prisma.OdaTransferOperationCreateunspecifiedRequirementIdsInput | string[]
   id?: string
   transferId: string
   productId: number
@@ -360,7 +356,7 @@ export type OdaTransferOperationCreateManyInput = {
 }
 
 export type OdaTransferOperationUpdateManyMutationInput = {
-  canUseCartCoverage?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  unspecifiedRequirementIds?: Prisma.OdaTransferOperationUpdateunspecifiedRequirementIdsInput | string[]
   id?: Prisma.StringFieldUpdateOperationsInput | string
   productId?: Prisma.IntFieldUpdateOperationsInput | number
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
@@ -370,7 +366,7 @@ export type OdaTransferOperationUpdateManyMutationInput = {
 }
 
 export type OdaTransferOperationUncheckedUpdateManyInput = {
-  canUseCartCoverage?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  unspecifiedRequirementIds?: Prisma.OdaTransferOperationUpdateunspecifiedRequirementIdsInput | string[]
   id?: Prisma.StringFieldUpdateOperationsInput | string
   transferId?: Prisma.StringFieldUpdateOperationsInput | string
   productId?: Prisma.IntFieldUpdateOperationsInput | number
@@ -399,7 +395,7 @@ export type StringNullableListFilter<$PrismaModel = never> = {
 }
 
 export type OdaTransferOperationCountOrderByAggregateInput = {
-  canUseCartCoverage?: Prisma.SortOrder
+  unspecifiedRequirementIds?: Prisma.SortOrder
   id?: Prisma.SortOrder
   transferId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
@@ -416,7 +412,6 @@ export type OdaTransferOperationAvgOrderByAggregateInput = {
 }
 
 export type OdaTransferOperationMaxOrderByAggregateInput = {
-  canUseCartCoverage?: Prisma.SortOrder
   id?: Prisma.SortOrder
   transferId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
@@ -426,7 +421,6 @@ export type OdaTransferOperationMaxOrderByAggregateInput = {
 }
 
 export type OdaTransferOperationMinOrderByAggregateInput = {
-  canUseCartCoverage?: Prisma.SortOrder
   id?: Prisma.SortOrder
   transferId?: Prisma.SortOrder
   productId?: Prisma.SortOrder
@@ -483,8 +477,17 @@ export type OdaTransferOperationUncheckedUpdateManyWithoutTransferNestedInput = 
   deleteMany?: Prisma.OdaTransferOperationScalarWhereInput | Prisma.OdaTransferOperationScalarWhereInput[]
 }
 
+export type OdaTransferOperationCreateunspecifiedRequirementIdsInput = {
+  set: string[]
+}
+
 export type OdaTransferOperationCreaterequirementIdsInput = {
   set: string[]
+}
+
+export type OdaTransferOperationUpdateunspecifiedRequirementIdsInput = {
+  set?: string[]
+  push?: string | string[]
 }
 
 export type OdaTransferOperationUpdaterequirementIdsInput = {
@@ -497,7 +500,7 @@ export type EnumOdaOperationStateFieldUpdateOperationsInput = {
 }
 
 export type OdaTransferOperationCreateWithoutTransferInput = {
-  canUseCartCoverage?: boolean
+  unspecifiedRequirementIds?: Prisma.OdaTransferOperationCreateunspecifiedRequirementIdsInput | string[]
   id?: string
   productId: number
   quantity: number
@@ -507,7 +510,7 @@ export type OdaTransferOperationCreateWithoutTransferInput = {
 }
 
 export type OdaTransferOperationUncheckedCreateWithoutTransferInput = {
-  canUseCartCoverage?: boolean
+  unspecifiedRequirementIds?: Prisma.OdaTransferOperationCreateunspecifiedRequirementIdsInput | string[]
   id?: string
   productId: number
   quantity: number
@@ -546,7 +549,7 @@ export type OdaTransferOperationScalarWhereInput = {
   AND?: Prisma.OdaTransferOperationScalarWhereInput | Prisma.OdaTransferOperationScalarWhereInput[]
   OR?: Prisma.OdaTransferOperationScalarWhereInput[]
   NOT?: Prisma.OdaTransferOperationScalarWhereInput | Prisma.OdaTransferOperationScalarWhereInput[]
-  canUseCartCoverage?: Prisma.BoolFilter<"OdaTransferOperation"> | boolean
+  unspecifiedRequirementIds?: Prisma.StringNullableListFilter<"OdaTransferOperation">
   id?: Prisma.StringFilter<"OdaTransferOperation"> | string
   transferId?: Prisma.StringFilter<"OdaTransferOperation"> | string
   productId?: Prisma.IntFilter<"OdaTransferOperation"> | number
@@ -557,7 +560,7 @@ export type OdaTransferOperationScalarWhereInput = {
 }
 
 export type OdaTransferOperationCreateManyTransferInput = {
-  canUseCartCoverage?: boolean
+  unspecifiedRequirementIds?: Prisma.OdaTransferOperationCreateunspecifiedRequirementIdsInput | string[]
   id?: string
   productId: number
   quantity: number
@@ -567,7 +570,7 @@ export type OdaTransferOperationCreateManyTransferInput = {
 }
 
 export type OdaTransferOperationUpdateWithoutTransferInput = {
-  canUseCartCoverage?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  unspecifiedRequirementIds?: Prisma.OdaTransferOperationUpdateunspecifiedRequirementIdsInput | string[]
   id?: Prisma.StringFieldUpdateOperationsInput | string
   productId?: Prisma.IntFieldUpdateOperationsInput | number
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
@@ -577,7 +580,7 @@ export type OdaTransferOperationUpdateWithoutTransferInput = {
 }
 
 export type OdaTransferOperationUncheckedUpdateWithoutTransferInput = {
-  canUseCartCoverage?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  unspecifiedRequirementIds?: Prisma.OdaTransferOperationUpdateunspecifiedRequirementIdsInput | string[]
   id?: Prisma.StringFieldUpdateOperationsInput | string
   productId?: Prisma.IntFieldUpdateOperationsInput | number
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
@@ -587,7 +590,7 @@ export type OdaTransferOperationUncheckedUpdateWithoutTransferInput = {
 }
 
 export type OdaTransferOperationUncheckedUpdateManyWithoutTransferInput = {
-  canUseCartCoverage?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  unspecifiedRequirementIds?: Prisma.OdaTransferOperationUpdateunspecifiedRequirementIdsInput | string[]
   id?: Prisma.StringFieldUpdateOperationsInput | string
   productId?: Prisma.IntFieldUpdateOperationsInput | number
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
@@ -599,7 +602,7 @@ export type OdaTransferOperationUncheckedUpdateManyWithoutTransferInput = {
 
 
 export type OdaTransferOperationSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  canUseCartCoverage?: boolean
+  unspecifiedRequirementIds?: boolean
   id?: boolean
   transferId?: boolean
   productId?: boolean
@@ -611,7 +614,7 @@ export type OdaTransferOperationSelect<ExtArgs extends runtime.Types.Extensions.
 }, ExtArgs["result"]["odaTransferOperation"]>
 
 export type OdaTransferOperationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  canUseCartCoverage?: boolean
+  unspecifiedRequirementIds?: boolean
   id?: boolean
   transferId?: boolean
   productId?: boolean
@@ -623,7 +626,7 @@ export type OdaTransferOperationSelectCreateManyAndReturn<ExtArgs extends runtim
 }, ExtArgs["result"]["odaTransferOperation"]>
 
 export type OdaTransferOperationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  canUseCartCoverage?: boolean
+  unspecifiedRequirementIds?: boolean
   id?: boolean
   transferId?: boolean
   productId?: boolean
@@ -635,7 +638,7 @@ export type OdaTransferOperationSelectUpdateManyAndReturn<ExtArgs extends runtim
 }, ExtArgs["result"]["odaTransferOperation"]>
 
 export type OdaTransferOperationSelectScalar = {
-  canUseCartCoverage?: boolean
+  unspecifiedRequirementIds?: boolean
   id?: boolean
   transferId?: boolean
   productId?: boolean
@@ -645,7 +648,7 @@ export type OdaTransferOperationSelectScalar = {
   state?: boolean
 }
 
-export type OdaTransferOperationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"canUseCartCoverage" | "id" | "transferId" | "productId" | "quantity" | "beforeQuantity" | "requirementIds" | "state", ExtArgs["result"]["odaTransferOperation"]>
+export type OdaTransferOperationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"unspecifiedRequirementIds" | "id" | "transferId" | "productId" | "quantity" | "beforeQuantity" | "requirementIds" | "state", ExtArgs["result"]["odaTransferOperation"]>
 export type OdaTransferOperationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transfer?: boolean | Prisma.OdaTransferDefaultArgs<ExtArgs>
 }
@@ -662,7 +665,7 @@ export type $OdaTransferOperationPayload<ExtArgs extends runtime.Types.Extension
     transfer: Prisma.$OdaTransferPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
-    canUseCartCoverage: boolean
+    unspecifiedRequirementIds: string[]
     id: string
     transferId: string
     productId: number
@@ -753,8 +756,8 @@ export interface OdaTransferOperationDelegate<ExtArgs extends runtime.Types.Exte
    * // Get first 10 OdaTransferOperations
    * const odaTransferOperations = await prisma.odaTransferOperation.findMany({ take: 10 })
    * 
-   * // Only select the `canUseCartCoverage`
-   * const odaTransferOperationWithCanUseCartCoverageOnly = await prisma.odaTransferOperation.findMany({ select: { canUseCartCoverage: true } })
+   * // Only select the `unspecifiedRequirementIds`
+   * const odaTransferOperationWithUnspecifiedRequirementIdsOnly = await prisma.odaTransferOperation.findMany({ select: { unspecifiedRequirementIds: true } })
    * 
    */
   findMany<T extends OdaTransferOperationFindManyArgs>(args?: Prisma.SelectSubset<T, OdaTransferOperationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OdaTransferOperationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
@@ -798,9 +801,9 @@ export interface OdaTransferOperationDelegate<ExtArgs extends runtime.Types.Exte
    *   ]
    * })
    * 
-   * // Create many OdaTransferOperations and only return the `canUseCartCoverage`
-   * const odaTransferOperationWithCanUseCartCoverageOnly = await prisma.odaTransferOperation.createManyAndReturn({
-   *   select: { canUseCartCoverage: true },
+   * // Create many OdaTransferOperations and only return the `unspecifiedRequirementIds`
+   * const odaTransferOperationWithUnspecifiedRequirementIdsOnly = await prisma.odaTransferOperation.createManyAndReturn({
+   *   select: { unspecifiedRequirementIds: true },
    *   data: [
    *     // ... provide data here
    *   ]
@@ -889,9 +892,9 @@ export interface OdaTransferOperationDelegate<ExtArgs extends runtime.Types.Exte
    *   ]
    * })
    * 
-   * // Update zero or more OdaTransferOperations and only return the `canUseCartCoverage`
-   * const odaTransferOperationWithCanUseCartCoverageOnly = await prisma.odaTransferOperation.updateManyAndReturn({
-   *   select: { canUseCartCoverage: true },
+   * // Update zero or more OdaTransferOperations and only return the `unspecifiedRequirementIds`
+   * const odaTransferOperationWithUnspecifiedRequirementIdsOnly = await prisma.odaTransferOperation.updateManyAndReturn({
+   *   select: { unspecifiedRequirementIds: true },
    *   where: {
    *     // ... provide filter here
    *   },
@@ -1094,7 +1097,7 @@ export interface Prisma__OdaTransferOperationClient<T, Null = never, ExtArgs ext
  * Fields of the OdaTransferOperation model
  */
 export interface OdaTransferOperationFieldRefs {
-  readonly canUseCartCoverage: Prisma.FieldRef<"OdaTransferOperation", 'Boolean'>
+  readonly unspecifiedRequirementIds: Prisma.FieldRef<"OdaTransferOperation", 'String[]'>
   readonly id: Prisma.FieldRef<"OdaTransferOperation", 'String'>
   readonly transferId: Prisma.FieldRef<"OdaTransferOperation", 'String'>
   readonly productId: Prisma.FieldRef<"OdaTransferOperation", 'Int'>

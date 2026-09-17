@@ -774,3 +774,30 @@ void test("uncertain coverage cannot be reconciled against a replacement Oda con
       afterAdd = () => Promise.resolve();
     }
   }));
+
+void test("cart coverage recovers the unspecified part of an uncertain shared addition", () =>
+  withHousehold(async ({ oda, shopping }) => {
+    cart = new Map();
+    added = [];
+    products = [milk];
+    const explicit = await shopping.addManual({ name: "Milk" });
+    await shopping.edit({ ...explicit, amount: 2, unit: "l" });
+    const unspecified = await shopping.addManual({ name: "Milk" });
+    selections = [
+      { requirementId: explicit.id, productId: 10, quantity: 2 },
+      { requirementId: unspecified.id, productId: 10, quantity: null },
+    ];
+    afterAdd = () => Promise.reject(new Error("Response lost"));
+    try {
+      const transfer = await oda.send({ id: crypto.randomUUID() });
+      afterAdd = () => Promise.resolve();
+      assert.equal((await oda.recover({ id: transfer.id })).state, "UNCERTAIN");
+      assert.deepEqual(
+        (await shopping.list()).map((item) => item.id),
+        [explicit.id],
+      );
+      assert.deepEqual(added, [{ productId: 10, quantity: 2 }]);
+    } finally {
+      afterAdd = () => Promise.resolve();
+    }
+  }));

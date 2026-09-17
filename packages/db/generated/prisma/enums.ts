@@ -84,3 +84,11 @@ export const OdaOperationState = {
 } as const
 
 export type OdaOperationState = (typeof OdaOperationState)[keyof typeof OdaOperationState]
+
+
+export const OdaTransferResolution = {
+  ADDED: 'ADDED',
+  NOT_ADDED: 'NOT_ADDED'
+} as const
+
+export type OdaTransferResolution = (typeof OdaTransferResolution)[keyof typeof OdaTransferResolution]
