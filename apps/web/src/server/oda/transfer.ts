@@ -403,3 +403,58 @@ export async function recover(
     ? runTransfer(db, householdId, id, runId)
     : transferStatus(start.transfer);
 }
+
+// The member has checked the cart. This records their decision without making
+// another Oda write; later edits still pass through normal revision checks.
+export async function resolveUncertain(
+  db: PrismaClient,
+  householdId: string,
+  userId: string,
+  id: string,
+  outcome: "ADDED" | "NOT_ADDED",
+) {
+  const runId = crypto.randomUUID();
+  const start = await db.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
+    const transfer = await tx.odaTransfer.findUniqueOrThrow({
+      where: { id, householdId },
+    });
+    if (transfer.state === "COMPLETED") return { transfer, claimed: false };
+    if (transfer.state !== "UNCERTAIN" || !transferStatus(transfer).recoverable)
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Recover the transfer before resolving its outcome.",
+      });
+    const resolution = transfer.resolution ?? outcome;
+    await tx.odaTransferOperation.updateMany({
+      where: { transferId: id, state: "WRITING" },
+      data: { state: resolution === "ADDED" ? "CONFIRMED" : "FAILED" },
+    });
+    await tx.odaTransferOperation.updateMany({
+      where: { transferId: id, state: "PENDING" },
+      data: { state: "FAILED" },
+    });
+    return {
+      transfer: await tx.odaTransfer.update({
+        where: { id },
+        data: {
+          resolution,
+          resolvedByUserId: transfer.resolvedByUserId ?? userId,
+          runId,
+          leaseUntil: new Date(Date.now() + leaseDuration),
+        },
+      }),
+      claimed: true,
+    };
+  });
+  if (!start.claimed) return transferStatus(start.transfer);
+  try {
+    return transferStatus(await completeConfirmed(db, householdId, id, runId));
+  } catch (error) {
+    await db.odaTransfer.updateMany({
+      where: { id, householdId, runId },
+      data: { runId: null, leaseUntil: null },
+    });
+    throw error;
+  }
+}

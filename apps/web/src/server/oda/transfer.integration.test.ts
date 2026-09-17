@@ -801,3 +801,106 @@ void test("cart coverage recovers the unspecified part of an uncertain shared ad
       afterAdd = () => Promise.resolve();
     }
   }));
+
+void test("a member resolves uncertain additions after cart review without replaying or deleting later edits", () =>
+  withHousehold(async ({ oda, member, shopping, db }) => {
+    cart = new Map();
+    added = [];
+    products = [milk];
+    const unchanged = await shopping.addManual({ name: "Milk" });
+    await shopping.edit({ ...unchanged, amount: 2, unit: "l" });
+    const edited = await shopping.addManual({ name: "Whole milk" });
+    await shopping.edit({ ...edited, amount: 2, unit: "l" });
+    selections = [unchanged, edited].map((item) => ({
+      requirementId: item.id,
+      productId: 10,
+      quantity: 2,
+    }));
+    afterAdd = () => Promise.reject(new Error("Response lost"));
+    try {
+      const transfer = await oda.send({ id: crypto.randomUUID() });
+      afterAdd = () => Promise.resolve();
+      await shopping.edit({ ...edited, amount: 3, unit: "l" });
+      await withHousehold(async ({ oda: other }) => {
+        await assert.rejects(
+          other.resolve({ id: transfer.id, outcome: "ADDED" }),
+        );
+      });
+      assert.equal(
+        (await member.resolve({ id: transfer.id, outcome: "ADDED" })).state,
+        "COMPLETED",
+      );
+      assert.deepEqual(
+        (await shopping.list()).map((item) => item.id),
+        [edited.id],
+      );
+      assert.equal(
+        (await shopping.recent())[0]?.ownItemId,
+        unchanged.ownItemId,
+      );
+      const resolved = await db.odaTransfer.findUniqueOrThrow({
+        where: { id: transfer.id },
+      });
+      assert.equal(resolved.resolution, "ADDED");
+      assert.ok(resolved.resolvedByUserId);
+      await member.resolve({ id: transfer.id, outcome: "NOT_ADDED" });
+      assert.deepEqual(added, [{ productId: 10, quantity: 2 }]);
+      assert.equal(
+        (await db.odaTransfer.findUniqueOrThrow({ where: { id: transfer.id } }))
+          .resolution,
+        "ADDED",
+      );
+      selections = [{ requirementId: edited.id, productId: 10, quantity: 3 }];
+      assert.equal(
+        (await oda.send({ id: crypto.randomUUID() })).state,
+        "COMPLETED",
+      );
+      assert.deepEqual(added, [
+        { productId: 10, quantity: 2 },
+        { productId: 10, quantity: 3 },
+      ]);
+    } finally {
+      afterAdd = () => Promise.resolve();
+    }
+  }));
+
+void test("marking an uncertain addition as not added retains the requirement until a new send", () =>
+  withHousehold(async ({ oda, member, shopping }) => {
+    cart = new Map();
+    added = [];
+    products = [milk];
+    const item = await shopping.addManual({ name: "Milk" });
+    await shopping.edit({ ...item, amount: 2, unit: "l" });
+    selections = [{ requirementId: item.id, productId: 10, quantity: 2 }];
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    beforeAdd = async () => {
+      started.resolve();
+      await release.promise;
+      throw new Error("Write did not reach Oda");
+    };
+    const id = crypto.randomUUID();
+    const sending = oda.send({ id });
+    try {
+      await started.promise;
+      await assert.rejects(member.resolve({ id, outcome: "NOT_ADDED" }));
+      release.resolve();
+      assert.equal((await sending).state, "UNCERTAIN");
+      beforeAdd = () => Promise.resolve();
+      assert.equal(
+        (await member.resolve({ id, outcome: "NOT_ADDED" })).state,
+        "COMPLETED",
+      );
+      assert.equal((await shopping.list()).length, 1);
+      assert.deepEqual(added, []);
+      assert.equal(
+        (await oda.send({ id: crypto.randomUUID() })).state,
+        "COMPLETED",
+      );
+      assert.deepEqual(added, [{ productId: 10, quantity: 2 }]);
+    } finally {
+      release.resolve();
+      beforeAdd = () => Promise.resolve();
+      await sending;
+    }
+  }));
