@@ -162,18 +162,32 @@ async function runTransfer(
         const cart = cartSchema.parse(
           await odaTool(db, householdId, "get_cart", {}, transfer.connectionId),
         );
-        await db.odaTransferOperation.updateMany({
-          where: {
-            id: {
-              in: uncertain
-                .filter(
-                  (operation) => cartQuantity(cart, operation.productId) > 0,
-                )
-                .map((operation) => operation.id),
+        await db.$transaction(async (tx) => {
+          await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
+          const owned = await tx.odaTransfer.findUniqueOrThrow({
+            where: { id },
+          });
+          const current = await tx.odaConnection.findUnique({
+            where: { householdId },
+          });
+          if (
+            owned.runId !== runId ||
+            current?.connectionId !== owned.connectionId
+          )
+            return;
+          await tx.odaTransferOperation.updateMany({
+            where: {
+              id: {
+                in: uncertain
+                  .filter(
+                    (operation) => cartQuantity(cart, operation.productId) > 0,
+                  )
+                  .map((operation) => operation.id),
+              },
+              state: "WRITING",
             },
-            state: "WRITING",
-          },
-          data: { state: "CONFIRMED" },
+            data: { state: "CONFIRMED" },
+          });
         });
       } catch {
         /* Confirmed parts can still finish when Oda is unreachable. */

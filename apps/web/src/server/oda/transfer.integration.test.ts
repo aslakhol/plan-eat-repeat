@@ -713,3 +713,64 @@ void test("an ambiguous explicit addition cannot be inferred from cart totals or
       afterAdd = () => Promise.resolve();
     }
   }));
+
+void test("a delayed remote success can finish locally after recovery without another write", () =>
+  withHousehold(async ({ oda, member, shopping }) => {
+    cart = new Map();
+    added = [];
+    products = [milk];
+    const item = await shopping.addManual({ name: "Milk" });
+    await shopping.edit({ ...item, amount: 2, unit: "l" });
+    selections = [{ requirementId: item.id, productId: 10, quantity: 2 }];
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    afterAdd = () => {
+      started.resolve();
+      return release.promise;
+    };
+    const id = crypto.randomUUID();
+    const sending = oda.send({ id });
+    const now = Date.now();
+    const clock = mock.method(Date, "now", () => now);
+    try {
+      await started.promise;
+      clock.mock.mockImplementation(() => now + 181_000);
+      assert.equal((await member.recover({ id })).state, "UNCERTAIN");
+      assert.equal((await shopping.list()).length, 1);
+      release.resolve();
+      await sending;
+      assert.equal((await member.recover({ id })).state, "COMPLETED");
+      assert.deepEqual(added, [{ productId: 10, quantity: 2 }]);
+      assert.deepEqual(await shopping.list(), []);
+    } finally {
+      release.resolve();
+      afterAdd = () => Promise.resolve();
+      clock.mock.restore();
+      await sending;
+    }
+  }));
+
+void test("uncertain coverage cannot be reconciled against a replacement Oda connection", () =>
+  withHousehold(async ({ oda, shopping }) => {
+    cart = new Map();
+    added = [];
+    products = [milk];
+    const item = await shopping.addManual({ name: "Milk" });
+    selections = [{ requirementId: item.id, productId: 10, quantity: null }];
+    afterAdd = () => Promise.reject(new Error("Response lost"));
+    try {
+      const transfer = await oda.send({ id: crypto.randomUUID() });
+      afterAdd = () => Promise.resolve();
+      await oda.disconnect();
+      const login = await oda.connect();
+      await oda.callback({
+        state: new URL(login.url).searchParams.get("state")!,
+        code: "test-code",
+      });
+      assert.equal((await oda.recover({ id: transfer.id })).state, "UNCERTAIN");
+      assert.equal((await shopping.list()).length, 1);
+      assert.equal(added.length, 1);
+    } finally {
+      afterAdd = () => Promise.resolve();
+    }
+  }));
