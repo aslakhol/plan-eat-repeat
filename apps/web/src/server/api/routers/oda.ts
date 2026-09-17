@@ -1,4 +1,4 @@
-import { currentTransfer, send } from "../../oda/transfer";
+import { currentTransfer, recover, send } from "../../oda/transfer";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedureWithHousehold } from "../trpc";
 import {
@@ -10,6 +10,9 @@ import {
 import { cartSchema, odaTool } from "../../oda/provider";
 
 export const odaRouter = createTRPCRouter({
+  recover: protectedProcedureWithHousehold
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(({ ctx, input }) => recover(ctx.db, ctx.householdId, input.id)),
   transfer: protectedProcedureWithHousehold.query(({ ctx }) =>
     currentTransfer(ctx.db, ctx.householdId),
   ),

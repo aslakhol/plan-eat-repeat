@@ -39,6 +39,8 @@ let historySearch = new Map<string, (typeof milk)[]>();
 let cart = new Map<number, number>();
 let added: { productId: number; quantity: number }[] = [];
 let beforeAdd = () => Promise.resolve();
+let afterAdd = () => Promise.resolve();
+let beforeModel = () => Promise.resolve();
 const cartResponse = () => ({
   url: "https://oda.com/no/cart/",
   groups: [
@@ -115,6 +117,7 @@ mock.module("@modelcontextprotocol/sdk/client/index.js", {
               (cart.get(operation.productId) ?? 0) + operation.quantity,
             );
           }
+          await afterAdd();
           return { structuredContent: cartResponse() };
         }
         throw new Error(`Unexpected Oda tool ${input.name}`);
@@ -123,8 +126,9 @@ mock.module("@modelcontextprotocol/sdk/client/index.js", {
   },
 });
 const model = new MockLanguageModelV3({
-  doGenerate: () =>
-    Promise.resolve({
+  doGenerate: async () => {
+    await beforeModel();
+    return {
       content: [{ type: "text", text: JSON.stringify({ selections }) }],
       finishReason: { unified: "stop", raw: "end_turn" },
       usage: {
@@ -132,7 +136,8 @@ const model = new MockLanguageModelV3({
         outputTokens: { total: 20, text: 20, reasoning: 0 },
       },
       warnings: [],
-    }),
+    };
+  },
 });
 mock.module("@ai-sdk/anthropic", { namedExports: { anthropic: () => model } });
 const { odaRouter } = await import("../api/routers/oda");
@@ -567,5 +572,31 @@ void test("historical availability cannot authorize an unavailable product and o
     } finally {
       suggestions = [];
       historySearch = new Map();
+    }
+  }));
+
+void test("an ambiguous unspecified addition can recover established cart coverage without replay", () =>
+  withHousehold(async ({ oda, member, shopping }) => {
+    cart = new Map();
+    added = [];
+    products = [milk];
+    const item = await shopping.addManual({ name: "Milk" });
+    selections = [{ requirementId: item.id, productId: 10, quantity: null }];
+    afterAdd = () =>
+      Promise.reject(new Error("Response lost after remote success"));
+    try {
+      const transfer = await oda.send({ id: crypto.randomUUID() });
+      assert.equal(transfer.state, "UNCERTAIN");
+      assert.equal(cart.get(10), 1);
+      afterAdd = () => Promise.resolve();
+      assert.equal(
+        (await member.recover({ id: transfer.id })).state,
+        "COMPLETED",
+      );
+      assert.deepEqual(added, [{ productId: 10, quantity: 1 }]);
+      assert.deepEqual(await shopping.list(), []);
+      assert.equal((await shopping.recent())[0]?.ownItemId, item.ownItemId);
+    } finally {
+      afterAdd = () => Promise.resolve();
     }
   }));

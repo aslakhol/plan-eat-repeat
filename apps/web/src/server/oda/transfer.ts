@@ -206,3 +206,65 @@ export async function send(db: PrismaClient, householdId: string, id: string) {
     );
   }
 }
+
+export async function recover(
+  db: PrismaClient,
+  householdId: string,
+  id: string,
+) {
+  const claimed = await db.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
+    const transfer = await tx.odaTransfer.findUniqueOrThrow({
+      where: { id, householdId },
+      include: { operations: true },
+    });
+    if (transfer.state !== "UNCERTAIN") return null;
+    await tx.odaTransfer.update({ where: { id }, data: { state: "SENDING" } });
+    return transfer;
+  });
+  if (!claimed)
+    return transferStatus(
+      await db.odaTransfer.findUniqueOrThrow({ where: { id, householdId } }),
+    );
+  try {
+    const uncertain = claimed.operations.filter(
+      (operation) =>
+        operation.state === "WRITING" && operation.canUseCartCoverage,
+    );
+    const connection = await db.odaConnection.findUnique({
+      where: { householdId },
+    });
+    if (uncertain.length && connection?.connectionId === claimed.connectionId) {
+      const cart = cartSchema.parse(await odaTool(db, householdId, "get_cart"));
+      const present = new Set(
+        cart.groups
+          .flatMap((group) => group.items)
+          .filter((item) => item.quantity > 0)
+          .map((item) => item.product.id),
+      );
+      await db.odaTransferOperation.updateMany({
+        where: {
+          id: {
+            in: uncertain
+              .filter((operation) => present.has(operation.productId))
+              .map((operation) => operation.id),
+          },
+          state: "WRITING",
+        },
+        data: { state: "CONFIRMED" },
+      });
+    }
+    return transferStatus(await completeConfirmed(db, householdId, id));
+  } catch {
+    return transferStatus(
+      await db.odaTransfer.update({
+        where: { id },
+        data: {
+          state: "UNCERTAIN",
+          message:
+            "Could not recover the transfer. Check the Oda connection and try again.",
+        },
+      }),
+    );
+  }
+}
