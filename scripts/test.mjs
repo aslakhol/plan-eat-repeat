@@ -9,7 +9,14 @@ if (files.length === 0) throw new Error("No test files found");
 
 const result = spawnSync(
   process.execPath,
-  ["--import", "tsx", "--experimental-test-module-mocks", "--test", ...files],
+  [
+    "--import",
+    "tsx",
+    "--experimental-test-module-mocks",
+    "--test",
+    ...(integration ? ["--test-concurrency=4"] : []),
+    ...files,
+  ],
   {
     stdio: "inherit",
     env: integration
