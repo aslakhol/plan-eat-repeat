@@ -45,7 +45,9 @@ mock.module("@modelcontextprotocol/sdk/client/index.js", {
         nextCart = undefined;
         return pending
           ? pending()
-          : Promise.resolve({ structuredContent: cartResult });
+          : Promise.resolve({
+              structuredContent: { ...cartResult, groups: [] },
+            });
       }
       close() {
         return Promise.resolve();

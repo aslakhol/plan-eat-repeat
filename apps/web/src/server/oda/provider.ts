@@ -5,17 +5,38 @@ import { TRPCError } from "@trpc/server";
 import type { PrismaClient } from "@planeatrepeat/db";
 import { accessToken } from "./connection";
 
+export const productSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  description: z.string(),
+  price: z.string(),
+  unitName: z.string(),
+  unitPrice: z.string(),
+  brand: z.string().nullish(),
+  availability: z.object({ isAvailable: z.boolean() }).nullish(),
+});
 export const cartSchema = z.object({
   url: z
     .string()
     .url()
     .refine((value) => new URL(value).origin === "https://oda.com"),
+  groups: z.array(
+    z.object({
+      items: z.array(
+        z.object({
+          product: productSchema,
+          quantity: z.number().int().nonnegative(),
+        }),
+      ),
+    }),
+  ),
 });
+export type Cart = z.infer<typeof cartSchema>;
 
 export async function odaTool(
   db: PrismaClient,
   householdId: string,
-  name: "get_cart",
+  name: "get_cart" | "product_search" | "manipulate_cart",
   args: Record<string, unknown> = {},
 ) {
   const credentials = await accessToken(db, householdId);
