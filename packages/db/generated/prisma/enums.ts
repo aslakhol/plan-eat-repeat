@@ -92,3 +92,14 @@ export const OdaTransferResolution = {
 } as const
 
 export type OdaTransferResolution = (typeof OdaTransferResolution)[keyof typeof OdaTransferResolution]
+
+
+export const OdaTransferStage = {
+  CHECKING_CART: 'CHECKING_CART',
+  FINDING_PRODUCTS: 'FINDING_PRODUCTS',
+  CHOOSING_PRODUCTS: 'CHOOSING_PRODUCTS',
+  ADDING_TO_CART: 'ADDING_TO_CART',
+  UPDATING_LIST: 'UPDATING_LIST'
+} as const
+
+export type OdaTransferStage = (typeof OdaTransferStage)[keyof typeof OdaTransferStage]

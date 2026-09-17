@@ -292,6 +292,7 @@ export type OdaAuthorizationScalarFieldEnum = (typeof OdaAuthorizationScalarFiel
 
 
 export const OdaTransferScalarFieldEnum = {
+  stage: 'stage',
   resolvedByUserId: 'resolvedByUserId',
   resolution: 'resolution',
   runId: 'runId',

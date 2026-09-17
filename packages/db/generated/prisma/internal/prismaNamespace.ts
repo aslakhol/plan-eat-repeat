@@ -1997,6 +1997,7 @@ export type OdaAuthorizationScalarFieldEnum = (typeof OdaAuthorizationScalarFiel
 
 
 export const OdaTransferScalarFieldEnum = {
+  stage: 'stage',
   resolvedByUserId: 'resolvedByUserId',
   resolution: 'resolution',
   runId: 'runId',
@@ -2205,6 +2206,20 @@ export type EnumAiImportInferenceStateFieldRefInput<$PrismaModel> = FieldRefInpu
  * Reference to a field of type 'AiImportInferenceState[]'
  */
 export type ListEnumAiImportInferenceStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiImportInferenceState[]'>
+    
+
+
+/**
+ * Reference to a field of type 'OdaTransferStage'
+ */
+export type EnumOdaTransferStageFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OdaTransferStage'>
+    
+
+
+/**
+ * Reference to a field of type 'OdaTransferStage[]'
+ */
+export type ListEnumOdaTransferStageFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OdaTransferStage[]'>
     
 
 
