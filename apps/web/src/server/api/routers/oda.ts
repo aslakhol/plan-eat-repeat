@@ -1,3 +1,4 @@
+import { currentTransfer, send } from "../../oda/transfer";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedureWithHousehold } from "../trpc";
 import {
@@ -9,6 +10,12 @@ import {
 import { cartSchema, odaTool } from "../../oda/provider";
 
 export const odaRouter = createTRPCRouter({
+  transfer: protectedProcedureWithHousehold.query(({ ctx }) =>
+    currentTransfer(ctx.db, ctx.householdId),
+  ),
+  send: protectedProcedureWithHousehold
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(({ ctx, input }) => send(ctx.db, ctx.householdId, input.id)),
   status: protectedProcedureWithHousehold.query(({ ctx }) =>
     connectionStatus(ctx.db, ctx.householdId),
   ),
@@ -23,7 +30,8 @@ export const odaRouter = createTRPCRouter({
   disconnect: protectedProcedureWithHousehold.mutation(({ ctx }) =>
     disconnect(ctx.db, ctx.householdId),
   ),
-  cart: protectedProcedureWithHousehold.query(async ({ ctx }) =>
-    cartSchema.parse(await odaTool(ctx.db, ctx.householdId, "get_cart")),
-  ),
+  cart: protectedProcedureWithHousehold.query(async ({ ctx }) => ({
+    url: cartSchema.parse(await odaTool(ctx.db, ctx.householdId, "get_cart"))
+      .url,
+  })),
 });

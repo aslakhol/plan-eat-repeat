@@ -6,7 +6,7 @@ import {
 } from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import type { PrismaClient } from "@planeatrepeat/db";
+import type { PrismaClient, Prisma } from "@planeatrepeat/db";
 import { env } from "~/env";
 
 const clientSchema = z.object({
@@ -148,6 +148,21 @@ export async function connect(
   return { url: url.href };
 }
 
+async function ensureConnectionIdle(
+  tx: Prisma.TransactionClient,
+  householdId: string,
+) {
+  if (
+    await tx.odaTransfer.findFirst({
+      where: { householdId, state: { in: ["MATCHING", "SENDING"] } },
+    })
+  )
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "Wait for the Oda transfer to finish.",
+    });
+}
+
 export async function callback(
   db: PrismaClient,
   householdId: string,
@@ -157,6 +172,7 @@ export async function callback(
   await db.$transaction(
     async (tx) => {
       await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
+      await ensureConnectionIdle(tx, householdId);
       const authorization = await tx.odaAuthorization.findFirst({
         where: {
           state: input.state,
@@ -200,6 +216,7 @@ export async function callback(
         where: { householdId },
         create: { householdId, credentials },
         update: {
+          connectionId: crypto.randomUUID(),
           credentials,
           reconnectRequired: false,
           revision: crypto.randomUUID(),
@@ -280,6 +297,7 @@ export async function accessToken(db: PrismaClient, householdId: string) {
 export async function disconnect(db: PrismaClient, householdId: string) {
   const connection = await db.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
+    await ensureConnectionIdle(tx, householdId);
     const previous = await tx.odaConnection.findUnique({
       where: { householdId },
     });
