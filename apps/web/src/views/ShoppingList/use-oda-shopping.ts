@@ -74,6 +74,14 @@ export function useOdaShopping(
         }
       : transfer.data;
   const busy = send.isPending || recover.isPending || resolve.isPending;
+  const visibleProgress =
+    progress &&
+    (progress.state !== "COMPLETED" ||
+      (progress.finishedAt &&
+        Date.now() - progress.finishedAt.getTime() < 5 * 60_000 &&
+        dismissedId !== progress.id))
+      ? progress
+      : null;
   return {
     status,
     transfer,
@@ -81,8 +89,7 @@ export function useOdaShopping(
     connect,
     recover,
     resolve,
-    progress,
-    dismissedId,
+    progress: visibleProgress,
     busy,
     recoveryDisabled: busy || pendingChanges > 0,
     sendDisabled:

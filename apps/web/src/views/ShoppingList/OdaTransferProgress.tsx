@@ -52,11 +52,6 @@ export function OdaTransferProgress({ oda }: { oda: OdaShopping }) {
   const router = useRouter();
   const transfer = oda.progress;
   const finished = transfer?.state === "COMPLETED";
-  const recent =
-    !!transfer?.finishedAt &&
-    Date.now() - transfer.finishedAt.getTime() < 5 * 60_000;
-  const visible =
-    transfer && (!finished || (recent && oda.dismissedId !== transfer.id));
   const covered =
     transfer?.items.filter((item) => item.state === "CONFIRMED").length ?? 0;
   const remaining = (transfer?.items.length ?? 0) - covered;
@@ -107,7 +102,7 @@ export function OdaTransferProgress({ oda }: { oda: OdaShopping }) {
           Connecting to Oda…
         </p>
       )}
-      {visible && (
+      {transfer && (
         <section className="mb-5" aria-label="Oda transfer progress">
           <div className="mb-2 flex items-center justify-between gap-3">
             <p className="text-[13px] font-medium text-stone-600" role="status">

@@ -314,7 +314,7 @@ export function ShoppingListView() {
         </p>
       )}
       {(list.data !== undefined || optimisticItems.length > 0) &&
-        (!hasItems ? (
+        (!hasItems && !oda.progress ? (
           <div
             className={cn(
               "flex flex-col items-center justify-center gap-5 px-4",
