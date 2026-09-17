@@ -281,6 +281,8 @@ model OdaAuthorization {
 }
 
 model OdaTransfer {
+    runId String?
+    leaseUntil DateTime?
     id String @id
     householdId String
     household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
@@ -304,6 +306,7 @@ enum OdaTransferState {
 }
 
 model OdaTransferOperation {
+    canUseCartCoverage Boolean @default(false)
     id String @id @default(cuid())
     transferId String
     transfer OdaTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
