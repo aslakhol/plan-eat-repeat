@@ -1997,6 +1997,7 @@ export type OdaAuthorizationScalarFieldEnum = (typeof OdaAuthorizationScalarFiel
 
 
 export const OdaTransferScalarFieldEnum = {
+  dismissed: 'dismissed',
   stage: 'stage',
   resolvedByUserId: 'resolvedByUserId',
   resolution: 'resolution',

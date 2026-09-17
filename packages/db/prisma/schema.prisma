@@ -281,6 +281,7 @@ model OdaAuthorization {
 }
 
 model OdaTransfer {
+    dismissed Boolean @default(false)
     stage OdaTransferStage @default(CHECKING_CART)
     resolvedByUserId String?
     resolution OdaTransferResolution?
