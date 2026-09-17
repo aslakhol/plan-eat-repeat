@@ -221,6 +221,9 @@ export type HouseholdWhereInput = {
   OwnItems?: Prisma.OwnItemListRelationFilter
   ShoppingItems?: Prisma.ShoppingItemListRelationFilter
   RecentShoppingItems?: Prisma.RecentShoppingItemListRelationFilter
+  odaTransfers?: Prisma.OdaTransferListRelationFilter
+  odaConnection?: Prisma.XOR<Prisma.OdaConnectionNullableScalarRelationFilter, Prisma.OdaConnectionWhereInput> | null
+  odaAuthorizations?: Prisma.OdaAuthorizationListRelationFilter
 }
 
 export type HouseholdOrderByWithRelationInput = {
@@ -240,6 +243,9 @@ export type HouseholdOrderByWithRelationInput = {
   OwnItems?: Prisma.OwnItemOrderByRelationAggregateInput
   ShoppingItems?: Prisma.ShoppingItemOrderByRelationAggregateInput
   RecentShoppingItems?: Prisma.RecentShoppingItemOrderByRelationAggregateInput
+  odaTransfers?: Prisma.OdaTransferOrderByRelationAggregateInput
+  odaConnection?: Prisma.OdaConnectionOrderByWithRelationInput
+  odaAuthorizations?: Prisma.OdaAuthorizationOrderByRelationAggregateInput
 }
 
 export type HouseholdWhereUniqueInput = Prisma.AtLeast<{
@@ -262,6 +268,9 @@ export type HouseholdWhereUniqueInput = Prisma.AtLeast<{
   OwnItems?: Prisma.OwnItemListRelationFilter
   ShoppingItems?: Prisma.ShoppingItemListRelationFilter
   RecentShoppingItems?: Prisma.RecentShoppingItemListRelationFilter
+  odaTransfers?: Prisma.OdaTransferListRelationFilter
+  odaConnection?: Prisma.XOR<Prisma.OdaConnectionNullableScalarRelationFilter, Prisma.OdaConnectionWhereInput> | null
+  odaAuthorizations?: Prisma.OdaAuthorizationListRelationFilter
 }, "id" | "slug" | "publicSlug" | "aiImportSpendAttributionKey">
 
 export type HouseholdOrderByWithAggregationInput = {
@@ -311,6 +320,9 @@ export type HouseholdCreateInput = {
   OwnItems?: Prisma.OwnItemCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
   RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUncheckedCreateInput = {
@@ -330,6 +342,9 @@ export type HouseholdUncheckedCreateInput = {
   OwnItems?: Prisma.OwnItemUncheckedCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferUncheckedCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionUncheckedCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUpdateInput = {
@@ -349,6 +364,9 @@ export type HouseholdUpdateInput = {
   OwnItems?: Prisma.OwnItemUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdUncheckedUpdateInput = {
@@ -368,6 +386,9 @@ export type HouseholdUncheckedUpdateInput = {
   OwnItems?: Prisma.OwnItemUncheckedUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUncheckedUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdCreateManyInput = {
@@ -556,6 +577,48 @@ export type HouseholdUpdateOneRequiredWithoutInviteNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.HouseholdUpdateToOneWithWhereWithoutInviteInput, Prisma.HouseholdUpdateWithoutInviteInput>, Prisma.HouseholdUncheckedUpdateWithoutInviteInput>
 }
 
+export type HouseholdCreateNestedOneWithoutOdaConnectionInput = {
+  create?: Prisma.XOR<Prisma.HouseholdCreateWithoutOdaConnectionInput, Prisma.HouseholdUncheckedCreateWithoutOdaConnectionInput>
+  connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutOdaConnectionInput
+  connect?: Prisma.HouseholdWhereUniqueInput
+}
+
+export type HouseholdUpdateOneRequiredWithoutOdaConnectionNestedInput = {
+  create?: Prisma.XOR<Prisma.HouseholdCreateWithoutOdaConnectionInput, Prisma.HouseholdUncheckedCreateWithoutOdaConnectionInput>
+  connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutOdaConnectionInput
+  upsert?: Prisma.HouseholdUpsertWithoutOdaConnectionInput
+  connect?: Prisma.HouseholdWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.HouseholdUpdateToOneWithWhereWithoutOdaConnectionInput, Prisma.HouseholdUpdateWithoutOdaConnectionInput>, Prisma.HouseholdUncheckedUpdateWithoutOdaConnectionInput>
+}
+
+export type HouseholdCreateNestedOneWithoutOdaAuthorizationsInput = {
+  create?: Prisma.XOR<Prisma.HouseholdCreateWithoutOdaAuthorizationsInput, Prisma.HouseholdUncheckedCreateWithoutOdaAuthorizationsInput>
+  connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutOdaAuthorizationsInput
+  connect?: Prisma.HouseholdWhereUniqueInput
+}
+
+export type HouseholdUpdateOneRequiredWithoutOdaAuthorizationsNestedInput = {
+  create?: Prisma.XOR<Prisma.HouseholdCreateWithoutOdaAuthorizationsInput, Prisma.HouseholdUncheckedCreateWithoutOdaAuthorizationsInput>
+  connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutOdaAuthorizationsInput
+  upsert?: Prisma.HouseholdUpsertWithoutOdaAuthorizationsInput
+  connect?: Prisma.HouseholdWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.HouseholdUpdateToOneWithWhereWithoutOdaAuthorizationsInput, Prisma.HouseholdUpdateWithoutOdaAuthorizationsInput>, Prisma.HouseholdUncheckedUpdateWithoutOdaAuthorizationsInput>
+}
+
+export type HouseholdCreateNestedOneWithoutOdaTransfersInput = {
+  create?: Prisma.XOR<Prisma.HouseholdCreateWithoutOdaTransfersInput, Prisma.HouseholdUncheckedCreateWithoutOdaTransfersInput>
+  connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutOdaTransfersInput
+  connect?: Prisma.HouseholdWhereUniqueInput
+}
+
+export type HouseholdUpdateOneRequiredWithoutOdaTransfersNestedInput = {
+  create?: Prisma.XOR<Prisma.HouseholdCreateWithoutOdaTransfersInput, Prisma.HouseholdUncheckedCreateWithoutOdaTransfersInput>
+  connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutOdaTransfersInput
+  upsert?: Prisma.HouseholdUpsertWithoutOdaTransfersInput
+  connect?: Prisma.HouseholdWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.HouseholdUpdateToOneWithWhereWithoutOdaTransfersInput, Prisma.HouseholdUpdateWithoutOdaTransfersInput>, Prisma.HouseholdUncheckedUpdateWithoutOdaTransfersInput>
+}
+
 export type HouseholdCreateWithoutDinnersInput = {
   id?: string
   name: string
@@ -572,6 +635,9 @@ export type HouseholdCreateWithoutDinnersInput = {
   OwnItems?: Prisma.OwnItemCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
   RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUncheckedCreateWithoutDinnersInput = {
@@ -590,6 +656,9 @@ export type HouseholdUncheckedCreateWithoutDinnersInput = {
   OwnItems?: Prisma.OwnItemUncheckedCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferUncheckedCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionUncheckedCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdCreateOrConnectWithoutDinnersInput = {
@@ -624,6 +693,9 @@ export type HouseholdUpdateWithoutDinnersInput = {
   OwnItems?: Prisma.OwnItemUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdUncheckedUpdateWithoutDinnersInput = {
@@ -642,6 +714,9 @@ export type HouseholdUncheckedUpdateWithoutDinnersInput = {
   OwnItems?: Prisma.OwnItemUncheckedUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUncheckedUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdCreateWithoutOwnItemsInput = {
@@ -660,6 +735,9 @@ export type HouseholdCreateWithoutOwnItemsInput = {
   AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
   RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUncheckedCreateWithoutOwnItemsInput = {
@@ -678,6 +756,9 @@ export type HouseholdUncheckedCreateWithoutOwnItemsInput = {
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferUncheckedCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionUncheckedCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdCreateOrConnectWithoutOwnItemsInput = {
@@ -712,6 +793,9 @@ export type HouseholdUpdateWithoutOwnItemsInput = {
   AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdUncheckedUpdateWithoutOwnItemsInput = {
@@ -730,6 +814,9 @@ export type HouseholdUncheckedUpdateWithoutOwnItemsInput = {
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUncheckedUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdCreateWithoutShoppingItemsInput = {
@@ -748,6 +835,9 @@ export type HouseholdCreateWithoutShoppingItemsInput = {
   AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
   OwnItems?: Prisma.OwnItemCreateNestedManyWithoutHouseholdInput
   RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUncheckedCreateWithoutShoppingItemsInput = {
@@ -766,6 +856,9 @@ export type HouseholdUncheckedCreateWithoutShoppingItemsInput = {
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
   OwnItems?: Prisma.OwnItemUncheckedCreateNestedManyWithoutHouseholdInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferUncheckedCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionUncheckedCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdCreateOrConnectWithoutShoppingItemsInput = {
@@ -800,6 +893,9 @@ export type HouseholdUpdateWithoutShoppingItemsInput = {
   AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
   OwnItems?: Prisma.OwnItemUpdateManyWithoutHouseholdNestedInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdUncheckedUpdateWithoutShoppingItemsInput = {
@@ -818,6 +914,9 @@ export type HouseholdUncheckedUpdateWithoutShoppingItemsInput = {
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
   OwnItems?: Prisma.OwnItemUncheckedUpdateManyWithoutHouseholdNestedInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUncheckedUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdCreateWithoutRecentShoppingItemsInput = {
@@ -836,6 +935,9 @@ export type HouseholdCreateWithoutRecentShoppingItemsInput = {
   AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
   OwnItems?: Prisma.OwnItemCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUncheckedCreateWithoutRecentShoppingItemsInput = {
@@ -854,6 +956,9 @@ export type HouseholdUncheckedCreateWithoutRecentShoppingItemsInput = {
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
   OwnItems?: Prisma.OwnItemUncheckedCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferUncheckedCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionUncheckedCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdCreateOrConnectWithoutRecentShoppingItemsInput = {
@@ -888,6 +993,9 @@ export type HouseholdUpdateWithoutRecentShoppingItemsInput = {
   AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
   OwnItems?: Prisma.OwnItemUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdUncheckedUpdateWithoutRecentShoppingItemsInput = {
@@ -906,6 +1014,9 @@ export type HouseholdUncheckedUpdateWithoutRecentShoppingItemsInput = {
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
   OwnItems?: Prisma.OwnItemUncheckedUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUncheckedUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdCreateWithoutMembersInput = {
@@ -924,6 +1035,9 @@ export type HouseholdCreateWithoutMembersInput = {
   OwnItems?: Prisma.OwnItemCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
   RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUncheckedCreateWithoutMembersInput = {
@@ -942,6 +1056,9 @@ export type HouseholdUncheckedCreateWithoutMembersInput = {
   OwnItems?: Prisma.OwnItemUncheckedCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferUncheckedCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionUncheckedCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdCreateOrConnectWithoutMembersInput = {
@@ -976,6 +1093,9 @@ export type HouseholdUpdateWithoutMembersInput = {
   OwnItems?: Prisma.OwnItemUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdUncheckedUpdateWithoutMembersInput = {
@@ -994,6 +1114,9 @@ export type HouseholdUncheckedUpdateWithoutMembersInput = {
   OwnItems?: Prisma.OwnItemUncheckedUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUncheckedUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdCreateWithoutAiImportAttemptsInput = {
@@ -1012,6 +1135,9 @@ export type HouseholdCreateWithoutAiImportAttemptsInput = {
   OwnItems?: Prisma.OwnItemCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
   RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUncheckedCreateWithoutAiImportAttemptsInput = {
@@ -1030,6 +1156,9 @@ export type HouseholdUncheckedCreateWithoutAiImportAttemptsInput = {
   OwnItems?: Prisma.OwnItemUncheckedCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferUncheckedCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionUncheckedCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdCreateOrConnectWithoutAiImportAttemptsInput = {
@@ -1064,6 +1193,9 @@ export type HouseholdUpdateWithoutAiImportAttemptsInput = {
   OwnItems?: Prisma.OwnItemUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdUncheckedUpdateWithoutAiImportAttemptsInput = {
@@ -1082,6 +1214,9 @@ export type HouseholdUncheckedUpdateWithoutAiImportAttemptsInput = {
   OwnItems?: Prisma.OwnItemUncheckedUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUncheckedUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdCreateWithoutInviteInput = {
@@ -1100,6 +1235,9 @@ export type HouseholdCreateWithoutInviteInput = {
   OwnItems?: Prisma.OwnItemCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
   RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdUncheckedCreateWithoutInviteInput = {
@@ -1118,6 +1256,9 @@ export type HouseholdUncheckedCreateWithoutInviteInput = {
   OwnItems?: Prisma.OwnItemUncheckedCreateNestedManyWithoutHouseholdInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferUncheckedCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionUncheckedCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedCreateNestedManyWithoutHouseholdInput
 }
 
 export type HouseholdCreateOrConnectWithoutInviteInput = {
@@ -1152,6 +1293,9 @@ export type HouseholdUpdateWithoutInviteInput = {
   OwnItems?: Prisma.OwnItemUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUpdateManyWithoutHouseholdNestedInput
 }
 
 export type HouseholdUncheckedUpdateWithoutInviteInput = {
@@ -1170,6 +1314,309 @@ export type HouseholdUncheckedUpdateWithoutInviteInput = {
   OwnItems?: Prisma.OwnItemUncheckedUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
   RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUncheckedUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedUpdateManyWithoutHouseholdNestedInput
+}
+
+export type HouseholdCreateWithoutOdaConnectionInput = {
+  id?: string
+  name: string
+  slug: string
+  publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
+  importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
+  Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
+  Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
+  OwnItems?: Prisma.OwnItemCreateNestedManyWithoutHouseholdInput
+  ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferCreateNestedManyWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationCreateNestedManyWithoutHouseholdInput
+}
+
+export type HouseholdUncheckedCreateWithoutOdaConnectionInput = {
+  id?: string
+  name: string
+  slug: string
+  publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
+  importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
+  Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
+  Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
+  OwnItems?: Prisma.OwnItemUncheckedCreateNestedManyWithoutHouseholdInput
+  ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferUncheckedCreateNestedManyWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedCreateNestedManyWithoutHouseholdInput
+}
+
+export type HouseholdCreateOrConnectWithoutOdaConnectionInput = {
+  where: Prisma.HouseholdWhereUniqueInput
+  create: Prisma.XOR<Prisma.HouseholdCreateWithoutOdaConnectionInput, Prisma.HouseholdUncheckedCreateWithoutOdaConnectionInput>
+}
+
+export type HouseholdUpsertWithoutOdaConnectionInput = {
+  update: Prisma.XOR<Prisma.HouseholdUpdateWithoutOdaConnectionInput, Prisma.HouseholdUncheckedUpdateWithoutOdaConnectionInput>
+  create: Prisma.XOR<Prisma.HouseholdCreateWithoutOdaConnectionInput, Prisma.HouseholdUncheckedCreateWithoutOdaConnectionInput>
+  where?: Prisma.HouseholdWhereInput
+}
+
+export type HouseholdUpdateToOneWithWhereWithoutOdaConnectionInput = {
+  where?: Prisma.HouseholdWhereInput
+  data: Prisma.XOR<Prisma.HouseholdUpdateWithoutOdaConnectionInput, Prisma.HouseholdUncheckedUpdateWithoutOdaConnectionInput>
+}
+
+export type HouseholdUpdateWithoutOdaConnectionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
+  importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
+  Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
+  Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
+  OwnItems?: Prisma.OwnItemUpdateManyWithoutHouseholdNestedInput
+  ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUpdateManyWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUpdateManyWithoutHouseholdNestedInput
+}
+
+export type HouseholdUncheckedUpdateWithoutOdaConnectionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
+  importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
+  Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
+  Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
+  OwnItems?: Prisma.OwnItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedUpdateManyWithoutHouseholdNestedInput
+}
+
+export type HouseholdCreateWithoutOdaAuthorizationsInput = {
+  id?: string
+  name: string
+  slug: string
+  publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
+  importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
+  Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
+  Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
+  OwnItems?: Prisma.OwnItemCreateNestedManyWithoutHouseholdInput
+  ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionCreateNestedOneWithoutHouseholdInput
+}
+
+export type HouseholdUncheckedCreateWithoutOdaAuthorizationsInput = {
+  id?: string
+  name: string
+  slug: string
+  publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
+  importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
+  Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
+  Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
+  OwnItems?: Prisma.OwnItemUncheckedCreateNestedManyWithoutHouseholdInput
+  ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferUncheckedCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionUncheckedCreateNestedOneWithoutHouseholdInput
+}
+
+export type HouseholdCreateOrConnectWithoutOdaAuthorizationsInput = {
+  where: Prisma.HouseholdWhereUniqueInput
+  create: Prisma.XOR<Prisma.HouseholdCreateWithoutOdaAuthorizationsInput, Prisma.HouseholdUncheckedCreateWithoutOdaAuthorizationsInput>
+}
+
+export type HouseholdUpsertWithoutOdaAuthorizationsInput = {
+  update: Prisma.XOR<Prisma.HouseholdUpdateWithoutOdaAuthorizationsInput, Prisma.HouseholdUncheckedUpdateWithoutOdaAuthorizationsInput>
+  create: Prisma.XOR<Prisma.HouseholdCreateWithoutOdaAuthorizationsInput, Prisma.HouseholdUncheckedCreateWithoutOdaAuthorizationsInput>
+  where?: Prisma.HouseholdWhereInput
+}
+
+export type HouseholdUpdateToOneWithWhereWithoutOdaAuthorizationsInput = {
+  where?: Prisma.HouseholdWhereInput
+  data: Prisma.XOR<Prisma.HouseholdUpdateWithoutOdaAuthorizationsInput, Prisma.HouseholdUncheckedUpdateWithoutOdaAuthorizationsInput>
+}
+
+export type HouseholdUpdateWithoutOdaAuthorizationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
+  importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
+  Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
+  Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
+  OwnItems?: Prisma.OwnItemUpdateManyWithoutHouseholdNestedInput
+  ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUpdateOneWithoutHouseholdNestedInput
+}
+
+export type HouseholdUncheckedUpdateWithoutOdaAuthorizationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
+  importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
+  Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
+  Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
+  OwnItems?: Prisma.OwnItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUncheckedUpdateOneWithoutHouseholdNestedInput
+}
+
+export type HouseholdCreateWithoutOdaTransfersInput = {
+  id?: string
+  name: string
+  slug: string
+  publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
+  importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
+  Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
+  Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
+  OwnItems?: Prisma.OwnItemCreateNestedManyWithoutHouseholdInput
+  ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationCreateNestedManyWithoutHouseholdInput
+}
+
+export type HouseholdUncheckedCreateWithoutOdaTransfersInput = {
+  id?: string
+  name: string
+  slug: string
+  publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
+  importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
+  Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
+  Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
+  OwnItems?: Prisma.OwnItemUncheckedCreateNestedManyWithoutHouseholdInput
+  ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionUncheckedCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedCreateNestedManyWithoutHouseholdInput
+}
+
+export type HouseholdCreateOrConnectWithoutOdaTransfersInput = {
+  where: Prisma.HouseholdWhereUniqueInput
+  create: Prisma.XOR<Prisma.HouseholdCreateWithoutOdaTransfersInput, Prisma.HouseholdUncheckedCreateWithoutOdaTransfersInput>
+}
+
+export type HouseholdUpsertWithoutOdaTransfersInput = {
+  update: Prisma.XOR<Prisma.HouseholdUpdateWithoutOdaTransfersInput, Prisma.HouseholdUncheckedUpdateWithoutOdaTransfersInput>
+  create: Prisma.XOR<Prisma.HouseholdCreateWithoutOdaTransfersInput, Prisma.HouseholdUncheckedCreateWithoutOdaTransfersInput>
+  where?: Prisma.HouseholdWhereInput
+}
+
+export type HouseholdUpdateToOneWithWhereWithoutOdaTransfersInput = {
+  where?: Prisma.HouseholdWhereInput
+  data: Prisma.XOR<Prisma.HouseholdUpdateWithoutOdaTransfersInput, Prisma.HouseholdUncheckedUpdateWithoutOdaTransfersInput>
+}
+
+export type HouseholdUpdateWithoutOdaTransfersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
+  importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
+  Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
+  Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
+  OwnItems?: Prisma.OwnItemUpdateManyWithoutHouseholdNestedInput
+  ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUpdateManyWithoutHouseholdNestedInput
+}
+
+export type HouseholdUncheckedUpdateWithoutOdaTransfersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
+  importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
+  Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
+  Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
+  OwnItems?: Prisma.OwnItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUncheckedUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedUpdateManyWithoutHouseholdNestedInput
 }
 
 
@@ -1185,6 +1632,8 @@ export type HouseholdCountOutputType = {
   OwnItems: number
   ShoppingItems: number
   RecentShoppingItems: number
+  odaTransfers: number
+  odaAuthorizations: number
 }
 
 export type HouseholdCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1195,6 +1644,8 @@ export type HouseholdCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensi
   OwnItems?: boolean | HouseholdCountOutputTypeCountOwnItemsArgs
   ShoppingItems?: boolean | HouseholdCountOutputTypeCountShoppingItemsArgs
   RecentShoppingItems?: boolean | HouseholdCountOutputTypeCountRecentShoppingItemsArgs
+  odaTransfers?: boolean | HouseholdCountOutputTypeCountOdaTransfersArgs
+  odaAuthorizations?: boolean | HouseholdCountOutputTypeCountOdaAuthorizationsArgs
 }
 
 /**
@@ -1256,6 +1707,20 @@ export type HouseholdCountOutputTypeCountRecentShoppingItemsArgs<ExtArgs extends
   where?: Prisma.RecentShoppingItemWhereInput
 }
 
+/**
+ * HouseholdCountOutputType without action
+ */
+export type HouseholdCountOutputTypeCountOdaTransfersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.OdaTransferWhereInput
+}
+
+/**
+ * HouseholdCountOutputType without action
+ */
+export type HouseholdCountOutputTypeCountOdaAuthorizationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.OdaAuthorizationWhereInput
+}
+
 
 export type HouseholdSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1274,6 +1739,9 @@ export type HouseholdSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   OwnItems?: boolean | Prisma.Household$OwnItemsArgs<ExtArgs>
   ShoppingItems?: boolean | Prisma.Household$ShoppingItemsArgs<ExtArgs>
   RecentShoppingItems?: boolean | Prisma.Household$RecentShoppingItemsArgs<ExtArgs>
+  odaTransfers?: boolean | Prisma.Household$odaTransfersArgs<ExtArgs>
+  odaConnection?: boolean | Prisma.Household$odaConnectionArgs<ExtArgs>
+  odaAuthorizations?: boolean | Prisma.Household$odaAuthorizationsArgs<ExtArgs>
   _count?: boolean | Prisma.HouseholdCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["household"]>
 
@@ -1322,6 +1790,9 @@ export type HouseholdInclude<ExtArgs extends runtime.Types.Extensions.InternalAr
   OwnItems?: boolean | Prisma.Household$OwnItemsArgs<ExtArgs>
   ShoppingItems?: boolean | Prisma.Household$ShoppingItemsArgs<ExtArgs>
   RecentShoppingItems?: boolean | Prisma.Household$RecentShoppingItemsArgs<ExtArgs>
+  odaTransfers?: boolean | Prisma.Household$odaTransfersArgs<ExtArgs>
+  odaConnection?: boolean | Prisma.Household$odaConnectionArgs<ExtArgs>
+  odaAuthorizations?: boolean | Prisma.Household$odaAuthorizationsArgs<ExtArgs>
   _count?: boolean | Prisma.HouseholdCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type HouseholdIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1337,6 +1808,9 @@ export type $HouseholdPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     OwnItems: Prisma.$OwnItemPayload<ExtArgs>[]
     ShoppingItems: Prisma.$ShoppingItemPayload<ExtArgs>[]
     RecentShoppingItems: Prisma.$RecentShoppingItemPayload<ExtArgs>[]
+    odaTransfers: Prisma.$OdaTransferPayload<ExtArgs>[]
+    odaConnection: Prisma.$OdaConnectionPayload<ExtArgs> | null
+    odaAuthorizations: Prisma.$OdaAuthorizationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1749,6 +2223,9 @@ export interface Prisma__HouseholdClient<T, Null = never, ExtArgs extends runtim
   OwnItems<T extends Prisma.Household$OwnItemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$OwnItemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OwnItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   ShoppingItems<T extends Prisma.Household$ShoppingItemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$ShoppingItemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ShoppingItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   RecentShoppingItems<T extends Prisma.Household$RecentShoppingItemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$RecentShoppingItemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RecentShoppingItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  odaTransfers<T extends Prisma.Household$odaTransfersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$odaTransfersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OdaTransferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  odaConnection<T extends Prisma.Household$odaConnectionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$odaConnectionArgs<ExtArgs>>): Prisma.Prisma__OdaConnectionClient<runtime.Types.Result.GetResult<Prisma.$OdaConnectionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  odaAuthorizations<T extends Prisma.Household$odaAuthorizationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$odaAuthorizationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OdaAuthorizationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2340,6 +2817,73 @@ export type Household$RecentShoppingItemsArgs<ExtArgs extends runtime.Types.Exte
   take?: number
   skip?: number
   distinct?: Prisma.RecentShoppingItemScalarFieldEnum | Prisma.RecentShoppingItemScalarFieldEnum[]
+}
+
+/**
+ * Household.odaTransfers
+ */
+export type Household$odaTransfersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the OdaTransfer
+   */
+  select?: Prisma.OdaTransferSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the OdaTransfer
+   */
+  omit?: Prisma.OdaTransferOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OdaTransferInclude<ExtArgs> | null
+  where?: Prisma.OdaTransferWhereInput
+  orderBy?: Prisma.OdaTransferOrderByWithRelationInput | Prisma.OdaTransferOrderByWithRelationInput[]
+  cursor?: Prisma.OdaTransferWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.OdaTransferScalarFieldEnum | Prisma.OdaTransferScalarFieldEnum[]
+}
+
+/**
+ * Household.odaConnection
+ */
+export type Household$odaConnectionArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the OdaConnection
+   */
+  select?: Prisma.OdaConnectionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the OdaConnection
+   */
+  omit?: Prisma.OdaConnectionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OdaConnectionInclude<ExtArgs> | null
+  where?: Prisma.OdaConnectionWhereInput
+}
+
+/**
+ * Household.odaAuthorizations
+ */
+export type Household$odaAuthorizationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the OdaAuthorization
+   */
+  select?: Prisma.OdaAuthorizationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the OdaAuthorization
+   */
+  omit?: Prisma.OdaAuthorizationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OdaAuthorizationInclude<ExtArgs> | null
+  where?: Prisma.OdaAuthorizationWhereInput
+  orderBy?: Prisma.OdaAuthorizationOrderByWithRelationInput | Prisma.OdaAuthorizationOrderByWithRelationInput[]
+  cursor?: Prisma.OdaAuthorizationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.OdaAuthorizationScalarFieldEnum | Prisma.OdaAuthorizationScalarFieldEnum[]
 }
 
 /**

@@ -65,6 +65,11 @@ export const saveShoppingItem = async (
   },
 ) => {
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
+  if (!input.id)
+    await tx.odaTransfer.updateMany({
+      where: { householdId, state: "COMPLETED", dismissed: false },
+      data: { dismissed: true },
+    });
   const original = input.id
     ? await tx.shoppingItem.findUniqueOrThrow({
         where: { id: input.id, householdId },

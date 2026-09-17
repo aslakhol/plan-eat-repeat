@@ -64,7 +64,11 @@ export const ModelName = {
   Household: 'Household',
   Membership: 'Membership',
   AiImportAttempt: 'AiImportAttempt',
-  Invite: 'Invite'
+  Invite: 'Invite',
+  OdaConnection: 'OdaConnection',
+  OdaAuthorization: 'OdaAuthorization',
+  OdaTransfer: 'OdaTransfer',
+  OdaTransferOperation: 'OdaTransferOperation'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -265,12 +269,76 @@ export const InviteScalarFieldEnum = {
 export type InviteScalarFieldEnum = (typeof InviteScalarFieldEnum)[keyof typeof InviteScalarFieldEnum]
 
 
+export const OdaConnectionScalarFieldEnum = {
+  connectionId: 'connectionId',
+  householdId: 'householdId',
+  credentials: 'credentials',
+  reconnectRequired: 'reconnectRequired',
+  revision: 'revision'
+} as const
+
+export type OdaConnectionScalarFieldEnum = (typeof OdaConnectionScalarFieldEnum)[keyof typeof OdaConnectionScalarFieldEnum]
+
+
+export const OdaAuthorizationScalarFieldEnum = {
+  state: 'state',
+  householdId: 'householdId',
+  userId: 'userId',
+  credentials: 'credentials',
+  expiresAt: 'expiresAt'
+} as const
+
+export type OdaAuthorizationScalarFieldEnum = (typeof OdaAuthorizationScalarFieldEnum)[keyof typeof OdaAuthorizationScalarFieldEnum]
+
+
+export const OdaTransferScalarFieldEnum = {
+  dismissed: 'dismissed',
+  stage: 'stage',
+  resolvedByUserId: 'resolvedByUserId',
+  resolution: 'resolution',
+  runId: 'runId',
+  leaseUntil: 'leaseUntil',
+  id: 'id',
+  householdId: 'householdId',
+  connectionId: 'connectionId',
+  state: 'state',
+  snapshot: 'snapshot',
+  cartUrl: 'cartUrl',
+  message: 'message',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OdaTransferScalarFieldEnum = (typeof OdaTransferScalarFieldEnum)[keyof typeof OdaTransferScalarFieldEnum]
+
+
+export const OdaTransferOperationScalarFieldEnum = {
+  unspecifiedRequirementIds: 'unspecifiedRequirementIds',
+  id: 'id',
+  transferId: 'transferId',
+  productId: 'productId',
+  quantity: 'quantity',
+  beforeQuantity: 'beforeQuantity',
+  requirementIds: 'requirementIds',
+  state: 'state'
+} as const
+
+export type OdaTransferOperationScalarFieldEnum = (typeof OdaTransferOperationScalarFieldEnum)[keyof typeof OdaTransferOperationScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -287,4 +355,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

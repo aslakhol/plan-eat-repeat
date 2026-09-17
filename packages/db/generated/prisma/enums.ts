@@ -64,3 +64,42 @@ export const AiImportInferenceState = {
 } as const
 
 export type AiImportInferenceState = (typeof AiImportInferenceState)[keyof typeof AiImportInferenceState]
+
+
+export const OdaTransferState = {
+  MATCHING: 'MATCHING',
+  SENDING: 'SENDING',
+  COMPLETED: 'COMPLETED',
+  UNCERTAIN: 'UNCERTAIN'
+} as const
+
+export type OdaTransferState = (typeof OdaTransferState)[keyof typeof OdaTransferState]
+
+
+export const OdaOperationState = {
+  PENDING: 'PENDING',
+  WRITING: 'WRITING',
+  CONFIRMED: 'CONFIRMED',
+  FAILED: 'FAILED'
+} as const
+
+export type OdaOperationState = (typeof OdaOperationState)[keyof typeof OdaOperationState]
+
+
+export const OdaTransferResolution = {
+  ADDED: 'ADDED',
+  NOT_ADDED: 'NOT_ADDED'
+} as const
+
+export type OdaTransferResolution = (typeof OdaTransferResolution)[keyof typeof OdaTransferResolution]
+
+
+export const OdaTransferStage = {
+  CHECKING_CART: 'CHECKING_CART',
+  FINDING_PRODUCTS: 'FINDING_PRODUCTS',
+  CHOOSING_PRODUCTS: 'CHOOSING_PRODUCTS',
+  ADDING_TO_CART: 'ADDING_TO_CART',
+  UPDATING_LIST: 'UPDATING_LIST'
+} as const
+
+export type OdaTransferStage = (typeof OdaTransferStage)[keyof typeof OdaTransferStage]
