@@ -109,3 +109,13 @@ export type AiImportAttempt = Prisma.AiImportAttemptModel
  * 
  */
 export type Invite = Prisma.InviteModel
+/**
+ * Model OdaConnection
+ * 
+ */
+export type OdaConnection = Prisma.OdaConnectionModel
+/**
+ * Model OdaAuthorization
+ * 
+ */
+export type OdaAuthorization = Prisma.OdaAuthorizationModel

@@ -180,6 +180,8 @@ model Household {
     OwnItems                    OwnItem[]
     ShoppingItems               ShoppingItem[]
     RecentShoppingItems         RecentShoppingItem[]
+    odaConnection               OdaConnection?
+    odaAuthorizations           OdaAuthorization[]
 }
 
 model Membership {
@@ -255,4 +257,23 @@ model Invite {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
     expiresAt DateTime
+}
+
+model OdaConnection {
+    householdId String @id
+    household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    credentials String
+    reconnectRequired Boolean @default(false)
+    revision String @default(uuid())
+}
+
+model OdaAuthorization {
+    state String @id
+    householdId String
+    household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    userId String
+    credentials String
+    expiresAt DateTime
+
+    @@index([householdId])
 }

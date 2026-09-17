@@ -64,7 +64,9 @@ export const ModelName = {
   Household: 'Household',
   Membership: 'Membership',
   AiImportAttempt: 'AiImportAttempt',
-  Invite: 'Invite'
+  Invite: 'Invite',
+  OdaConnection: 'OdaConnection',
+  OdaAuthorization: 'OdaAuthorization'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -263,6 +265,27 @@ export const InviteScalarFieldEnum = {
 } as const
 
 export type InviteScalarFieldEnum = (typeof InviteScalarFieldEnum)[keyof typeof InviteScalarFieldEnum]
+
+
+export const OdaConnectionScalarFieldEnum = {
+  householdId: 'householdId',
+  credentials: 'credentials',
+  reconnectRequired: 'reconnectRequired',
+  revision: 'revision'
+} as const
+
+export type OdaConnectionScalarFieldEnum = (typeof OdaConnectionScalarFieldEnum)[keyof typeof OdaConnectionScalarFieldEnum]
+
+
+export const OdaAuthorizationScalarFieldEnum = {
+  state: 'state',
+  householdId: 'householdId',
+  userId: 'userId',
+  credentials: 'credentials',
+  expiresAt: 'expiresAt'
+} as const
+
+export type OdaAuthorizationScalarFieldEnum = (typeof OdaAuthorizationScalarFieldEnum)[keyof typeof OdaAuthorizationScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -397,7 +397,9 @@ export const ModelName = {
   Household: 'Household',
   Membership: 'Membership',
   AiImportAttempt: 'AiImportAttempt',
-  Invite: 'Invite'
+  Invite: 'Invite',
+  OdaConnection: 'OdaConnection',
+  OdaAuthorization: 'OdaAuthorization'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -413,7 +415,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "dinner" | "recipePart" | "recipeIngredient" | "recipeStep" | "ownItem" | "shoppingItem" | "recentShoppingItem" | "tag" | "plan" | "user" | "household" | "membership" | "aiImportAttempt" | "invite"
+    modelProps: "dinner" | "recipePart" | "recipeIngredient" | "recipeStep" | "ownItem" | "shoppingItem" | "recentShoppingItem" | "tag" | "plan" | "user" | "household" | "membership" | "aiImportAttempt" | "invite" | "odaConnection" | "odaAuthorization"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1453,6 +1455,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    OdaConnection: {
+      payload: Prisma.$OdaConnectionPayload<ExtArgs>
+      fields: Prisma.OdaConnectionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OdaConnectionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaConnectionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OdaConnectionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaConnectionPayload>
+        }
+        findFirst: {
+          args: Prisma.OdaConnectionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaConnectionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OdaConnectionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaConnectionPayload>
+        }
+        findMany: {
+          args: Prisma.OdaConnectionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaConnectionPayload>[]
+        }
+        create: {
+          args: Prisma.OdaConnectionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaConnectionPayload>
+        }
+        createMany: {
+          args: Prisma.OdaConnectionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OdaConnectionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaConnectionPayload>[]
+        }
+        delete: {
+          args: Prisma.OdaConnectionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaConnectionPayload>
+        }
+        update: {
+          args: Prisma.OdaConnectionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaConnectionPayload>
+        }
+        deleteMany: {
+          args: Prisma.OdaConnectionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OdaConnectionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OdaConnectionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaConnectionPayload>[]
+        }
+        upsert: {
+          args: Prisma.OdaConnectionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaConnectionPayload>
+        }
+        aggregate: {
+          args: Prisma.OdaConnectionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOdaConnection>
+        }
+        groupBy: {
+          args: Prisma.OdaConnectionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OdaConnectionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OdaConnectionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OdaConnectionCountAggregateOutputType> | number
+        }
+      }
+    }
+    OdaAuthorization: {
+      payload: Prisma.$OdaAuthorizationPayload<ExtArgs>
+      fields: Prisma.OdaAuthorizationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OdaAuthorizationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaAuthorizationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OdaAuthorizationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaAuthorizationPayload>
+        }
+        findFirst: {
+          args: Prisma.OdaAuthorizationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaAuthorizationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OdaAuthorizationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaAuthorizationPayload>
+        }
+        findMany: {
+          args: Prisma.OdaAuthorizationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaAuthorizationPayload>[]
+        }
+        create: {
+          args: Prisma.OdaAuthorizationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaAuthorizationPayload>
+        }
+        createMany: {
+          args: Prisma.OdaAuthorizationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OdaAuthorizationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaAuthorizationPayload>[]
+        }
+        delete: {
+          args: Prisma.OdaAuthorizationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaAuthorizationPayload>
+        }
+        update: {
+          args: Prisma.OdaAuthorizationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaAuthorizationPayload>
+        }
+        deleteMany: {
+          args: Prisma.OdaAuthorizationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OdaAuthorizationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OdaAuthorizationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaAuthorizationPayload>[]
+        }
+        upsert: {
+          args: Prisma.OdaAuthorizationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaAuthorizationPayload>
+        }
+        aggregate: {
+          args: Prisma.OdaAuthorizationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOdaAuthorization>
+        }
+        groupBy: {
+          args: Prisma.OdaAuthorizationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OdaAuthorizationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OdaAuthorizationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OdaAuthorizationCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1672,6 +1822,27 @@ export const InviteScalarFieldEnum = {
 } as const
 
 export type InviteScalarFieldEnum = (typeof InviteScalarFieldEnum)[keyof typeof InviteScalarFieldEnum]
+
+
+export const OdaConnectionScalarFieldEnum = {
+  householdId: 'householdId',
+  credentials: 'credentials',
+  reconnectRequired: 'reconnectRequired',
+  revision: 'revision'
+} as const
+
+export type OdaConnectionScalarFieldEnum = (typeof OdaConnectionScalarFieldEnum)[keyof typeof OdaConnectionScalarFieldEnum]
+
+
+export const OdaAuthorizationScalarFieldEnum = {
+  state: 'state',
+  householdId: 'householdId',
+  userId: 'userId',
+  credentials: 'credentials',
+  expiresAt: 'expiresAt'
+} as const
+
+export type OdaAuthorizationScalarFieldEnum = (typeof OdaAuthorizationScalarFieldEnum)[keyof typeof OdaAuthorizationScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1945,6 +2116,8 @@ export type GlobalOmitConfig = {
   membership?: Prisma.MembershipOmit
   aiImportAttempt?: Prisma.AiImportAttemptOmit
   invite?: Prisma.InviteOmit
+  odaConnection?: Prisma.OdaConnectionOmit
+  odaAuthorization?: Prisma.OdaAuthorizationOmit
 }
 
 /* Types for Logging */
