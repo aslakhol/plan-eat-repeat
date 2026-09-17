@@ -281,7 +281,11 @@ export function ShoppingListView() {
           </div>
         </DetailsMenu>
       </header>
-      <OdaConnection />
+      <OdaConnection
+        sendDisabled={
+          !items.length || pendingItems.length > 0 || pendingOwnIds.size > 0
+        }
+      />
 
       {list.isPending && (
         <div role="status" className="flex items-center justify-center py-8">

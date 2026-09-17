@@ -1,10 +1,17 @@
+import { OdaTransferActions } from "./OdaTransferActions";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { api } from "~/utils/api";
 import { Button } from "~/components/ui/button";
 import { toast } from "~/components/ui/use-toast";
 
-export function OdaConnection({ settings = false }: { settings?: boolean }) {
+export function OdaConnection({
+  settings = false,
+  sendDisabled = true,
+}: {
+  settings?: boolean;
+  sendDisabled?: boolean;
+}) {
   const router = useRouter();
   const utils = api.useUtils();
   const status = api.oda.status.useQuery();
@@ -40,6 +47,11 @@ export function OdaConnection({ settings = false }: { settings?: boolean }) {
                 : "Not connected"}
         </p>
       )}
+      {!settings &&
+        status.data?.connected &&
+        !status.data.reconnectRequired && (
+          <OdaTransferActions disabled={sendDisabled} />
+        )}
       <div className="flex flex-wrap gap-2">
         {settings ? (
           <>
