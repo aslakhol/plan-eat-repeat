@@ -7,3 +7,7 @@ Set `ODA_CREDENTIAL_KEY` to a random 32-byte base64 key on the server. Generate 
 After deploying, open Shopping List settings and connect Oda. Confirm the browser returns to the list and Open Oda cart works. Reconnect from another household member and check shared access. Leave the connection until its access token expires, then open the cart again to exercise refresh. Disconnect and check that the app no longer has access. These live checks remain necessary even when the controlled-provider tests pass.
 
 Do not place an order during verification. Transfer testing should use a small reversible addition, followed by restoring the cart in Oda.
+
+## Matching check
+
+On 2026-09-17, the configured real model interpreted a controlled candidate set through the application transfer operation. With one litre of milk already in the simulated cart, an explicit two-litre requirement plus unspecified Milk produced two additional one-litre packs. “Two eggs” produced one six-egg pack. All requirements completed. Oda transport was controlled, so this exercised real model interpretation without changing an Oda cart. It does not establish general matching quality or live stock availability.
