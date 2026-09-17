@@ -14,6 +14,20 @@ export function OdaShoppingMenu({
     <div className="border-border mt-1 border-t pt-1">
       {oda.status.data?.connected && !oda.status.data.reconnectRequired ? (
         <>
+          {oda.transfer.isError && (
+            <>
+              <p className="px-3 py-2 text-xs text-stone-600" role="alert">
+                Could not load Oda transfer status.
+              </p>
+              <button
+                type="button"
+                className={menuItem}
+                onClick={() => void oda.transfer.refetch()}
+              >
+                Retry transfer status
+              </button>
+            </>
+          )}
           <button
             type="button"
             className={menuItem}

@@ -89,7 +89,8 @@ export function OdaTransferProgress({ oda }: { oda: OdaShopping }) {
             className="size-8 shrink-0"
             aria-label="Dismiss Oda connection message"
             onClick={() => {
-              const { oda: _oda, ...query } = router.query;
+              const query = { ...router.query };
+              delete query.oda;
               void router.replace(
                 { pathname: router.pathname, query },
                 undefined,
@@ -126,7 +127,7 @@ export function OdaTransferProgress({ oda }: { oda: OdaShopping }) {
                   variant="ghost"
                   className="size-8"
                   aria-label="Dismiss Oda result"
-                  onClick={oda.dismiss}
+                  onClick={() => oda.dismiss()}
                 >
                   <X className="size-3.5" />
                 </Button>
@@ -150,6 +151,18 @@ export function OdaTransferProgress({ oda }: { oda: OdaShopping }) {
               />
             ))}
           </div>
+          {oda.transfer.isError && (
+            <div className="mt-2 text-xs text-stone-600" role="alert">
+              Could not refresh Oda progress.{" "}
+              <button
+                type="button"
+                className="min-h-9 font-semibold underline underline-offset-4"
+                onClick={() => void oda.transfer.refetch()}
+              >
+                Retry transfer status
+              </button>
+            </div>
+          )}
           {transfer.message &&
             (transfer.state === "UNCERTAIN" || covered === 0) && (
               <p className="mt-2 text-xs text-stone-600" role="status">

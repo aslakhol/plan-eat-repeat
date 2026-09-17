@@ -43,6 +43,7 @@ test("Oda login returns to the list, recovers a transfer after refresh, and leav
   let cartReads = 0;
   let connected = false;
   let sends = 0;
+  let transferUnavailable = false;
   try {
     await page.route("**/api/trpc/**", async (route) => {
       const procedures = new URL(route.request().url()).pathname
@@ -102,6 +103,20 @@ test("Oda login returns to the list, recovers a transfer after refresh, and leav
         };
       }
       const result = procedures.map((name, index) => {
+        if (name === "oda.transfer" && transferUnavailable)
+          return {
+            error: {
+              json: {
+                message: "Transfer status unavailable",
+                code: -32603,
+                data: {
+                  code: "INTERNAL_SERVER_ERROR",
+                  httpStatus: 500,
+                  path: "oda.transfer",
+                },
+              },
+            },
+          };
         if (
           name === "oda.transfer" ||
           name === "oda.send" ||
@@ -165,10 +180,17 @@ test("Oda login returns to the list, recovers a transfer after refresh, and leav
       page.getByRole("button", { name: "Send to Oda", exact: true }),
     ).not.toBeVisible();
     expect(cartReads).toBe(0);
+    transferUnavailable = true;
+    await page.reload();
     await page
       .locator("summary")
       .filter({ hasText: "Shopping list actions" })
       .click();
+    await expect(
+      page.getByRole("button", { name: "Retry transfer status" }),
+    ).toBeVisible({ timeout: 20_000 });
+    transferUnavailable = false;
+    await page.getByRole("button", { name: "Retry transfer status" }).click();
     await expect(
       page.getByRole("link", { name: "Open Oda cart" }),
     ).toHaveAttribute("href", "https://oda.com/no/cart/");
