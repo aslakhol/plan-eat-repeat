@@ -15,6 +15,7 @@ export function OdaConnection({
   const router = useRouter();
   const utils = api.useUtils();
   const status = api.oda.status.useQuery();
+  const transfer = api.oda.transfer.useQuery();
   const connect = api.oda.connect.useMutation({
     onSuccess: ({ url }) => window.location.assign(url),
     onError: (error) => toast({ title: error.message, variant: "destructive" }),
@@ -27,6 +28,7 @@ export function OdaConnection({
     enabled: !!status.data?.connected && !status.data.reconnectRequired,
     retry: false,
   });
+  const cartUrl = cart.data?.url ?? transfer.data?.cartUrl;
   return (
     <div className="my-3 space-y-2">
       {router.query.oda === "failed" && (
@@ -47,11 +49,15 @@ export function OdaConnection({
                 : "Not connected"}
         </p>
       )}
-      {!settings &&
-        status.data?.connected &&
-        !status.data.reconnectRequired && (
-          <OdaTransferActions disabled={sendDisabled} />
-        )}
+      {!settings && (
+        <OdaTransferActions
+          disabled={
+            sendDisabled ||
+            !status.data?.connected ||
+            status.data.reconnectRequired
+          }
+        />
+      )}
       <div className="flex flex-wrap gap-2">
         {settings ? (
           <>
@@ -85,9 +91,9 @@ export function OdaConnection({
             </Button>
           )
         )}
-        {cart.data && (
+        {cartUrl && (
           <Button asChild variant="outline">
-            <a href={cart.data.url} target="_blank" rel="noopener noreferrer">
+            <a href={cartUrl} target="_blank" rel="noopener noreferrer">
               Open Oda cart
             </a>
           </Button>
