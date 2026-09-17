@@ -1,3 +1,4 @@
+import { convertUnitAmount, normalizeUnit } from "@planeatrepeat/shared";
 import { anthropic } from "@ai-sdk/anthropic";
 import { generateText, Output } from "ai";
 import { z } from "zod";
@@ -23,6 +24,15 @@ const selectionSchema = z.object({
       requirementId: z.string(),
       productId: z.number().int().positive().nullable(),
       quantity: z.number().finite().positive().max(1000).nullable(),
+      measurement: z
+        .object({
+          amount: z.number().finite().positive(),
+          unit: z.string().min(1),
+          packAmount: z.number().finite().positive(),
+          packUnit: z.string().min(1),
+        })
+        .nullable()
+        .default(null),
     }),
   ),
 });
@@ -67,6 +77,7 @@ export async function matchRequirements(
 Understand English and Norwegian. Assess the entire name AND note for relevance. Search results may be unrelated even when nonempty. Return productId null for unsuitable, unavailable or unresolvable requirements. Only select IDs supplied in the candidate data. Never infer verified allergen safety from a name.
 Prefer a reasonably priced suitable modest single pack for unspecified needs, e.g. 1 litre milk, not a large value multipack because its unit price is lower. A suitable product already in the cart can cover an unspecified need. Requirements for the same actual need may use the same product; incompatible notes or different products must remain distinct.
 Interpret the entire requirement, including numbers in names/notes, missing units and vague measures. Return quantity as the positive number of PRODUCT PACKS needed, which can be fractional before rounding. Two eggs means two eggs, not two cartons. A 6-egg carton covers two eggs with quantity 2/6. Reasonable ingredient-aware estimates are allowed. Return quantity null ONLY for genuinely unspecified demand. Amount and Unit are independently optional; a null Amount does not establish unspecified demand.
+When you can express demand and package size as measurements, also return measurement with amount/unit and packAmount/packUnit. Use pcs for ingredient counts. The application applies known unit conversions itself. For incompatible units like cups versus grams, still supply the measurements and estimate quantity using the ingredient. Do not convert a pack count into an ingredient count. Return measurement null for genuinely unspecified demand.
 Read pack sizes from product description text. unitName is the unit-price denominator, NOT pack size. Explicit quantities are additional demand: never subtract existing cart quantities. For overlapping representations of the same product need, choose one suitable product for all of them; the application takes the maximum pack requirement and rounds once rather than adding them. Keep incompatible needs/notes separate.
 Return one selection for each requirement ID. The application controls cart writes; do not propose unrelated purchases.`,
     prompt: JSON.stringify({
@@ -92,7 +103,11 @@ Return one selection for each requirement ID. The application controls cart writ
     if (matches.length !== 1) continue;
     const match = matches[0]!;
     if (match.productId === null) continue;
-    if (match.quantity === null && (item.amount !== null || item.unit !== null))
+    if (
+      match.quantity === null &&
+      match.measurement === null &&
+      (item.amount !== null || item.unit !== null)
+    )
       continue;
     const product = candidates.get(match.productId);
     if (!product?.availability?.isAvailable) continue;
@@ -101,12 +116,23 @@ Return one selection for each requirement ID. The application controls cart writ
       .filter((line) => line.product.id === product.id)
       .reduce((sum, line) => sum + line.quantity, 0);
     const existing = groups.get(product.id);
+    let packs = match.quantity;
+    if (match.measurement) {
+      const { amount, unit, packAmount, packUnit } = match.measurement;
+      const converted =
+        normalizeUnit(unit) === normalizeUnit(packUnit)
+          ? amount
+          : convertUnitAmount(amount, unit, packUnit);
+      if (converted !== null) packs = converted / packAmount;
+    }
+    if (packs === null && match.measurement !== null) continue;
+    if (
+      packs !== null &&
+      (!Number.isFinite(packs) || packs <= 0 || packs > 1000)
+    )
+      continue;
     const quantity =
-      match.quantity === null
-        ? beforeQuantity > 0
-          ? 0
-          : 1
-        : Math.ceil(match.quantity);
+      packs === null ? (beforeQuantity > 0 ? 0 : 1) : Math.ceil(packs);
     if (existing) {
       existing.requirementIds.push(item.id);
       existing.quantity = Math.max(existing.quantity, quantity);
