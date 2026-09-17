@@ -399,7 +399,9 @@ export const ModelName = {
   AiImportAttempt: 'AiImportAttempt',
   Invite: 'Invite',
   OdaConnection: 'OdaConnection',
-  OdaAuthorization: 'OdaAuthorization'
+  OdaAuthorization: 'OdaAuthorization',
+  OdaTransfer: 'OdaTransfer',
+  OdaTransferOperation: 'OdaTransferOperation'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -415,7 +417,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "dinner" | "recipePart" | "recipeIngredient" | "recipeStep" | "ownItem" | "shoppingItem" | "recentShoppingItem" | "tag" | "plan" | "user" | "household" | "membership" | "aiImportAttempt" | "invite" | "odaConnection" | "odaAuthorization"
+    modelProps: "dinner" | "recipePart" | "recipeIngredient" | "recipeStep" | "ownItem" | "shoppingItem" | "recentShoppingItem" | "tag" | "plan" | "user" | "household" | "membership" | "aiImportAttempt" | "invite" | "odaConnection" | "odaAuthorization" | "odaTransfer" | "odaTransferOperation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1603,6 +1605,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    OdaTransfer: {
+      payload: Prisma.$OdaTransferPayload<ExtArgs>
+      fields: Prisma.OdaTransferFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OdaTransferFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OdaTransferFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferPayload>
+        }
+        findFirst: {
+          args: Prisma.OdaTransferFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OdaTransferFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferPayload>
+        }
+        findMany: {
+          args: Prisma.OdaTransferFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferPayload>[]
+        }
+        create: {
+          args: Prisma.OdaTransferCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferPayload>
+        }
+        createMany: {
+          args: Prisma.OdaTransferCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OdaTransferCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferPayload>[]
+        }
+        delete: {
+          args: Prisma.OdaTransferDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferPayload>
+        }
+        update: {
+          args: Prisma.OdaTransferUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferPayload>
+        }
+        deleteMany: {
+          args: Prisma.OdaTransferDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OdaTransferUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OdaTransferUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferPayload>[]
+        }
+        upsert: {
+          args: Prisma.OdaTransferUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferPayload>
+        }
+        aggregate: {
+          args: Prisma.OdaTransferAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOdaTransfer>
+        }
+        groupBy: {
+          args: Prisma.OdaTransferGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OdaTransferGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OdaTransferCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OdaTransferCountAggregateOutputType> | number
+        }
+      }
+    }
+    OdaTransferOperation: {
+      payload: Prisma.$OdaTransferOperationPayload<ExtArgs>
+      fields: Prisma.OdaTransferOperationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OdaTransferOperationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferOperationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OdaTransferOperationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferOperationPayload>
+        }
+        findFirst: {
+          args: Prisma.OdaTransferOperationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferOperationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OdaTransferOperationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferOperationPayload>
+        }
+        findMany: {
+          args: Prisma.OdaTransferOperationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferOperationPayload>[]
+        }
+        create: {
+          args: Prisma.OdaTransferOperationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferOperationPayload>
+        }
+        createMany: {
+          args: Prisma.OdaTransferOperationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OdaTransferOperationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferOperationPayload>[]
+        }
+        delete: {
+          args: Prisma.OdaTransferOperationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferOperationPayload>
+        }
+        update: {
+          args: Prisma.OdaTransferOperationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferOperationPayload>
+        }
+        deleteMany: {
+          args: Prisma.OdaTransferOperationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OdaTransferOperationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OdaTransferOperationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferOperationPayload>[]
+        }
+        upsert: {
+          args: Prisma.OdaTransferOperationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OdaTransferOperationPayload>
+        }
+        aggregate: {
+          args: Prisma.OdaTransferOperationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOdaTransferOperation>
+        }
+        groupBy: {
+          args: Prisma.OdaTransferOperationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OdaTransferOperationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OdaTransferOperationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OdaTransferOperationCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1825,6 +1975,7 @@ export type InviteScalarFieldEnum = (typeof InviteScalarFieldEnum)[keyof typeof 
 
 
 export const OdaConnectionScalarFieldEnum = {
+  connectionId: 'connectionId',
   householdId: 'householdId',
   credentials: 'credentials',
   reconnectRequired: 'reconnectRequired',
@@ -1845,12 +1996,47 @@ export const OdaAuthorizationScalarFieldEnum = {
 export type OdaAuthorizationScalarFieldEnum = (typeof OdaAuthorizationScalarFieldEnum)[keyof typeof OdaAuthorizationScalarFieldEnum]
 
 
+export const OdaTransferScalarFieldEnum = {
+  id: 'id',
+  householdId: 'householdId',
+  connectionId: 'connectionId',
+  state: 'state',
+  snapshot: 'snapshot',
+  cartUrl: 'cartUrl',
+  message: 'message',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OdaTransferScalarFieldEnum = (typeof OdaTransferScalarFieldEnum)[keyof typeof OdaTransferScalarFieldEnum]
+
+
+export const OdaTransferOperationScalarFieldEnum = {
+  id: 'id',
+  transferId: 'transferId',
+  productId: 'productId',
+  quantity: 'quantity',
+  beforeQuantity: 'beforeQuantity',
+  requirementIds: 'requirementIds',
+  state: 'state'
+} as const
+
+export type OdaTransferOperationScalarFieldEnum = (typeof OdaTransferOperationScalarFieldEnum)[keyof typeof OdaTransferOperationScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -1867,6 +2053,15 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
 
@@ -2007,6 +2202,48 @@ export type EnumAiImportInferenceStateFieldRefInput<$PrismaModel> = FieldRefInpu
 export type ListEnumAiImportInferenceStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiImportInferenceState[]'>
     
 
+
+/**
+ * Reference to a field of type 'OdaTransferState'
+ */
+export type EnumOdaTransferStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OdaTransferState'>
+    
+
+
+/**
+ * Reference to a field of type 'OdaTransferState[]'
+ */
+export type ListEnumOdaTransferStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OdaTransferState[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+/**
+ * Reference to a field of type 'OdaOperationState'
+ */
+export type EnumOdaOperationStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OdaOperationState'>
+    
+
+
+/**
+ * Reference to a field of type 'OdaOperationState[]'
+ */
+export type ListEnumOdaOperationStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OdaOperationState[]'>
+    
+
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */
@@ -2118,6 +2355,8 @@ export type GlobalOmitConfig = {
   invite?: Prisma.InviteOmit
   odaConnection?: Prisma.OdaConnectionOmit
   odaAuthorization?: Prisma.OdaAuthorizationOmit
+  odaTransfer?: Prisma.OdaTransferOmit
+  odaTransferOperation?: Prisma.OdaTransferOperationOmit
 }
 
 /* Types for Logging */

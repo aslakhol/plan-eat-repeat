@@ -180,6 +180,7 @@ model Household {
     OwnItems                    OwnItem[]
     ShoppingItems               ShoppingItem[]
     RecentShoppingItems         RecentShoppingItem[]
+    odaTransfers                OdaTransfer[]
     odaConnection               OdaConnection?
     odaAuthorizations           OdaAuthorization[]
 }
@@ -260,6 +261,7 @@ model Invite {
 }
 
 model OdaConnection {
+    connectionId String @default(uuid())
     householdId String @id
     household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
     credentials String
@@ -276,4 +278,47 @@ model OdaAuthorization {
     expiresAt DateTime
 
     @@index([householdId])
+}
+
+model OdaTransfer {
+    id String @id
+    householdId String
+    household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+    connectionId String
+    state OdaTransferState @default(MATCHING)
+    snapshot Json
+    cartUrl String?
+    message String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    operations OdaTransferOperation[]
+
+    @@index([householdId, createdAt])
+}
+
+enum OdaTransferState {
+    MATCHING
+    SENDING
+    COMPLETED
+    UNCERTAIN
+}
+
+model OdaTransferOperation {
+    id String @id @default(cuid())
+    transferId String
+    transfer OdaTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+    productId Int
+    quantity Int
+    beforeQuantity Int
+    requirementIds String[]
+    state OdaOperationState @default(PENDING)
+
+    @@index([transferId])
+}
+
+enum OdaOperationState {
+    PENDING
+    WRITING
+    CONFIRMED
+    FAILED
 }

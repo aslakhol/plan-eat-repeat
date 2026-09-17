@@ -66,7 +66,9 @@ export const ModelName = {
   AiImportAttempt: 'AiImportAttempt',
   Invite: 'Invite',
   OdaConnection: 'OdaConnection',
-  OdaAuthorization: 'OdaAuthorization'
+  OdaAuthorization: 'OdaAuthorization',
+  OdaTransfer: 'OdaTransfer',
+  OdaTransferOperation: 'OdaTransferOperation'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -268,6 +270,7 @@ export type InviteScalarFieldEnum = (typeof InviteScalarFieldEnum)[keyof typeof 
 
 
 export const OdaConnectionScalarFieldEnum = {
+  connectionId: 'connectionId',
   householdId: 'householdId',
   credentials: 'credentials',
   reconnectRequired: 'reconnectRequired',
@@ -288,12 +291,47 @@ export const OdaAuthorizationScalarFieldEnum = {
 export type OdaAuthorizationScalarFieldEnum = (typeof OdaAuthorizationScalarFieldEnum)[keyof typeof OdaAuthorizationScalarFieldEnum]
 
 
+export const OdaTransferScalarFieldEnum = {
+  id: 'id',
+  householdId: 'householdId',
+  connectionId: 'connectionId',
+  state: 'state',
+  snapshot: 'snapshot',
+  cartUrl: 'cartUrl',
+  message: 'message',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OdaTransferScalarFieldEnum = (typeof OdaTransferScalarFieldEnum)[keyof typeof OdaTransferScalarFieldEnum]
+
+
+export const OdaTransferOperationScalarFieldEnum = {
+  id: 'id',
+  transferId: 'transferId',
+  productId: 'productId',
+  quantity: 'quantity',
+  beforeQuantity: 'beforeQuantity',
+  requirementIds: 'requirementIds',
+  state: 'state'
+} as const
+
+export type OdaTransferOperationScalarFieldEnum = (typeof OdaTransferOperationScalarFieldEnum)[keyof typeof OdaTransferOperationScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -310,4 +348,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

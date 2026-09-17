@@ -119,3 +119,13 @@ export type OdaConnection = Prisma.OdaConnectionModel
  * 
  */
 export type OdaAuthorization = Prisma.OdaAuthorizationModel
+/**
+ * Model OdaTransfer
+ * 
+ */
+export type OdaTransfer = Prisma.OdaTransferModel
+/**
+ * Model OdaTransferOperation
+ * 
+ */
+export type OdaTransferOperation = Prisma.OdaTransferOperationModel

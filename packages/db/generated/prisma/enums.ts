@@ -64,3 +64,23 @@ export const AiImportInferenceState = {
 } as const
 
 export type AiImportInferenceState = (typeof AiImportInferenceState)[keyof typeof AiImportInferenceState]
+
+
+export const OdaTransferState = {
+  MATCHING: 'MATCHING',
+  SENDING: 'SENDING',
+  COMPLETED: 'COMPLETED',
+  UNCERTAIN: 'UNCERTAIN'
+} as const
+
+export type OdaTransferState = (typeof OdaTransferState)[keyof typeof OdaTransferState]
+
+
+export const OdaOperationState = {
+  PENDING: 'PENDING',
+  WRITING: 'WRITING',
+  CONFIRMED: 'CONFIRMED',
+  FAILED: 'FAILED'
+} as const
+
+export type OdaOperationState = (typeof OdaOperationState)[keyof typeof OdaOperationState]

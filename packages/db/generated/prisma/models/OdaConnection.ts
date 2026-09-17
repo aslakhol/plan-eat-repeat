@@ -25,6 +25,7 @@ export type AggregateOdaConnection = {
 }
 
 export type OdaConnectionMinAggregateOutputType = {
+  connectionId: string | null
   householdId: string | null
   credentials: string | null
   reconnectRequired: boolean | null
@@ -32,6 +33,7 @@ export type OdaConnectionMinAggregateOutputType = {
 }
 
 export type OdaConnectionMaxAggregateOutputType = {
+  connectionId: string | null
   householdId: string | null
   credentials: string | null
   reconnectRequired: boolean | null
@@ -39,6 +41,7 @@ export type OdaConnectionMaxAggregateOutputType = {
 }
 
 export type OdaConnectionCountAggregateOutputType = {
+  connectionId: number
   householdId: number
   credentials: number
   reconnectRequired: number
@@ -48,6 +51,7 @@ export type OdaConnectionCountAggregateOutputType = {
 
 
 export type OdaConnectionMinAggregateInputType = {
+  connectionId?: true
   householdId?: true
   credentials?: true
   reconnectRequired?: true
@@ -55,6 +59,7 @@ export type OdaConnectionMinAggregateInputType = {
 }
 
 export type OdaConnectionMaxAggregateInputType = {
+  connectionId?: true
   householdId?: true
   credentials?: true
   reconnectRequired?: true
@@ -62,6 +67,7 @@ export type OdaConnectionMaxAggregateInputType = {
 }
 
 export type OdaConnectionCountAggregateInputType = {
+  connectionId?: true
   householdId?: true
   credentials?: true
   reconnectRequired?: true
@@ -142,6 +148,7 @@ export type OdaConnectionGroupByArgs<ExtArgs extends runtime.Types.Extensions.In
 }
 
 export type OdaConnectionGroupByOutputType = {
+  connectionId: string
   householdId: string
   credentials: string
   reconnectRequired: boolean
@@ -170,6 +177,7 @@ export type OdaConnectionWhereInput = {
   AND?: Prisma.OdaConnectionWhereInput | Prisma.OdaConnectionWhereInput[]
   OR?: Prisma.OdaConnectionWhereInput[]
   NOT?: Prisma.OdaConnectionWhereInput | Prisma.OdaConnectionWhereInput[]
+  connectionId?: Prisma.StringFilter<"OdaConnection"> | string
   householdId?: Prisma.StringFilter<"OdaConnection"> | string
   credentials?: Prisma.StringFilter<"OdaConnection"> | string
   reconnectRequired?: Prisma.BoolFilter<"OdaConnection"> | boolean
@@ -178,6 +186,7 @@ export type OdaConnectionWhereInput = {
 }
 
 export type OdaConnectionOrderByWithRelationInput = {
+  connectionId?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   credentials?: Prisma.SortOrder
   reconnectRequired?: Prisma.SortOrder
@@ -190,6 +199,7 @@ export type OdaConnectionWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.OdaConnectionWhereInput | Prisma.OdaConnectionWhereInput[]
   OR?: Prisma.OdaConnectionWhereInput[]
   NOT?: Prisma.OdaConnectionWhereInput | Prisma.OdaConnectionWhereInput[]
+  connectionId?: Prisma.StringFilter<"OdaConnection"> | string
   credentials?: Prisma.StringFilter<"OdaConnection"> | string
   reconnectRequired?: Prisma.BoolFilter<"OdaConnection"> | boolean
   revision?: Prisma.StringFilter<"OdaConnection"> | string
@@ -197,6 +207,7 @@ export type OdaConnectionWhereUniqueInput = Prisma.AtLeast<{
 }, "householdId">
 
 export type OdaConnectionOrderByWithAggregationInput = {
+  connectionId?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   credentials?: Prisma.SortOrder
   reconnectRequired?: Prisma.SortOrder
@@ -210,6 +221,7 @@ export type OdaConnectionScalarWhereWithAggregatesInput = {
   AND?: Prisma.OdaConnectionScalarWhereWithAggregatesInput | Prisma.OdaConnectionScalarWhereWithAggregatesInput[]
   OR?: Prisma.OdaConnectionScalarWhereWithAggregatesInput[]
   NOT?: Prisma.OdaConnectionScalarWhereWithAggregatesInput | Prisma.OdaConnectionScalarWhereWithAggregatesInput[]
+  connectionId?: Prisma.StringWithAggregatesFilter<"OdaConnection"> | string
   householdId?: Prisma.StringWithAggregatesFilter<"OdaConnection"> | string
   credentials?: Prisma.StringWithAggregatesFilter<"OdaConnection"> | string
   reconnectRequired?: Prisma.BoolWithAggregatesFilter<"OdaConnection"> | boolean
@@ -217,6 +229,7 @@ export type OdaConnectionScalarWhereWithAggregatesInput = {
 }
 
 export type OdaConnectionCreateInput = {
+  connectionId?: string
   credentials: string
   reconnectRequired?: boolean
   revision?: string
@@ -224,6 +237,7 @@ export type OdaConnectionCreateInput = {
 }
 
 export type OdaConnectionUncheckedCreateInput = {
+  connectionId?: string
   householdId: string
   credentials: string
   reconnectRequired?: boolean
@@ -231,6 +245,7 @@ export type OdaConnectionUncheckedCreateInput = {
 }
 
 export type OdaConnectionUpdateInput = {
+  connectionId?: Prisma.StringFieldUpdateOperationsInput | string
   credentials?: Prisma.StringFieldUpdateOperationsInput | string
   reconnectRequired?: Prisma.BoolFieldUpdateOperationsInput | boolean
   revision?: Prisma.StringFieldUpdateOperationsInput | string
@@ -238,6 +253,7 @@ export type OdaConnectionUpdateInput = {
 }
 
 export type OdaConnectionUncheckedUpdateInput = {
+  connectionId?: Prisma.StringFieldUpdateOperationsInput | string
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   credentials?: Prisma.StringFieldUpdateOperationsInput | string
   reconnectRequired?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -245,6 +261,7 @@ export type OdaConnectionUncheckedUpdateInput = {
 }
 
 export type OdaConnectionCreateManyInput = {
+  connectionId?: string
   householdId: string
   credentials: string
   reconnectRequired?: boolean
@@ -252,12 +269,14 @@ export type OdaConnectionCreateManyInput = {
 }
 
 export type OdaConnectionUpdateManyMutationInput = {
+  connectionId?: Prisma.StringFieldUpdateOperationsInput | string
   credentials?: Prisma.StringFieldUpdateOperationsInput | string
   reconnectRequired?: Prisma.BoolFieldUpdateOperationsInput | boolean
   revision?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type OdaConnectionUncheckedUpdateManyInput = {
+  connectionId?: Prisma.StringFieldUpdateOperationsInput | string
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   credentials?: Prisma.StringFieldUpdateOperationsInput | string
   reconnectRequired?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -270,6 +289,7 @@ export type OdaConnectionNullableScalarRelationFilter = {
 }
 
 export type OdaConnectionCountOrderByAggregateInput = {
+  connectionId?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   credentials?: Prisma.SortOrder
   reconnectRequired?: Prisma.SortOrder
@@ -277,6 +297,7 @@ export type OdaConnectionCountOrderByAggregateInput = {
 }
 
 export type OdaConnectionMaxOrderByAggregateInput = {
+  connectionId?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   credentials?: Prisma.SortOrder
   reconnectRequired?: Prisma.SortOrder
@@ -284,6 +305,7 @@ export type OdaConnectionMaxOrderByAggregateInput = {
 }
 
 export type OdaConnectionMinOrderByAggregateInput = {
+  connectionId?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   credentials?: Prisma.SortOrder
   reconnectRequired?: Prisma.SortOrder
@@ -323,12 +345,14 @@ export type OdaConnectionUncheckedUpdateOneWithoutHouseholdNestedInput = {
 }
 
 export type OdaConnectionCreateWithoutHouseholdInput = {
+  connectionId?: string
   credentials: string
   reconnectRequired?: boolean
   revision?: string
 }
 
 export type OdaConnectionUncheckedCreateWithoutHouseholdInput = {
+  connectionId?: string
   credentials: string
   reconnectRequired?: boolean
   revision?: string
@@ -351,12 +375,14 @@ export type OdaConnectionUpdateToOneWithWhereWithoutHouseholdInput = {
 }
 
 export type OdaConnectionUpdateWithoutHouseholdInput = {
+  connectionId?: Prisma.StringFieldUpdateOperationsInput | string
   credentials?: Prisma.StringFieldUpdateOperationsInput | string
   reconnectRequired?: Prisma.BoolFieldUpdateOperationsInput | boolean
   revision?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type OdaConnectionUncheckedUpdateWithoutHouseholdInput = {
+  connectionId?: Prisma.StringFieldUpdateOperationsInput | string
   credentials?: Prisma.StringFieldUpdateOperationsInput | string
   reconnectRequired?: Prisma.BoolFieldUpdateOperationsInput | boolean
   revision?: Prisma.StringFieldUpdateOperationsInput | string
@@ -365,6 +391,7 @@ export type OdaConnectionUncheckedUpdateWithoutHouseholdInput = {
 
 
 export type OdaConnectionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  connectionId?: boolean
   householdId?: boolean
   credentials?: boolean
   reconnectRequired?: boolean
@@ -373,6 +400,7 @@ export type OdaConnectionSelect<ExtArgs extends runtime.Types.Extensions.Interna
 }, ExtArgs["result"]["odaConnection"]>
 
 export type OdaConnectionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  connectionId?: boolean
   householdId?: boolean
   credentials?: boolean
   reconnectRequired?: boolean
@@ -381,6 +409,7 @@ export type OdaConnectionSelectCreateManyAndReturn<ExtArgs extends runtime.Types
 }, ExtArgs["result"]["odaConnection"]>
 
 export type OdaConnectionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  connectionId?: boolean
   householdId?: boolean
   credentials?: boolean
   reconnectRequired?: boolean
@@ -389,13 +418,14 @@ export type OdaConnectionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
 }, ExtArgs["result"]["odaConnection"]>
 
 export type OdaConnectionSelectScalar = {
+  connectionId?: boolean
   householdId?: boolean
   credentials?: boolean
   reconnectRequired?: boolean
   revision?: boolean
 }
 
-export type OdaConnectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"householdId" | "credentials" | "reconnectRequired" | "revision", ExtArgs["result"]["odaConnection"]>
+export type OdaConnectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"connectionId" | "householdId" | "credentials" | "reconnectRequired" | "revision", ExtArgs["result"]["odaConnection"]>
 export type OdaConnectionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }
@@ -412,6 +442,7 @@ export type $OdaConnectionPayload<ExtArgs extends runtime.Types.Extensions.Inter
     household: Prisma.$HouseholdPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    connectionId: string
     householdId: string
     credentials: string
     reconnectRequired: boolean
@@ -499,8 +530,8 @@ export interface OdaConnectionDelegate<ExtArgs extends runtime.Types.Extensions.
    * // Get first 10 OdaConnections
    * const odaConnections = await prisma.odaConnection.findMany({ take: 10 })
    * 
-   * // Only select the `householdId`
-   * const odaConnectionWithHouseholdIdOnly = await prisma.odaConnection.findMany({ select: { householdId: true } })
+   * // Only select the `connectionId`
+   * const odaConnectionWithConnectionIdOnly = await prisma.odaConnection.findMany({ select: { connectionId: true } })
    * 
    */
   findMany<T extends OdaConnectionFindManyArgs>(args?: Prisma.SelectSubset<T, OdaConnectionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OdaConnectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
@@ -544,9 +575,9 @@ export interface OdaConnectionDelegate<ExtArgs extends runtime.Types.Extensions.
    *   ]
    * })
    * 
-   * // Create many OdaConnections and only return the `householdId`
-   * const odaConnectionWithHouseholdIdOnly = await prisma.odaConnection.createManyAndReturn({
-   *   select: { householdId: true },
+   * // Create many OdaConnections and only return the `connectionId`
+   * const odaConnectionWithConnectionIdOnly = await prisma.odaConnection.createManyAndReturn({
+   *   select: { connectionId: true },
    *   data: [
    *     // ... provide data here
    *   ]
@@ -635,9 +666,9 @@ export interface OdaConnectionDelegate<ExtArgs extends runtime.Types.Extensions.
    *   ]
    * })
    * 
-   * // Update zero or more OdaConnections and only return the `householdId`
-   * const odaConnectionWithHouseholdIdOnly = await prisma.odaConnection.updateManyAndReturn({
-   *   select: { householdId: true },
+   * // Update zero or more OdaConnections and only return the `connectionId`
+   * const odaConnectionWithConnectionIdOnly = await prisma.odaConnection.updateManyAndReturn({
+   *   select: { connectionId: true },
    *   where: {
    *     // ... provide filter here
    *   },
@@ -840,6 +871,7 @@ export interface Prisma__OdaConnectionClient<T, Null = never, ExtArgs extends ru
  * Fields of the OdaConnection model
  */
 export interface OdaConnectionFieldRefs {
+  readonly connectionId: Prisma.FieldRef<"OdaConnection", 'String'>
   readonly householdId: Prisma.FieldRef<"OdaConnection", 'String'>
   readonly credentials: Prisma.FieldRef<"OdaConnection", 'String'>
   readonly reconnectRequired: Prisma.FieldRef<"OdaConnection", 'Boolean'>
