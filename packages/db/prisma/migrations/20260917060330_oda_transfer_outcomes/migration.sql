@@ -1,9 +1,3 @@
-/*
-  Warnings:
-
-  - The required column `connectionId` was added to the `OdaConnection` table with a prisma-level default value. This is not possible if the table is not empty. Please add this column as optional, then populate it before making it required.
-
-*/
 -- CreateEnum
 CREATE TYPE "OdaTransferState" AS ENUM ('MATCHING', 'SENDING', 'COMPLETED', 'UNCERTAIN');
 
@@ -11,7 +5,9 @@ CREATE TYPE "OdaTransferState" AS ENUM ('MATCHING', 'SENDING', 'COMPLETED', 'UNC
 CREATE TYPE "OdaOperationState" AS ENUM ('PENDING', 'WRITING', 'CONFIRMED', 'FAILED');
 
 -- AlterTable
-ALTER TABLE "OdaConnection" ADD COLUMN     "connectionId" TEXT NOT NULL;
+ALTER TABLE "OdaConnection" ADD COLUMN "connectionId" TEXT;
+UPDATE "OdaConnection" SET "connectionId" = gen_random_uuid()::text;
+ALTER TABLE "OdaConnection" ALTER COLUMN "connectionId" SET NOT NULL;
 
 -- CreateTable
 CREATE TABLE "OdaTransfer" (
