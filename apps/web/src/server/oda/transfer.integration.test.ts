@@ -41,6 +41,7 @@ let added: { productId: number; quantity: number }[] = [];
 let beforeAdd = () => Promise.resolve();
 let afterAdd = () => Promise.resolve();
 let beforeModel = () => Promise.resolve();
+let beforeTool = (_name: string) => Promise.resolve();
 const cartResponse = () => ({
   url: "https://oda.com/no/cart/",
   groups: [
@@ -72,6 +73,7 @@ mock.module("@modelcontextprotocol/sdk/client/index.js", {
         return Promise.resolve();
       }
       async callTool(input: { name: string; arguments: unknown }) {
+        await beforeTool(input.name);
         if (input.name === "get_cart")
           return { structuredContent: cartResponse() };
         if (input.name === "likely_to_buy")
@@ -948,6 +950,113 @@ void test("recovery identifies the uncertain addition and does not start another
       release.resolve();
       afterAdd = () => Promise.resolve();
       clock.mock.restore();
+      await sending;
+    }
+  }));
+
+void test("members see real transfer stages and independent requirement outcomes across refresh and recovery", () =>
+  withHousehold(async ({ oda, member, shopping }) => {
+    cart = new Map();
+    added = [];
+    products = [milk, eggs];
+    const explicit = await shopping.addManual({ name: "Milk" });
+    await shopping.edit({ ...explicit, amount: 2, unit: "l" });
+    const unspecified = await shopping.addManual({ name: "Milk" });
+    const eggItem = await shopping.addManual({ name: "Eggs" });
+    const unmatched = await shopping.addManual({ name: "Bread" });
+    selections = [
+      { requirementId: explicit.id, productId: 10, quantity: 2 },
+      { requirementId: unspecified.id, productId: 10, quantity: null },
+      { requirementId: eggItem.id, productId: 20, quantity: 1 },
+      { requirementId: unmatched.id, productId: null, quantity: null },
+    ];
+    const checking = Promise.withResolvers<void>();
+    const finding = Promise.withResolvers<void>();
+    const choosing = Promise.withResolvers<void>();
+    const writing = Promise.withResolvers<void>();
+    const releaseCart = Promise.withResolvers<void>();
+    const releaseHistory = Promise.withResolvers<void>();
+    const releaseModel = Promise.withResolvers<void>();
+    const releaseWrite = Promise.withResolvers<void>();
+    beforeTool = async (name) => {
+      if (name === "get_cart") {
+        checking.resolve();
+        await releaseCart.promise;
+      }
+      if (name === "likely_to_buy") {
+        finding.resolve();
+        await releaseHistory.promise;
+      }
+    };
+    beforeModel = async () => {
+      choosing.resolve();
+      await releaseModel.promise;
+    };
+    let writes = 0;
+    beforeAdd = async () => {
+      if (++writes === 2) {
+        writing.resolve();
+        await releaseWrite.promise;
+        throw new Error("Uncertain write");
+      }
+    };
+    const id = crypto.randomUUID();
+    const sending = oda.send({ id });
+    try {
+      await checking.promise;
+      const initial = await member.transfer();
+      assert.equal(initial?.stage, "CHECKING_CART");
+      assert.deepEqual(
+        initial?.items.map((item) => item.state),
+        ["WAITING", "WAITING", "WAITING", "WAITING"],
+      );
+      await withHousehold(async ({ oda: other }) =>
+        assert.equal(await other.transfer(), null),
+      );
+      releaseCart.resolve();
+      await finding.promise;
+      assert.equal((await member.transfer())?.stage, "FINDING_PRODUCTS");
+      releaseHistory.resolve();
+      await choosing.promise;
+      const matching = await member.transfer();
+      assert.equal(matching?.stage, "CHOOSING_PRODUCTS");
+      assert.ok(matching?.items.every((item) => item.state === "MATCHING"));
+      releaseModel.resolve();
+      await writing.promise;
+      const adding = await member.transfer();
+      assert.equal(adding?.stage, "ADDING_TO_CART");
+      assert.equal(adding?.addedProducts, 1);
+      assert.equal(adding?.totalProducts, 2);
+      assert.deepEqual(
+        adding?.items.map((item) => item.state),
+        ["CONFIRMED", "CONFIRMED", "ADDING", "UNRESOLVED"],
+      );
+      releaseWrite.resolve();
+      await sending;
+      const uncertain = await member.transfer();
+      assert.equal(
+        uncertain?.items.find((item) => item.id === eggItem.id)?.state,
+        "UNCERTAIN",
+      );
+      assert.equal(uncertain?.recoverable, true);
+      await member.resolve({ id, outcome: "NOT_ADDED" });
+      const complete = await member.transfer();
+      assert.equal(complete?.state, "COMPLETED");
+      assert.deepEqual(
+        complete?.items.map((item) => item.state),
+        ["CONFIRMED", "CONFIRMED", "UNRESOLVED", "UNRESOLVED"],
+      );
+      assert.equal(complete?.startedAt.getTime(), initial?.startedAt.getTime());
+      assert.ok(complete?.finishedAt);
+      assert.deepEqual(added, [{ productId: 10, quantity: 2 }]);
+    } finally {
+      releaseCart.resolve();
+      releaseHistory.resolve();
+      releaseModel.resolve();
+      releaseWrite.resolve();
+      beforeTool = () => Promise.resolve();
+      beforeModel = () => Promise.resolve();
+      beforeAdd = () => Promise.resolve();
       await sending;
     }
   }));

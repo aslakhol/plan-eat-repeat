@@ -46,7 +46,11 @@ export async function matchRequirements(
   householdId: string,
   requirements: Requirements,
   cart: Cart,
+  reportStage: (
+    stage: "FINDING_PRODUCTS" | "CHOOSING_PRODUCTS",
+  ) => Promise<void>,
 ) {
+  await reportStage("FINDING_PRODUCTS");
   const history = await purchaseHistory(db, householdId);
   const queries = [
     ...new Set([
@@ -62,6 +66,7 @@ export async function matchRequirements(
       .map((item) => [item.product.id, item.product]),
   );
   for (let index = 0; index < queries.length; index += 10) {
+    await reportStage("FINDING_PRODUCTS");
     const response = searchSchema.parse(
       await odaTool(db, householdId, "product_search", {
         queries: queries.slice(index, index + 10),
@@ -71,6 +76,7 @@ export async function matchRequirements(
     for (const product of response.result.flatMap((result) => result.products))
       candidates.set(product.id, product);
   }
+  await reportStage("CHOOSING_PRODUCTS");
   const { output } = await generateText({
     model: anthropic(env.AI_EXTRACT_MODEL),
     maxRetries: 1,

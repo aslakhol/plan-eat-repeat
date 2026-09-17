@@ -3,6 +3,7 @@ import type {
   PrismaClient,
   OdaTransfer,
   OdaTransferOperation,
+  OdaTransferStage,
 } from "@planeatrepeat/db";
 import { rememberShoppingItems } from "../recent-shopping-items";
 import { cartSchema, odaTool, type Cart } from "./provider";
@@ -48,9 +49,49 @@ export async function currentTransfer(db: PrismaClient, householdId: string) {
   const transfer = await db.odaTransfer.findFirst({
     where: { householdId },
     orderBy: { createdAt: "desc" },
+    include: { operations: true },
   });
-  return transfer ? transferStatus(transfer) : null;
+  if (!transfer) return null;
+  const status = transferStatus(transfer);
+  const operations = new Map(
+    transfer.operations.flatMap((operation) =>
+      operation.requirementIds.map((id) => [id, operation] as const),
+    ),
+  );
+  return {
+    ...status,
+    stage: transfer.stage,
+    startedAt: transfer.createdAt,
+    finishedAt: transfer.state === "COMPLETED" ? transfer.updatedAt : null,
+    addedProducts: transfer.operations.filter(
+      (operation) => operation.quantity > 0 && operation.state === "CONFIRMED",
+    ).length,
+    totalProducts: transfer.operations.filter(
+      (operation) => operation.quantity > 0,
+    ).length,
+    items: snapshotSchema.parse(transfer.snapshot).map((item) => {
+      const operation = operations.get(item.id);
+      const state =
+        operation?.state === "CONFIRMED"
+          ? "CONFIRMED"
+          : operation?.state === "WRITING"
+            ? status.recoverable || transfer.state === "UNCERTAIN"
+              ? "UNCERTAIN"
+              : "ADDING"
+            : operation?.state === "FAILED" || transfer.state === "COMPLETED"
+              ? "UNRESOLVED"
+              : operation?.state === "PENDING"
+                ? "READY"
+                : transfer.state !== "MATCHING"
+                  ? "UNRESOLVED"
+                  : transfer.stage === "CHECKING_CART"
+                    ? "WAITING"
+                    : "MATCHING";
+      return { id: item.id, name: item.name, state } as const;
+    }),
+  };
 }
+
 function cartQuantity(cart: Cart, productId: number) {
   return cart.groups
     .flatMap((group) => group.items)
@@ -124,6 +165,13 @@ async function runTransfer(
   id: string,
   runId: string,
 ) {
+  const reportStage = async (stage: OdaTransferStage) => {
+    const updated = await db.odaTransfer.updateMany({
+      where: { id, householdId, runId },
+      data: { stage, leaseUntil: new Date(Date.now() + leaseDuration) },
+    });
+    if (!updated.count) throw new Error("Transfer ownership changed");
+  };
   try {
     let transfer = await db.odaTransfer.findUniqueOrThrow({
       where: { id, householdId },
@@ -135,6 +183,7 @@ async function runTransfer(
     const sameConnection = connection?.connectionId === transfer.connectionId;
     if (transfer.state === "MATCHING") {
       if (!sameConnection) throw new Error("Connection changed");
+      await reportStage("CHECKING_CART");
       const cart = cartSchema.parse(
         await odaTool(db, householdId, "get_cart", {}, transfer.connectionId),
       );
@@ -143,6 +192,7 @@ async function runTransfer(
         householdId,
         snapshotSchema.parse(transfer.snapshot),
         cart,
+        reportStage,
       );
       const planned = await db.$transaction(async (tx) => {
         await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
@@ -152,6 +202,7 @@ async function runTransfer(
           where: { id },
           data: {
             state: "SENDING",
+            stage: "ADDING_TO_CART",
             cartUrl: cart.url,
             leaseUntil: new Date(Date.now() + leaseDuration),
             operations: {
@@ -174,6 +225,7 @@ async function runTransfer(
       });
     }
 
+    await reportStage("ADDING_TO_CART");
     // A later cart read cannot attribute an explicit delta to this request.
     // Unspecified demand is different: current presence establishes coverage.
     const uncertain = transfer.operations.filter(
@@ -315,6 +367,7 @@ async function runTransfer(
           data: { state: "FAILED" },
         });
     });
+    await reportStage("UPDATING_LIST");
     return transferStatus(await completeConfirmed(db, householdId, id, runId));
   } catch {
     return db.$transaction(async (tx) => {
@@ -470,6 +523,7 @@ export async function resolveUncertain(
         where: { id },
         data: {
           resolution,
+          stage: "UPDATING_LIST",
           resolvedByUserId: transfer.resolvedByUserId ?? userId,
           runId,
           leaseUntil: new Date(Date.now() + leaseDuration),
