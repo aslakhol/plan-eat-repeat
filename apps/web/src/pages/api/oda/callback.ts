@@ -13,7 +13,7 @@ export default async function handler(
     if (typeof state !== "string" || typeof code !== "string")
       throw new Error("Invalid callback");
     await odaRouter
-      .createCaller(createTRPCContext({ req, res }))
+      .createCaller(createTRPCContext({ req }))
       .callback({ state, code });
     return res.redirect(303, "/shopping-list?oda=connected");
   } catch {
