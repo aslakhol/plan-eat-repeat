@@ -2,7 +2,7 @@ import { z } from "zod";
 import { expect, test } from "@playwright/test";
 import { ensureSignedIn } from "./capture-support";
 
-test("Oda login returns to the list, sends items, and leaves unresolved items usable", async ({
+test("Oda login returns to the list, recovers a transfer after refresh, and leaves unresolved items usable", async ({
   page,
 }) => {
   await ensureSignedIn(page);
@@ -31,10 +31,12 @@ test("Oda login returns to the list, sends items, and leaves unresolved items us
   let transfer: {
     id: string;
     state: string;
+    recoverable: boolean;
     cartUrl: string;
     message: string | null;
   } | null = null;
   let connected = false;
+  let sends = 0;
   try {
     await page.route("**/api/trpc/**", async (route) => {
       const procedures = new URL(route.request().url()).pathname
@@ -59,16 +61,31 @@ test("Oda login returns to the list, sends items, and leaves unresolved items us
             await route.fetch({ url: safeUrl.href })
           ).json()) as unknown[]);
       if (procedures.includes("oda.send")) {
+        sends += 1;
+        transfer = {
+          id: crypto.randomUUID(),
+          state: "MATCHING",
+          recoverable: false,
+          cartUrl: "https://oda.com/no/cart/",
+          message: null,
+        };
+      }
+      if (procedures.includes("oda.recover")) {
         await call("remove", { id: sent.id });
         transfer = {
           id: crypto.randomUUID(),
           state: "COMPLETED",
+          recoverable: false,
           cartUrl: "https://oda.com/no/cart/",
           message: "Some items could not be sent. They remain on your list.",
         };
       }
       const result = procedures.map((name, index) => {
-        if (name === "oda.transfer" || name === "oda.send")
+        if (
+          name === "oda.transfer" ||
+          name === "oda.send" ||
+          name === "oda.recover"
+        )
           return { result: { data: { json: transfer } } };
         if (name === "oda.status")
           return {
@@ -118,6 +135,26 @@ test("Oda login returns to the list, sends items, and leaves unresolved items us
     await page
       .getByRole("button", { name: "Send to Oda", exact: true })
       .click();
+    await expect(
+      page.getByRole("button", { name: "Sending to Oda…" }),
+    ).toBeDisabled();
+    await page.reload();
+    await expect(
+      page.getByRole("button", { name: "Sending to Oda…" }),
+    ).toBeDisabled();
+    // Simulate the server reporting an expired request lease on re-entry.
+    transfer = {
+      id: crypto.randomUUID(),
+      state: "MATCHING",
+      recoverable: true,
+      cartUrl: "https://oda.com/no/cart/",
+      message: null,
+    };
+    await page.reload();
+    await page
+      .getByRole("button", { name: "Recover transfer", exact: true })
+      .click();
+    expect(sends).toBe(1);
     const list = page.getByRole("list", {
       name: "Shopping items",
       exact: true,
