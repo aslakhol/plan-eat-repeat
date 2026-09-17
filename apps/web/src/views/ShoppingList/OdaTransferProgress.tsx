@@ -103,7 +103,7 @@ export function OdaTransferProgress({ oda }: { oda: OdaShopping }) {
         </p>
       )}
       {transfer && (
-        <section className="mb-5" aria-label="Oda transfer progress">
+        <section className="mb-2" aria-label="Oda transfer progress">
           <div className="mb-2 flex items-center justify-between gap-3">
             <p className="text-[13px] font-medium text-stone-600" role="status">
               {title}
@@ -165,7 +165,7 @@ export function OdaTransferProgress({ oda }: { oda: OdaShopping }) {
                 {transfer.message}
               </p>
             )}
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs empty:hidden">
             {transfer.cartUrl && (finished || transfer.recoverable) && (
               <a
                 href={transfer.cartUrl}
