@@ -25,6 +25,12 @@ let selections: {
   requirementId: string;
   productId: number | null;
   quantity: number | null;
+  measurement?: {
+    amount: number;
+    unit: string;
+    packAmount: number;
+    packUnit: string;
+  } | null;
 }[] = [];
 let products = [milk, eggs];
 let cart = new Map<number, number>();
@@ -287,4 +293,119 @@ void test("partial success completes only confirmed items and an ambiguous write
     } finally {
       beforeAdd = () => Promise.resolve();
     }
+  }));
+
+void test("explicit quantities add in full while overlapping unspecified needs add no extra pack", () =>
+  withHousehold(async ({ oda, shopping }) => {
+    cart = new Map([[10, 1]]);
+    added = [];
+    products = [milk, eggs];
+    const explicit = await shopping.addManual({ name: "Milk" });
+    await shopping.edit({ ...explicit, amount: 2, unit: "l" });
+    const unspecified = await shopping.addManual({ name: "Milk" });
+    selections = [
+      { requirementId: explicit.id, productId: 10, quantity: 2 },
+      { requirementId: unspecified.id, productId: 10, quantity: null },
+    ];
+    await oda.send({ id: crypto.randomUUID() });
+    assert.deepEqual(added, [{ productId: 10, quantity: 2 }]);
+    assert.equal(cart.get(10), 3);
+    assert.deepEqual(await shopping.list(), []);
+    assert.equal((await shopping.recent()).length, 1);
+  }));
+
+void test("known unit conversions override estimates and round overlapping representations together", () =>
+  withHousehold(async ({ oda, shopping }) => {
+    const flour = {
+      ...milk,
+      id: 30,
+      name: "Flour",
+      description: "1 kg",
+      unitName: "kg",
+    };
+    cart = new Map();
+    added = [];
+    products = [flour];
+    const weight = await shopping.addManual({ name: "Flour" });
+    await shopping.edit({ ...weight, amount: 2500, unit: "g" });
+    const cups = await shopping.addManual({ name: "Flour" });
+    await shopping.edit({ ...cups, amount: 10, unit: "cup" });
+    selections = [
+      {
+        requirementId: weight.id,
+        productId: 30,
+        quantity: 1,
+        measurement: { amount: 2500, unit: "g", packAmount: 1, packUnit: "kg" },
+      },
+      {
+        requirementId: cups.id,
+        productId: 30,
+        quantity: 1.25,
+        measurement: { amount: 10, unit: "cup", packAmount: 1, packUnit: "kg" },
+      },
+    ];
+    await oda.send({ id: crypto.randomUUID() });
+    assert.deepEqual(added, [{ productId: 30, quantity: 3 }]);
+    assert.deepEqual(await shopping.list(), []);
+  }));
+
+void test("text quantities, missing units, and ingredient counts use packs while incompatible notes stay separate", () =>
+  withHousehold(async ({ oda, shopping }) => {
+    const duck = {
+      ...eggs,
+      id: 21,
+      name: "Duck eggs",
+      description: "6 pcs",
+      unitName: "kg",
+    };
+    const spinach = {
+      ...milk,
+      id: 40,
+      name: "Spinach",
+      description: "200 g",
+      unitName: "kg",
+    };
+    cart = new Map();
+    added = [];
+    products = [eggs, duck, spinach];
+    const numeric = await shopping.addManual({ name: "Eggs" });
+    await shopping.edit({ ...numeric, amount: 2, unit: null, note: "hen" });
+    const textual = await shopping.addManual({ name: "Two hen eggs" });
+    const distinct = await shopping.addManual({ name: "Eggs" });
+    await shopping.edit({ ...distinct, note: "duck", amount: 2 });
+    const vague = await shopping.addManual({ name: "A handful of spinach" });
+    selections = [
+      {
+        requirementId: numeric.id,
+        productId: 20,
+        quantity: 2 / 6,
+        measurement: { amount: 2, unit: "pcs", packAmount: 6, packUnit: "pcs" },
+      },
+      { requirementId: textual.id, productId: 20, quantity: 2 / 6 },
+      { requirementId: distinct.id, productId: 21, quantity: 2 / 6 },
+      {
+        requirementId: vague.id,
+        productId: 40,
+        quantity: 0.2,
+        measurement: {
+          amount: 1,
+          unit: "handful",
+          packAmount: 200,
+          packUnit: "g",
+        },
+      },
+    ];
+    await oda.send({ id: crypto.randomUUID() });
+    assert.deepEqual(
+      added.sort((a, b) => a.productId - b.productId),
+      [
+        { productId: 20, quantity: 1 },
+        { productId: 21, quantity: 1 },
+        { productId: 40, quantity: 1 },
+      ],
+    );
+    assert.deepEqual(await shopping.list(), []);
+    const recent = await shopping.recent();
+    assert.equal(recent.find((item) => item.note === "duck")?.amount, 2);
+    assert.equal(recent.find((item) => item.note === "hen")?.amount, 2);
   }));
