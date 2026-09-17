@@ -33,6 +33,9 @@ let selections: {
   } | null;
 }[] = [];
 let products = [milk, eggs];
+let suggestions: (typeof milk)[] = [];
+let previousOrders: (typeof milk)[] = [];
+let historySearch = new Map<string, (typeof milk)[]>();
 let cart = new Map<number, number>();
 let added: { productId: number; quantity: number }[] = [];
 let beforeAdd = () => Promise.resolve();
@@ -41,7 +44,9 @@ const cartResponse = () => ({
   groups: [
     {
       items: [...cart].map(([id, quantity]) => ({
-        product: products.find((p) => p.id === id)!,
+        product: [...products, ...[...historySearch.values()].flat()].find(
+          (p) => p.id === id,
+        )!,
         quantity,
       })),
     },
@@ -67,12 +72,30 @@ mock.module("@modelcontextprotocol/sdk/client/index.js", {
       async callTool(input: { name: string; arguments: unknown }) {
         if (input.name === "get_cart")
           return { structuredContent: cartResponse() };
-        if (input.name === "product_search")
+        if (input.name === "likely_to_buy")
+          return { structuredContent: { result: suggestions } };
+        if (input.name === "get_orders")
           return {
             structuredContent: {
-              result: [{ query: "groceries", products, hasMore: false }],
+              orders: [
+                { products: previousOrders.map((product) => ({ product })) },
+              ],
             },
           };
+        if (input.name === "product_search") {
+          const { queries } = z
+            .object({ queries: z.array(z.string()) })
+            .parse(input.arguments);
+          return {
+            structuredContent: {
+              result: queries.map((query) => ({
+                query,
+                products: historySearch.get(query) ?? products,
+                hasMore: false,
+              })),
+            },
+          };
+        }
         if (input.name === "manipulate_cart") {
           const { operations } = z
             .object({
@@ -466,5 +489,83 @@ void test("existing-cart coverage completes independently of an uncertain explic
       assert.equal(cart.get(10), 1);
     } finally {
       beforeAdd = () => Promise.resolve();
+    }
+  }));
+
+void test("usual purchases are revalidated and can be selected beyond ordinary search results", () =>
+  withHousehold(async ({ oda, shopping }) => {
+    const usual = { ...milk, id: 11, name: "Usual milk" };
+    cart = new Map();
+    added = [];
+    products = [milk];
+    suggestions = [usual];
+    historySearch = new Map([[usual.name, [usual]]]);
+    try {
+      const item = await shopping.addManual({ name: "Milk" });
+      selections = [{ requirementId: item.id, productId: 11, quantity: null }];
+      await oda.send({ id: crypto.randomUUID() });
+      assert.deepEqual(added, [{ productId: 11, quantity: 1 }]);
+      assert.deepEqual(await shopping.list(), []);
+    } finally {
+      suggestions = [];
+      historySearch = new Map();
+    }
+  }));
+
+void test("empty suggestions fall back to recent orders without sharing history between Households", () =>
+  withHousehold(async ({ oda, shopping }) => {
+    const usual = { ...milk, id: 11, name: "Usual milk" };
+    cart = new Map();
+    added = [];
+    products = [milk];
+    suggestions = [];
+    previousOrders = [usual];
+    historySearch = new Map([[usual.name, [usual]]]);
+    try {
+      const item = await shopping.addManual({ name: "Milk" });
+      selections = [{ requirementId: item.id, productId: 11, quantity: null }];
+      await oda.send({ id: crypto.randomUUID() });
+      assert.deepEqual(added, [{ productId: 11, quantity: 1 }]);
+      previousOrders = [];
+      cart = new Map();
+      added = [];
+      await withHousehold(async ({ oda: other, shopping: otherList }) => {
+        const another = await otherList.addManual({ name: "Milk" });
+        selections = [
+          { requirementId: another.id, productId: 11, quantity: null },
+        ];
+        await other.send({ id: crypto.randomUUID() });
+        assert.deepEqual(added, []);
+        assert.equal((await otherList.list()).length, 1);
+      });
+    } finally {
+      previousOrders = [];
+      historySearch = new Map();
+    }
+  }));
+
+void test("historical availability cannot authorize an unavailable product and ordinary matching remains available", () =>
+  withHousehold(async ({ oda, shopping }) => {
+    const usual = { ...milk, id: 11, name: "Usual milk" };
+    cart = new Map();
+    added = [];
+    products = [milk];
+    suggestions = [usual];
+    historySearch = new Map([
+      [usual.name, [{ ...usual, availability: { isAvailable: false } }]],
+    ]);
+    try {
+      const item = await shopping.addManual({ name: "Milk" });
+      selections = [{ requirementId: item.id, productId: 11, quantity: null }];
+      await oda.send({ id: crypto.randomUUID() });
+      assert.deepEqual(added, []);
+      assert.equal((await shopping.list()).length, 1);
+      selections = [{ requirementId: item.id, productId: 10, quantity: null }];
+      await oda.send({ id: crypto.randomUUID() });
+      assert.deepEqual(added, [{ productId: 10, quantity: 1 }]);
+      assert.deepEqual(await shopping.list(), []);
+    } finally {
+      suggestions = [];
+      historySearch = new Map();
     }
   }));
