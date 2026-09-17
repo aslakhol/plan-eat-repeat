@@ -439,6 +439,14 @@ export async function send(db: PrismaClient, householdId: string, id: string) {
       unit: item.unit,
       name: item.ownItem.name,
       note: item.ownItem.note,
+      odaProduct:
+        item.ownItem.odaProductId !== null
+          ? {
+              id: item.ownItem.odaProductId,
+              name: item.ownItem.odaProductName!,
+              description: item.ownItem.odaProductDescription!,
+            }
+          : null,
     }));
     return {
       transfer: await tx.odaTransfer.create({

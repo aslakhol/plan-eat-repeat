@@ -12,9 +12,26 @@ import {
   connectionStatus,
   disconnect,
 } from "../../oda/connection";
-import { cartSchema, odaTool } from "../../oda/provider";
+import { cartSchema, odaTool, productSearchSchema } from "../../oda/provider";
 
 export const odaRouter = createTRPCRouter({
+  searchProducts: protectedProcedureWithHousehold
+    .input(z.object({ query: z.string().trim().min(2).max(200) }))
+    .query(async ({ ctx, input }) => {
+      const response = productSearchSchema.parse(
+        await odaTool(ctx.db, ctx.householdId, "product_search", {
+          queries: [input.query],
+          size: 20,
+        }),
+      );
+      return [
+        ...new Map(
+          response.result
+            .flatMap(({ products }) => products)
+            .map((product) => [product.id, product]),
+        ).values(),
+      ];
+    }),
   dismiss: protectedProcedureWithHousehold
     .input(z.object({ id: z.string().uuid() }))
     .mutation(({ ctx, input }) =>

@@ -5,6 +5,7 @@ import {
 } from "./shopping-list";
 import type { Prisma, ShoppingCategory } from "@planeatrepeat/db";
 import { normalizeUnit } from "@planeatrepeat/shared";
+import type { OdaProductPreference } from "~/lib/oda-product";
 
 export async function rememberShoppingItems(
   tx: Prisma.TransactionClient,
@@ -47,6 +48,7 @@ export async function editRecentShoppingItem(
     id: string;
     category?: ShoppingCategory;
     usuallyHave?: boolean;
+    odaProduct?: OdaProductPreference | null;
   },
 ) {
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;

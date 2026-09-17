@@ -146,7 +146,10 @@ export const OwnItemScalarFieldEnum = {
   note: 'note',
   normalizedNote: 'normalizedNote',
   category: 'category',
-  usuallyHave: 'usuallyHave'
+  usuallyHave: 'usuallyHave',
+  odaProductId: 'odaProductId',
+  odaProductName: 'odaProductName',
+  odaProductDescription: 'odaProductDescription'
 } as const
 
 export type OwnItemScalarFieldEnum = (typeof OwnItemScalarFieldEnum)[keyof typeof OwnItemScalarFieldEnum]
