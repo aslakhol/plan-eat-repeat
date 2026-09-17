@@ -132,7 +132,14 @@ Return one selection for each requirement ID. The application controls cart writ
     )
       continue;
     const quantity =
-      packs === null ? (beforeQuantity > 0 ? 0 : 1) : Math.ceil(packs);
+      packs === null
+        ? beforeQuantity > 0
+          ? 0
+          : 1
+        : Math.max(
+            1,
+            Math.ceil(packs - Number.EPSILON * Math.max(1, packs) * 4),
+          );
     if (existing) {
       existing.requirementIds.push(item.id);
       existing.quantity = Math.max(existing.quantity, quantity);
