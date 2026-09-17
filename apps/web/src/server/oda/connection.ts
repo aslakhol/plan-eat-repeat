@@ -242,6 +242,7 @@ export async function accessToken(db: PrismaClient, householdId: string) {
       if (credentials.expiresAt > Date.now() + 60_000)
         return {
           token: credentials.accessToken,
+          connectionId: connection.connectionId,
           revision: connection.revision,
         };
       try {
@@ -271,7 +272,11 @@ export async function accessToken(db: PrismaClient, householdId: string) {
             ),
           },
         });
-        return { token: refreshed.access_token, revision };
+        return {
+          token: refreshed.access_token,
+          revision,
+          connectionId: connection.connectionId,
+        };
       } catch (error) {
         if (
           !(error instanceof TRPCError) ||

@@ -145,6 +145,8 @@ const { shoppingListRouter } = await import("../api/routers/shoppingList");
 
 async function withHousehold(
   run: (fixture: {
+    db: ReturnType<typeof createPrismaClient>;
+    householdId: string;
     oda: ReturnType<typeof odaRouter.createCaller>;
     member: ReturnType<typeof odaRouter.createCaller>;
     shopping: ReturnType<typeof shoppingListRouter.createCaller>;
@@ -184,6 +186,8 @@ async function withHousehold(
       code: "test-code",
     });
     await run({
+      db,
+      householdId: household.id,
       oda,
       member: odaRouter.createCaller(context(1)),
       shopping: shoppingListRouter.createCaller(context(0)),
@@ -596,6 +600,115 @@ void test("an ambiguous unspecified addition can recover established cart covera
       assert.deepEqual(added, [{ productId: 10, quantity: 1 }]);
       assert.deepEqual(await shopping.list(), []);
       assert.equal((await shopping.recent())[0]?.ownItemId, item.ownItemId);
+    } finally {
+      afterAdd = () => Promise.resolve();
+    }
+  }));
+
+void test("an expired matching request resumes once and its late response cannot send again", () =>
+  withHousehold(async ({ oda, member, shopping }) => {
+    cart = new Map();
+    added = [];
+    products = [milk];
+    const item = await shopping.addManual({ name: "Milk" });
+    selections = [{ requirementId: item.id, productId: 10, quantity: null }];
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    beforeModel = () => {
+      started.resolve();
+      return release.promise;
+    };
+    const id = crypto.randomUUID();
+    const original = oda.send({ id });
+    const now = Date.now();
+    const clock = mock.method(Date, "now", () => now);
+    try {
+      await started.promise;
+      assert.equal((await member.recover({ id })).state, "MATCHING");
+      clock.mock.mockImplementation(() => now + 181_000);
+      beforeModel = () => Promise.resolve();
+      assert.equal((await member.recover({ id })).state, "COMPLETED");
+      release.resolve();
+      await original;
+      assert.deepEqual(added, [{ productId: 10, quantity: 1 }]);
+      assert.deepEqual(await shopping.list(), []);
+    } finally {
+      release.resolve();
+      beforeModel = () => Promise.resolve();
+      clock.mock.restore();
+      await original;
+    }
+  }));
+
+void test("confirmed remote additions survive local completion failure and preserve later edits", () =>
+  withHousehold(async ({ db, householdId, oda, shopping }) => {
+    cart = new Map();
+    added = [];
+    products = [milk, eggs];
+    const changed = await shopping.addManual({ name: "Milk" });
+    const unchanged = await shopping.addManual({ name: "Eggs" });
+    selections = [
+      { requirementId: changed.id, productId: 10, quantity: null },
+      { requirementId: unchanged.id, productId: 20, quantity: null },
+    ];
+    const trigger = `oda_failure_${crypto.randomUUID().replaceAll("-", "")}`;
+    await db.$executeRawUnsafe(
+      `CREATE FUNCTION ${trigger}() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF OLD."householdId" = TG_ARGV[0] THEN RAISE EXCEPTION 'Controlled completion failure'; END IF; RETURN OLD; END; $$`,
+    );
+    try {
+      await db.$executeRawUnsafe(
+        `CREATE TRIGGER ${trigger} BEFORE DELETE ON "ShoppingItem" FOR EACH ROW EXECUTE FUNCTION ${trigger}('${householdId.replaceAll("'", "''")}')`,
+      );
+      const transfer = await oda.send({ id: crypto.randomUUID() });
+      assert.equal(transfer.state, "UNCERTAIN");
+      assert.equal(added.length, 2);
+      assert.equal((await shopping.list()).length, 2);
+      await db.$executeRawUnsafe(`DROP TRIGGER ${trigger} ON "ShoppingItem"`);
+      await shopping.edit({ ...changed, amount: 3 });
+      const later = await shopping.addManual({ name: "Bread" });
+      assert.equal((await oda.recover({ id: transfer.id })).state, "COMPLETED");
+      assert.equal(added.length, 2);
+      assert.deepEqual(
+        new Set((await shopping.list()).map((item) => item.id)),
+        new Set([changed.id, later.id]),
+      );
+      assert.equal(
+        (await shopping.recent())[0]?.ownItemId,
+        unchanged.ownItemId,
+      );
+    } finally {
+      await db.$executeRawUnsafe(
+        `DROP TRIGGER IF EXISTS ${trigger} ON "ShoppingItem"`,
+      );
+      await db.$executeRawUnsafe(`DROP FUNCTION ${trigger}()`);
+    }
+  }));
+
+void test("an ambiguous explicit addition cannot be inferred from cart totals or replayed", () =>
+  withHousehold(async ({ oda, member, shopping }) => {
+    cart = new Map([[10, 1]]);
+    added = [];
+    products = [milk];
+    const item = await shopping.addManual({ name: "Milk" });
+    await shopping.edit({ ...item, amount: 2, unit: "l" });
+    selections = [{ requirementId: item.id, productId: 10, quantity: 2 }];
+    afterAdd = () => Promise.reject(new Error("Response lost"));
+    try {
+      const transfer = await oda.send({ id: crypto.randomUUID() });
+      afterAdd = () => Promise.resolve();
+      assert.equal(
+        (await member.recover({ id: transfer.id })).state,
+        "UNCERTAIN",
+      );
+      assert.equal(
+        (await member.send({ id: crypto.randomUUID() })).id,
+        transfer.id,
+      );
+      assert.deepEqual(added, [{ productId: 10, quantity: 2 }]);
+      assert.equal((await shopping.list()).length, 1);
+      await withHousehold(async ({ oda: other }) => {
+        await assert.rejects(other.recover({ id: transfer.id }));
+      });
     } finally {
       afterAdd = () => Promise.resolve();
     }

@@ -43,8 +43,14 @@ export async function odaTool(
     | "likely_to_buy"
     | "get_orders",
   args: Record<string, unknown> = {},
+  expectedConnectionId?: string,
 ) {
   const credentials = await accessToken(db, householdId);
+  if (expectedConnectionId && credentials.connectionId !== expectedConnectionId)
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "The Oda connection changed. Review the original Oda cart.",
+    });
   const client = new Client({ name: "plan-eat-repeat", version: "1.0.0" });
   const transport = new StreamableHTTPClientTransport(
     new URL("https://oda.com/mcp"),

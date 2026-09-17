@@ -1,8 +1,14 @@
 import { TRPCError } from "@trpc/server";
 import type { PrismaClient, OdaTransfer } from "@planeatrepeat/db";
 import { rememberShoppingItems } from "../recent-shopping-items";
-import { cartSchema, odaTool } from "./provider";
+import { cartSchema, odaTool, type Cart } from "./provider";
 import { matchRequirements, snapshotSchema } from "./matching";
+
+// Longer than an individual provider call. Recovery takes ownership under the
+// Household lock; the previous request must check ownership before each write.
+const leaseDuration = 180_000;
+const uncertainMessage =
+  "Some additions could not be verified. Review the Oda cart; sending is paused to prevent duplicates.";
 
 function transferStatus(transfer: OdaTransfer) {
   return {
@@ -10,6 +16,9 @@ function transferStatus(transfer: OdaTransfer) {
     state: transfer.state,
     cartUrl: transfer.cartUrl,
     message: transfer.message,
+    recoverable:
+      transfer.state !== "COMPLETED" &&
+      (!transfer.leaseUntil || transfer.leaseUntil.getTime() <= Date.now()),
   };
 }
 export async function currentTransfer(db: PrismaClient, householdId: string) {
@@ -19,11 +28,18 @@ export async function currentTransfer(db: PrismaClient, householdId: string) {
   });
   return transfer ? transferStatus(transfer) : null;
 }
+function cartQuantity(cart: Cart, productId: number) {
+  return cart.groups
+    .flatMap((group) => group.items)
+    .filter((line) => line.product.id === productId)
+    .reduce((sum, line) => sum + line.quantity, 0);
+}
 
 async function completeConfirmed(
   db: PrismaClient,
   householdId: string,
   id: string,
+  runId: string,
 ) {
   return db.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
@@ -31,14 +47,14 @@ async function completeConfirmed(
       where: { id, householdId },
       include: { operations: true },
     });
+    if (transfer.runId !== runId) return transfer;
+    const requirements = snapshotSchema.parse(transfer.snapshot);
     const completedIds = new Set(
       transfer.operations
         .filter((operation) => operation.state === "CONFIRMED")
         .flatMap((operation) => operation.requirementIds),
     );
-    const snapshot = snapshotSchema
-      .parse(transfer.snapshot)
-      .filter((item) => completedIds.has(item.id));
+    const snapshot = requirements.filter((item) => completedIds.has(item.id));
     const unchanged = snapshot.length
       ? await tx.shoppingItem.findMany({
           where: {
@@ -49,6 +65,11 @@ async function completeConfirmed(
               ownItemId,
             })),
           },
+          orderBy: [
+            { ownItem: { normalizedName: "asc" } },
+            { ownItem: { normalizedNote: "asc" } },
+            { id: "asc" },
+          ],
         })
       : [];
     await rememberShoppingItems(tx, householdId, unchanged);
@@ -58,15 +79,15 @@ async function completeConfirmed(
     const uncertain = transfer.operations.some(
       (operation) => operation.state === "WRITING",
     );
-    const unresolved =
-      completedIds.size < snapshotSchema.parse(transfer.snapshot).length;
     return tx.odaTransfer.update({
       where: { id },
       data: {
         state: uncertain ? "UNCERTAIN" : "COMPLETED",
+        runId: null,
+        leaseUntil: null,
         message: uncertain
-          ? "Oda may have received some items. Check the Oda cart before sending again."
-          : unresolved
+          ? uncertainMessage
+          : completedIds.size < requirements.length
             ? "Some items could not be sent. They remain on your list."
             : null,
       },
@@ -74,7 +95,189 @@ async function completeConfirmed(
   });
 }
 
+async function runTransfer(
+  db: PrismaClient,
+  householdId: string,
+  id: string,
+  runId: string,
+) {
+  try {
+    let transfer = await db.odaTransfer.findUniqueOrThrow({
+      where: { id, householdId },
+      include: { operations: true },
+    });
+    const connection = await db.odaConnection.findUnique({
+      where: { householdId },
+    });
+    const sameConnection = connection?.connectionId === transfer.connectionId;
+    if (transfer.state === "MATCHING") {
+      if (!sameConnection) throw new Error("Connection changed");
+      const cart = cartSchema.parse(
+        await odaTool(db, householdId, "get_cart", {}, transfer.connectionId),
+      );
+      const operations = await matchRequirements(
+        db,
+        householdId,
+        snapshotSchema.parse(transfer.snapshot),
+        cart,
+      );
+      const planned = await db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
+        const owned = await tx.odaTransfer.findUniqueOrThrow({ where: { id } });
+        if (owned.runId !== runId) return false;
+        await tx.odaTransfer.update({
+          where: { id },
+          data: {
+            state: "SENDING",
+            cartUrl: cart.url,
+            leaseUntil: new Date(Date.now() + leaseDuration),
+            operations: {
+              create: operations.map((operation) => ({
+                ...operation,
+                state: operation.quantity === 0 ? "CONFIRMED" : "PENDING",
+              })),
+            },
+          },
+        });
+        return true;
+      });
+      if (!planned)
+        return transferStatus(
+          await db.odaTransfer.findUniqueOrThrow({ where: { id } }),
+        );
+      transfer = await db.odaTransfer.findUniqueOrThrow({
+        where: { id },
+        include: { operations: true },
+      });
+    }
+
+    // A later cart read cannot attribute an explicit delta to this request.
+    // Unspecified demand is different: current presence establishes coverage.
+    const uncertain = transfer.operations.filter(
+      (operation) =>
+        operation.state === "WRITING" && operation.canUseCartCoverage,
+    );
+    if (sameConnection && uncertain.length) {
+      try {
+        const cart = cartSchema.parse(
+          await odaTool(db, householdId, "get_cart", {}, transfer.connectionId),
+        );
+        await db.odaTransferOperation.updateMany({
+          where: {
+            id: {
+              in: uncertain
+                .filter(
+                  (operation) => cartQuantity(cart, operation.productId) > 0,
+                )
+                .map((operation) => operation.id),
+            },
+            state: "WRITING",
+          },
+          data: { state: "CONFIRMED" },
+        });
+      } catch {
+        /* Confirmed parts can still finish when Oda is unreachable. */
+      }
+    }
+
+    for (const operation of transfer.operations.filter(
+      (operation) => operation.state === "PENDING",
+    )) {
+      const claimed = await db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
+        const owned = await tx.odaTransfer.findUniqueOrThrow({ where: { id } });
+        if (owned.runId !== runId) return false;
+        const current = await tx.odaConnection.findUnique({
+          where: { householdId },
+        });
+        if (current?.connectionId !== owned.connectionId) return false;
+        await tx.odaTransfer.update({
+          where: { id },
+          data: { leaseUntil: new Date(Date.now() + leaseDuration) },
+        });
+        return (
+          (
+            await tx.odaTransferOperation.updateMany({
+              where: { id: operation.id, state: "PENDING" },
+              data: { state: "WRITING" },
+            })
+          ).count === 1
+        );
+      });
+      if (!claimed) break;
+      try {
+        const updated = cartSchema.parse(
+          await odaTool(
+            db,
+            householdId,
+            "manipulate_cart",
+            {
+              operations: [
+                {
+                  productId: operation.productId,
+                  quantity: operation.quantity,
+                },
+              ],
+            },
+            transfer.connectionId,
+          ),
+        );
+        if (
+          cartQuantity(updated, operation.productId) <
+          operation.beforeQuantity + operation.quantity
+        )
+          break;
+        // A late successful response is still evidence, even if another request
+        // now owns recovery. It must never initiate another cart operation.
+        await db.odaTransferOperation.updateMany({
+          where: { id: operation.id, state: "WRITING" },
+          data: { state: "CONFIRMED" },
+        });
+      } catch {
+        break;
+      }
+    }
+    await db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
+      const owned = await tx.odaTransfer.findUniqueOrThrow({ where: { id } });
+      if (owned.runId === runId)
+        await tx.odaTransferOperation.updateMany({
+          where: { transferId: id, state: "PENDING" },
+          data: { state: "FAILED" },
+        });
+    });
+    return transferStatus(await completeConfirmed(db, householdId, id, runId));
+  } catch {
+    return db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
+      const transfer = await tx.odaTransfer.findUniqueOrThrow({
+        where: { id },
+        include: { operations: true },
+      });
+      if (transfer.runId !== runId) return transferStatus(transfer);
+      const hasRemoteOutcome = transfer.operations.some(
+        (operation) =>
+          operation.state === "WRITING" || operation.state === "CONFIRMED",
+      );
+      return transferStatus(
+        await tx.odaTransfer.update({
+          where: { id },
+          data: {
+            state: hasRemoteOutcome ? "UNCERTAIN" : "COMPLETED",
+            runId: null,
+            leaseUntil: null,
+            message: hasRemoteOutcome
+              ? uncertainMessage
+              : "Could not send to Oda. Your items are still on the list. Try again.",
+          },
+        }),
+      );
+    });
+  }
+}
+
 export async function send(db: PrismaClient, householdId: string, id: string) {
+  const runId = crypto.randomUUID();
   const start = await db.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
     const previous = await tx.odaTransfer.findUnique({ where: { id } });
@@ -121,90 +324,16 @@ export async function send(db: PrismaClient, householdId: string, id: string) {
           householdId,
           connectionId: connection.connectionId,
           snapshot,
+          runId,
+          leaseUntil: new Date(Date.now() + leaseDuration),
         },
       }),
       claimed: true,
     };
   });
-  if (!start.claimed) return transferStatus(start.transfer);
-  try {
-    const cart = cartSchema.parse(await odaTool(db, householdId, "get_cart"));
-    const operations = await matchRequirements(
-      db,
-      householdId,
-      snapshotSchema.parse(start.transfer.snapshot),
-      cart,
-    );
-    await db.odaTransfer.update({
-      where: { id },
-      data: {
-        state: "SENDING",
-        cartUrl: cart.url,
-        operations: {
-          create: operations.map((operation) => ({
-            ...operation,
-            state: operation.quantity === 0 ? "CONFIRMED" : "PENDING",
-          })),
-        },
-      },
-    });
-    const pending = await db.odaTransferOperation.findMany({
-      where: { transferId: id, state: "PENDING" },
-      orderBy: { id: "asc" },
-    });
-    for (const operation of pending) {
-      await db.odaTransferOperation.update({
-        where: { id: operation.id },
-        data: { state: "WRITING" },
-      });
-      try {
-        const updated = cartSchema.parse(
-          await odaTool(db, householdId, "manipulate_cart", {
-            operations: [
-              { productId: operation.productId, quantity: operation.quantity },
-            ],
-          }),
-        );
-        const quantity = updated.groups
-          .flatMap((group) => group.items)
-          .filter((line) => line.product.id === operation.productId)
-          .reduce((sum, line) => sum + line.quantity, 0);
-        if (quantity < operation.beforeQuantity + operation.quantity) break;
-        await db.odaTransferOperation.update({
-          where: { id: operation.id },
-          data: { state: "CONFIRMED" },
-        });
-      } catch {
-        break;
-      }
-    }
-    await db.odaTransferOperation.updateMany({
-      where: { transferId: id, state: "PENDING" },
-      data: { state: "FAILED" },
-    });
-    return transferStatus(await completeConfirmed(db, householdId, id));
-  } catch {
-    // Once a remote write may have happened, retain its durable outcome for recovery.
-    const transfer = await db.odaTransfer.findUniqueOrThrow({
-      where: { id },
-      include: { operations: true },
-    });
-    const hasRemoteOutcome = transfer.operations.some(
-      (operation) =>
-        operation.state === "WRITING" || operation.state === "CONFIRMED",
-    );
-    return transferStatus(
-      await db.odaTransfer.update({
-        where: { id },
-        data: {
-          state: hasRemoteOutcome ? "UNCERTAIN" : "COMPLETED",
-          message: hasRemoteOutcome
-            ? "Oda may have received some items. Check the Oda cart before sending again."
-            : "Could not send to Oda. Your items are still on the list. Try again.",
-        },
-      }),
-    );
-  }
+  return start.claimed
+    ? runTransfer(db, householdId, id, runId)
+    : transferStatus(start.transfer);
 }
 
 export async function recover(
@@ -212,59 +341,27 @@ export async function recover(
   householdId: string,
   id: string,
 ) {
-  const claimed = await db.$transaction(async (tx) => {
+  const runId = crypto.randomUUID();
+  const start = await db.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
     const transfer = await tx.odaTransfer.findUniqueOrThrow({
       where: { id, householdId },
-      include: { operations: true },
     });
-    if (transfer.state !== "UNCERTAIN") return null;
-    await tx.odaTransfer.update({ where: { id }, data: { state: "SENDING" } });
-    return transfer;
-  });
-  if (!claimed)
-    return transferStatus(
-      await db.odaTransfer.findUniqueOrThrow({ where: { id, householdId } }),
-    );
-  try {
-    const uncertain = claimed.operations.filter(
-      (operation) =>
-        operation.state === "WRITING" && operation.canUseCartCoverage,
-    );
-    const connection = await db.odaConnection.findUnique({
-      where: { householdId },
-    });
-    if (uncertain.length && connection?.connectionId === claimed.connectionId) {
-      const cart = cartSchema.parse(await odaTool(db, householdId, "get_cart"));
-      const present = new Set(
-        cart.groups
-          .flatMap((group) => group.items)
-          .filter((item) => item.quantity > 0)
-          .map((item) => item.product.id),
-      );
-      await db.odaTransferOperation.updateMany({
-        where: {
-          id: {
-            in: uncertain
-              .filter((operation) => present.has(operation.productId))
-              .map((operation) => operation.id),
-          },
-          state: "WRITING",
-        },
-        data: { state: "CONFIRMED" },
-      });
-    }
-    return transferStatus(await completeConfirmed(db, householdId, id));
-  } catch {
-    return transferStatus(
-      await db.odaTransfer.update({
+    if (!transferStatus(transfer).recoverable)
+      return { transfer, claimed: false };
+    return {
+      transfer: await tx.odaTransfer.update({
         where: { id },
         data: {
-          state: "UNCERTAIN",
-          message:
-            "Could not recover the transfer. Check the Oda connection and try again.",
+          runId,
+          leaseUntil: new Date(Date.now() + leaseDuration),
+          state: transfer.state === "MATCHING" ? "MATCHING" : "SENDING",
         },
       }),
-    );
-  }
+      claimed: true,
+    };
+  });
+  return start.claimed
+    ? runTransfer(db, householdId, id, runId)
+    : transferStatus(start.transfer);
 }
