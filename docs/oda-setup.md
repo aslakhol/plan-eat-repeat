@@ -6,6 +6,10 @@ Set `ODA_CREDENTIAL_KEY` to a random 32-byte base64 key on the server. Generate 
 
 After deploying, open Shopping List settings and connect Oda. Confirm the browser returns to the list and Open Oda cart works. Reconnect from another household member and check shared access. Leave the connection until its access token expires, then open the cart again to exercise refresh. Disconnect and check that the app no longer has access. These live checks remain necessary even when the controlled-provider tests pass.
 
+The Shopping List's `…` menu also offers Connect Oda. Once connected, the menu offers Send to Oda, Open Oda cart, and Oda settings. Sending takes the current unchecked list as a snapshot. Ordinary list use does not fetch the remote cart.
+
+During a transfer, a compact indicator shows the current server stage and elapsed time. Each square represents one shopping requirement in the snapshot. Green means covered, red means unresolved, and amber after an interruption means the outcome needs checking. These states persist across refreshes and are shared by household members. Completed results can be dismissed and stop appearing on later visits after five minutes.
+
 Do not place an order during verification. Transfer testing should use a small reversible addition, followed by restoring the cart in Oda.
 
 ## Matching check
