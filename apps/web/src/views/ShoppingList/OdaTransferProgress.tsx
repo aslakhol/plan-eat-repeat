@@ -122,6 +122,7 @@ export function OdaTransferProgress({ oda }: { oda: OdaShopping }) {
                   variant="ghost"
                   className="size-8"
                   aria-label="Dismiss Oda result"
+                  disabled={oda.dismissDisabled}
                   onClick={() => oda.dismiss()}
                 >
                   <X className="size-3.5" />

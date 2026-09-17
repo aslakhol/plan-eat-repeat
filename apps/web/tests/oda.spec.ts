@@ -89,8 +89,8 @@ test("Oda login returns to the list, recovers a transfer after refresh, and leav
           id: crypto.randomUUID(),
           state: "COMPLETED",
           stage: "UPDATING_LIST",
-          startedAt,
-          finishedAt: new Date(),
+          startedAt: new Date(Date.now() - 11 * 60_000),
+          finishedAt: new Date(Date.now() - 10 * 60_000),
           confirmedProducts: 1,
           totalProducts: 1,
           items: snapshot.map((item, index) => ({
@@ -103,6 +103,10 @@ test("Oda login returns to the list, recovers a transfer after refresh, and leav
         };
       }
       const result = procedures.map((name, index) => {
+        if (name === "oda.dismiss") {
+          transfer = null;
+          return { result: { data: { json: { count: 1 } } } };
+        }
         if (name === "oda.transfer" && transferUnavailable)
           return {
             error: {
@@ -248,6 +252,10 @@ test("Oda login returns to the list, recovers a transfer after refresh, and leav
       page.getByRole("heading", { name: "Shopping list", exact: true }),
     ).toBeVisible();
     await page.getByRole("button", { name: "Dismiss Oda result" }).click();
+    await expect(
+      page.getByRole("region", { name: "Oda transfer progress" }),
+    ).not.toBeVisible();
+    await page.reload();
     await expect(
       page.getByRole("region", { name: "Oda transfer progress" }),
     ).not.toBeVisible();

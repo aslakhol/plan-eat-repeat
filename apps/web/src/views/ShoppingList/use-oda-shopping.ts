@@ -15,7 +15,6 @@ export function useOdaShopping(
     startedAt: Date;
     items: Item[];
   } | null>(null);
-  const [dismissedId, setDismissedId] = useState<string | null>(null);
   const pendingChanges = useIsMutating({ mutationKey: [["shoppingList"]] });
   const status = api.oda.status.useQuery();
   const transfer = api.oda.transfer.useQuery(undefined, {
@@ -55,6 +54,10 @@ export function useOdaShopping(
     onSuccess,
     onError,
   });
+  const dismissResult = api.oda.dismiss.useMutation({
+    onSuccess: () => utils.oda.transfer.invalidate(),
+    onError: (error) => toast({ title: error.message, variant: "destructive" }),
+  });
   const progress =
     send.isPending && request && transfer.data?.id !== request.id
       ? {
@@ -74,14 +77,6 @@ export function useOdaShopping(
         }
       : transfer.data;
   const busy = send.isPending || recover.isPending || resolve.isPending;
-  const visibleProgress =
-    progress &&
-    (progress.state !== "COMPLETED" ||
-      (progress.finishedAt &&
-        Date.now() - progress.finishedAt.getTime() < 5 * 60_000 &&
-        dismissedId !== progress.id))
-      ? progress
-      : null;
   return {
     status,
     transfer,
@@ -89,7 +84,8 @@ export function useOdaShopping(
     connect,
     recover,
     resolve,
-    progress: visibleProgress,
+    progress,
+    dismissDisabled: dismissResult.isPending,
     busy,
     recoveryDisabled: busy || pendingChanges > 0,
     sendDisabled:
@@ -115,11 +111,11 @@ export function useOdaShopping(
               items,
             };
       setRequest(next);
-      setDismissedId(null);
       send.mutate({ id: next.id });
     },
     dismiss() {
-      if (progress) setDismissedId(progress.id);
+      if (progress?.state === "COMPLETED")
+        dismissResult.mutate({ id: progress.id });
     },
   };
 }

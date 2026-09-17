@@ -23,6 +23,7 @@ export function useAddShoppingItem() {
       return { id };
     },
     onSuccess: async (saved) => {
+      void utils.oda.transfer.invalidate();
       // An older poll must not replace the saved result after it arrives.
       await utils.shoppingList.list.cancel();
       utils.shoppingList.list.setData(undefined, (items) => [

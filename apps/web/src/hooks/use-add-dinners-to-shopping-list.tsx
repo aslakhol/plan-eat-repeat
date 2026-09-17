@@ -23,6 +23,7 @@ export const useAddDinnersToShoppingList = (
     networkMode: "always",
     retry: false,
     onSuccess: async (result) => {
+      void utils.oda.transfer.invalidate();
       // Close the Dinner or picker drawer so Undo is outside its focus trap.
       await onAdded?.();
       void utils.shoppingList.invalidate();

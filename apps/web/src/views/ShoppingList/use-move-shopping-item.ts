@@ -54,6 +54,7 @@ export function useMoveShoppingItem(
       while (move.desiredRecent !== move.confirmed.recent) {
         const before = move.confirmed;
         const saved = await mutation.mutateAsync(before);
+        if (!saved.recent) void utils.oda.transfer.invalidate();
         move.confirmed = saved;
         move.ids.add(saved.item.id);
         await Promise.all([

@@ -8,7 +8,7 @@ After deploying, open Shopping List settings and connect Oda. Confirm the browse
 
 The Shopping List's `…` menu also offers Connect Oda. Once connected, the menu offers Send to Oda, Open Oda cart, and Oda settings. Sending takes the current unchecked list as a snapshot. Ordinary list use does not fetch the remote cart.
 
-During a transfer, a compact indicator shows the current server stage and elapsed time. Each square represents one shopping requirement in the snapshot. Green means covered, red means unresolved, and amber after an interruption means the outcome needs checking. These states persist across refreshes and are shared by household members. Completed results can be dismissed and stop appearing on later visits after five minutes.
+During a transfer, a compact indicator shows the current server stage and elapsed time. Each square represents one shopping requirement in the snapshot. Green means covered, red means unresolved, and amber after an interruption means the outcome needs checking. These states persist across refreshes and are shared by household members. Completed results remain until a member dismisses them or successfully adds an item to the Shopping List. Dismissal is shared by the Household and persists across visits. Active and interrupted transfers remain visible.
 
 Do not place an order during verification. Transfer testing should use a small reversible addition, followed by restoring the cart in Oda.
 
