@@ -1,0 +1,15 @@
+# Share Oda shopping transfers within the household
+
+Use one Oda Connection per Household, available to every member, because the Shopping List and grocery shopping are shared. Send matched products directly to the Oda Cart for review and checkout there; completed Shopping Items move to Recently Used, while unresolved or failed items remain on the Shopping List. An unspecified requirement already covered by a suitable cart product also counts as completed. Cart fulfillment completes the Shopping Item's role, consistent with taking an item into a physical basket, and does not mean an order has been placed.
+
+The current implementation spec is [issue 308](https://github.com/aslakhol/plan-eat-repeat/issues/308). These decisions supersede the proposed pre-transfer review and Shopping List preservation in [old and outdated issue 280](https://github.com/aslakhol/plan-eat-repeat/issues/280), and the individual connection ownership proposed in [old and outdated issue 164](https://github.com/aslakhol/plan-eat-repeat/issues/164), for this Shopping List integration.
+
+Automatic selection favors suitable products from the connected Oda account's previous purchases, then reasonably priced products matching the Shopping Item's name and note. Give the agent latitude to interpret the whole item, including quantities written in names or notes, omitted units and vague measures. For example, two eggs means two eggs rather than two cartons. When no quantity is specified, prefer one modest single pack, such as one litre of milk, over large packs or value multipacks; round interpreted requirements up to purchasable packs. Leave items the agent cannot resolve on the Shopping List.
+
+Interpret the current Shopping List's requirements for the same product together. Milk with no quantity and Milk with two litres require two litres, without an extra unspecified pack. Do not turn requirements expressed in different units into additive demands for the same product; choose quantities covering at least each listed requirement, while keeping genuinely different products distinct. This interpretation happens during transfer and does not change how the Shopping List already combines compatible quantities.
+
+Explicit quantities add to existing cart contents; do not subtract what is already in Oda. For example, a two-litre requirement adds two litres even when the cart already contains one litre. Only unspecified requirements take existing contents into account: Milk without an amount adds nothing if suitable milk is already present, and still counts as completed. The same unspecified requirement needs no extra pack when another requirement in the transfer supplies suitable milk.
+
+Keep the user on the existing Shopping List after sending, with an Open Oda cart action. Remaining items show what is left to handle; do not add a separate confirmation or results page.
+
+Defer optional preferred Oda products until the initial transfer works and has been tried. [Issue 307](https://github.com/aslakhol/plan-eat-repeat/issues/307) tracks the optional, connection-dependent product picker on reusable Own Items.

@@ -43,13 +43,22 @@ The Household's collection of active Dinners.
 _Avoid_: Dinner library, Dinners
 
 **Shopping List**:
-The Household's shared collection of items still to buy, added manually or from Dinners. Items leave the list when taken into the basket.
+The Household's shared collection of items still to buy, added manually or from Dinners. Items leave the list when taken into a physical basket or successfully transferred to the Oda Cart.
 
 **Shopping Item**:
 A requirement to buy an Own Item, with an optional Amount and Unit. It is independent of the Dinner or Recipe Ingredient it may have come from.
 
 **Shopping Note**:
 Optional wording qualifying an Own Item without changing its product name, such as "duck" for Eggs.
+
+**Oda Connection**:
+A Household's authorization to use one Oda account for its shopping. Every Household member can use the shared connection.
+
+**Oda Cart**:
+The shopping basket in the Oda account linked through the Household's Oda Connection. The shopper reviews its products and completes checkout in Oda.
+
+**Oda Transfer**:
+Fulfilling Shopping Items through the Household's Oda Cart. Completed items move to Recently Used, including unspecified requirements already covered by suitable cart contents; unresolved or failed items remain on the Shopping List.
 
 **Shopping Category**:
 A store-oriented grouping of Shopping Items used to order the Shopping List.
