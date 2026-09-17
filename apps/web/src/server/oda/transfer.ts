@@ -1,5 +1,9 @@
 import { TRPCError } from "@trpc/server";
-import type { PrismaClient, OdaTransfer } from "@planeatrepeat/db";
+import type {
+  PrismaClient,
+  OdaTransfer,
+  OdaTransferOperation,
+} from "@planeatrepeat/db";
 import { rememberShoppingItems } from "../recent-shopping-items";
 import { cartSchema, odaTool, type Cart } from "./provider";
 import { matchRequirements, snapshotSchema } from "./matching";
@@ -7,8 +11,27 @@ import { matchRequirements, snapshotSchema } from "./matching";
 // Longer than an individual provider call. Recovery takes ownership under the
 // Household lock; the previous request must check ownership before each write.
 const leaseDuration = 180_000;
-const uncertainMessage =
-  "Some additions could not be verified. Review the Oda cart; sending is paused to prevent duplicates.";
+function uncertainMessage(
+  transfer: OdaTransfer & { operations: OdaTransferOperation[] },
+) {
+  const requirements = snapshotSchema.parse(transfer.snapshot);
+  const additions = transfer.operations
+    .filter((operation) => operation.state === "WRITING")
+    .map((operation) => {
+      const names = requirements
+        .filter((item) => operation.requirementIds.includes(item.id))
+        .map((item) => {
+          const amount = [item.amount, item.unit]
+            .filter((value) => value !== null)
+            .join(" ");
+          return `${item.name}${item.note ? `, ${item.note}` : ""}${amount ? ` (${amount})` : ""}`;
+        });
+      return `${operation.quantity} added ${operation.quantity === 1 ? "pack" : "packs"} for ${names.join(", ")}`;
+    });
+  return additions.length
+    ? `Could not verify ${additions.join("; ")}. Check the Oda cart before marking the outcome.`
+    : "Cart additions are recorded. Recover the transfer to finish updating your list.";
+}
 
 function transferStatus(transfer: OdaTransfer) {
   return {
@@ -86,7 +109,7 @@ async function completeConfirmed(
         runId: null,
         leaseUntil: null,
         message: uncertain
-          ? uncertainMessage
+          ? uncertainMessage(transfer)
           : completedIds.size < requirements.length
             ? "Some items could not be sent. They remain on your list."
             : null,
@@ -225,6 +248,14 @@ async function runTransfer(
         await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
         const owned = await tx.odaTransfer.findUniqueOrThrow({ where: { id } });
         if (owned.runId !== runId) return false;
+        // Keep the member's cart-review decision about one uncertain addition.
+        // A recovery must not start another delta while an earlier one is unknown.
+        if (
+          await tx.odaTransferOperation.count({
+            where: { transferId: id, state: "WRITING" },
+          })
+        )
+          return false;
         const current = await tx.odaConnection.findUnique({
           where: { householdId },
         });
@@ -305,7 +336,7 @@ async function runTransfer(
             runId: null,
             leaseUntil: null,
             message: hasRemoteOutcome
-              ? uncertainMessage
+              ? uncertainMessage(transfer)
               : "Could not send to Oda. Your items are still on the list. Try again.",
           },
         }),

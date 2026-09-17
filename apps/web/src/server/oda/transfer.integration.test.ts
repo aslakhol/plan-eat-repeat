@@ -904,3 +904,50 @@ void test("marking an uncertain addition as not added retains the requirement un
       await sending;
     }
   }));
+
+void test("recovery identifies the uncertain addition and does not start another write before it is resolved", () =>
+  withHousehold(async ({ oda, member, shopping }) => {
+    cart = new Map();
+    added = [];
+    products = [milk, eggs];
+    const milkItem = await shopping.addManual({ name: "Milk" });
+    await shopping.edit({ ...milkItem, amount: 2, unit: "l" });
+    const eggItem = await shopping.addManual({ name: "Eggs" });
+    selections = [
+      { requirementId: milkItem.id, productId: 10, quantity: 2 },
+      { requirementId: eggItem.id, productId: 20, quantity: 1 },
+    ];
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    afterAdd = async () => {
+      started.resolve();
+      await release.promise;
+      throw new Error("Response lost");
+    };
+    const id = crypto.randomUUID();
+    const sending = oda.send({ id });
+    const now = Date.now();
+    const clock = mock.method(Date, "now", () => now);
+    try {
+      await started.promise;
+      afterAdd = () => Promise.reject(new Error("Another response lost"));
+      clock.mock.mockImplementation(() => now + 181_000);
+      const recovered = await member.recover({ id });
+      assert.equal(recovered.state, "UNCERTAIN");
+      assert.deepEqual(added, [{ productId: 10, quantity: 2 }]);
+      assert.match(recovered.message ?? "", /2 added packs for Milk \(2 l\)/);
+      await member.resolve({ id, outcome: "ADDED" });
+      assert.deepEqual(
+        (await shopping.list()).map((item) => item.id),
+        [eggItem.id],
+      );
+      release.resolve();
+      await sending;
+      assert.deepEqual(added, [{ productId: 10, quantity: 2 }]);
+    } finally {
+      release.resolve();
+      afterAdd = () => Promise.resolve();
+      clock.mock.restore();
+      await sending;
+    }
+  }));
