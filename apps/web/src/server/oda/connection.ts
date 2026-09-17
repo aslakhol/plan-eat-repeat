@@ -73,7 +73,12 @@ async function token(parameters: Record<string, string>) {
     }),
     signal: AbortSignal.timeout(15_000),
   });
-  if (!response.ok) throw reconnect();
+  if (response.status === 400 || response.status === 401) throw reconnect();
+  if (!response.ok)
+    throw new TRPCError({
+      code: "BAD_GATEWAY",
+      message: "Oda is unavailable. Try again.",
+    });
   return tokenSchema.parse(await response.json());
 }
 
@@ -232,9 +237,11 @@ export async function accessToken(db: PrismaClient, householdId: string) {
             ? { client_secret: credentials.client_secret }
             : {}),
         });
+        const revision = crypto.randomUUID();
         await tx.odaConnection.update({
           where: { householdId },
           data: {
+            revision,
             credentials: encrypt(
               {
                 ...credentials,
@@ -247,8 +254,16 @@ export async function accessToken(db: PrismaClient, householdId: string) {
             ),
           },
         });
-        return { token: refreshed.access_token, revision: connection.revision };
-      } catch {
+        return { token: refreshed.access_token, revision };
+      } catch (error) {
+        if (
+          !(error instanceof TRPCError) ||
+          error.code !== "PRECONDITION_FAILED"
+        )
+          throw new TRPCError({
+            code: "BAD_GATEWAY",
+            message: "Oda is unavailable. Try again.",
+          });
         await tx.odaConnection.update({
           where: { householdId },
           data: { reconnectRequired: true },
