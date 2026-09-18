@@ -83,6 +83,74 @@ const withShoppingList = async (
   }
 };
 
+void test("Dinner additions deduplicate concurrent retries while preserving repeated occurrences and original Undo", () =>
+  withShoppingList(async ({ caller, member, createDinner }) => {
+    const dinner = await createDinner({
+      name: "Bread",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: {
+            create: [
+              { order: 0, name: "Flour", amount: 250, unit: "g" },
+              { order: 1, name: "Salt", amount: 1, unit: "g" },
+            ],
+          },
+        },
+      },
+    });
+    await caller.setUsuallyHave({ name: "Salt", excluded: true });
+    const input = {
+      operationId: crypto.randomUUID(),
+      dinnerIds: [dinner.id, dinner.id],
+    };
+    const [first, concurrent] = await Promise.all([
+      caller.addDinners(input),
+      member.addDinners(input),
+    ]);
+    assert.deepEqual(concurrent.undo, first.undo);
+    assert.equal((await caller.list())[0]?.amount, 500);
+    assert.equal(first.items[0]?.amount, 500);
+    assert.equal(first.recentItems[0]?.name, "Salt");
+    const flour = (await caller.list())[0]!;
+    await caller.edit({ ...flour, amount: 700 });
+    // The first response was lost. Recovery returns its Undo and current rows.
+    const recovered = await caller.addDinners(input);
+    assert.deepEqual(recovered.undo, first.undo);
+    assert.equal(recovered.items[0]?.amount, 700);
+    await caller.undo(recovered.undo);
+    assert.equal((await caller.list())[0]?.amount, 700);
+    assert.deepEqual(await caller.recent(), []);
+    await assert.rejects(
+      caller.addDinners({ ...input, dinnerIds: [dinner.id] }),
+      /different Dinner selections/,
+    );
+  }));
+
+void test("Dinner addition receipts are Household scoped and failed additions leave no committed work", () =>
+  withShoppingList(async ({ caller, createDinner }) => {
+    const dinner = await createDinner({ name: "Household dinner" });
+    const operationId = crypto.randomUUID();
+    await withShoppingList(
+      async ({ caller: other, createDinner: otherDinner }) => {
+        const foreign = await otherDinner({ name: "Other dinner" });
+        const input = { operationId, dinnerIds: [foreign.id, dinner.id] };
+        await assert.rejects(other.addDinners(input));
+        assert.deepEqual(await other.list(), []);
+        const added = await caller.addDinners({
+          operationId,
+          dinnerIds: [dinner.id],
+        });
+        const otherAdded = await other.addDinners({
+          operationId,
+          dinnerIds: [foreign.id],
+        });
+        assert.equal(added.items[0]?.name, "Household dinner");
+        assert.equal(otherAdded.items[0]?.name, "Other dinner");
+      },
+    );
+  }));
+
 void test("Own Items distinguish normalized notes and an edit collision keeps the edited settings and quantities", () =>
   withShoppingList(async ({ caller }) => {
     const duck = await caller.addManual({ name: "Eggs" });
