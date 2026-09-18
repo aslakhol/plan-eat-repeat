@@ -128,6 +128,7 @@ function useShoppingState() {
   );
   return {
     ...edits,
+    isCurrent,
     writes,
     list,
     recent,
@@ -166,6 +167,15 @@ export function useShoppingWrite() {
   const shopping = useContext(ShoppingContext);
   return () => {
     if (!shopping) throw new Error("Shopping session is not ready");
-    return shopping.writes.reserve();
+    const ticket = shopping.writes.reserve();
+    return {
+      ...ticket,
+      ready: ticket.ready.then(() => {
+        if (!shopping.isCurrent()) {
+          ticket.release();
+          throw new Error("Shopping session ended");
+        }
+      }),
+    };
   };
 }
