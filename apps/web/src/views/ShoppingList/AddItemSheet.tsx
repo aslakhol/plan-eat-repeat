@@ -170,6 +170,11 @@ function AddItemContent({
           ))}
         </ResponsiveModalScrollViewport>
       )}
+      {sources.isPending && typing && (
+        <p role="status" className="text-muted-foreground mt-3 text-sm">
+          Loading suggestions…
+        </p>
+      )}
       {sources.isError && query.trim() && (
         <p role="alert" className="text-destructive mt-3 shrink-0 text-sm">
           Could not load suggestions. Try again.
