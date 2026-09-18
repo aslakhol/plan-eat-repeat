@@ -110,16 +110,13 @@ export const saveShoppingItemWithMerges = async (
       include: { ownItem: true },
     }),
   );
-  return { ...saved, mergedIds: Object.fromEntries(destinations) };
+  return { item: saved, mergedIds: Object.fromEntries(destinations) };
 };
 
 export async function saveShoppingItem(
   ...args: Parameters<typeof saveShoppingItemWithMerges>
 ) {
-  const { mergedIds: _mergedIds, ...saved } = await saveShoppingItemWithMerges(
-    ...args,
-  );
-  return saved;
+  return (await saveShoppingItemWithMerges(...args)).item;
 }
 
 export const setUsuallyHave = async (

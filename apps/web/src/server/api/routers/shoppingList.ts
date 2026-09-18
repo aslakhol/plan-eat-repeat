@@ -38,7 +38,10 @@ async function shoppingEditResult(
   tx: Prisma.TransactionClient,
   householdId: string,
   originalOwnItemId: string,
-  saved: Awaited<ReturnType<typeof saveShoppingItemWithMerges>>,
+  {
+    item: saved,
+    mergedIds,
+  }: Awaited<ReturnType<typeof saveShoppingItemWithMerges>>,
 ) {
   const affectedOwnItemIds = [...new Set([originalOwnItemId, saved.ownItemId])];
   const where = { householdId, ownItemId: { in: affectedOwnItemIds } };
@@ -48,6 +51,7 @@ async function shoppingEditResult(
   ]);
   return {
     ...saved,
+    mergedIds,
     affectedOwnItemIds,
     items: items.map(shoppingItemDetails),
     recentItems: recentItems.map(shoppingItemDetails),
@@ -90,7 +94,7 @@ export const shoppingListRouter = createTRPCRouter({
         );
         return {
           ...result,
-          mergedIds: { ...result.mergedIds, [input.id]: saved.id },
+          mergedIds: { ...result.mergedIds, [input.id]: saved.item.id },
         };
       }),
     ),

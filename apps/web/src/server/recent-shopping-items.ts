@@ -78,5 +78,5 @@ export async function editRecentShoppingItem(
       },
     }),
   );
-  return { ...saved, mergedIds: Object.fromEntries(destinations) };
+  return { item: saved, mergedIds: Object.fromEntries(destinations) };
 }
