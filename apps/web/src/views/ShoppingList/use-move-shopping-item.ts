@@ -16,6 +16,7 @@ type PendingMove = {
 export function useMoveShoppingItem(
   list: ShoppingItem[],
   recent: ShoppingItem[],
+  isCurrent: () => boolean,
 ) {
   const utils = api.useUtils();
   const moves = useRef(new Map<string, PendingMove>());
@@ -51,9 +52,10 @@ export function useMoveShoppingItem(
     try {
       // A second tap changes the destination immediately. Save this item's
       // requests in order, using the real ID returned by the previous move.
-      while (move.desiredRecent !== move.confirmed.recent) {
+      while (isCurrent() && move.desiredRecent !== move.confirmed.recent) {
         const before = move.confirmed;
         const saved = await mutation.mutateAsync(before);
+        if (!isCurrent()) return;
         if (!saved.recent) void utils.oda.transfer.invalidate();
         move.confirmed = saved;
         move.ids.add(saved.item.id);
@@ -61,6 +63,7 @@ export function useMoveShoppingItem(
           utils.shoppingList.list.cancel(),
           utils.shoppingList.recent.cancel(),
         ]);
+        if (!isCurrent()) return;
         utils.shoppingList.list.setData(undefined, (items = []) =>
           saved.recent
             ? items.filter((item) => item.id !== before.item.id)
@@ -78,6 +81,7 @@ export function useMoveShoppingItem(
         publish();
       }
     } catch {
+      if (!isCurrent()) return;
       // An intervening tap may already have returned to the confirmed state.
       if (move.desiredRecent !== move.confirmed.recent) {
         toast({
@@ -87,6 +91,7 @@ export function useMoveShoppingItem(
         });
       }
     } finally {
+      if (!isCurrent()) return;
       moves.current.delete(move.key);
       publish();
       // Refresh in the background; another tap never waits for these queries.

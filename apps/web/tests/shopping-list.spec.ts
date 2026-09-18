@@ -1,5 +1,5 @@
 import { createPrismaClient } from "@planeatrepeat/db";
-import { expect, test, type Locator } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { createRequire } from "node:module";
 import { ensureSignedIn } from "./capture-support";
 
@@ -10,6 +10,13 @@ loadEnvConfig(process.cwd());
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
 const db = createPrismaClient(process.env.DATABASE_URL);
 test.afterAll(async () => db.$disconnect());
+
+async function leaveAndReturnToShopping(page: Page) {
+  await page.getByRole("link", { name: /^(Cookbook|Dinners)$/ }).click();
+  await expect(page).toHaveURL(/\/dinners$/);
+  await page.getByRole("link", { name: "Shopping list", exact: true }).click();
+  await expect(page).toHaveURL(/\/shopping-list$/);
+}
 
 test("the navigation plus follows the current page", async ({ page }) => {
   await ensureSignedIn(page);
@@ -396,8 +403,10 @@ test("shopping previews keep typing through blur, scroll to choices, and support
     await last.scrollIntoViewIfNeeded();
     const refresh = Promise.withResolvers<void>();
     const refreshRequested = Promise.withResolvers<void>();
+    let additions = 0;
     await page.route("**/api/trpc/**", async (route) => {
       if (route.request().url().includes("shoppingList.addSelection")) {
+        additions += 1;
         refreshRequested.resolve();
         await refresh.promise;
       }
@@ -407,6 +416,10 @@ test("shopping previews keep typing through blur, scroll to choices, and support
       await last.click();
       await refreshRequested.promise;
       await expect(drawer).not.toBeVisible();
+      await leaveAndReturnToShopping(page);
+      await expect(
+        page.getByRole("button", { name: "Share", exact: true }),
+      ).toBeDisabled();
       await expect(
         page
           .getByRole("list", { name: "Shopping items", exact: true })
@@ -419,6 +432,7 @@ test("shopping previews keep typing through blur, scroll to choices, and support
       await page.unrouteAll({ behavior: "wait" });
     }
     await page.waitForLoadState("networkidle");
+    expect(additions).toBe(1);
     await expect(input).toHaveValue("Next purchase");
     await page.keyboard.press("Escape");
     await expect(drawer).not.toBeVisible();
@@ -531,6 +545,7 @@ test("a failed optimistic shopping add preserves overlapping successful adds", a
     await page.goto("/shopping-list");
     await add(failedName);
     await requested.promise;
+    await leaveAndReturnToShopping(page);
     await expect(items.getByText(failedName, { exact: true })).toBeVisible();
     await add(savedName);
     const saved = page.getByRole("button", {
@@ -735,6 +750,7 @@ test("the same shopping item can be moved repeatedly before earlier requests fin
     await page.goto("/shopping-list");
     await remove.click();
     await removeRequested.promise;
+    await leaveAndReturnToShopping(page);
     await expect(restore).toBeEnabled({ timeout: 500 });
     await restore.click();
     await expect(remove).toBeEnabled({ timeout: 500 });
@@ -849,6 +865,7 @@ test("a failed queued move returns to the last saved state and can be retried", 
     await expect(restore).toBeEnabled({ timeout: 500 });
     addGate.resolve();
     await removeRequested.promise;
+    await leaveAndReturnToShopping(page);
     await expect(restore).toBeEnabled();
     removeGate.resolve();
     await expect(remove).toBeEnabled();

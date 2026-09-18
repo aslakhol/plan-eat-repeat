@@ -24,8 +24,7 @@ import { api, type RouterOutputs } from "~/utils/api";
 import { toast } from "~/components/ui/use-toast";
 import { cn } from "~/lib/utils";
 import { shoppingIdentity } from "~/lib/shopping-matching";
-import { useAddShoppingItem } from "./use-add-shopping-item";
-import { useMoveShoppingItem } from "./use-move-shopping-item";
+import { useShopping } from "./ShoppingProvider";
 import { AddItemSheet } from "./AddItemSheet";
 import { EditItemSheet } from "./EditItemSheet";
 import { DinnerPicker, type ShoppingDinnerSource } from "./DinnerPicker";
@@ -102,7 +101,16 @@ function ShoppingItemRow({
 
 export function ShoppingListView() {
   const { close } = useShoppingItemCreation();
-  const { addItem, pendingItems } = useAddShoppingItem();
+  const {
+    addItem,
+    pendingItems,
+    list,
+    recent,
+    moveItem,
+    items,
+    recentItems: movedRecentItems,
+    pendingOwnIds,
+  } = useShopping();
   const pendingIdentities = new Set(
     pendingItems.map((item) => shoppingIdentity(item.name, item.note)),
   );
@@ -129,22 +137,6 @@ export function ShoppingListView() {
   }, []);
   const menuRef = useRef<HTMLDetailsElement>(null);
   const utils = api.useUtils();
-  const list = api.shoppingList.list.useQuery(undefined, {
-    refetchInterval: 2000,
-    refetchOnWindowFocus: "always",
-    refetchOnReconnect: "always",
-  });
-  const recent = api.shoppingList.recent.useQuery(undefined, {
-    refetchInterval: 2000,
-    refetchOnWindowFocus: "always",
-    refetchOnReconnect: "always",
-  });
-  const {
-    moveItem,
-    items,
-    recentItems: movedRecentItems,
-    pendingOwnIds,
-  } = useMoveShoppingItem(list.data ?? [], recent.data ?? []);
   // Keep pending additions separate so polling cannot erase them, and only
   // deduplicate the unspecified requirements created by autocomplete.
   const optimisticItems = pendingItems.filter((item, index) => {

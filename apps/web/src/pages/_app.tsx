@@ -26,6 +26,8 @@ const quicksand = Quicksand({
   variable: "--font-quicksand",
 });
 
+import { ShoppingProvider } from "~/views/ShoppingList/ShoppingProvider";
+
 import { AppLayout } from "~/components/AppLayout";
 
 if (
@@ -85,7 +87,9 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
         <main
           className={`${youngSerif.variable} ${quicksand.variable} font-sans`}
         >
-          {getLayout(<Component {...pageProps} />)}
+          <ShoppingProvider>
+            {getLayout(<Component {...pageProps} />)}
+          </ShoppingProvider>
           <Toaster />
         </main>
       </ClerkProvider>
