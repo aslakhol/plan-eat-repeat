@@ -13,6 +13,7 @@ import {
   type ReactNode,
 } from "react";
 import { api } from "~/utils/api";
+import { useAddDinners } from "./use-add-dinners";
 import { useAddShoppingItem } from "./use-add-shopping-item";
 import { useEditShoppingItem } from "./use-edit-shopping-item";
 import { useMoveShoppingItem } from "./use-move-shopping-item";
@@ -112,6 +113,7 @@ function useShoppingState() {
     writes,
   );
   const additions = useAddShoppingItem(isCurrent, writes);
+  const dinnerAdditions = useAddDinners(isCurrent, writes);
   const moves = useMoveShoppingItem(
     edits.editedItems,
     edits.editedRecentItems,
@@ -133,6 +135,7 @@ function useShoppingState() {
     list,
     recent,
     ...additions,
+    ...dinnerAdditions,
     ...moves,
     ...removals,
   };
@@ -178,4 +181,8 @@ export function useShoppingWrite() {
       }),
     };
   };
+}
+
+export function useShoppingDinnerAdditions() {
+  return useContext(ShoppingContext);
 }
