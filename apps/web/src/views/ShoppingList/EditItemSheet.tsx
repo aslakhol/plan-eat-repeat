@@ -23,6 +23,10 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { cn } from "~/lib/utils";
+import {
+  shoppingCategoriesQueryOptions,
+  shoppingChoicesQueryOptions,
+} from "~/lib/query-freshness";
 import { api, type RouterOutputs } from "~/utils/api";
 import type { OdaProductPreference } from "~/lib/oda-product";
 import { OdaProductPicker } from "./OdaProductPicker";
@@ -37,9 +41,7 @@ export function EditItemSheet({
   recent?: boolean;
 }) {
   const categories = api.shoppingList.categories.useQuery(undefined, {
-    refetchInterval: 2000,
-    refetchOnWindowFocus: "always",
-    refetchOnReconnect: "always",
+    ...shoppingCategoriesQueryOptions,
     retry: false,
   });
   const [name, setName] = useState(item.name);
@@ -71,17 +73,12 @@ export function EditItemSheet({
             description: item.ownItem.odaProductDescription!,
           }
         : null;
-  const preferences = api.shoppingList.usuallyHave.useQuery(undefined, {
-    refetchInterval: 2000,
-    refetchOnWindowFocus: "always",
-    refetchOnReconnect: "always",
-    retry: false,
+  const excluded = excludedDraft ?? item.ownItem.usuallyHave;
+  const [unitFocused, setUnitFocused] = useState(false);
+  const ingredientNames = api.dinner.ingredientNames.useQuery(undefined, {
+    ...shoppingChoicesQueryOptions,
+    enabled: unitFocused,
   });
-  const excluded =
-    excludedDraft ??
-    preferences.data?.some((preference) => preference.id === item.ownItemId) ??
-    false;
-  const ingredientNames = api.dinner.ingredientNames.useQuery();
   const utils = api.useUtils();
   const onSuccess = async () => {
     await utils.shoppingList.invalidate();
@@ -247,6 +244,7 @@ export function EditItemSheet({
                 <Input
                   id="edit-shopping-unit"
                   list="shopping-item-units"
+                  onFocus={() => setUnitFocused(true)}
                   autoComplete="off"
                   value={unit}
                   onChange={(event) => setUnit(event.target.value)}
@@ -290,7 +288,7 @@ export function EditItemSheet({
                     placeholder={
                       categories.data?.find(
                         (category) => category.id === item.ownItem.category,
-                      )?.label
+                      )?.label ?? "Loading categories…"
                     }
                   />
                 </SelectTrigger>
@@ -303,6 +301,14 @@ export function EditItemSheet({
                 </SelectContent>
               </Select>
             </div>
+            {categories.isError && (
+              <p role="alert" className="text-destructive text-sm">
+                Could not load categories.
+                <button type="button" onClick={() => void categories.refetch()}>
+                  Try again
+                </button>
+              </p>
+            )}
             {odaConnected && (
               <OdaProductPicker
                 product={odaProduct}
@@ -322,7 +328,6 @@ export function EditItemSheet({
                 type="button"
                 role="switch"
                 aria-checked={excluded}
-                disabled={!preferences.isSuccess}
                 onClick={() => setExcludedDraft(!excluded)}
                 className={cn(
                   "focus-visible:ring-ring relative h-7 w-12 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50",
@@ -338,12 +343,6 @@ export function EditItemSheet({
                 />
               </button>
             </div>
-            {preferences.isError && (
-              <p role="alert" className="text-destructive text-sm">
-                Could not load Usually have. Check your connection and try
-                again.
-              </p>
-            )}
             {(edit.isError || deleteOwnItem.isError) && (
               <p role="alert" className="text-destructive text-sm">
                 Could not{" "}
