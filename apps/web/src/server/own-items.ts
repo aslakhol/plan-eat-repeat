@@ -26,6 +26,42 @@ const catalogs = {
   ),
 } satisfies Record<ShoppingLanguage, Map<string, ShoppingCategory>>;
 
+export function ownItemCategory(
+  shoppingLanguage: ShoppingLanguage,
+  remembered: Iterable<{ normalizedName: string; category: ShoppingCategory }>,
+  normalizedName: string,
+  initialCategory?: ShoppingCategory,
+): ShoppingCategory {
+  const catalog = catalogs[shoppingLanguage];
+  let category: ShoppingCategory | undefined =
+    initialCategory ?? catalog.get(normalizedName);
+  if (!category) {
+    const candidates = new Map<string, ShoppingCategory>(catalog);
+    for (const product of remembered) {
+      candidates.set(product.normalizedName, product.category);
+    }
+    let longest = 0;
+    let earliest = Infinity;
+    for (const [phrase, candidate] of candidates) {
+      if (candidate === "OWN_ITEMS") continue;
+      const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const position = normalizedName.search(
+        new RegExp(`(?<![\\p{L}\\p{N}_])${escaped}(?![\\p{L}\\p{N}_])`, "u"),
+      );
+      if (position < 0) continue;
+      if (
+        phrase.length > longest ||
+        (phrase.length === longest && position < earliest)
+      ) {
+        category = candidate;
+        longest = phrase.length;
+        earliest = position;
+      }
+    }
+  }
+  return category ?? "OWN_ITEMS";
+}
+
 export const rememberOwnItem = async (
   tx: Prisma.TransactionClient,
   householdId: string,
@@ -52,37 +88,19 @@ export const rememberOwnItem = async (
     where: { id: householdId },
     select: { shoppingLanguage: true },
   });
-  const catalog = catalogs[shoppingLanguage];
-  let category: ShoppingCategory | undefined =
-    initialCategory ?? catalog.get(normalizedName);
-  if (!category) {
-    const remembered = await tx.ownItem.findMany({
-      where: { householdId },
-      select: { normalizedName: true, category: true },
-    });
-    const candidates = new Map<string, ShoppingCategory>(catalog);
-    for (const product of remembered) {
-      candidates.set(product.normalizedName, product.category);
-    }
-    let longest = 0;
-    let earliest = Infinity;
-    for (const [phrase, candidate] of candidates) {
-      if (candidate === "OWN_ITEMS") continue;
-      const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const position = normalizedName.search(
-        new RegExp(`(?<![\\p{L}\\p{N}_])${escaped}(?![\\p{L}\\p{N}_])`, "u"),
-      );
-      if (position < 0) continue;
-      if (
-        phrase.length > longest ||
-        (phrase.length === longest && position < earliest)
-      ) {
-        category = candidate;
-        longest = phrase.length;
-        earliest = position;
-      }
-    }
-  }
+  const remembered =
+    (initialCategory ?? catalogs[shoppingLanguage].get(normalizedName))
+      ? []
+      : await tx.ownItem.findMany({
+          where: { householdId },
+          select: { normalizedName: true, category: true },
+        });
+  const category = ownItemCategory(
+    shoppingLanguage,
+    remembered,
+    normalizedName,
+    initialCategory,
+  );
   return tx.ownItem.create({
     data: {
       householdId,
