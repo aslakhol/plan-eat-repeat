@@ -14,6 +14,7 @@ import {
 } from "react";
 import { api } from "~/utils/api";
 import { useAddShoppingItem } from "./use-add-shopping-item";
+import { useEditShoppingItem } from "./use-edit-shopping-item";
 import { useMoveShoppingItem } from "./use-move-shopping-item";
 
 type ShoppingState = ReturnType<typeof useShoppingState>;
@@ -100,11 +101,21 @@ function useShoppingState() {
   };
   const list = api.shoppingList.list.useQuery(undefined, queryOptions);
   const recent = api.shoppingList.recent.useQuery(undefined, queryOptions);
+  const edits = useEditShoppingItem(
+    list.data ?? [],
+    recent.data ?? [],
+    isCurrent,
+  );
   return {
+    ...edits,
     list,
     recent,
     ...useAddShoppingItem(isCurrent),
-    ...useMoveShoppingItem(list.data ?? [], recent.data ?? [], isCurrent),
+    ...useMoveShoppingItem(
+      edits.editedItems,
+      edits.editedRecentItems,
+      isCurrent,
+    ),
   };
 }
 

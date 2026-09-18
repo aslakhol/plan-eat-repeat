@@ -28,6 +28,7 @@ import {
   shoppingChoicesQueryOptions,
 } from "~/lib/query-freshness";
 import { shoppingIdentity } from "~/lib/shopping-matching";
+import type { ShoppingEdit } from "./use-edit-shopping-item";
 import { useShopping } from "./ShoppingProvider";
 import { AddItemSheet } from "./AddItemSheet";
 import { EditItemSheet } from "./EditItemSheet";
@@ -114,6 +115,10 @@ export function ShoppingListView() {
     items,
     recentItems: movedRecentItems,
     pendingOwnIds,
+    editingOwnIds,
+    failedEdits,
+    editItem,
+    dismissFailedEdit,
   } = useShopping();
   const pendingIdentities = new Set(
     pendingItems.map((item) => shoppingIdentity(item.name, item.note)),
@@ -130,6 +135,8 @@ export function ShoppingListView() {
   const [editingItem, setEditingItem] = useState<{
     item: ShoppingItem;
     recent: boolean;
+    draft?: ShoppingEdit["input"];
+    failedKey?: string;
   } | null>(null);
   const [recentOpen, setRecentOpen] = useState(true);
   useEffect(() => {
@@ -173,7 +180,7 @@ export function ShoppingListView() {
   const hasItems = items.length > 0 || optimisticItems.length > 0;
   const oda = useOdaShopping(
     items,
-    pendingItems.length > 0 || pendingOwnIds.size > 0,
+    pendingItems.length > 0 || pendingOwnIds.size > 0 || editingOwnIds.size > 0,
   );
   const recentItems = movedRecentItems.filter(
     (item) => !pendingIdentities.has(shoppingIdentity(item.name, item.note)),
@@ -194,6 +201,7 @@ export function ShoppingListView() {
     !items.length ||
     pendingItems.length > 0 ||
     pendingOwnIds.size > 0 ||
+    editingOwnIds.size > 0 ||
     sharing;
   const shoppingText = [
     "Shopping list",
@@ -290,7 +298,8 @@ export function ShoppingListView() {
               disabled={
                 !items.length ||
                 pendingItems.length > 0 ||
-                pendingOwnIds.size > 0
+                pendingOwnIds.size > 0 ||
+                editingOwnIds.size > 0
               }
               onClick={() => {
                 menuRef.current?.removeAttribute("open");
@@ -307,6 +316,30 @@ export function ShoppingListView() {
         </DetailsMenu>
       </header>
       <OdaTransferProgress oda={oda} />
+      {failedEdits.map((edit) => (
+        <div key={edit.key} role="alert" className="mb-3 rounded-xl border p-3">
+          <p>Could not save {edit.input.name}.</p>
+          <Button variant="ghost" onClick={() => editItem(edit, edit.key)}>
+            Retry
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() =>
+              setEditingItem({
+                item: edit.item,
+                recent: edit.recent,
+                draft: edit.input,
+                failedKey: edit.key,
+              })
+            }
+          >
+            Edit failed draft
+          </Button>
+          <Button variant="ghost" onClick={() => dismissFailedEdit(edit.key)}>
+            Dismiss
+          </Button>
+        </div>
+      ))}
 
       {list.isPending && (
         <div role="status" className="flex items-center justify-center py-8">
@@ -364,9 +397,12 @@ export function ShoppingListView() {
                       shoppingIdentity(item.name, item.note),
                     )
                   }
-                  moveDisabled={pendingIdentities.has(
-                    shoppingIdentity(item.name, item.note),
-                  )}
+                  moveDisabled={
+                    editingOwnIds.has(item.ownItemId) ||
+                    pendingIdentities.has(
+                      shoppingIdentity(item.name, item.note),
+                    )
+                  }
                   onMove={() => moveItem({ item, recent: false })}
                   onEdit={() => setEditingItem({ item, recent: false })}
                 />
@@ -434,6 +470,7 @@ export function ShoppingListView() {
                 key={item.id}
                 item={item}
                 recent
+                moveDisabled={editingOwnIds.has(item.ownItemId)}
                 pending={pendingOwnIds.has(item.ownItemId)}
                 onMove={() => moveItem({ item, recent: true })}
                 onEdit={() => setEditingItem({ item, recent: true })}
@@ -452,6 +489,9 @@ export function ShoppingListView() {
       )}
       {editingItem && (
         <EditItemSheet
+          key={editingItem.failedKey ?? editingItem.item.id}
+          draft={editingItem.draft}
+          failedKey={editingItem.failedKey}
           item={editingItem.item}
           recent={editingItem.recent}
           onClose={() => setEditingItem(null)}
