@@ -3,6 +3,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { api, type RouterInputs, type RouterOutputs } from "~/utils/api";
 
+import type { ShoppingWrites } from "./shopping-writes";
+
 type Item = RouterOutputs["shoppingList"]["list"][number];
 export type ShoppingEdit = {
   item: Item;
@@ -10,6 +12,7 @@ export type ShoppingEdit = {
   input: RouterInputs["shoppingList"]["edit"];
 };
 type Edit = ShoppingEdit & {
+  ticket: ReturnType<ShoppingWrites["reserve"]>;
   key: string;
   ownIds: string[];
   conflictKeys: string[];
@@ -56,9 +59,15 @@ export function useEditShoppingItem(
   list: Item[],
   recent: Item[],
   isCurrent: () => boolean,
+  writes: ShoppingWrites,
 ) {
   const utils = api.useUtils();
   const queue = useRef<Edit[]>([]);
+  const mergedOwnIds = useRef(new Map<string, string>());
+  const resolveOwnId = (id: string): string => {
+    const replacement = mergedOwnIds.current.get(id);
+    return replacement ? resolveOwnId(replacement) : id;
+  };
   const [pending, setPending] = useState<Edit[]>([]);
   const [failedEdits, setFailedEdits] = useState<Edit[]>([]);
   const publish = () => setPending([...queue.current]);
@@ -73,6 +82,8 @@ export function useEditShoppingItem(
   });
   const save = async (edit: Edit) => {
     try {
+      await edit.ticket.ready;
+      if (!isCurrent()) return;
       const saved = await mutation.mutateAsync(edit);
       if (!isCurrent()) return;
       await Promise.all([
@@ -83,6 +94,10 @@ export function useEditShoppingItem(
       ]);
       if (!isCurrent()) return;
       const affected = new Set(saved.affectedOwnItemIds);
+      for (const id of affected) {
+        if (id !== saved.ownItemId)
+          mergedOwnIds.current.set(id, saved.ownItemId);
+      }
       utils.shoppingList.list.setData(undefined, (items = []) => [
         ...items.filter((item) => !affected.has(item.ownItemId)),
         ...saved.items,
@@ -219,6 +234,7 @@ export function useEditShoppingItem(
         },
       }));
     } finally {
+      edit.ticket.release();
       if (!isCurrent()) return;
       queue.current = queue.current.filter((next) => next.key !== edit.key);
       publish();
@@ -264,6 +280,7 @@ export function useEditShoppingItem(
     ];
     queue.current.push({
       ...draft,
+      ticket: writes.reserve(),
       key: crypto.randomUUID(),
       ownIds,
       conflictKeys,
@@ -297,6 +314,7 @@ export function useEditShoppingItem(
     }, items);
   };
   return {
+    resolveOwnId,
     editedItems: overlay(list, false),
     editedRecentItems: overlay(recent, true),
     editItem,

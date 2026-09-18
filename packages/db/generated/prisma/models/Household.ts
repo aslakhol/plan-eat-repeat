@@ -214,6 +214,7 @@ export type HouseholdWhereInput = {
   aiImportSpendAttributionKey?: Prisma.StringFilter<"Household"> | string
   createdAt?: Prisma.DateTimeFilter<"Household"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Household"> | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionListRelationFilter
   Dinners?: Prisma.DinnerListRelationFilter
   Members?: Prisma.MembershipListRelationFilter
   Invite?: Prisma.InviteListRelationFilter
@@ -236,6 +237,7 @@ export type HouseholdOrderByWithRelationInput = {
   aiImportSpendAttributionKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionOrderByRelationAggregateInput
   Dinners?: Prisma.DinnerOrderByRelationAggregateInput
   Members?: Prisma.MembershipOrderByRelationAggregateInput
   Invite?: Prisma.InviteOrderByRelationAggregateInput
@@ -261,6 +263,7 @@ export type HouseholdWhereUniqueInput = Prisma.AtLeast<{
   importInstructions?: Prisma.StringNullableFilter<"Household"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Household"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Household"> | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionListRelationFilter
   Dinners?: Prisma.DinnerListRelationFilter
   Members?: Prisma.MembershipListRelationFilter
   Invite?: Prisma.InviteListRelationFilter
@@ -313,6 +316,7 @@ export type HouseholdCreateInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
@@ -335,6 +339,7 @@ export type HouseholdUncheckedCreateInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
@@ -357,6 +362,7 @@ export type HouseholdUpdateInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
@@ -379,6 +385,7 @@ export type HouseholdUncheckedUpdateInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
@@ -529,6 +536,20 @@ export type HouseholdUpdateOneRequiredWithoutRecentShoppingItemsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.HouseholdUpdateToOneWithWhereWithoutRecentShoppingItemsInput, Prisma.HouseholdUpdateWithoutRecentShoppingItemsInput>, Prisma.HouseholdUncheckedUpdateWithoutRecentShoppingItemsInput>
 }
 
+export type HouseholdCreateNestedOneWithoutShoppingDinnerAdditionsInput = {
+  create?: Prisma.XOR<Prisma.HouseholdCreateWithoutShoppingDinnerAdditionsInput, Prisma.HouseholdUncheckedCreateWithoutShoppingDinnerAdditionsInput>
+  connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutShoppingDinnerAdditionsInput
+  connect?: Prisma.HouseholdWhereUniqueInput
+}
+
+export type HouseholdUpdateOneRequiredWithoutShoppingDinnerAdditionsNestedInput = {
+  create?: Prisma.XOR<Prisma.HouseholdCreateWithoutShoppingDinnerAdditionsInput, Prisma.HouseholdUncheckedCreateWithoutShoppingDinnerAdditionsInput>
+  connectOrCreate?: Prisma.HouseholdCreateOrConnectWithoutShoppingDinnerAdditionsInput
+  upsert?: Prisma.HouseholdUpsertWithoutShoppingDinnerAdditionsInput
+  connect?: Prisma.HouseholdWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.HouseholdUpdateToOneWithWhereWithoutShoppingDinnerAdditionsInput, Prisma.HouseholdUpdateWithoutShoppingDinnerAdditionsInput>, Prisma.HouseholdUncheckedUpdateWithoutShoppingDinnerAdditionsInput>
+}
+
 export type EnumShoppingLanguageFieldUpdateOperationsInput = {
   set?: $Enums.ShoppingLanguage
 }
@@ -629,6 +650,7 @@ export type HouseholdCreateWithoutDinnersInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
@@ -650,6 +672,7 @@ export type HouseholdUncheckedCreateWithoutDinnersInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
@@ -687,6 +710,7 @@ export type HouseholdUpdateWithoutDinnersInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
@@ -708,6 +732,7 @@ export type HouseholdUncheckedUpdateWithoutDinnersInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
@@ -729,6 +754,7 @@ export type HouseholdCreateWithoutOwnItemsInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
@@ -750,6 +776,7 @@ export type HouseholdUncheckedCreateWithoutOwnItemsInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
@@ -787,6 +814,7 @@ export type HouseholdUpdateWithoutOwnItemsInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
@@ -808,6 +836,7 @@ export type HouseholdUncheckedUpdateWithoutOwnItemsInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
@@ -829,6 +858,7 @@ export type HouseholdCreateWithoutShoppingItemsInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
@@ -850,6 +880,7 @@ export type HouseholdUncheckedCreateWithoutShoppingItemsInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
@@ -887,6 +918,7 @@ export type HouseholdUpdateWithoutShoppingItemsInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
@@ -908,6 +940,7 @@ export type HouseholdUncheckedUpdateWithoutShoppingItemsInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
@@ -929,6 +962,7 @@ export type HouseholdCreateWithoutRecentShoppingItemsInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
@@ -950,6 +984,7 @@ export type HouseholdUncheckedCreateWithoutRecentShoppingItemsInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
@@ -987,6 +1022,7 @@ export type HouseholdUpdateWithoutRecentShoppingItemsInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
@@ -1008,12 +1044,117 @@ export type HouseholdUncheckedUpdateWithoutRecentShoppingItemsInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
   OwnItems?: Prisma.OwnItemUncheckedUpdateManyWithoutHouseholdNestedInput
   ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUncheckedUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUncheckedUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedUpdateManyWithoutHouseholdNestedInput
+}
+
+export type HouseholdCreateWithoutShoppingDinnerAdditionsInput = {
+  id?: string
+  name: string
+  slug: string
+  publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
+  importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
+  Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
+  Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
+  OwnItems?: Prisma.OwnItemCreateNestedManyWithoutHouseholdInput
+  ShoppingItems?: Prisma.ShoppingItemCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationCreateNestedManyWithoutHouseholdInput
+}
+
+export type HouseholdUncheckedCreateWithoutShoppingDinnerAdditionsInput = {
+  id?: string
+  name: string
+  slug: string
+  publicSlug?: string | null
+  shoppingLanguage?: $Enums.ShoppingLanguage
+  importInstructions?: string | null
+  aiImportSpendAttributionKey?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
+  Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
+  Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
+  OwnItems?: Prisma.OwnItemUncheckedCreateNestedManyWithoutHouseholdInput
+  ShoppingItems?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutHouseholdInput
+  odaTransfers?: Prisma.OdaTransferUncheckedCreateNestedManyWithoutHouseholdInput
+  odaConnection?: Prisma.OdaConnectionUncheckedCreateNestedOneWithoutHouseholdInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUncheckedCreateNestedManyWithoutHouseholdInput
+}
+
+export type HouseholdCreateOrConnectWithoutShoppingDinnerAdditionsInput = {
+  where: Prisma.HouseholdWhereUniqueInput
+  create: Prisma.XOR<Prisma.HouseholdCreateWithoutShoppingDinnerAdditionsInput, Prisma.HouseholdUncheckedCreateWithoutShoppingDinnerAdditionsInput>
+}
+
+export type HouseholdUpsertWithoutShoppingDinnerAdditionsInput = {
+  update: Prisma.XOR<Prisma.HouseholdUpdateWithoutShoppingDinnerAdditionsInput, Prisma.HouseholdUncheckedUpdateWithoutShoppingDinnerAdditionsInput>
+  create: Prisma.XOR<Prisma.HouseholdCreateWithoutShoppingDinnerAdditionsInput, Prisma.HouseholdUncheckedCreateWithoutShoppingDinnerAdditionsInput>
+  where?: Prisma.HouseholdWhereInput
+}
+
+export type HouseholdUpdateToOneWithWhereWithoutShoppingDinnerAdditionsInput = {
+  where?: Prisma.HouseholdWhereInput
+  data: Prisma.XOR<Prisma.HouseholdUpdateWithoutShoppingDinnerAdditionsInput, Prisma.HouseholdUncheckedUpdateWithoutShoppingDinnerAdditionsInput>
+}
+
+export type HouseholdUpdateWithoutShoppingDinnerAdditionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
+  importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
+  Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
+  Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
+  OwnItems?: Prisma.OwnItemUpdateManyWithoutHouseholdNestedInput
+  ShoppingItems?: Prisma.ShoppingItemUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUpdateManyWithoutHouseholdNestedInput
+  odaTransfers?: Prisma.OdaTransferUpdateManyWithoutHouseholdNestedInput
+  odaConnection?: Prisma.OdaConnectionUpdateOneWithoutHouseholdNestedInput
+  odaAuthorizations?: Prisma.OdaAuthorizationUpdateManyWithoutHouseholdNestedInput
+}
+
+export type HouseholdUncheckedUpdateWithoutShoppingDinnerAdditionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  publicSlug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shoppingLanguage?: Prisma.EnumShoppingLanguageFieldUpdateOperationsInput | $Enums.ShoppingLanguage
+  importInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
+  Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
+  Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
+  AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
+  OwnItems?: Prisma.OwnItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  ShoppingItems?: Prisma.ShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
+  RecentShoppingItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutHouseholdNestedInput
   odaTransfers?: Prisma.OdaTransferUncheckedUpdateManyWithoutHouseholdNestedInput
   odaConnection?: Prisma.OdaConnectionUncheckedUpdateOneWithoutHouseholdNestedInput
   odaAuthorizations?: Prisma.OdaAuthorizationUncheckedUpdateManyWithoutHouseholdNestedInput
@@ -1029,6 +1170,7 @@ export type HouseholdCreateWithoutMembersInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
@@ -1050,6 +1192,7 @@ export type HouseholdUncheckedCreateWithoutMembersInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
@@ -1087,6 +1230,7 @@ export type HouseholdUpdateWithoutMembersInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
@@ -1108,6 +1252,7 @@ export type HouseholdUncheckedUpdateWithoutMembersInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
@@ -1129,6 +1274,7 @@ export type HouseholdCreateWithoutAiImportAttemptsInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
@@ -1150,6 +1296,7 @@ export type HouseholdUncheckedCreateWithoutAiImportAttemptsInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
@@ -1187,6 +1334,7 @@ export type HouseholdUpdateWithoutAiImportAttemptsInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
@@ -1208,6 +1356,7 @@ export type HouseholdUncheckedUpdateWithoutAiImportAttemptsInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
@@ -1229,6 +1378,7 @@ export type HouseholdCreateWithoutInviteInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptCreateNestedManyWithoutHouseholdInput
@@ -1250,6 +1400,7 @@ export type HouseholdUncheckedCreateWithoutInviteInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedCreateNestedManyWithoutHouseholdInput
@@ -1287,6 +1438,7 @@ export type HouseholdUpdateWithoutInviteInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUpdateManyWithoutHouseholdNestedInput
@@ -1308,6 +1460,7 @@ export type HouseholdUncheckedUpdateWithoutInviteInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   AiImportAttempts?: Prisma.AiImportAttemptUncheckedUpdateManyWithoutHouseholdNestedInput
@@ -1329,6 +1482,7 @@ export type HouseholdCreateWithoutOdaConnectionInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
@@ -1350,6 +1504,7 @@ export type HouseholdUncheckedCreateWithoutOdaConnectionInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
@@ -1387,6 +1542,7 @@ export type HouseholdUpdateWithoutOdaConnectionInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
@@ -1408,6 +1564,7 @@ export type HouseholdUncheckedUpdateWithoutOdaConnectionInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
@@ -1429,6 +1586,7 @@ export type HouseholdCreateWithoutOdaAuthorizationsInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
@@ -1450,6 +1608,7 @@ export type HouseholdUncheckedCreateWithoutOdaAuthorizationsInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
@@ -1487,6 +1646,7 @@ export type HouseholdUpdateWithoutOdaAuthorizationsInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
@@ -1508,6 +1668,7 @@ export type HouseholdUncheckedUpdateWithoutOdaAuthorizationsInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
@@ -1529,6 +1690,7 @@ export type HouseholdCreateWithoutOdaTransfersInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteCreateNestedManyWithoutHouseholdInput
@@ -1550,6 +1712,7 @@ export type HouseholdUncheckedCreateWithoutOdaTransfersInput = {
   aiImportSpendAttributionKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedCreateNestedManyWithoutHouseholdInput
   Dinners?: Prisma.DinnerUncheckedCreateNestedManyWithoutHouseholdInput
   Members?: Prisma.MembershipUncheckedCreateNestedManyWithoutHouseholdInput
   Invite?: Prisma.InviteUncheckedCreateNestedManyWithoutHouseholdInput
@@ -1587,6 +1750,7 @@ export type HouseholdUpdateWithoutOdaTransfersInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUpdateManyWithoutHouseholdNestedInput
@@ -1608,6 +1772,7 @@ export type HouseholdUncheckedUpdateWithoutOdaTransfersInput = {
   aiImportSpendAttributionKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  shoppingDinnerAdditions?: Prisma.ShoppingDinnerAdditionUncheckedUpdateManyWithoutHouseholdNestedInput
   Dinners?: Prisma.DinnerUncheckedUpdateManyWithoutHouseholdNestedInput
   Members?: Prisma.MembershipUncheckedUpdateManyWithoutHouseholdNestedInput
   Invite?: Prisma.InviteUncheckedUpdateManyWithoutHouseholdNestedInput
@@ -1625,6 +1790,7 @@ export type HouseholdUncheckedUpdateWithoutOdaTransfersInput = {
  */
 
 export type HouseholdCountOutputType = {
+  shoppingDinnerAdditions: number
   Dinners: number
   Members: number
   Invite: number
@@ -1637,6 +1803,7 @@ export type HouseholdCountOutputType = {
 }
 
 export type HouseholdCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  shoppingDinnerAdditions?: boolean | HouseholdCountOutputTypeCountShoppingDinnerAdditionsArgs
   Dinners?: boolean | HouseholdCountOutputTypeCountDinnersArgs
   Members?: boolean | HouseholdCountOutputTypeCountMembersArgs
   Invite?: boolean | HouseholdCountOutputTypeCountInviteArgs
@@ -1656,6 +1823,13 @@ export type HouseholdCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Ex
    * Select specific fields to fetch from the HouseholdCountOutputType
    */
   select?: Prisma.HouseholdCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * HouseholdCountOutputType without action
+ */
+export type HouseholdCountOutputTypeCountShoppingDinnerAdditionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ShoppingDinnerAdditionWhereInput
 }
 
 /**
@@ -1732,6 +1906,7 @@ export type HouseholdSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   aiImportSpendAttributionKey?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  shoppingDinnerAdditions?: boolean | Prisma.Household$shoppingDinnerAdditionsArgs<ExtArgs>
   Dinners?: boolean | Prisma.Household$DinnersArgs<ExtArgs>
   Members?: boolean | Prisma.Household$MembersArgs<ExtArgs>
   Invite?: boolean | Prisma.Household$InviteArgs<ExtArgs>
@@ -1783,6 +1958,7 @@ export type HouseholdSelectScalar = {
 
 export type HouseholdOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "slug" | "publicSlug" | "shoppingLanguage" | "importInstructions" | "aiImportSpendAttributionKey" | "createdAt" | "updatedAt", ExtArgs["result"]["household"]>
 export type HouseholdInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  shoppingDinnerAdditions?: boolean | Prisma.Household$shoppingDinnerAdditionsArgs<ExtArgs>
   Dinners?: boolean | Prisma.Household$DinnersArgs<ExtArgs>
   Members?: boolean | Prisma.Household$MembersArgs<ExtArgs>
   Invite?: boolean | Prisma.Household$InviteArgs<ExtArgs>
@@ -1801,6 +1977,7 @@ export type HouseholdIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
 export type $HouseholdPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Household"
   objects: {
+    shoppingDinnerAdditions: Prisma.$ShoppingDinnerAdditionPayload<ExtArgs>[]
     Dinners: Prisma.$DinnerPayload<ExtArgs>[]
     Members: Prisma.$MembershipPayload<ExtArgs>[]
     Invite: Prisma.$InvitePayload<ExtArgs>[]
@@ -2216,6 +2393,7 @@ readonly fields: HouseholdFieldRefs;
  */
 export interface Prisma__HouseholdClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  shoppingDinnerAdditions<T extends Prisma.Household$shoppingDinnerAdditionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$shoppingDinnerAdditionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ShoppingDinnerAdditionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   Dinners<T extends Prisma.Household$DinnersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$DinnersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DinnerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   Members<T extends Prisma.Household$MembersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$MembersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   Invite<T extends Prisma.Household$InviteArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Household$InviteArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InvitePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2649,6 +2827,30 @@ export type HouseholdDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Limit how many Households to delete.
    */
   limit?: number
+}
+
+/**
+ * Household.shoppingDinnerAdditions
+ */
+export type Household$shoppingDinnerAdditionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ShoppingDinnerAddition
+   */
+  select?: Prisma.ShoppingDinnerAdditionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ShoppingDinnerAddition
+   */
+  omit?: Prisma.ShoppingDinnerAdditionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ShoppingDinnerAdditionInclude<ExtArgs> | null
+  where?: Prisma.ShoppingDinnerAdditionWhereInput
+  orderBy?: Prisma.ShoppingDinnerAdditionOrderByWithRelationInput | Prisma.ShoppingDinnerAdditionOrderByWithRelationInput[]
+  cursor?: Prisma.ShoppingDinnerAdditionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ShoppingDinnerAdditionScalarFieldEnum | Prisma.ShoppingDinnerAdditionScalarFieldEnum[]
 }
 
 /**
