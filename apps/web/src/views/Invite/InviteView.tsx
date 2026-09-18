@@ -1,4 +1,4 @@
-import { UtensilsCrossed } from "lucide-react";
+import { LoadingIndicator } from "~/components/LoadingIndicator";
 
 import { api } from "../../utils/api";
 import { NoInvite } from "./NoInvite";
@@ -13,9 +13,10 @@ export const InviteView = ({ inviteId }: Props) => {
 
   if (inviteQuery.isPending) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center">
-        <UtensilsCrossed className="animate-spin" />
-      </div>
+      <LoadingIndicator
+        label="Loading invitation…"
+        className="h-[50vh] w-full"
+      />
     );
   }
 
@@ -43,9 +44,10 @@ export const LoggedInInvite = ({ inviteId }: LoggedInInviteProps) => {
 
   if (inviteQuery.isPending || householdQuery.isPending) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center">
-        <UtensilsCrossed className="animate-spin" />
-      </div>
+      <LoadingIndicator
+        label="Loading invitation…"
+        className="h-[50vh] w-full"
+      />
     );
   }
 
