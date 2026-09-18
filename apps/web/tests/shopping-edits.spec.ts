@@ -150,6 +150,7 @@ test("a held merge response reconciles identities and queues another edit withou
   const saved = Promise.withResolvers<void>();
   const mutationGate = Promise.withResolvers<void>();
   const readGate = Promise.withResolvers<void>();
+  const secondGate = Promise.withResolvers<void>();
   let blockReads = false;
   let writes = 0;
   await page.route("**/api/trpc/**", async (route) => {
@@ -163,7 +164,7 @@ test("a held merge response reconciles identities and queues another edit withou
       if (writes === 1) {
         saved.resolve();
         await mutationGate.promise;
-      }
+      } else if (writes === 2) await secondGate.promise;
       await route.fulfill({ response });
     } else if (
       blockReads &&
@@ -199,6 +200,16 @@ test("a held merge response reconciles identities and queues another edit withou
     await editor.getByLabel("Amount", { exact: true }).fill("2");
     await editor.getByRole("button", { name: "Done", exact: true }).click();
     await expect(editor).not.toBeVisible();
+    await page
+      .getByRole("button", {
+        name: `Edit quantity for ${targetName}`,
+        exact: true,
+      })
+      .filter({ hasText: "2 kg" })
+      .click();
+    await editor.getByRole("switch").click();
+    await editor.getByRole("button", { name: "Done", exact: true }).click();
+    await expect(editor).not.toBeVisible();
     expect(writes).toBe(1);
     blockReads = true;
     mutationGate.resolve();
@@ -212,6 +223,8 @@ test("a held merge response reconciles identities and queues another edit withou
         exact: true,
       }),
     ).toHaveText("2 kg");
+    secondGate.resolve();
+    await expect.poll(() => writes).toBe(3);
     await expect(
       page.getByRole("button", {
         name: `Remove ${targetName} from list`,
@@ -223,6 +236,7 @@ test("a held merge response reconciles identities and queues another edit withou
     ).toHaveCount(0);
   } finally {
     mutationGate.resolve();
+    secondGate.resolve();
     readGate.resolve();
     await page.unrouteAll({ behavior: "wait" });
     await db.ownItem.deleteMany({
@@ -262,8 +276,9 @@ test("queued renames order a newly established shared identity", async ({
   let writes = 0;
   await page.route("**/api/trpc/shoppingList.edit?*", async (route) => {
     const index = writes++;
+    if (index === 0) await gates[0]!.promise;
     const response = await route.fetch();
-    if (gates[index]) await gates[index]!.promise;
+    if (index === 1) await gates[1]!.promise;
     await route.fulfill({ response });
   });
   const editor = page.getByRole("dialog", { name: "Edit item", exact: true });
@@ -298,6 +313,9 @@ test("queued renames order a newly established shared identity", async ({
     await expect(
       page.getByRole("button", { name: `Remove ${y} from list`, exact: true }),
     ).toBeEnabled();
+    await expect(
+      page.getByRole("button", { name: `Edit quantity for ${y}`, exact: true }),
+    ).toHaveText("3");
     await expect(
       page.getByRole("button", { name: `Edit ${x}`, exact: true }),
     ).toHaveCount(0);

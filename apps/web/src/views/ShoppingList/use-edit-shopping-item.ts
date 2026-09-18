@@ -14,10 +14,11 @@ type Edit = ShoppingEdit & {
   ownIds: string[];
   conflictKeys: string[];
   running: boolean;
+  quantityChanged: boolean;
   before: { list: Item[]; recent: Item[] };
 };
 
-function applyDraft(item: Item, edit: ShoppingEdit): Item {
+function applyDraft(item: Item, edit: Edit): Item {
   if (item.ownItemId !== edit.item.ownItemId) return item;
   const input = edit.input;
   const name = input.name.trim();
@@ -45,7 +46,7 @@ function applyDraft(item: Item, edit: ShoppingEdit): Item {
     name,
     note,
     normalizedName: ownItem.normalizedName,
-    ...(item.id === input.id
+    ...(item.id === input.id && edit.quantityChanged
       ? { amount: input.amount, unit: normalizeUnit(input.unit) }
       : {}),
   };
@@ -129,6 +130,13 @@ export function useEditShoppingItem(
         const id = sourceChanged
           ? (saved.mergedIds[next.input.id] ?? next.input.id)
           : next.input.id;
+        const canonical = (next.recent ? saved.recentItems : saved.items).find(
+          (item) => item.id === id,
+        );
+        const quantity =
+          sourceChanged && canonical && !next.quantityChanged
+            ? { amount: canonical.amount, unit: canonical.unit }
+            : {};
         return {
           ...next,
           item: sourceChanged
@@ -139,7 +147,7 @@ export function useEditShoppingItem(
                 ownItem: saved.ownItem,
               }
             : next.item,
-          input: { ...next.input, id },
+          input: { ...next.input, id, ...quantity },
           before: {
             list: [
               ...next.before.list.filter(
@@ -260,6 +268,9 @@ export function useEditShoppingItem(
       ownIds,
       conflictKeys,
       running: false,
+      quantityChanged:
+        draft.input.amount !== draft.item.amount ||
+        normalizeUnit(draft.input.unit) !== draft.item.unit,
       before: {
         list: overlay(list, false).filter((item) =>
           ownIds.includes(item.ownItemId),
