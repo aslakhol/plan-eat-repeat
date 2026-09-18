@@ -9,17 +9,23 @@ import {
 import { useRouter } from "next/router";
 import { cn } from "../lib/utils";
 import Link from "next/link";
+import { ShoppingItemCreationTrigger } from "./ShoppingList/ShoppingItemCreationContext";
 import { useClerk } from "@clerk/nextjs";
 
-export const BottomNav = ({
-  onAdd,
-  addLabel,
-}: {
-  onAdd: () => void;
-  addLabel: string;
-}) => {
+export const BottomNav = ({ onAddDinner }: { onAddDinner: () => void }) => {
   const router = useRouter();
   const { user } = useClerk();
+  const isShoppingList = router.pathname === "/shopping-list";
+  const addButton = (
+    <button
+      type="button"
+      aria-label={isShoppingList ? "Add shopping item" : "Add Dinner"}
+      className="bg-primary text-primary-foreground focus-visible:ring-ring relative -top-3 mx-auto flex size-[52px] items-center justify-center rounded-full shadow-[0_6px_18px_rgba(194,85,47,0.3)] transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+      onClick={isShoppingList ? undefined : onAddDinner}
+    >
+      <Plus aria-hidden="true" className="size-7" />
+    </button>
+  );
 
   const onClick = !user?.publicMetadata.householdId
     ? async () => {
@@ -63,16 +69,14 @@ export const BottomNav = ({
                 <item.icon aria-hidden="true" className="size-6" />
               </Link>
 
-              {item.url === "/dinners" && (
-                <button
-                  type="button"
-                  aria-label={addLabel}
-                  className="bg-primary text-primary-foreground focus-visible:ring-ring relative -top-3 mx-auto flex size-[52px] items-center justify-center rounded-full shadow-[0_6px_18px_rgba(194,85,47,0.3)] transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                  onClick={onAdd}
-                >
-                  <Plus aria-hidden="true" className="size-7" />
-                </button>
-              )}
+              {item.url === "/dinners" &&
+                (isShoppingList ? (
+                  <ShoppingItemCreationTrigger>
+                    {addButton}
+                  </ShoppingItemCreationTrigger>
+                ) : (
+                  addButton
+                ))}
             </Fragment>
           );
         })}

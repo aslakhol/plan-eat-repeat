@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useRef, useState } from "react";
 import {
-  ResponsiveModal,
   ResponsiveModalContent,
   ResponsiveModalDescription,
   ResponsiveModalScrollViewport,
   ResponsiveModalTitle,
 } from "~/components/ResponsiveModal";
+import { useShoppingItemCreation } from "./ShoppingItemCreationContext";
 import { Input } from "~/components/ui/input";
 import {
   shoppingIdentity,
@@ -17,55 +17,28 @@ import { type ShoppingDinnerSource } from "./DinnerPicker";
 import { type ShoppingPreview } from "./use-add-shopping-item";
 
 export function AddItemSheet({
-  open,
-  onOpenChange,
   onSelectDinners,
   onAdd,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   onAdd: (preview: ShoppingPreview) => void;
   onSelectDinners: (source: ShoppingDinnerSource) => void;
 }) {
-  const [mobileStyle, setMobileStyle] = useState<CSSProperties>();
-
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!open || !viewport) return;
-
-    const updateViewport = () => {
-      // Use the fixed containing block's height, not innerHeight: iOS browser
-      // chrome can make the two differ. Include any visual viewport panning.
-      setMobileStyle({
-        bottom: `max(0px, calc(100% - ${viewport.height + viewport.offsetTop}px))`,
-        maxHeight: Math.min(600, viewport.height - 16),
-      });
-    };
-    updateViewport();
-    viewport.addEventListener("resize", updateViewport);
-    viewport.addEventListener("scroll", updateViewport);
-    return () => {
-      viewport.removeEventListener("resize", updateViewport);
-      viewport.removeEventListener("scroll", updateViewport);
-    };
-  }, [open]);
+  const { close, restoreFocus } = useShoppingItemCreation();
 
   return (
-    <ResponsiveModal open={open} onOpenChange={onOpenChange}>
-      <ResponsiveModalContent
-        mobileStyle={mobileStyle}
-        onOpenAutoFocus={(event) => event.preventDefault()}
-        className="flex h-auto flex-col gap-0 rounded-t-3xl bg-white p-5 pb-8 has-[[data-typing=true]]:h-[65dvh] has-[[data-typing=true]]:max-h-[600px] md:rounded-2xl md:pt-10"
-      >
-        <AddItemContent
-          onAdd={(preview) => {
-            onAdd(preview);
-            onOpenChange(false);
-          }}
-          onSelectDinners={onSelectDinners}
-        />
-      </ResponsiveModalContent>
-    </ResponsiveModal>
+    <ResponsiveModalContent
+      onOpenAutoFocus={(event) => event.preventDefault()}
+      onCloseAutoFocus={restoreFocus}
+      className="flex h-auto flex-col gap-0 rounded-t-3xl bg-white p-5 pb-8 has-[[data-typing=true]]:h-[65dvh] has-[[data-typing=true]]:max-h-[600px] md:rounded-2xl md:pt-10"
+    >
+      <AddItemContent
+        onAdd={(preview) => {
+          onAdd(preview);
+          close();
+        }}
+        onSelectDinners={onSelectDinners}
+      />
+    </ResponsiveModalContent>
   );
 }
 

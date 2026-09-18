@@ -53,17 +53,27 @@ export const ResponsiveModal = ({
 export const ResponsiveModalTrigger = ({
   children,
   asChild,
+  onClick,
 }: {
   children: React.ReactNode;
   asChild?: boolean;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
 }) => {
   const isMobile = useIsMobile();
 
   if (isMobile) {
-    return <DrawerTrigger asChild={asChild}>{children}</DrawerTrigger>;
+    return (
+      <DrawerTrigger asChild={asChild} onClick={onClick}>
+        {children}
+      </DrawerTrigger>
+    );
   }
 
-  return <DialogTrigger asChild={asChild}>{children}</DialogTrigger>;
+  return (
+    <DialogTrigger asChild={asChild} onClick={onClick}>
+      {children}
+    </DialogTrigger>
+  );
 };
 
 export const ResponsiveModalContent = ({
@@ -72,14 +82,14 @@ export const ResponsiveModalContent = ({
   scrollViewport = false,
   scrollViewportClassName,
   onOpenAutoFocus,
-  mobileStyle,
+  onCloseAutoFocus,
 }: {
   children: React.ReactNode;
   className?: string;
   scrollViewport?: boolean;
   scrollViewportClassName?: string;
   onOpenAutoFocus?: (event: Event) => void;
-  mobileStyle?: React.CSSProperties;
+  onCloseAutoFocus?: (event: Event) => void;
 }) => {
   const isMobile = useIsMobile();
 
@@ -88,7 +98,7 @@ export const ResponsiveModalContent = ({
       <DrawerContent
         className={cn(className, "!overflow-visible")}
         onOpenAutoFocus={onOpenAutoFocus}
-        style={mobileStyle}
+        onCloseAutoFocus={onCloseAutoFocus}
       >
         {scrollViewport ? (
           <ResponsiveModalScrollViewport className={scrollViewportClassName}>
@@ -110,6 +120,7 @@ export const ResponsiveModalContent = ({
       )}
       showCloseButton={false}
       onOpenAutoFocus={onOpenAutoFocus}
+      onCloseAutoFocus={onCloseAutoFocus}
     >
       {scrollViewport ? (
         <ResponsiveModalScrollViewport className={scrollViewportClassName}>
