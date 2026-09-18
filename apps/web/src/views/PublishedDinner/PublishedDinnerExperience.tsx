@@ -32,6 +32,7 @@ export const PublishedDinnerExperience = ({
   upsell: string;
 }) => {
   const router = useRouter();
+  const utils = api.useUtils();
   const { isLoaded, isSignedIn } = useAuth();
   const { session } = useSession();
   const [today] = useState(startOfToday);
@@ -66,7 +67,11 @@ export const PublishedDinnerExperience = ({
       setSaveResult(result);
       setSaveResultOpen(true);
       if (hasSaveIntent) await clearSaveIntent();
-      await statusQuery.refetch();
+      await Promise.all([
+        statusQuery.refetch(),
+        utils.dinner.summaries.invalidate(),
+        utils.dinner.ingredientNames.invalidate(),
+      ]);
     },
     onError: (error) => {
       if (error.data?.code === "NOT_FOUND") {
@@ -92,9 +97,7 @@ export const PublishedDinnerExperience = ({
 
   const detectedDinner = saveResult?.dinner ?? statusQuery.data?.dinner;
   const createdNewCopy = saveResult?.createdNewCopy ?? false;
-  const actionLabel = saveMutation.isPending
-    ? "Saving…"
-    : "Add to my cookbook";
+  const actionLabel = saveMutation.isPending ? "Saving…" : "Add to my cookbook";
 
   const actionButton = (
     <Button
