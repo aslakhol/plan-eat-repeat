@@ -10,8 +10,12 @@ import {
 } from "@planeatrepeat/shared";
 import { rememberOwnItem, shoppingItemDetails } from "../../own-items";
 import { z } from "zod";
-import { ShoppingCategory } from "@planeatrepeat/db";
-import { saveShoppingItem, setUsuallyHave } from "../../shopping-list";
+import { type Prisma, ShoppingCategory } from "@planeatrepeat/db";
+import {
+  saveShoppingItem,
+  saveShoppingItemWithMerges,
+  setUsuallyHave,
+} from "../../shopping-list";
 import {
   editRecentShoppingItem,
   rememberShoppingItems,
@@ -28,6 +32,27 @@ const itemFields = z.object({
     .nullable()
     .transform((note) => (note === "" ? null : note)),
 });
+
+// An edit may change several requirements and delete their former identities.
+async function shoppingEditResult(
+  tx: Prisma.TransactionClient,
+  householdId: string,
+  originalOwnItemId: string,
+  saved: Awaited<ReturnType<typeof saveShoppingItemWithMerges>>,
+) {
+  const affectedOwnItemIds = [...new Set([originalOwnItemId, saved.ownItemId])];
+  const where = { householdId, ownItemId: { in: affectedOwnItemIds } };
+  const [items, recentItems] = await Promise.all([
+    tx.shoppingItem.findMany({ where, include: { ownItem: true } }),
+    tx.recentShoppingItem.findMany({ where, include: { ownItem: true } }),
+  ]);
+  return {
+    ...saved,
+    affectedOwnItemIds,
+    items: items.map(shoppingItemDetails),
+    recentItems: recentItems.map(shoppingItemDetails),
+  };
+}
 
 export const shoppingListRouter = createTRPCRouter({
   categories: protectedProcedureWithHousehold.query(async ({ ctx }) => {
@@ -51,9 +76,23 @@ export const shoppingListRouter = createTRPCRouter({
       }),
     )
     .mutation(({ ctx, input }) =>
-      ctx.db.$transaction((tx) =>
-        editRecentShoppingItem(tx, ctx.householdId, input),
-      ),
+      ctx.db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
+        const original = await tx.recentShoppingItem.findUniqueOrThrow({
+          where: { id: input.id, householdId: ctx.householdId },
+        });
+        const saved = await editRecentShoppingItem(tx, ctx.householdId, input);
+        const result = await shoppingEditResult(
+          tx,
+          ctx.householdId,
+          original.ownItemId,
+          saved,
+        );
+        return {
+          ...result,
+          mergedIds: { ...result.mergedIds, [input.id]: saved.id },
+        };
+      }),
     ),
 
   removeRecent: protectedProcedureWithHousehold
@@ -376,7 +415,21 @@ export const shoppingListRouter = createTRPCRouter({
     )
     .mutation(({ ctx, input }) =>
       ctx.db.$transaction(async (tx) => {
-        return saveShoppingItem(tx, ctx.householdId, input);
+        await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
+        const original = await tx.shoppingItem.findUniqueOrThrow({
+          where: { id: input.id, householdId: ctx.householdId },
+        });
+        const saved = await saveShoppingItemWithMerges(
+          tx,
+          ctx.householdId,
+          input,
+        );
+        return shoppingEditResult(
+          tx,
+          ctx.householdId,
+          original.ownItemId,
+          saved,
+        );
       }),
     ),
 

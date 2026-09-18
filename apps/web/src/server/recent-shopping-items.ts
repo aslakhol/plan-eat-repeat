@@ -61,13 +61,13 @@ export async function editRecentShoppingItem(
     original.ownItemId,
     input,
   );
-  await combineShoppingRequirements(
+  const destinations = await combineShoppingRequirements(
     tx,
     householdId,
     ownItem.id,
     reassignedRequirementIds,
   );
-  return shoppingItemDetails(
+  const saved = shoppingItemDetails(
     await tx.recentShoppingItem.update({
       where: { ownItemId: ownItem.id, householdId },
       include: { ownItem: true },
@@ -78,4 +78,5 @@ export async function editRecentShoppingItem(
       },
     }),
   );
+  return { ...saved, mergedIds: Object.fromEntries(destinations) };
 }

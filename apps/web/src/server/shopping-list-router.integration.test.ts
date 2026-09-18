@@ -399,7 +399,15 @@ void test("recent edits that collide keep the edited settings and combine every 
     await caller.remove({ id: hen.id });
     const [recentHen] = await caller.recent();
     await caller.addRecent({ id: recentHen!.id });
-    await caller.editRecent({ ...recentHen!, note: " DUCK ", amount: 3 });
+    const saved = await caller.editRecent({
+      ...recentHen!,
+      note: " DUCK ",
+      amount: 3,
+    });
+    assert.equal(saved.items.length, 1);
+    assert.equal(saved.items[0]?.amount, 18);
+    assert.equal(saved.recentItems[0]?.amount, 3);
+    assert.equal(saved.mergedIds[recentHen!.id], saved.id);
     const [active] = await caller.list();
     assert.equal(active?.amount, 18);
     assert.equal(active?.ownItem.category, "MEAT");
@@ -429,6 +437,16 @@ void test("an older source requirement converts into the destination unit when O
     assert.equal(merged.id, destination.id);
     assert.equal(merged.amount, 1500);
     assert.equal(merged.unit, "g");
+    assert.deepEqual(
+      merged.affectedOwnItemIds.sort(),
+      [source.ownItemId, destination.ownItemId].sort(),
+    );
+    assert.deepEqual(
+      merged.items.map(({ id, amount }) => ({ id, amount })),
+      [{ id: destination.id, amount: 1500 }],
+    );
+    assert.equal(merged.mergedIds[source.id], destination.id);
+    assert.deepEqual(merged.recentItems, []);
   }));
 
 void test("Shopping Language defaults to English and ordinary members update only their Household", () =>

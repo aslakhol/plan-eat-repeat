@@ -56,7 +56,7 @@ export async function combineShoppingRequirements(
   return destinations;
 }
 
-export const saveShoppingItem = async (
+export const saveShoppingItemWithMerges = async (
   tx: Prisma.TransactionClient,
   householdId: string,
   input: ShoppingRequirement & {
@@ -104,13 +104,23 @@ export const saveShoppingItem = async (
     ownItem.id,
     [...reassignedRequirementIds, item.id],
   );
-  return shoppingItemDetails(
+  const saved = shoppingItemDetails(
     await tx.shoppingItem.findUniqueOrThrow({
       where: { id: destinations.get(item.id) ?? item.id, householdId },
       include: { ownItem: true },
     }),
   );
+  return { ...saved, mergedIds: Object.fromEntries(destinations) };
 };
+
+export async function saveShoppingItem(
+  ...args: Parameters<typeof saveShoppingItemWithMerges>
+) {
+  const { mergedIds: _mergedIds, ...saved } = await saveShoppingItemWithMerges(
+    ...args,
+  );
+  return saved;
+}
 
 export const setUsuallyHave = async (
   tx: Prisma.TransactionClient,
