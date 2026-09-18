@@ -33,6 +33,7 @@ test("edits dismiss immediately, survive stale reads and navigation, and retain 
       },
     });
   const gate = Promise.withResolvers<void>();
+  const queuedGate = Promise.withResolvers<void>();
   let firstRequested = false;
   let writes = 0;
   await page.route("**/api/trpc/shoppingList.edit?*", async (route) => {
@@ -41,7 +42,10 @@ test("edits dismiss immediately, survive stale reads and navigation, and retain 
       firstRequested = true;
       await gate.promise;
       await route.abort("failed");
-    } else await route.continue();
+    } else {
+      if (writes === 3) await queuedGate.promise;
+      await route.continue();
+    }
   });
   const editor = page.getByRole("dialog", { name: "Edit item", exact: true });
   const edit = async (name: string, amount: string) => {
@@ -49,6 +53,7 @@ test("edits dismiss immediately, survive stale reads and navigation, and retain 
       .getByRole("button", { name: `Edit ${name}`, exact: true })
       .click();
     await editor.getByLabel("Amount", { exact: true }).fill(amount);
+    if (amount === "2") await editor.getByRole("switch").click();
     await editor.getByRole("button", { name: "Done", exact: true }).click();
     await expect(editor).not.toBeVisible();
   };
@@ -76,6 +81,12 @@ test("edits dismiss immediately, survive stale reads and navigation, and retain 
     ).toHaveText("3");
     gate.resolve();
     await expect.poll(() => writes).toBe(3);
+    await page
+      .getByRole("button", { name: `Edit ${names[0]}`, exact: true })
+      .click();
+    await expect(editor.getByRole("switch")).not.toBeChecked();
+    await editor.getByRole("button", { name: "Done", exact: true }).click();
+    queuedGate.resolve();
     await expect(
       page.getByRole("button", { name: `Edit quantity for ${names[1]}` }),
     ).toHaveText("4");
@@ -102,6 +113,7 @@ test("edits dismiss immediately, survive stale reads and navigation, and retain 
     ).toHaveCount(0);
   } finally {
     gate.resolve();
+    queuedGate.resolve();
     await page.unrouteAll({ behavior: "wait" });
     await db.ownItem.deleteMany({
       where: { householdId, name: { startsWith: marker } },

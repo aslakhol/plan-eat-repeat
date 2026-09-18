@@ -186,7 +186,30 @@ export function useEditShoppingItem(
       )
         void utils.oda.transfer.invalidate();
     } catch {
-      if (isCurrent()) setFailedEdits((edits) => [...edits, edit]);
+      if (!isCurrent()) return;
+      setFailedEdits((edits) => [...edits, edit]);
+      // Later quantity-only edits must not retain this failed category or preference.
+      queue.current = queue.current.map((next) => ({
+        ...next,
+        before: {
+          list: [
+            ...next.before.list.filter(
+              (item) => !edit.ownIds.includes(item.ownItemId),
+            ),
+            ...edit.before.list.filter((item) =>
+              next.ownIds.includes(item.ownItemId),
+            ),
+          ],
+          recent: [
+            ...next.before.recent.filter(
+              (item) => !edit.ownIds.includes(item.ownItemId),
+            ),
+            ...edit.before.recent.filter((item) =>
+              next.ownIds.includes(item.ownItemId),
+            ),
+          ],
+        },
+      }));
     } finally {
       if (!isCurrent()) return;
       queue.current = queue.current.filter((next) => next.key !== edit.key);
@@ -249,16 +272,19 @@ export function useEditShoppingItem(
     publish();
     startReady();
   };
-  const overlay = (items: Item[], isRecent: boolean) =>
-    pending.reduce(
-      (items, edit) => [
-        ...items.filter((item) => !edit.ownIds.includes(item.ownItemId)),
-        ...(isRecent ? edit.before.recent : edit.before.list).map((item) =>
-          applyDraft(item, edit),
+  const overlay = (items: Item[], isRecent: boolean) => {
+    const frozenIds = new Set<string>();
+    return pending.reduce((items, edit) => {
+      const freeze = new Set(edit.ownIds.filter((id) => !frozenIds.has(id)));
+      edit.ownIds.forEach((id) => frozenIds.add(id));
+      return [
+        ...items.filter((item) => !freeze.has(item.ownItemId)),
+        ...(isRecent ? edit.before.recent : edit.before.list).filter((item) =>
+          freeze.has(item.ownItemId),
         ),
-      ],
-      items,
-    );
+      ].map((item) => applyDraft(item, edit));
+    }, items);
+  };
   return {
     editedItems: overlay(list, false),
     editedRecentItems: overlay(recent, true),
