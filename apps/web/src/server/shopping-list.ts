@@ -10,6 +10,24 @@ export type ShoppingRequirement = {
   unit: string | null;
 };
 
+export function combineShoppingQuantity(
+  destination: Pick<ShoppingRequirement, "amount" | "unit">,
+  incoming: Pick<ShoppingRequirement, "amount" | "unit">,
+) {
+  if ((incoming.amount === null) !== (destination.amount === null)) return null;
+  const sameUnit =
+    normalizeUnit(incoming.unit) === normalizeUnit(destination.unit);
+  const converted =
+    incoming.amount === null || sameUnit
+      ? incoming.amount
+      : convertUnitAmount(incoming.amount, incoming.unit, destination.unit);
+  if (!sameUnit && converted === null) return null;
+  // Repeated unspecified requirements with the same unit still deduplicate.
+  return {
+    amount: converted === null ? null : destination.amount! + converted,
+  };
+}
+
 // Keep destination requirements and their units ahead of reassigned or edited rows.
 export async function combineShoppingRequirements(
   tx: Prisma.TransactionClient,
@@ -28,17 +46,9 @@ export async function combineShoppingRequirements(
   for (const item of items) {
     let combined = false;
     for (const destination of kept) {
-      if ((item.amount === null) !== (destination.amount === null)) continue;
-      const sameUnit =
-        normalizeUnit(item.unit) === normalizeUnit(destination.unit);
-      const converted =
-        item.amount === null || sameUnit
-          ? item.amount
-          : convertUnitAmount(item.amount, item.unit, destination.unit);
-      if (!sameUnit && converted === null) continue;
-      // Repeated unspecified requirements with the same unit still deduplicate.
-      const amount =
-        converted === null ? null : destination.amount! + converted;
+      const quantity = combineShoppingQuantity(destination, item);
+      if (!quantity) continue;
+      const { amount } = quantity;
       if (amount !== destination.amount) {
         await tx.shoppingItem.update({
           where: { id: destination.id, householdId },
