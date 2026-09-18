@@ -318,12 +318,19 @@ export const shoppingListRouter = createTRPCRouter({
         await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
         const original = await tx.shoppingItem.findUniqueOrThrow({
           where: { id: input.id, householdId: ctx.householdId },
+          include: { ownItem: true },
         });
         const saved = await saveShoppingItemWithMerges(
           tx,
           ctx.householdId,
           input,
         );
+        if (input.usuallyHave === true && !original.ownItem.usuallyHave) {
+          await rememberShoppingItems(tx, ctx.householdId, [saved.item]);
+          await tx.shoppingItem.delete({
+            where: { id: saved.item.id, householdId: ctx.householdId },
+          });
+        }
         return shoppingEditResult(
           tx,
           ctx.householdId,

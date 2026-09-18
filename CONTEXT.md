@@ -83,7 +83,7 @@ The initial assignment of a new Own Item's Shopping Category from a matching Own
 The fallback Shopping Category for names without a category match, labelled "Own Items" and ordered after all other Shopping Categories. Own Items can belong to any Shopping Category.
 
 **Usually Have**:
-The Household's set of Own Items to place in Recently Used instead of its Shopping List when adding from Dinners. Each name-and-note combination has its own setting; membership neither prevents manual additions nor removes existing Shopping Items.
+The Household's set of Own Items to place in Recently Used instead of its Shopping List when adding from Dinners. Each name-and-note combination has its own setting. Turning it on while editing a Shopping Item also moves that item to Recently Used, preserving its saved Amount and Unit. Manual additions remain allowed, and subsequent edits with the setting already on keep the item on the Shopping List.
 
 **Recently Used**:
 The Household's reusable Own Items from Shopping List removals and Usually Have exclusions when adding from Dinners, shown most recent first without time-based expiry, with at most 25 Own Items and none currently on the Shopping List. Each entry retains its latest Amount and Unit for restoration; different Shopping Notes distinguish entries even when their product names match.
