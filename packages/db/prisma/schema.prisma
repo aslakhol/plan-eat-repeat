@@ -166,7 +166,18 @@ model User {
     Memberships Membership[]
 }
 
+model ShoppingDinnerAddition {
+    householdId String
+    operationId String
+    dinnerIds   Int[]
+    result      String
+    household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+    @@id([householdId, operationId])
+}
+
 model Household {
+    shoppingDinnerAdditions ShoppingDinnerAddition[]
     id                          String               @id @default(cuid())
     name                        String
     slug                        String               @unique

@@ -1,4 +1,4 @@
-import { selectRecipeIngredient } from "~/lib/shopping-matching";
+import { addDinnersToShoppingList } from "../../shopping-dinner-additions";
 import { odaProductPreferenceSchema } from "~/lib/oda-product";
 import {
   shoppingSources,
@@ -8,7 +8,7 @@ import {
   shoppingCategoryOrder,
   shoppingCategories,
 } from "@planeatrepeat/shared";
-import { rememberOwnItem, shoppingItemDetails } from "../../own-items";
+import { shoppingItemDetails } from "../../own-items";
 import { z } from "zod";
 import { type Prisma, ShoppingCategory } from "@planeatrepeat/db";
 import {
@@ -235,104 +235,19 @@ export const shoppingListRouter = createTRPCRouter({
     ),
 
   addDinners: protectedProcedureWithHousehold
-    .input(z.object({ dinnerIds: z.array(z.number().int().positive()).min(1) }))
+    .input(
+      z.object({
+        operationId: z
+          .string()
+          .uuid()
+          .default(() => crypto.randomUUID()),
+        dinnerIds: z.array(z.number().int().positive()).min(1),
+      }),
+    )
     .mutation(({ ctx, input }) =>
       ctx.db.$transaction(async (tx) => {
         await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
-        const before = new Map(
-          (
-            await tx.shoppingItem.findMany({
-              where: { householdId: ctx.householdId },
-            })
-          ).map((item) => [item.id, item]),
-        );
-        const recentBefore = new Map(
-          (
-            await tx.recentShoppingItem.findMany({
-              where: { householdId: ctx.householdId },
-            })
-          ).map((item) => [item.ownItemId, item]),
-        );
-        const addedIds = new Set<string>();
-        const skipped: {
-          ownItemId: string;
-          amount: number | null;
-          unit: string | null;
-        }[] = [];
-        const sources = await shoppingSources(tx, ctx.householdId);
-        for (const dinnerId of input.dinnerIds) {
-          const dinner = await tx.dinner.findUniqueOrThrow({
-            where: { id: dinnerId, householdId: ctx.householdId },
-            include: {
-              parts: {
-                orderBy: { order: "asc" },
-                include: { ingredients: { orderBy: { order: "asc" } } },
-              },
-            },
-          });
-          const ingredients = dinner.parts.flatMap((part) => part.ingredients);
-          const requirements =
-            ingredients.length > 0
-              ? ingredients
-              : [{ name: dinner.name, amount: null, unit: null }];
-          for (const item of requirements) {
-            const ownItem =
-              ingredients.length > 0
-                ? await resolveShoppingSelection(
-                    tx,
-                    ctx.householdId,
-                    selectRecipeIngredient(item.name, sources),
-                  )
-                : await rememberOwnItem(tx, ctx.householdId, item.name);
-            if (!sources.some(({ id }) => id === ownItem.id))
-              sources.push(ownItem);
-            if (ownItem.usuallyHave) {
-              skipped.push({
-                ownItemId: ownItem.id,
-                amount: item.amount,
-                unit: item.unit,
-              });
-              continue;
-            }
-            const saved = await saveShoppingItem(tx, ctx.householdId, {
-              name: ownItem.name,
-              amount: item.amount,
-              unit: item.unit,
-              note: ownItem.note,
-            });
-            addedIds.add(saved.id);
-          }
-        }
-        const recent = await rememberShoppingItems(
-          tx,
-          ctx.householdId,
-          skipped,
-        );
-        const added = await tx.shoppingItem.findMany({
-          where: { householdId: ctx.householdId, id: { in: [...addedIds] } },
-        });
-        return {
-          undo: {
-            recent: recent.map(({ id, ownItemId, revision }) => ({
-              id,
-              ownItemId,
-              revision,
-              before: recentBefore.get(ownItemId) ?? null,
-            })),
-            items: added.flatMap((item) => {
-              const original = before.get(item.id);
-              if (original?.revision === item.revision) return [];
-              return [
-                {
-                  id: item.id,
-                  ownItemId: item.ownItemId,
-                  revision: item.revision,
-                  before: original ?? null,
-                },
-              ];
-            }),
-          },
-        };
+        return addDinnersToShoppingList(tx, ctx.householdId, input);
       }),
     ),
 

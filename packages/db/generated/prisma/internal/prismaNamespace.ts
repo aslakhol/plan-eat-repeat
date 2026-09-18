@@ -394,6 +394,7 @@ export const ModelName = {
   Tag: 'Tag',
   Plan: 'Plan',
   User: 'User',
+  ShoppingDinnerAddition: 'ShoppingDinnerAddition',
   Household: 'Household',
   Membership: 'Membership',
   AiImportAttempt: 'AiImportAttempt',
@@ -417,7 +418,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "dinner" | "recipePart" | "recipeIngredient" | "recipeStep" | "ownItem" | "shoppingItem" | "recentShoppingItem" | "tag" | "plan" | "user" | "household" | "membership" | "aiImportAttempt" | "invite" | "odaConnection" | "odaAuthorization" | "odaTransfer" | "odaTransferOperation"
+    modelProps: "dinner" | "recipePart" | "recipeIngredient" | "recipeStep" | "ownItem" | "shoppingItem" | "recentShoppingItem" | "tag" | "plan" | "user" | "shoppingDinnerAddition" | "household" | "membership" | "aiImportAttempt" | "invite" | "odaConnection" | "odaAuthorization" | "odaTransfer" | "odaTransferOperation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1158,6 +1159,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.UserCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.UserCountAggregateOutputType> | number
+        }
+      }
+    }
+    ShoppingDinnerAddition: {
+      payload: Prisma.$ShoppingDinnerAdditionPayload<ExtArgs>
+      fields: Prisma.ShoppingDinnerAdditionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ShoppingDinnerAdditionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShoppingDinnerAdditionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ShoppingDinnerAdditionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShoppingDinnerAdditionPayload>
+        }
+        findFirst: {
+          args: Prisma.ShoppingDinnerAdditionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShoppingDinnerAdditionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ShoppingDinnerAdditionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShoppingDinnerAdditionPayload>
+        }
+        findMany: {
+          args: Prisma.ShoppingDinnerAdditionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShoppingDinnerAdditionPayload>[]
+        }
+        create: {
+          args: Prisma.ShoppingDinnerAdditionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShoppingDinnerAdditionPayload>
+        }
+        createMany: {
+          args: Prisma.ShoppingDinnerAdditionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ShoppingDinnerAdditionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShoppingDinnerAdditionPayload>[]
+        }
+        delete: {
+          args: Prisma.ShoppingDinnerAdditionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShoppingDinnerAdditionPayload>
+        }
+        update: {
+          args: Prisma.ShoppingDinnerAdditionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShoppingDinnerAdditionPayload>
+        }
+        deleteMany: {
+          args: Prisma.ShoppingDinnerAdditionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ShoppingDinnerAdditionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ShoppingDinnerAdditionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShoppingDinnerAdditionPayload>[]
+        }
+        upsert: {
+          args: Prisma.ShoppingDinnerAdditionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShoppingDinnerAdditionPayload>
+        }
+        aggregate: {
+          args: Prisma.ShoppingDinnerAdditionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateShoppingDinnerAddition>
+        }
+        groupBy: {
+          args: Prisma.ShoppingDinnerAdditionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ShoppingDinnerAdditionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ShoppingDinnerAdditionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ShoppingDinnerAdditionCountAggregateOutputType> | number
         }
       }
     }
@@ -1913,6 +1988,16 @@ export const UserScalarFieldEnum = {
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
+export const ShoppingDinnerAdditionScalarFieldEnum = {
+  householdId: 'householdId',
+  operationId: 'operationId',
+  dinnerIds: 'dinnerIds',
+  result: 'result'
+} as const
+
+export type ShoppingDinnerAdditionScalarFieldEnum = (typeof ShoppingDinnerAdditionScalarFieldEnum)[keyof typeof ShoppingDinnerAdditionScalarFieldEnum]
+
+
 export const HouseholdScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -2387,6 +2472,7 @@ export type GlobalOmitConfig = {
   tag?: Prisma.TagOmit
   plan?: Prisma.PlanOmit
   user?: Prisma.UserOmit
+  shoppingDinnerAddition?: Prisma.ShoppingDinnerAdditionOmit
   household?: Prisma.HouseholdOmit
   membership?: Prisma.MembershipOmit
   aiImportAttempt?: Prisma.AiImportAttemptOmit

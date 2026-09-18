@@ -109,6 +109,10 @@ export function ShoppingListView() {
   const {
     addItem,
     pendingItems,
+    pendingDinnerAdditions,
+    failedDinnerAdditions,
+    retryDinnerAddition,
+    dismissDinnerAddition,
     list,
     recent,
     moveItem,
@@ -184,10 +188,14 @@ export function ShoppingListView() {
       )
     );
   });
-  const hasItems = items.length > 0 || optimisticItems.length > 0;
+  const hasItems =
+    items.length > 0 ||
+    optimisticItems.length > 0 ||
+    pendingDinnerAdditions.length > 0;
   const oda = useOdaShopping(
     items,
     pendingItems.length > 0 ||
+      pendingDinnerAdditions.length > 0 ||
       pendingOwnIds.size > 0 ||
       editingOwnIds.size > 0 ||
       pendingRemovals.length > 0,
@@ -199,6 +207,7 @@ export function ShoppingListView() {
   const shareDisabled =
     !items.length ||
     pendingItems.length > 0 ||
+    pendingDinnerAdditions.length > 0 ||
     pendingOwnIds.size > 0 ||
     editingOwnIds.size > 0 ||
     sharing;
@@ -310,6 +319,31 @@ export function ShoppingListView() {
         </DetailsMenu>
       </header>
       <OdaTransferProgress oda={oda} />
+      {pendingDinnerAdditions.map((addition) => (
+        <p key={addition.operationId} role="status" className="mb-3 text-sm">
+          Adding {addition.dinners.map(({ name }) => name).join(", ")}…
+        </p>
+      ))}
+      {failedDinnerAdditions.map((addition) => (
+        <div
+          key={addition.operationId}
+          role="alert"
+          className="mb-3 rounded-xl border p-3"
+        >
+          <p>
+            Could not add {addition.dinners.map(({ name }) => name).join(", ")}.
+          </p>
+          <Button variant="ghost" onClick={() => retryDinnerAddition(addition)}>
+            Retry
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => dismissDinnerAddition(addition.operationId)}
+          >
+            Dismiss
+          </Button>
+        </div>
+      ))}
       {pendingRemovals.map((removal) => (
         <p key={removal.key} role="status" className="mb-3 text-sm">
           {removal.kind === "clear"
