@@ -160,3 +160,11 @@ export function useShopping() {
   return value;
 }
 
+// Dinner controls also mount before the shopping session is ready.
+export function useShoppingWrite() {
+  const shopping = useContext(ShoppingContext);
+  return () => {
+    if (!shopping) throw new Error("Shopping session is not ready");
+    return shopping.writes.reserve();
+  };
+}
