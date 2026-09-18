@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useClerk, SignedIn, SignedOut } from "@clerk/nextjs";
-import { UtensilsCrossed } from "lucide-react";
+import { LoadingIndicator } from "~/components/LoadingIndicator";
 import { api } from "../../utils/api";
 import { LandingView } from "../../views/LandingView";
 import { SettingsView } from "../../views/Settings/SettingsView";
@@ -21,9 +21,10 @@ export default function Settings() {
           <meta name="description" content="The easiest way to plan dinners" />
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <div className="flex h-screen w-screen items-center justify-center">
-          <UtensilsCrossed className="animate-spin" />
-        </div>
+        <LoadingIndicator
+          label="Loading settings…"
+          className="h-[50vh] w-full"
+        />
       </>
     );
   }
