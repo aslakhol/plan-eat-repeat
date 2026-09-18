@@ -30,7 +30,10 @@ import { AddItemSheet } from "./AddItemSheet";
 import { EditItemSheet } from "./EditItemSheet";
 import { DinnerPicker, type ShoppingDinnerSource } from "./DinnerPicker";
 import { DinnerSourceActions } from "./DinnerSourceActions";
-import { useShoppingItemCreation } from "./ShoppingItemCreationContext";
+import {
+  ShoppingItemCreationTrigger,
+  useShoppingItemCreation,
+} from "./ShoppingItemCreationContext";
 
 type ShoppingItem = RouterOutputs["shoppingList"]["list"][number];
 const RECENT_OPEN_KEY = "plan-eat-repeat:recently-used-open";
@@ -98,7 +101,7 @@ function ShoppingItemRow({
 }
 
 export function ShoppingListView() {
-  const { addOpen, setAddOpen } = useShoppingItemCreation();
+  const { close } = useShoppingItemCreation();
   const { addItem, pendingItems } = useAddShoppingItem();
   const pendingIdentities = new Set(
     pendingItems.map((item) => shoppingIdentity(item.name, item.note)),
@@ -107,7 +110,7 @@ export function ShoppingListView() {
     null,
   );
   const openPicker = (source: ShoppingDinnerSource) => {
-    setAddOpen(false);
+    close();
     setPickerSource(source);
   };
   const [clearOpen, setClearOpen] = useState(false);
@@ -317,25 +320,27 @@ export function ShoppingListView() {
           >
             <h2 className="font-serif text-xl">Nothing on the list</h2>
             <div className="flex w-full max-w-sm flex-col gap-2.5">
-              <Button
-                variant="outline"
-                className="h-12 w-full max-w-sm rounded-xl bg-white"
-                onClick={() => setAddOpen(true)}
-              >
-                Add an item
-              </Button>
+              <ShoppingItemCreationTrigger>
+                <Button
+                  variant="outline"
+                  className="h-12 w-full max-w-sm rounded-xl bg-white"
+                >
+                  Add an item
+                </Button>
+              </ShoppingItemCreationTrigger>
               <DinnerSourceActions onSelect={openPicker} />
             </div>
           </div>
         ) : (
           <>
-            <button
-              type="button"
-              onClick={() => setAddOpen(true)}
-              className="border-border text-muted-foreground mb-2 flex min-h-12 w-full items-center gap-2 rounded-[14px] border border-dashed px-3.5 text-sm font-semibold"
-            >
-              <Plus className="size-4" /> Add an item
-            </button>
+            <ShoppingItemCreationTrigger>
+              <button
+                type="button"
+                className="border-border text-muted-foreground mb-2 flex min-h-12 w-full items-center gap-2 rounded-[14px] border border-dashed px-3.5 text-sm font-semibold"
+              >
+                <Plus className="size-4" /> Add an item
+              </button>
+            </ShoppingItemCreationTrigger>
             <ul className="space-y-2" aria-label="Shopping items">
               {items.map((item) => (
                 <ShoppingItemRow
@@ -426,12 +431,7 @@ export function ShoppingListView() {
         </section>
       )}
 
-      <AddItemSheet
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        onAdd={addItem}
-        onSelectDinners={openPicker}
-      />
+      <AddItemSheet onAdd={addItem} onSelectDinners={openPicker} />
       {pickerSource && (
         <DinnerPicker
           initialSource={pickerSource}
