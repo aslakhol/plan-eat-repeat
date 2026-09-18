@@ -17,6 +17,7 @@ import { useAddShoppingItem } from "./use-add-shopping-item";
 import { useEditShoppingItem } from "./use-edit-shopping-item";
 import { useMoveShoppingItem } from "./use-move-shopping-item";
 
+import { useRemoveShoppingItems } from "./use-remove-shopping-items";
 import { createShoppingWrites } from "./shopping-writes";
 
 type ShoppingState = ReturnType<typeof useShoppingState>;
@@ -110,18 +111,28 @@ function useShoppingState() {
     isCurrent,
     writes,
   );
+  const additions = useAddShoppingItem(isCurrent, writes);
+  const moves = useMoveShoppingItem(
+    edits.editedItems,
+    edits.editedRecentItems,
+    isCurrent,
+    writes,
+  );
+  const removals = useRemoveShoppingItems(
+    moves.items,
+    moves.recentItems,
+    additions.pendingItems,
+    writes,
+    isCurrent,
+  );
   return {
     ...edits,
     writes,
     list,
     recent,
-    ...useAddShoppingItem(isCurrent, writes),
-    ...useMoveShoppingItem(
-      edits.editedItems,
-      edits.editedRecentItems,
-      isCurrent,
-      writes,
-    ),
+    ...additions,
+    ...moves,
+    ...removals,
   };
 }
 
@@ -148,3 +159,4 @@ export function useShopping() {
   if (!value) throw new Error("ShoppingProvider is missing");
   return value;
 }
+

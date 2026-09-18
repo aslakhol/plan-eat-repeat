@@ -475,35 +475,53 @@ export const shoppingListRouter = createTRPCRouter({
       }),
     ),
 
-  clear: protectedProcedureWithHousehold.mutation(({ ctx }) =>
-    ctx.db.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
-      const where = { householdId: ctx.householdId };
-      const items = await tx.shoppingItem.findMany({
-        where,
-        orderBy: [
-          { ownItem: { normalizedName: "asc" } },
-          { ownItem: { normalizedNote: "asc" } },
-          { id: "asc" },
-        ],
-      });
-      await rememberShoppingItems(tx, ctx.householdId, items);
-      const removed = await tx.shoppingItem.deleteMany({ where });
-      const recent = await tx.recentShoppingItem.findMany({
-        where,
-        orderBy: [
-          { recentlyUsedAt: "desc" },
-          { ownItem: { normalizedName: "asc" } },
-          { ownItem: { normalizedNote: "asc" } },
-        ],
-        take: 25,
-        include: { ownItem: true },
-      });
-      return {
-        ...removed,
-        removedIds: items.map((item) => item.id),
-        recentItems: recent.map(shoppingItemDetails),
-      };
-    }),
-  ),
+  clear: protectedProcedureWithHousehold
+    .input(
+      z
+        .object({
+          items: z.array(z.object({ id: z.string(), revision: z.string() })),
+        })
+        .optional(),
+    )
+    .mutation(({ ctx, input }) =>
+      ctx.db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
+        const where = {
+          householdId: ctx.householdId,
+          ...(input ? { OR: input.items } : {}),
+        };
+        const items = await tx.shoppingItem.findMany({
+          where,
+          orderBy: [
+            { ownItem: { normalizedName: "asc" } },
+            { ownItem: { normalizedNote: "asc" } },
+            { id: "asc" },
+          ],
+        });
+        await rememberShoppingItems(tx, ctx.householdId, items);
+        const removed = await tx.shoppingItem.deleteMany({ where });
+        const active = await tx.shoppingItem.findMany({
+          where: { householdId: ctx.householdId },
+          select: { ownItemId: true },
+        });
+        const recent = await tx.recentShoppingItem.findMany({
+          where: {
+            householdId: ctx.householdId,
+            ownItemId: { notIn: active.map((item) => item.ownItemId) },
+          },
+          orderBy: [
+            { recentlyUsedAt: "desc" },
+            { ownItem: { normalizedName: "asc" } },
+            { ownItem: { normalizedNote: "asc" } },
+          ],
+          take: 25,
+          include: { ownItem: true },
+        });
+        return {
+          ...removed,
+          removedIds: items.map((item) => item.id),
+          recentItems: recent.map(shoppingItemDetails),
+        };
+      }),
+    ),
 });

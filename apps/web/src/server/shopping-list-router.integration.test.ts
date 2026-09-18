@@ -1802,3 +1802,21 @@ void test("Clear returns the removed requirements and canonical Recently Used ro
     );
     assert.deepEqual(await caller.list(), []);
   }));
+
+void test("retrying Clear only removes unchanged requirements from the original action", () =>
+  withShoppingList(async ({ caller }) => {
+    const original = await caller.addManual({ name: "Original" });
+    const changed = await caller.addManual({ name: "Changed later" });
+    await caller.edit({ ...changed, amount: 4 });
+    const later = await caller.addManual({ name: "Later addition" });
+    const result = await caller.clear({ items: [original, changed] });
+    assert.deepEqual(result.removedIds, [original.id]);
+    assert.deepEqual(
+      new Set((await caller.list()).map((item) => item.id)),
+      new Set([changed.id, later.id]),
+    );
+    assert.deepEqual(
+      result.recentItems.map((item) => item.name),
+      ["Original"],
+    );
+  }));
