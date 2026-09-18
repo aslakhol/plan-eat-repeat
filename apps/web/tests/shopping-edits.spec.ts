@@ -106,6 +106,12 @@ test("edits dismiss immediately, survive stale reads and navigation, and retain 
     await editor.getByRole("button", { name: "Done", exact: true }).click();
     await expect(editor).not.toBeVisible();
     await expect(
+      page.getByRole("button", { name: `Remove ${names[0]} from list` }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: `Add ${names[0]} to shopping list` }),
+    ).toBeVisible();
+    await expect(
       page.getByRole("button", { name: `Edit quantity for ${names[0]}` }),
     ).toHaveText("5");
     await expect(
@@ -228,6 +234,12 @@ test("a held merge response reconciles identities and queues another edit withou
     await expect(
       page.getByRole("button", {
         name: `Remove ${targetName} from list`,
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", {
+        name: `Add ${targetName} to shopping list`,
         exact: true,
       }),
     ).toBeEnabled();

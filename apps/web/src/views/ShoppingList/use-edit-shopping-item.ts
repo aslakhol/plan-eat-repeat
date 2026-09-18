@@ -203,6 +203,7 @@ export function useEditShoppingItem(
         void utils.shoppingList.usuallyHave.invalidate();
       if (
         edit.input.odaProduct !== undefined ||
+        edit.input.usuallyHave === true ||
         definitionChanged ||
         edit.input.amount !== edit.item.amount ||
         normalizeUnit(edit.input.unit) !== edit.item.unit

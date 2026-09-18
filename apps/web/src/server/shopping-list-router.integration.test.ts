@@ -196,6 +196,61 @@ void test("Dinner addition receipts are Household scoped and failed additions le
     );
   }));
 
+void test("turning on Usually Have while editing moves the saved item to Recently Used", () =>
+  withShoppingList(async ({ caller, member }) => {
+    const item = await caller.addManual({ name: "Olive oil" });
+    const saved = await member.edit({
+      ...item,
+      amount: 500,
+      unit: "ml",
+      note: "For salad",
+      category: "INGREDIENTS",
+      usuallyHave: true,
+    });
+    assert.deepEqual(await caller.list(), []);
+    assert.deepEqual(saved.items, []);
+    const [recent] = await caller.recent();
+    assert.ok(recent);
+    assert.equal(recent.ownItemId, item.ownItemId);
+    assert.equal(recent.amount, 500);
+    assert.equal(recent.unit, "ml");
+    assert.equal(recent.note, "For salad");
+    assert.equal(recent.ownItem.usuallyHave, true);
+    assert.deepEqual(saved.recentItems, [recent]);
+
+    // Manual additions stay allowed, including later edits with the setting on.
+    const restored = await caller.addRecent({ id: recent.id });
+    await member.edit({ ...restored, amount: 750, usuallyHave: true });
+    assert.equal((await caller.list())[0]?.amount, 750);
+    await member.edit({ ...restored, usuallyHave: false });
+    assert.equal((await caller.list()).length, 1);
+  }));
+
+void test("turning on Usually Have after a merge removes the combined requirement and preserves other units", () =>
+  withShoppingList(async ({ caller }) => {
+    const oil = await caller.addManual({ name: "Oil" });
+    await caller.edit({ ...oil, amount: 500, unit: "ml" });
+    const bottles = await caller.addManual({ name: "Oil" });
+    await caller.edit({ ...bottles, amount: 2, unit: "bottles" });
+    const source = await caller.addManual({ name: "Olive oil" });
+    const saved = await caller.edit({
+      ...source,
+      name: "Oil",
+      amount: 1,
+      unit: "l",
+      usuallyHave: true,
+    });
+    assert.deepEqual(saved.items.map(({ id }) => id), [bottles.id]);
+    assert.deepEqual((await caller.list()).map(({ id }) => id), [bottles.id]);
+    const [recent] = saved.recentItems;
+    assert.ok(recent);
+    assert.equal(recent.amount, 1500);
+    assert.equal(recent.unit, "ml");
+    assert.equal(recent.ownItem.usuallyHave, true);
+    // As with a normal click, another requirement keeps this Own Item active.
+    assert.deepEqual(await caller.recent(), []);
+  }));
+
 void test("Own Items distinguish normalized notes and an edit collision keeps the edited settings and quantities", () =>
   withShoppingList(async ({ caller }) => {
     const duck = await caller.addManual({ name: "Eggs" });
@@ -204,8 +259,8 @@ void test("Own Items distinguish normalized notes and an edit collision keeps th
       amount: 12,
       note: "duck",
       category: "DAIRY",
-      usuallyHave: true,
     });
+    await caller.setUsuallyHave({ id: duck.ownItemId, excluded: true });
     const hen = await caller.addManual({ name: "Eggs" });
     const edited = await caller.edit({
       ...hen,
@@ -236,8 +291,8 @@ void test("Own Item edits update all referring quantities and deletion preserves
       ...plain,
       amount: 6,
       category: "MEAT",
-      usuallyHave: true,
     });
+    await caller.setUsuallyHave({ id: plain.ownItemId, excluded: true });
     const unspecified = await caller.addManual({ name: "EGGS" });
     await caller.edit({ ...unspecified, note: "duck", name: "Duck eggs" });
     const edited = await caller.list();
@@ -260,9 +315,9 @@ void test("Own Item edits update all referring quantities and deletion preserves
     await caller.edit({
       ...hen,
       note: "hen",
-      usuallyHave: true,
       category: "DAIRY",
     });
+    await caller.setUsuallyHave({ id: hen.ownItemId, excluded: true });
     await withShoppingList(async ({ caller: other }) => {
       await assert.rejects(
         other.setUsuallyHave({ id: hen.ownItemId, excluded: false }),
@@ -337,7 +392,6 @@ void test("Dinner resolution checks the destination variant's Usually Have and c
   withShoppingList(async ({ caller, member, createDinner }) => {
     const cheese = await caller.addManual({ name: "Cheese" });
     await caller.edit({ ...cheese, category: "MEAT", usuallyHave: true });
-    await caller.remove({ id: cheese.id });
     const dinner = await createDinner({
       name: "Cheese snacks",
       parts: {
@@ -365,8 +419,8 @@ void test("Dinner resolution checks the destination variant's Usually Have and c
       ...variant,
       amount: 7,
       category: "SNACKS",
-      usuallyHave: true,
     });
+    await member.setUsuallyHave({ id: variant.ownItemId, excluded: true });
     await caller.undo(first.undo);
     assert.equal((await caller.list())[0]?.amount, 7);
     await member.remove({ id: variant.id });
@@ -447,7 +501,8 @@ void test("recipe sources follow Shopping Language and keep saved names within t
 void test("Dinner additions ignore saved notes absent from the ingredient name and Undo protects later definition edits", () =>
   withShoppingList(async ({ caller, createDinner }) => {
     const eggs = await caller.addManual({ name: "Eggs" });
-    await caller.edit({ ...eggs, note: "duck", usuallyHave: true, amount: 6 });
+    await caller.edit({ ...eggs, note: "duck", amount: 6 });
+    await caller.setUsuallyHave({ id: eggs.ownItemId, excluded: true });
     const dinner = await createDinner({
       name: "Breakfast",
       parts: {
@@ -1296,11 +1351,11 @@ void test("Household members manage Usually Have, add Dinner and manual items, e
     const edited = await caller.list();
     assert.deepEqual(
       edited.map(({ name }) => name),
-      ["Apples", "Carrots", "Yukon potatoes", "Zucchini", "Oil"],
+      ["Apples", "Carrots", "Zucchini", "Oil"],
     );
     assert.deepEqual(
-      edited
-        .filter(({ id }) => id === potatoes.id)
+      (await caller.recent())
+        .filter(({ ownItemId }) => ownItemId === potatoes.ownItemId)
         .map(({ name, amount, unit, note }) => ({ name, amount, unit, note })),
       [
         {
@@ -1314,11 +1369,6 @@ void test("Household members manage Usually Have, add Dinner and manual items, e
     assert.deepEqual(
       (await member.usuallyHave()).map(({ normalizedName }) => normalizedName),
       ["oil", "yukon potatoes"],
-    );
-    await member.remove({ id: potatoes.id });
-    assert.deepEqual(
-      (await caller.list()).map(({ name }) => name),
-      ["Apples", "Carrots", "Zucchini", "Oil"],
     );
     await caller.setUsuallyHave({ name: "Carrots", excluded: true });
     await caller.clear();
@@ -1790,7 +1840,6 @@ void test("selecting previews remembers destinations, inherits categories once, 
   withShoppingList(async ({ caller, settings }) => {
     const source = await caller.addManual({ name: "Eggs" });
     await caller.edit({ ...source, category: "MEAT", usuallyHave: true });
-    await caller.remove({ id: source.id });
     for (const recent of await caller.recent())
       await caller.removeRecent({ id: recent.id });
     const preview = suggestShoppingItems(
@@ -1809,7 +1858,8 @@ void test("selecting previews remembers destinations, inherits categories once, 
     assert.equal(duck.ownItem.usuallyHave, false);
     assert.equal(duck.amount, null);
     assert.equal(duck.unit, null);
-    await caller.edit({ ...duck, category: "PETS", usuallyHave: true });
+    await caller.edit({ ...duck, category: "PETS" });
+    await caller.setUsuallyHave({ id: duck.ownItemId, excluded: true });
     const plain = await caller.addSelection({ ownItemId: source.ownItemId });
     await caller.edit({ ...plain, category: "DAIRY" });
     const reused = await caller.addSelection(preview.selection);
