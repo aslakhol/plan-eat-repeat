@@ -3,6 +3,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { api, type RouterInputs, type RouterOutputs } from "~/utils/api";
 
+import type { ShoppingWrites } from "./shopping-writes";
+
 type Item = RouterOutputs["shoppingList"]["list"][number];
 export type ShoppingEdit = {
   item: Item;
@@ -10,6 +12,7 @@ export type ShoppingEdit = {
   input: RouterInputs["shoppingList"]["edit"];
 };
 type Edit = ShoppingEdit & {
+  ticket: ReturnType<ShoppingWrites["reserve"]>;
   key: string;
   ownIds: string[];
   conflictKeys: string[];
@@ -56,6 +59,7 @@ export function useEditShoppingItem(
   list: Item[],
   recent: Item[],
   isCurrent: () => boolean,
+  writes: ShoppingWrites,
 ) {
   const utils = api.useUtils();
   const queue = useRef<Edit[]>([]);
@@ -73,6 +77,8 @@ export function useEditShoppingItem(
   });
   const save = async (edit: Edit) => {
     try {
+      await edit.ticket.ready;
+      if (!isCurrent()) return;
       const saved = await mutation.mutateAsync(edit);
       if (!isCurrent()) return;
       await Promise.all([
@@ -219,6 +225,7 @@ export function useEditShoppingItem(
         },
       }));
     } finally {
+      edit.ticket.release();
       if (!isCurrent()) return;
       queue.current = queue.current.filter((next) => next.key !== edit.key);
       publish();
@@ -264,6 +271,7 @@ export function useEditShoppingItem(
     ];
     queue.current.push({
       ...draft,
+      ticket: writes.reserve(),
       key: crypto.randomUUID(),
       ownIds,
       conflictKeys,

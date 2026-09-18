@@ -17,6 +17,8 @@ import { useAddShoppingItem } from "./use-add-shopping-item";
 import { useEditShoppingItem } from "./use-edit-shopping-item";
 import { useMoveShoppingItem } from "./use-move-shopping-item";
 
+import { createShoppingWrites } from "./shopping-writes";
+
 type ShoppingState = ReturnType<typeof useShoppingState>;
 type ShoppingSnapshot = { identity: string; value: ShoppingState };
 const ShoppingContext = createContext<ShoppingState | null>(null);
@@ -85,6 +87,7 @@ const ShoppingSession = memo(function ShoppingSession({
 function useShoppingState() {
   const { isSignedIn } = useAuth();
   const { pathname } = useRouter();
+  const [writes] = useState(createShoppingWrites);
   const active = useRef(true);
   useEffect(() => {
     active.current = true;
@@ -105,16 +108,19 @@ function useShoppingState() {
     list.data ?? [],
     recent.data ?? [],
     isCurrent,
+    writes,
   );
   return {
     ...edits,
+    writes,
     list,
     recent,
-    ...useAddShoppingItem(isCurrent),
+    ...useAddShoppingItem(isCurrent, writes),
     ...useMoveShoppingItem(
       edits.editedItems,
       edits.editedRecentItems,
       isCurrent,
+      writes,
     ),
   };
 }
