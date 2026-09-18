@@ -127,6 +127,51 @@ void test("Dinner additions deduplicate concurrent retries while preserving repe
     );
   }));
 
+void test("Dinner batch selection order chooses the first unit and last Usually Have quantity across repeated Dinners", () =>
+  withShoppingList(async ({ caller, member, createDinner }) => {
+    await caller.setUsuallyHave({ name: "Salt", excluded: true });
+    const create = (name: string, amount: number, unit: string) =>
+      createDinner({
+        name,
+        parts: {
+          create: {
+            order: 0,
+            ingredients: {
+              create: [
+                { order: 0, name: "Flour", amount, unit },
+                { order: 1, name: "Salt", amount, unit },
+              ],
+            },
+          },
+        },
+      });
+    const grams = await create("Grams", 250, "g");
+    const kilos = await create("Kilos", 1, "kg");
+    const addition = await caller.addDinners({
+      dinnerIds: [kilos.id, grams.id, kilos.id],
+    });
+    assert.deepEqual(
+      addition.items.map(({ name, amount, unit }) => ({ name, amount, unit })),
+      [{ name: "Flour", amount: 2.25, unit: "kg" }],
+    );
+    assert.deepEqual(
+      addition.recentItems.map(({ name, amount, unit }) => ({
+        name,
+        amount,
+        unit,
+      })),
+      [{ name: "Salt", amount: 1, unit: "kg" }],
+    );
+    // A distinct concurrent action still adds once after taking the same lock.
+    await Promise.all([
+      caller.addDinners({ dinnerIds: [grams.id] }),
+      member.addDinners({ dinnerIds: [grams.id] }),
+    ]);
+    await member.undo(addition.undo);
+    assert.equal((await caller.list())[0]?.amount, 2.75);
+    assert.equal((await caller.recent())[0]?.amount, 250);
+  }));
+
 void test("Dinner addition receipts are Household scoped and failed additions leave no committed work", () =>
   withShoppingList(async ({ caller, createDinner }) => {
     const dinner = await createDinner({ name: "Household dinner" });
