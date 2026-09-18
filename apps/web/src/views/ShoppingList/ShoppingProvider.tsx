@@ -59,9 +59,11 @@ const ShoppingSession = memo(function ShoppingSession({
   useEffect(() => {
     let active = true;
     const reset = async () => {
-      const filters = [api.shoppingList, api.oda].map((router) => ({
-        queryKey: getQueryKey(router),
-      }));
+      const filters = [api.shoppingList, api.oda, api.dinner, api.plan].map(
+        (router) => ({
+          queryKey: getQueryKey(router),
+        }),
+      );
       await Promise.all(filters.map((filter) => client.cancelQueries(filter)));
       if (!active) return;
       // Clear old data while restarting any readers that stayed mounted.
