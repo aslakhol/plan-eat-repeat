@@ -9,7 +9,8 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { useShoppingCategoryHeadings } from "~/hooks/use-shopping-category-headings";
 import { Button } from "~/components/ui/button";
 import { DetailsMenu } from "~/components/ui/details-menu";
 import {
@@ -105,6 +106,7 @@ function ShoppingItemRow({
 }
 
 export function ShoppingListView() {
+  const { enabled: showCategoryHeadings } = useShoppingCategoryHeadings();
   const { close } = useShoppingItemCreation();
   const {
     addItem,
@@ -161,15 +163,15 @@ export function ShoppingListView() {
   const utils = api.useUtils();
   // Wait for the page's essential reads so preparation uses a later HTTP batch.
   const readyToPrepare = !list.isPending && !recent.isPending;
+  const categories = api.shoppingList.categories.useQuery(undefined, {
+    ...shoppingCategoriesQueryOptions,
+    enabled: readyToPrepare,
+  });
   useEffect(() => {
     if (!readyToPrepare) return;
     void utils.shoppingList.sources.prefetch(
       undefined,
       shoppingChoicesQueryOptions,
-    );
-    void utils.shoppingList.categories.prefetch(
-      undefined,
-      shoppingCategoriesQueryOptions,
     );
   }, [readyToPrepare, utils]);
   // Keep pending additions separate so polling cannot erase them, and only
@@ -462,26 +464,6 @@ export function ShoppingListView() {
               </button>
             </ShoppingItemCreationTrigger>
             <ul className="space-y-2" aria-label="Shopping items">
-              {items.map((item) => (
-                <ShoppingItemRow
-                  key={item.id}
-                  item={item}
-                  pending={
-                    pendingOwnIds.has(item.ownItemId) ||
-                    pendingIdentities.has(
-                      shoppingIdentity(item.name, item.note),
-                    )
-                  }
-                  moveDisabled={
-                    editingOwnIds.has(item.ownItemId) ||
-                    pendingIdentities.has(
-                      shoppingIdentity(item.name, item.note),
-                    )
-                  }
-                  onMove={() => moveItem({ item, recent: false })}
-                  onEdit={() => setEditingItem({ item, recent: false })}
-                />
-              ))}
               {optimisticItems.map((item) => (
                 <li
                   key={item.id}
@@ -497,6 +479,45 @@ export function ShoppingListView() {
                     )}
                   </span>
                 </li>
+              ))}
+              {items.map((item, index) => (
+                <Fragment key={item.id}>
+                  {showCategoryHeadings &&
+                    categories.data &&
+                    item.ownItem.category !==
+                      items[index - 1]?.ownItem.category && (
+                      <li
+                        className="px-1 pt-4 first:pt-2 [&+li]:!mt-1"
+                        role="presentation"
+                      >
+                        <h2 className="text-muted-foreground text-sm font-bold">
+                          {
+                            categories.data?.find(
+                              (category) =>
+                                category.id === item.ownItem.category,
+                            )?.label
+                          }
+                        </h2>
+                      </li>
+                    )}
+                  <ShoppingItemRow
+                    item={item}
+                    pending={
+                      pendingOwnIds.has(item.ownItemId) ||
+                      pendingIdentities.has(
+                        shoppingIdentity(item.name, item.note),
+                      )
+                    }
+                    moveDisabled={
+                      editingOwnIds.has(item.ownItemId) ||
+                      pendingIdentities.has(
+                        shoppingIdentity(item.name, item.note),
+                      )
+                    }
+                    onMove={() => moveItem({ item, recent: false })}
+                    onEdit={() => setEditingItem({ item, recent: false })}
+                  />
+                </Fragment>
               ))}
             </ul>
           </>
