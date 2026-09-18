@@ -19,6 +19,7 @@ import {
 import {
   editRecentShoppingItem,
   rememberShoppingItems,
+  readRecentShoppingItems,
 } from "../../recent-shopping-items";
 import { createTRPCRouter, protectedProcedureWithHousehold } from "../trpc";
 
@@ -110,29 +111,9 @@ export const shoppingListRouter = createTRPCRouter({
       }),
     ),
 
-  recent: protectedProcedureWithHousehold.query(async ({ ctx }) => {
-    const [recent, active] = await Promise.all([
-      ctx.db.recentShoppingItem.findMany({
-        where: { householdId: ctx.householdId },
-        orderBy: [
-          { recentlyUsedAt: "desc" },
-          { ownItem: { normalizedName: "asc" } },
-          { ownItem: { normalizedNote: "asc" } },
-        ],
-        take: 25,
-        include: { ownItem: true },
-      }),
-      ctx.db.shoppingItem.findMany({
-        where: { householdId: ctx.householdId },
-        select: { ownItemId: true },
-        distinct: ["ownItemId"],
-      }),
-    ]);
-    const activeIds = new Set(active.map((item) => item.ownItemId));
-    return recent
-      .filter((item) => !activeIds.has(item.ownItemId))
-      .map(shoppingItemDetails);
-  }),
+  recent: protectedProcedureWithHousehold.query(({ ctx }) =>
+    readRecentShoppingItems(ctx.db, ctx.householdId),
+  ),
 
   addRecent: protectedProcedureWithHousehold
     .input(z.object({ id: z.string() }))
@@ -500,27 +481,11 @@ export const shoppingListRouter = createTRPCRouter({
         });
         await rememberShoppingItems(tx, ctx.householdId, items);
         const removed = await tx.shoppingItem.deleteMany({ where });
-        const active = await tx.shoppingItem.findMany({
-          where: { householdId: ctx.householdId },
-          select: { ownItemId: true },
-        });
-        const recent = await tx.recentShoppingItem.findMany({
-          where: {
-            householdId: ctx.householdId,
-            ownItemId: { notIn: active.map((item) => item.ownItemId) },
-          },
-          orderBy: [
-            { recentlyUsedAt: "desc" },
-            { ownItem: { normalizedName: "asc" } },
-            { ownItem: { normalizedNote: "asc" } },
-          ],
-          take: 25,
-          include: { ownItem: true },
-        });
+        const recentItems = await readRecentShoppingItems(tx, ctx.householdId);
         return {
           ...removed,
           removedIds: items.map((item) => item.id),
-          recentItems: recent.map(shoppingItemDetails),
+          recentItems,
         };
       }),
     ),

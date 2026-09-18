@@ -80,3 +80,30 @@ export async function editRecentShoppingItem(
   );
   return { item: saved, mergedIds: Object.fromEntries(destinations) };
 }
+
+export async function readRecentShoppingItems(
+  db: Prisma.TransactionClient,
+  householdId: string,
+) {
+  const [recent, active] = await Promise.all([
+    db.recentShoppingItem.findMany({
+      where: { householdId: householdId },
+      orderBy: [
+        { recentlyUsedAt: "desc" },
+        { ownItem: { normalizedName: "asc" } },
+        { ownItem: { normalizedNote: "asc" } },
+      ],
+      take: 25,
+      include: { ownItem: true },
+    }),
+    db.shoppingItem.findMany({
+      where: { householdId: householdId },
+      select: { ownItemId: true },
+      distinct: ["ownItemId"],
+    }),
+  ]);
+  const activeIds = new Set(active.map((item) => item.ownItemId));
+  return recent
+    .filter((item) => !activeIds.has(item.ownItemId))
+    .map(shoppingItemDetails);
+}
