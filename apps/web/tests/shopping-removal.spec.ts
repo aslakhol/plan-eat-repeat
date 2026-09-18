@@ -101,6 +101,10 @@ test("Clear waits for earlier adds and moves, preserves later additions, and set
   const before = Promise.withResolvers<void>();
   const removal = Promise.withResolvers<void>();
   const reads = Promise.withResolvers<void>();
+  const staleRead = Promise.withResolvers<void>();
+  const captured = Promise.withResolvers<void>();
+  const delivered = Promise.withResolvers<void>();
+  let captureRead = false;
   let additions = 0,
     moves = 0,
     clears = 0,
@@ -130,6 +134,17 @@ test("Clear waits for earlier adds and moves, preserves later additions, and set
       const response = await route.fetch();
       await removal.promise;
       await route.fulfill({ response });
+    } else if (
+      captureRead &&
+      request.method() === "GET" &&
+      request.url().includes("shoppingList.list")
+    ) {
+      captureRead = false;
+      const response = await route.fetch();
+      captured.resolve();
+      await staleRead.promise;
+      await route.fulfill({ response });
+      delivered.resolve();
     } else {
       if (
         holdReads &&
@@ -156,7 +171,9 @@ test("Clear waits for earlier adds and moves, preserves later additions, and set
       page.getByRole("status").filter({ hasText: "Clearing" }),
     ).toBeVisible();
     await add(page, "Later addition");
+    captureRead = true;
     await navigate(page);
+    await captured.promise;
     await expect(
       page.getByRole("list", { name: "Shopping items", exact: true }),
     ).not.toContainText("Earlier");
@@ -187,10 +204,25 @@ test("Clear waits for earlier adds and moves, preserves later additions, and set
     await expect(
       page.getByRole("status").filter({ hasText: "Clearing" }),
     ).toHaveCount(0);
+    staleRead.resolve();
+    await delivered.promise;
+    await expect(
+      page.getByRole("button", {
+        name: "Remove Earlier move from list",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", {
+        name: "Remove Later addition from list",
+        exact: true,
+      }),
+    ).toBeEnabled();
   } finally {
     before.resolve();
     removal.resolve();
     reads.resolve();
+    staleRead.resolve();
     try {
       await page.unrouteAll({ behavior: "wait" });
     } finally {
