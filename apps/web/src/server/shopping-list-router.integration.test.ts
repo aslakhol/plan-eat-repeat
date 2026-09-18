@@ -1783,3 +1783,22 @@ void test("autocomplete and Dinner additions capitalize new names but keep exist
       list.some((item) => item.name === "Fresh supplies" && item.amount === 3),
     );
   }));
+
+void test("Clear returns the removed requirements and canonical Recently Used rows", () =>
+  withShoppingList(async ({ caller }) => {
+    const first = await caller.addManual({ name: "Clear first" });
+    await caller.edit({ ...first, amount: 3, unit: "kg" });
+    const second = await caller.addManual({ name: "Clear second" });
+    const result = await caller.clear();
+    assert.deepEqual(
+      new Set(result.removedIds),
+      new Set([first.id, second.id]),
+    );
+    assert.deepEqual(result.recentItems, await caller.recent());
+    assert.equal(
+      result.recentItems.find((item) => item.ownItemId === first.ownItemId)
+        ?.amount,
+      3,
+    );
+    assert.deepEqual(await caller.list(), []);
+  }));

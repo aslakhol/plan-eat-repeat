@@ -488,7 +488,22 @@ export const shoppingListRouter = createTRPCRouter({
         ],
       });
       await rememberShoppingItems(tx, ctx.householdId, items);
-      return tx.shoppingItem.deleteMany({ where });
+      const removed = await tx.shoppingItem.deleteMany({ where });
+      const recent = await tx.recentShoppingItem.findMany({
+        where,
+        orderBy: [
+          { recentlyUsedAt: "desc" },
+          { ownItem: { normalizedName: "asc" } },
+          { ownItem: { normalizedNote: "asc" } },
+        ],
+        take: 25,
+        include: { ownItem: true },
+      });
+      return {
+        ...removed,
+        removedIds: items.map((item) => item.id),
+        recentItems: recent.map(shoppingItemDetails),
+      };
     }),
   ),
 });
