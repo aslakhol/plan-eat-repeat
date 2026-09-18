@@ -28,6 +28,7 @@ export function AddItemSheet({
   onSelectDinners: (source: ShoppingDinnerSource) => void;
 }) {
   const [mobileStyle, setMobileStyle] = useState<CSSProperties>();
+  const addedItem = useRef(false);
 
   useEffect(() => {
     const viewport = window.visualViewport;
@@ -54,11 +55,20 @@ export function AddItemSheet({
     <ResponsiveModal open={open} onOpenChange={onOpenChange}>
       <ResponsiveModalContent
         mobileStyle={mobileStyle}
-        onOpenAutoFocus={(event) => event.preventDefault()}
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          addedItem.current = false;
+        }}
+        onCloseAutoFocus={() => {
+          // Reset after the closing animation and drawer scroll restoration.
+          if (addedItem.current)
+            window.scrollTo({ top: 0, behavior: "instant" });
+        }}
         className="flex h-auto flex-col gap-0 rounded-t-3xl bg-white p-5 pb-8 has-[[data-typing=true]]:h-[65dvh] has-[[data-typing=true]]:max-h-[600px] md:rounded-2xl md:pt-10"
       >
         <AddItemContent
           onAdd={(preview) => {
+            addedItem.current = true;
             onAdd(preview);
             onOpenChange(false);
           }}

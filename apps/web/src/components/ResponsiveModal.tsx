@@ -72,6 +72,7 @@ export const ResponsiveModalContent = ({
   scrollViewport = false,
   scrollViewportClassName,
   onOpenAutoFocus,
+  onCloseAutoFocus,
   mobileStyle,
 }: {
   children: React.ReactNode;
@@ -79,6 +80,7 @@ export const ResponsiveModalContent = ({
   scrollViewport?: boolean;
   scrollViewportClassName?: string;
   onOpenAutoFocus?: (event: Event) => void;
+  onCloseAutoFocus?: (event: Event) => void;
   mobileStyle?: React.CSSProperties;
 }) => {
   const isMobile = useIsMobile();
@@ -88,6 +90,7 @@ export const ResponsiveModalContent = ({
       <DrawerContent
         className={cn(className, "!overflow-visible")}
         onOpenAutoFocus={onOpenAutoFocus}
+        onCloseAutoFocus={onCloseAutoFocus}
         style={mobileStyle}
       >
         {scrollViewport ? (
@@ -110,6 +113,7 @@ export const ResponsiveModalContent = ({
       )}
       showCloseButton={false}
       onOpenAutoFocus={onOpenAutoFocus}
+      onCloseAutoFocus={onCloseAutoFocus}
     >
       {scrollViewport ? (
         <ResponsiveModalScrollViewport className={scrollViewportClassName}>
