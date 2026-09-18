@@ -27,7 +27,10 @@ export function useOdaShopping(items: Item[], disabled: boolean) {
   const onSuccess = async () => {
     await Promise.all([
       utils.oda.transfer.invalidate(),
-      utils.shoppingList.invalidate(),
+      Promise.all([
+        utils.shoppingList.list.invalidate(),
+        utils.shoppingList.recent.invalidate(),
+      ]),
       utils.oda.status.invalidate(),
     ]);
     setRequest(null);

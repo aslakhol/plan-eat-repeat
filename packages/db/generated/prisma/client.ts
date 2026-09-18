@@ -90,6 +90,11 @@ export type Plan = Prisma.PlanModel
  */
 export type User = Prisma.UserModel
 /**
+ * Model ShoppingDinnerAddition
+ * 
+ */
+export type ShoppingDinnerAddition = Prisma.ShoppingDinnerAdditionModel
+/**
  * Model Household
  * 
  */

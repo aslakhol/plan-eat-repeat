@@ -92,11 +92,11 @@ export const PlannedDinner = ({
                 <Button
                   type="button"
                   variant="ghost"
-                  disabled={addToShoppingList.isPending}
+                  disabled={!addToShoppingList.isReady}
                   className="h-auto w-full justify-start rounded-none border-t px-3.5 py-3 text-left text-[13.5px] font-semibold"
                   onClick={() => {
                     closeMenu();
-                    addToShoppingList.mutate({ dinnerIds: [dinner.id] });
+                    addToShoppingList.add([dinner]);
                   }}
                 >
                   Add to shopping list

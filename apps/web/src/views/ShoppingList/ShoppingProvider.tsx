@@ -13,8 +13,13 @@ import {
   type ReactNode,
 } from "react";
 import { api } from "~/utils/api";
+import { useAddDinners } from "./use-add-dinners";
 import { useAddShoppingItem } from "./use-add-shopping-item";
+import { useEditShoppingItem } from "./use-edit-shopping-item";
 import { useMoveShoppingItem } from "./use-move-shopping-item";
+
+import { useRemoveShoppingItems } from "./use-remove-shopping-items";
+import { createShoppingWrites } from "./shopping-writes";
 
 type ShoppingState = ReturnType<typeof useShoppingState>;
 type ShoppingSnapshot = { identity: string; value: ShoppingState };
@@ -59,9 +64,11 @@ const ShoppingSession = memo(function ShoppingSession({
   useEffect(() => {
     let active = true;
     const reset = async () => {
-      const filters = [api.shoppingList, api.oda].map((router) => ({
-        queryKey: getQueryKey(router),
-      }));
+      const filters = [api.shoppingList, api.oda, api.dinner, api.plan].map(
+        (router) => ({
+          queryKey: getQueryKey(router),
+        }),
+      );
       await Promise.all(filters.map((filter) => client.cancelQueries(filter)));
       if (!active) return;
       // Clear old data while restarting any readers that stayed mounted.
@@ -82,6 +89,7 @@ const ShoppingSession = memo(function ShoppingSession({
 function useShoppingState() {
   const { isSignedIn } = useAuth();
   const { pathname } = useRouter();
+  const [writes] = useState(createShoppingWrites);
   const active = useRef(true);
   useEffect(() => {
     active.current = true;
@@ -98,11 +106,38 @@ function useShoppingState() {
   };
   const list = api.shoppingList.list.useQuery(undefined, queryOptions);
   const recent = api.shoppingList.recent.useQuery(undefined, queryOptions);
+  const edits = useEditShoppingItem(
+    list.data ?? [],
+    recent.data ?? [],
+    isCurrent,
+    writes,
+  );
+  const additions = useAddShoppingItem(isCurrent, writes);
+  const dinnerAdditions = useAddDinners(isCurrent, writes);
+  const moves = useMoveShoppingItem(
+    edits.editedItems,
+    edits.editedRecentItems,
+    isCurrent,
+    writes,
+  );
+  const removals = useRemoveShoppingItems(
+    moves.items,
+    moves.recentItems,
+    additions.pendingItems,
+    writes,
+    isCurrent,
+    edits.resolveOwnId,
+  );
   return {
+    ...edits,
+    isCurrent,
+    writes,
     list,
     recent,
-    ...useAddShoppingItem(isCurrent),
-    ...useMoveShoppingItem(list.data ?? [], recent.data ?? [], isCurrent),
+    ...additions,
+    ...dinnerAdditions,
+    ...moves,
+    ...removals,
   };
 }
 
@@ -128,4 +163,26 @@ export function useShopping() {
   const value = useContext(ShoppingContext);
   if (!value) throw new Error("ShoppingProvider is missing");
   return value;
+}
+
+// Dinner controls also mount before the shopping session is ready.
+export function useShoppingWrite() {
+  const shopping = useContext(ShoppingContext);
+  return () => {
+    if (!shopping) throw new Error("Shopping session is not ready");
+    const ticket = shopping.writes.reserve();
+    return {
+      ...ticket,
+      ready: ticket.ready.then(() => {
+        if (!shopping.isCurrent()) {
+          ticket.release();
+          throw new Error("Shopping session ended");
+        }
+      }),
+    };
+  };
+}
+
+export function useShoppingDinnerAdditions() {
+  return useContext(ShoppingContext);
 }

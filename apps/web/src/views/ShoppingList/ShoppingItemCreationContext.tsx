@@ -11,6 +11,10 @@ import {
   ResponsiveModalTrigger,
 } from "~/components/ResponsiveModal";
 
+import { api } from "~/utils/api";
+import { localCalendarBoundaries } from "~/hooks/use-dinner-summaries";
+import { shoppingChoicesQueryOptions } from "~/lib/query-freshness";
+
 const ShoppingItemCreationContext = createContext<{
   close: () => void;
   rememberTrigger: (element: HTMLButtonElement) => void;
@@ -28,10 +32,22 @@ export function ShoppingItemCreationProvider({
 
   if (pathname !== "/shopping-list" && open) setOpen(false);
 
+  const utils = api.useUtils();
   const onOpenChange = (nextOpen: boolean) => {
     // Dismiss the keyboard before the focused input animates offscreen.
     if (!nextOpen && document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
+    }
+    if (nextOpen) {
+      const calendar = localCalendarBoundaries();
+      void utils.dinner.summaries.prefetch(
+        calendar,
+        shoppingChoicesQueryOptions,
+      );
+      void utils.plan.plannedDinners.prefetch(
+        { startOfWeek: calendar.currentWeekStart },
+        shoppingChoicesQueryOptions,
+      );
     }
     setOpen(nextOpen);
   };

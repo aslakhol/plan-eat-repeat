@@ -61,6 +61,7 @@ export const ModelName = {
   Tag: 'Tag',
   Plan: 'Plan',
   User: 'User',
+  ShoppingDinnerAddition: 'ShoppingDinnerAddition',
   Household: 'Household',
   Membership: 'Membership',
   AiImportAttempt: 'AiImportAttempt',
@@ -206,6 +207,16 @@ export const UserScalarFieldEnum = {
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const ShoppingDinnerAdditionScalarFieldEnum = {
+  householdId: 'householdId',
+  operationId: 'operationId',
+  dinnerIds: 'dinnerIds',
+  result: 'result'
+} as const
+
+export type ShoppingDinnerAdditionScalarFieldEnum = (typeof ShoppingDinnerAdditionScalarFieldEnum)[keyof typeof ShoppingDinnerAdditionScalarFieldEnum]
 
 
 export const HouseholdScalarFieldEnum = {

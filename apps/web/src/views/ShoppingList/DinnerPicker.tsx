@@ -21,6 +21,7 @@ import {
 } from "~/lib/cookbook";
 import { buildDinnerPlanningWeek } from "~/lib/dinner-planning";
 import { cn } from "~/lib/utils";
+import { shoppingChoicesQueryOptions } from "~/lib/query-freshness";
 import { api } from "~/utils/api";
 import { DinnerCollectionControls } from "../DinnerCollectionControls";
 import { WeekSelect } from "../WeekSelect";
@@ -43,12 +44,14 @@ export function DinnerPicker({
   >([]);
   const [sort, setSort] = useState<CookbookSort>("not-lately");
   // A planned occurrence and the same Dinner in the Cookbook are separate additions.
-  const [selections, setSelections] = useState(new Map<string, number>());
+  const [selections, setSelections] = useState(
+    new Map<string, { id: number; name: string }>(),
+  );
   const { query: dinners, today } = useDinnerSummaries();
   const week = buildDinnerPlanningWeek(addWeeks(today, weekOffset));
   const plans = api.plan.plannedDinners.useQuery(
     { startOfWeek: week.start },
-    { enabled: source === "plan" },
+    { ...shoppingChoicesQueryOptions, enabled: source === "plan" },
   );
   const add = useAddDinnersToShoppingList(onClose);
   const collection = deriveDinnerCollection(dinners.data?.dinners ?? [], {
@@ -57,11 +60,11 @@ export function DinnerPicker({
     selectedContentFilters,
     sort,
   });
-  const toggle = (key: string, dinnerId: number) => {
+  const toggle = (key: string, dinner: { id: number; name: string }) => {
     setSelections((current) => {
       const next = new Map(current);
       if (next.has(key)) next.delete(key);
-      else next.set(key, dinnerId);
+      else next.set(key, dinner);
       return next;
     });
   };
@@ -141,8 +144,8 @@ export function DinnerPicker({
                   <DinnerChoice
                     key={day.dateTime}
                     selected={selections.has(`plan:${plan.id}`)}
-                    disabled={add.isPending}
-                    onClick={() => toggle(`plan:${plan.id}`, plan.dinner.id)}
+                    disabled={!add.isReady}
+                    onClick={() => toggle(`plan:${plan.id}`, plan.dinner)}
                   >
                     <span className="min-w-0 flex-1">
                       {date}
@@ -186,8 +189,8 @@ export function DinnerPicker({
                 )}
                 <DinnerChoice
                   selected={selections.has(`cookbook:${dinner.id}`)}
-                  disabled={add.isPending}
-                  onClick={() => toggle(`cookbook:${dinner.id}`, dinner.id)}
+                  disabled={!add.isReady}
+                  onClick={() => toggle(`cookbook:${dinner.id}`, dinner)}
                 >
                   <span className="min-w-0 flex-1 font-serif text-[17px]">
                     {dinner.name}
@@ -209,21 +212,14 @@ export function DinnerPicker({
             ))
           )}
         </ResponsiveModalScrollViewport>
-        {add.isError && (
-          <p role="alert" className="text-destructive shrink-0 text-sm">
-            Could not add dinners. Check your connection and try again.
-          </p>
-        )}
         <Button
           className="h-12 shrink-0 rounded-xl text-base"
-          disabled={selections.size === 0 || add.isPending}
-          onClick={() => add.mutate({ dinnerIds: [...selections.values()] })}
+          disabled={selections.size === 0 || !add.isReady}
+          onClick={() => add.add([...selections.values()])}
         >
-          {add.isPending
-            ? "Adding…"
-            : selections.size === 0
-              ? "Add dinners"
-              : `Add ${selections.size} ${selections.size === 1 ? "dinner" : "dinners"}`}
+          {selections.size === 0
+            ? "Add dinners"
+            : `Add ${selections.size} ${selections.size === 1 ? "dinner" : "dinners"}`}
         </Button>
       </ResponsiveModalContent>
     </ResponsiveModal>

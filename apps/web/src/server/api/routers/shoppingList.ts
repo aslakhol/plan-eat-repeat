@@ -1,4 +1,4 @@
-import { selectRecipeIngredient } from "~/lib/shopping-matching";
+import { addDinnersToShoppingList } from "../../shopping-dinner-additions";
 import { odaProductPreferenceSchema } from "~/lib/oda-product";
 import {
   shoppingSources,
@@ -8,13 +8,18 @@ import {
   shoppingCategoryOrder,
   shoppingCategories,
 } from "@planeatrepeat/shared";
-import { rememberOwnItem, shoppingItemDetails } from "../../own-items";
+import { shoppingItemDetails } from "../../own-items";
 import { z } from "zod";
-import { ShoppingCategory } from "@planeatrepeat/db";
-import { saveShoppingItem, setUsuallyHave } from "../../shopping-list";
+import { type Prisma, ShoppingCategory } from "@planeatrepeat/db";
+import {
+  saveShoppingItem,
+  saveShoppingItemWithMerges,
+  setUsuallyHave,
+} from "../../shopping-list";
 import {
   editRecentShoppingItem,
   rememberShoppingItems,
+  readRecentShoppingItems,
 } from "../../recent-shopping-items";
 import { createTRPCRouter, protectedProcedureWithHousehold } from "../trpc";
 
@@ -28,6 +33,31 @@ const itemFields = z.object({
     .nullable()
     .transform((note) => (note === "" ? null : note)),
 });
+
+// An edit may change several requirements and delete their former identities.
+async function shoppingEditResult(
+  tx: Prisma.TransactionClient,
+  householdId: string,
+  originalOwnItemId: string,
+  {
+    item: saved,
+    mergedIds,
+  }: Awaited<ReturnType<typeof saveShoppingItemWithMerges>>,
+) {
+  const affectedOwnItemIds = [...new Set([originalOwnItemId, saved.ownItemId])];
+  const where = { householdId, ownItemId: { in: affectedOwnItemIds } };
+  const [items, recentItems] = await Promise.all([
+    tx.shoppingItem.findMany({ where, include: { ownItem: true } }),
+    tx.recentShoppingItem.findMany({ where, include: { ownItem: true } }),
+  ]);
+  return {
+    ...saved,
+    mergedIds,
+    affectedOwnItemIds,
+    items: items.map(shoppingItemDetails),
+    recentItems: recentItems.map(shoppingItemDetails),
+  };
+}
 
 export const shoppingListRouter = createTRPCRouter({
   categories: protectedProcedureWithHousehold.query(async ({ ctx }) => {
@@ -51,9 +81,23 @@ export const shoppingListRouter = createTRPCRouter({
       }),
     )
     .mutation(({ ctx, input }) =>
-      ctx.db.$transaction((tx) =>
-        editRecentShoppingItem(tx, ctx.householdId, input),
-      ),
+      ctx.db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
+        const original = await tx.recentShoppingItem.findUniqueOrThrow({
+          where: { id: input.id, householdId: ctx.householdId },
+        });
+        const saved = await editRecentShoppingItem(tx, ctx.householdId, input);
+        const result = await shoppingEditResult(
+          tx,
+          ctx.householdId,
+          original.ownItemId,
+          saved,
+        );
+        return {
+          ...result,
+          mergedIds: { ...result.mergedIds, [input.id]: saved.item.id },
+        };
+      }),
     ),
 
   removeRecent: protectedProcedureWithHousehold
@@ -67,29 +111,9 @@ export const shoppingListRouter = createTRPCRouter({
       }),
     ),
 
-  recent: protectedProcedureWithHousehold.query(async ({ ctx }) => {
-    const [recent, active] = await Promise.all([
-      ctx.db.recentShoppingItem.findMany({
-        where: { householdId: ctx.householdId },
-        orderBy: [
-          { recentlyUsedAt: "desc" },
-          { ownItem: { normalizedName: "asc" } },
-          { ownItem: { normalizedNote: "asc" } },
-        ],
-        take: 25,
-        include: { ownItem: true },
-      }),
-      ctx.db.shoppingItem.findMany({
-        where: { householdId: ctx.householdId },
-        select: { ownItemId: true },
-        distinct: ["ownItemId"],
-      }),
-    ]);
-    const activeIds = new Set(active.map((item) => item.ownItemId));
-    return recent
-      .filter((item) => !activeIds.has(item.ownItemId))
-      .map(shoppingItemDetails);
-  }),
+  recent: protectedProcedureWithHousehold.query(({ ctx }) =>
+    readRecentShoppingItems(ctx.db, ctx.householdId),
+  ),
 
   addRecent: protectedProcedureWithHousehold
     .input(z.object({ id: z.string() }))
@@ -211,104 +235,19 @@ export const shoppingListRouter = createTRPCRouter({
     ),
 
   addDinners: protectedProcedureWithHousehold
-    .input(z.object({ dinnerIds: z.array(z.number().int().positive()).min(1) }))
+    .input(
+      z.object({
+        operationId: z
+          .string()
+          .uuid()
+          .default(() => crypto.randomUUID()),
+        dinnerIds: z.array(z.number().int().positive()).min(1),
+      }),
+    )
     .mutation(({ ctx, input }) =>
       ctx.db.$transaction(async (tx) => {
         await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
-        const before = new Map(
-          (
-            await tx.shoppingItem.findMany({
-              where: { householdId: ctx.householdId },
-            })
-          ).map((item) => [item.id, item]),
-        );
-        const recentBefore = new Map(
-          (
-            await tx.recentShoppingItem.findMany({
-              where: { householdId: ctx.householdId },
-            })
-          ).map((item) => [item.ownItemId, item]),
-        );
-        const addedIds = new Set<string>();
-        const skipped: {
-          ownItemId: string;
-          amount: number | null;
-          unit: string | null;
-        }[] = [];
-        const sources = await shoppingSources(tx, ctx.householdId);
-        for (const dinnerId of input.dinnerIds) {
-          const dinner = await tx.dinner.findUniqueOrThrow({
-            where: { id: dinnerId, householdId: ctx.householdId },
-            include: {
-              parts: {
-                orderBy: { order: "asc" },
-                include: { ingredients: { orderBy: { order: "asc" } } },
-              },
-            },
-          });
-          const ingredients = dinner.parts.flatMap((part) => part.ingredients);
-          const requirements =
-            ingredients.length > 0
-              ? ingredients
-              : [{ name: dinner.name, amount: null, unit: null }];
-          for (const item of requirements) {
-            const ownItem =
-              ingredients.length > 0
-                ? await resolveShoppingSelection(
-                    tx,
-                    ctx.householdId,
-                    selectRecipeIngredient(item.name, sources),
-                  )
-                : await rememberOwnItem(tx, ctx.householdId, item.name);
-            if (!sources.some(({ id }) => id === ownItem.id))
-              sources.push(ownItem);
-            if (ownItem.usuallyHave) {
-              skipped.push({
-                ownItemId: ownItem.id,
-                amount: item.amount,
-                unit: item.unit,
-              });
-              continue;
-            }
-            const saved = await saveShoppingItem(tx, ctx.householdId, {
-              name: ownItem.name,
-              amount: item.amount,
-              unit: item.unit,
-              note: ownItem.note,
-            });
-            addedIds.add(saved.id);
-          }
-        }
-        const recent = await rememberShoppingItems(
-          tx,
-          ctx.householdId,
-          skipped,
-        );
-        const added = await tx.shoppingItem.findMany({
-          where: { householdId: ctx.householdId, id: { in: [...addedIds] } },
-        });
-        return {
-          undo: {
-            recent: recent.map(({ id, ownItemId, revision }) => ({
-              id,
-              ownItemId,
-              revision,
-              before: recentBefore.get(ownItemId) ?? null,
-            })),
-            items: added.flatMap((item) => {
-              const original = before.get(item.id);
-              if (original?.revision === item.revision) return [];
-              return [
-                {
-                  id: item.id,
-                  ownItemId: item.ownItemId,
-                  revision: item.revision,
-                  before: original ?? null,
-                },
-              ];
-            }),
-          },
-        };
+        return addDinnersToShoppingList(tx, ctx.householdId, input);
       }),
     ),
 
@@ -376,7 +315,21 @@ export const shoppingListRouter = createTRPCRouter({
     )
     .mutation(({ ctx, input }) =>
       ctx.db.$transaction(async (tx) => {
-        return saveShoppingItem(tx, ctx.householdId, input);
+        await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
+        const original = await tx.shoppingItem.findUniqueOrThrow({
+          where: { id: input.id, householdId: ctx.householdId },
+        });
+        const saved = await saveShoppingItemWithMerges(
+          tx,
+          ctx.householdId,
+          input,
+        );
+        return shoppingEditResult(
+          tx,
+          ctx.householdId,
+          original.ownItemId,
+          saved,
+        );
       }),
     ),
 
@@ -418,20 +371,37 @@ export const shoppingListRouter = createTRPCRouter({
       }),
     ),
 
-  clear: protectedProcedureWithHousehold.mutation(({ ctx }) =>
-    ctx.db.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
-      const where = { householdId: ctx.householdId };
-      const items = await tx.shoppingItem.findMany({
-        where,
-        orderBy: [
-          { ownItem: { normalizedName: "asc" } },
-          { ownItem: { normalizedNote: "asc" } },
-          { id: "asc" },
-        ],
-      });
-      await rememberShoppingItems(tx, ctx.householdId, items);
-      return tx.shoppingItem.deleteMany({ where });
-    }),
-  ),
+  clear: protectedProcedureWithHousehold
+    .input(
+      z
+        .object({
+          items: z.array(z.object({ id: z.string(), revision: z.string() })),
+        })
+        .optional(),
+    )
+    .mutation(({ ctx, input }) =>
+      ctx.db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
+        const where = {
+          householdId: ctx.householdId,
+          ...(input ? { OR: input.items } : {}),
+        };
+        const items = await tx.shoppingItem.findMany({
+          where,
+          orderBy: [
+            { ownItem: { normalizedName: "asc" } },
+            { ownItem: { normalizedNote: "asc" } },
+            { id: "asc" },
+          ],
+        });
+        await rememberShoppingItems(tx, ctx.householdId, items);
+        const removed = await tx.shoppingItem.deleteMany({ where });
+        const recentItems = await readRecentShoppingItems(tx, ctx.householdId);
+        return {
+          ...removed,
+          removedIds: items.map((item) => item.id),
+          recentItems,
+        };
+      }),
+    ),
 });
