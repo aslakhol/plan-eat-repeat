@@ -45,6 +45,8 @@ async function setup(page: Page) {
     });
   return {
     createItem,
+    createDinner: (name: string) =>
+      db.dinner.create({ data: { name, householdId: household.id } }),
     async open() {
       await page.goto("/");
       await expect(
@@ -54,6 +56,7 @@ async function setup(page: Page) {
       await completeLocalAuth(page, auth.ticket, "/shopping-list");
     },
     async cleanup() {
+      await db.dinner.deleteMany({ where: { householdId: household.id } });
       await db.household.delete({ where: { id: household.id } });
       await db.user.delete({ where: { id: userId } });
       await clerk.users.updateUserMetadata(userId, {
@@ -484,6 +487,75 @@ test("a failed Delete restores the variant and reviews current data after later 
     await expect(
       page.getByRole("button", { name: "Remove Later success from list" }),
     ).toBeEnabled();
+  } finally {
+    gate.resolve();
+    try {
+      await page.unrouteAll({ behavior: "wait" });
+    } finally {
+      await fixture.cleanup();
+    }
+  }
+});
+
+test("Clear includes a pending Dinner addition after its picker is dismissed", async ({
+  page,
+}) => {
+  const fixture = await setup(page);
+  await fixture.createItem("Original item");
+  await fixture.createDinner("Pending dinner");
+  const gate = Promise.withResolvers<void>();
+  let additions = 0,
+    clears = 0;
+  await page.route("**/api/trpc/shoppingList.addDinners?*", async (route) => {
+    additions++;
+    await gate.promise;
+    await route.continue();
+  });
+  page.on("request", (request) => {
+    if (
+      request.method() === "POST" &&
+      request.url().includes("shoppingList.clear")
+    )
+      clears++;
+  });
+  try {
+    await fixture.open();
+    await page
+      .getByRole("button", { name: "Add an item", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "From the cookbook", exact: true })
+      .click();
+    const picker = page.getByRole("dialog", {
+      name: "Add dinners",
+      exact: true,
+    });
+    await picker.getByRole("searchbox").fill("Pending dinner");
+    await picker.getByRole("button", { name: /Pending dinner/ }).click();
+    await picker
+      .getByRole("button", { name: "Add 1 dinner", exact: true })
+      .click();
+    await expect.poll(() => additions).toBe(1);
+    await page.keyboard.press("Escape");
+    await expect(picker).not.toBeVisible();
+    await clear(page);
+    expect(clears).toBe(0);
+    gate.resolve();
+    await expect(
+      page.getByRole("button", {
+        name: "Add Pending dinner to shopping list",
+        exact: true,
+      }),
+    ).toBeEnabled();
+    await expect(
+      page.getByRole("button", {
+        name: "Remove Pending dinner from list",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("status").filter({ hasText: "Clearing" }),
+    ).toHaveCount(0);
   } finally {
     gate.resolve();
     try {
