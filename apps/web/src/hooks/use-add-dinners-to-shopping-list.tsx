@@ -9,7 +9,12 @@ export const useAddDinnersToShoppingList = (
   const undo = api.shoppingList.undo.useMutation({
     networkMode: "always",
     retry: false,
-    onSuccess: () => void utils.shoppingList.invalidate(),
+    onSuccess: () =>
+      void Promise.all([
+        utils.shoppingList.list.invalidate(),
+        utils.shoppingList.recent.invalidate(),
+        utils.shoppingList.sources.invalidate(),
+      ]),
     onError: (error) => {
       toast({
         variant: "destructive",
@@ -26,7 +31,11 @@ export const useAddDinnersToShoppingList = (
       void utils.oda.transfer.invalidate();
       // Close the Dinner or picker drawer so Undo is outside its focus trap.
       await onAdded?.();
-      void utils.shoppingList.invalidate();
+      void Promise.all([
+        utils.shoppingList.list.invalidate(),
+        utils.shoppingList.recent.invalidate(),
+        utils.shoppingList.sources.invalidate(),
+      ]);
       toast({
         title: "Added to shopping list",
         action: (

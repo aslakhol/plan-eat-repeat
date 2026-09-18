@@ -41,12 +41,16 @@ export function useAddShoppingItem(isCurrent: () => boolean) {
         description: "Check your connection and try again.",
       });
     },
-    onSettled: (_saved, _error, _preview, context) => {
+    onSettled: (_saved, _error, preview, context) => {
       if (!isCurrent()) return;
       setPendingItems((items) =>
         items.filter((item) => item.id !== context?.id),
       );
-      void utils.shoppingList.invalidate();
+      void utils.shoppingList.list.invalidate();
+      void utils.shoppingList.recent.invalidate();
+      if (!("ownItemId" in preview.selection)) {
+        void utils.shoppingList.sources.invalidate();
+      }
     },
   });
   return { addItem: add.mutate, pendingItems };

@@ -341,6 +341,7 @@ function AddDinnerFlow(
       await Promise.all([
         utils.dinner.summaries.invalidate(),
         utils.dinner.tags.invalidate(),
+        utils.dinner.ingredientNames.invalidate(),
         utils.plan.plannedDinners.invalidate(),
       ]);
 

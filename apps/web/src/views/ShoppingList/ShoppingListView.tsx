@@ -182,7 +182,10 @@ export function ShoppingListView() {
     networkMode: "always",
     retry: false,
     onSuccess: async () => {
-      await utils.shoppingList.invalidate();
+      await Promise.all([
+        utils.shoppingList.list.invalidate(),
+        utils.shoppingList.recent.invalidate(),
+      ]);
       setClearOpen(false);
     },
   });

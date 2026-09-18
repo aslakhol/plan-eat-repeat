@@ -81,7 +81,22 @@ export function EditItemSheet({
   });
   const utils = api.useUtils();
   const onSuccess = async () => {
-    await utils.shoppingList.invalidate();
+    await Promise.all([
+      utils.shoppingList.list.invalidate(),
+      utils.shoppingList.recent.invalidate(),
+      ...(name !== item.name ||
+      note !== (item.note ?? "") ||
+      categoryDraft !== undefined ||
+      deleteOwnItem.isPending
+        ? [utils.shoppingList.sources.invalidate()]
+        : []),
+      ...(excludedDraft !== undefined ||
+      name !== item.name ||
+      note !== (item.note ?? "") ||
+      deleteOwnItem.isPending
+        ? [utils.shoppingList.usuallyHave.invalidate()]
+        : []),
+    ]);
     onClose();
   };
   const options = {

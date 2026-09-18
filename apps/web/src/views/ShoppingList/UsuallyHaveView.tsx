@@ -20,7 +20,12 @@ export function UsuallyHaveView() {
     networkMode: "always",
     retry: false,
     onSuccess: async (_, input) => {
-      await utils.shoppingList.usuallyHave.invalidate();
+      await Promise.all([
+        utils.shoppingList.usuallyHave.invalidate(),
+        utils.shoppingList.list.invalidate(),
+        utils.shoppingList.recent.invalidate(),
+        ...("name" in input ? [utils.shoppingList.sources.invalidate()] : []),
+      ]);
       if (input.excluded && "name" in input) {
         setName("");
         inputRef.current?.focus();

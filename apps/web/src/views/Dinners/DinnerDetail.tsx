@@ -92,6 +92,7 @@ export const DinnerDetail = () => {
       toast({ title: `${result.dinner.name} deleted` });
       await Promise.all([
         utils.dinner.summaries.invalidate(),
+        utils.dinner.ingredientNames.invalidate(),
         utils.plan.plannedDinners.invalidate(),
       ]);
       void router.replace("/dinners");

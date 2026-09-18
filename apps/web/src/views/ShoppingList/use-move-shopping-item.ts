@@ -95,7 +95,10 @@ export function useMoveShoppingItem(
       moves.current.delete(move.key);
       publish();
       // Refresh in the background; another tap never waits for these queries.
-      void utils.shoppingList.invalidate();
+      void Promise.all([
+        utils.shoppingList.list.invalidate(),
+        utils.shoppingList.recent.invalidate(),
+      ]);
     }
   };
 
