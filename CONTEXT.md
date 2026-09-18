@@ -64,7 +64,7 @@ Fulfilling Shopping Items through the Household's Oda Cart. Completed items move
 A store-oriented grouping of Shopping Items used to order the Shopping List.
 
 **Own Item**:
-A Household's saved combination of a product name and optional Shopping Note, with its own Shopping Category and Usually Have setting, whether the name originated in the standard catalog or was entered by the Household. It remains available for reuse independently of the Shopping List and Recently Used; Amount and Unit belong to requirements to buy it, not to the Own Item.
+A Household's saved combination of a product name and optional Shopping Note, with its own Shopping Category, Usually Have setting and optional preferred Oda product, whether the name originated in the standard catalog or was entered by the Household. It remains available for reuse independently of the Shopping List and Recently Used; Amount and Unit belong to requirements to buy it, not to the Own Item.
 _Avoid_: Shopping Product
 
 **Standard Shopping Item**:

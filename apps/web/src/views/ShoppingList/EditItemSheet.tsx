@@ -24,6 +24,8 @@ import {
 } from "~/components/ui/select";
 import { cn } from "~/lib/utils";
 import { api, type RouterOutputs } from "~/utils/api";
+import type { OdaProductPreference } from "~/lib/oda-product";
+import { OdaProductPicker } from "./OdaProductPicker";
 
 export function EditItemSheet({
   item,
@@ -48,6 +50,27 @@ export function EditItemSheet({
   const [categoryDraft, setCategoryDraft] =
     useState<typeof item.ownItem.category>();
   const [excludedDraft, setExcludedDraft] = useState<boolean>();
+  const odaStatus = api.oda.status.useQuery(undefined, {
+    refetchInterval: 2000,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
+    retry: false,
+  });
+  const odaConnected =
+    odaStatus.data?.connected && !odaStatus.data.reconnectRequired;
+  const [odaProductDraft, setOdaProductDraft] = useState<
+    OdaProductPreference | null | undefined
+  >();
+  const odaProduct =
+    odaProductDraft !== undefined
+      ? odaProductDraft
+      : item.ownItem.odaProductId !== null
+        ? {
+            id: item.ownItem.odaProductId,
+            name: item.ownItem.odaProductName!,
+            description: item.ownItem.odaProductDescription!,
+          }
+        : null;
   const preferences = api.shoppingList.usuallyHave.useQuery(undefined, {
     refetchInterval: 2000,
     refetchOnWindowFocus: "always",
@@ -87,7 +110,8 @@ export function EditItemSheet({
       amount !== initialAmount ||
       unit !== (item.unit ?? "") ||
       categoryDraft !== undefined ||
-      excludedDraft !== undefined;
+      excludedDraft !== undefined ||
+      (odaConnected && odaProductDraft !== undefined);
     if (!changed) {
       onClose();
       return;
@@ -101,6 +125,7 @@ export function EditItemSheet({
       unit,
       usuallyHave: excludedDraft,
       category: categoryDraft,
+      odaProduct: odaConnected ? odaProductDraft : undefined,
     });
   };
 
@@ -278,6 +303,13 @@ export function EditItemSheet({
                 </SelectContent>
               </Select>
             </div>
+            {odaConnected && (
+              <OdaProductPicker
+                product={odaProduct}
+                itemName={name}
+                onChange={setOdaProductDraft}
+              />
+            )}
             <div className="border-border flex items-center justify-between gap-4 rounded-xl border p-3.5">
               <Label
                 htmlFor="edit-shopping-excluded"

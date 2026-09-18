@@ -30,10 +30,10 @@ mock.module("@modelcontextprotocol/sdk/client/streamableHttp.js", {
     },
   },
 });
-let nextCart:
-  | (() => Promise<{ structuredContent: { url: string } }>)
+const searchResponse = { result: [] };
+let nextSearch:
+  | (() => Promise<{ structuredContent: typeof searchResponse }>)
   | undefined;
-const cartResult = { url: "https://oda.com/no/cart/" };
 mock.module("@modelcontextprotocol/sdk/client/index.js", {
   namedExports: {
     Client: class {
@@ -41,12 +41,12 @@ mock.module("@modelcontextprotocol/sdk/client/index.js", {
         return Promise.resolve();
       }
       callTool() {
-        const pending = nextCart;
-        nextCart = undefined;
+        const pending = nextSearch;
+        nextSearch = undefined;
         return pending
           ? pending()
           : Promise.resolve({
-              structuredContent: { ...cartResult, groups: [] },
+              structuredContent: searchResponse,
             });
       }
       close() {
@@ -156,8 +156,8 @@ void test("Oda authorization belongs to its initiating member and Household", as
       reconnectRequired: false,
     });
     await assert.rejects(caller(0).callback({ state, code: "code" }));
-    assert.deepEqual(await caller(1).cart(), cartResult);
-    await assert.rejects(caller(2).cart());
+    assert.deepEqual(await caller(1).searchProducts({ query: "Milk" }), []);
+    await assert.rejects(caller(2).searchProducts({ query: "Milk" }));
     expiresIn = 1;
     const reconnect = await caller(0).connect();
     challenge = new URL(reconnect.url).searchParams.get("code_challenge");
@@ -167,7 +167,7 @@ void test("Oda authorization belongs to its initiating member and Household", as
     });
     refreshFails = true;
     refreshStatus = 503;
-    await assert.rejects(caller(1).cart());
+    await assert.rejects(caller(1).searchProducts({ query: "Milk" }));
     assert.deepEqual(await caller(0).status(), {
       connected: true,
       reconnectRequired: false,
@@ -175,21 +175,21 @@ void test("Oda authorization belongs to its initiating member and Household", as
     refreshFails = false;
     refreshStatus = 400;
     expiresIn = 3600;
-    assert.deepEqual(await caller(1).cart(), cartResult);
+    assert.deepEqual(await caller(1).searchProducts({ query: "Milk" }), []);
     const now = Date.now();
     const clock = mock.method(Date, "now", () => now);
     const oldResponse = Promise.withResolvers<{
-      structuredContent: { url: string };
+      structuredContent: typeof searchResponse;
     }>();
     const started = Promise.withResolvers<void>();
-    nextCart = () => {
+    nextSearch = () => {
       started.resolve();
       return oldResponse.promise;
     };
-    const stale = caller(1).cart();
+    const stale = caller(1).searchProducts({ query: "Milk" });
     await started.promise;
     clock.mock.mockImplementation(() => now + 3_550_000);
-    await caller(0).cart();
+    await caller(0).searchProducts({ query: "Milk" });
     oldResponse.reject(
       Object.assign(new Error("Old token expired"), { code: 401 }),
     );
@@ -208,7 +208,7 @@ void test("Oda authorization belongs to its initiating member and Household", as
       code: "code",
     });
     refreshFails = true;
-    await assert.rejects(caller(1).cart());
+    await assert.rejects(caller(1).searchProducts({ query: "Milk" }));
     assert.deepEqual(await caller(0).status(), {
       connected: true,
       reconnectRequired: true,

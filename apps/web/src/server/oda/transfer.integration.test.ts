@@ -1118,3 +1118,223 @@ void test("successful shopping additions dismiss completed results, while edits 
     await shopping.addRecent({ id: recent.id });
     assert.equal(await member.transfer(), null);
   }));
+
+void test("a preferred product survives edits, Recently Used and later shopping trips without leaking to note variants", () =>
+  withHousehold(async ({ oda, member, shopping }) => {
+    products = [milk, eggs];
+    const selected = (await member.searchProducts({ query: "Milk" }))[0]!;
+    const item = await shopping.addManual({ name: "Milk" });
+    const preferred = await shopping.edit({ ...item, odaProduct: selected });
+    assert.equal(preferred.ownItem.odaProductId, milk.id);
+    const renamed = await shopping.edit({
+      ...preferred,
+      name: "Breakfast milk",
+      note: "for coffee",
+    });
+    assert.equal(renamed.ownItem.odaProductId, milk.id);
+    const plain = await shopping.addManual({ name: "Breakfast milk" });
+    assert.equal(plain.ownItem.odaProductId, null);
+    await shopping.remove({ id: renamed.id });
+    const recent = (await shopping.recent())[0]!;
+    assert.equal(recent.ownItem.odaProductId, milk.id);
+    const replaced = await shopping.editRecent({ ...recent, odaProduct: eggs });
+    assert.equal(replaced.ownItem.odaProductId, eggs.id);
+    const restored = await shopping.addRecent({ id: replaced.id });
+    assert.equal(restored.ownItem.odaProductId, eggs.id);
+    const cleared = await shopping.edit({ ...restored, odaProduct: null });
+    assert.equal(cleared.ownItem.odaProductId, null);
+    assert.equal(cleared.ownItem.odaProductName, null);
+    assert.equal(cleared.ownItem.odaProductDescription, null);
+    await oda.disconnect();
+    await assert.rejects(shopping.edit({ ...cleared, odaProduct: milk }), {
+      code: "PRECONDITION_FAILED",
+    });
+    await assert.rejects(member.searchProducts({ query: "Milk" }), {
+      code: "PRECONDITION_FAILED",
+    });
+  }));
+
+void test("Own Item merges keep the destination preference unless explicitly changed", () =>
+  withHousehold(async ({ shopping }) => {
+    const destination = await shopping.addManual({ name: "Milk" });
+    await shopping.edit({ ...destination, odaProduct: milk });
+    const source = await shopping.addManual({ name: "Breakfast milk" });
+    await shopping.edit({ ...source, odaProduct: eggs });
+    const merged = await shopping.edit({ ...source, name: "Milk" });
+    assert.equal(merged.ownItemId, destination.ownItemId);
+    assert.equal(merged.ownItem.odaProductId, milk.id);
+    const another = await shopping.addManual({ name: "Other milk" });
+    const cleared = await shopping.edit({
+      ...another,
+      name: "Milk",
+      odaProduct: null,
+    });
+    assert.equal(cleared.ownItem.odaProductId, null);
+    const automatic = await shopping.addManual({ name: "Automatic" });
+    const preferred = await shopping.addManual({ name: "Preferred" });
+    await shopping.edit({ ...preferred, odaProduct: milk });
+    const automaticMerge = await shopping.edit({
+      ...preferred,
+      name: automatic.name,
+    });
+    assert.equal(automaticMerge.ownItem.odaProductId, null);
+  }));
+
+void test("another Household cannot change an item's Oda preference or use its connection", () =>
+  withHousehold(async ({ shopping }) => {
+    const item = await shopping.addManual({ name: "Milk" });
+    await shopping.edit({ ...item, odaProduct: milk });
+    await withHousehold(async ({ oda: otherOda, shopping: otherShopping }) => {
+      await assert.rejects(otherShopping.edit({ ...item, odaProduct: eggs }));
+      await otherOda.disconnect();
+      await assert.rejects(otherOda.searchProducts({ query: "Milk" }), {
+        code: "PRECONDITION_FAILED",
+      });
+    });
+    assert.equal((await shopping.list())[0]?.ownItem.odaProductId, milk.id);
+  }));
+
+void test("transfers find the preferred product by name, use its pack size, and retain it for reuse", () =>
+  withHousehold(async ({ member, shopping }) => {
+    cart = new Map();
+    added = [];
+    products = [eggs];
+    const preferredMilk = {
+      ...milk,
+      id: 30,
+      name: "Favourite milk",
+      description: "0.5 l",
+    };
+    historySearch = new Map([[preferredMilk.name, [preferredMilk]]]);
+    try {
+      const item = await shopping.addManual({ name: "Milk" });
+      await shopping.edit({
+        ...item,
+        amount: 1.5,
+        unit: "l",
+        odaProduct: preferredMilk,
+      });
+      selections = [
+        {
+          requirementId: item.id,
+          productId: preferredMilk.id,
+          quantity: 3,
+          measurement: {
+            amount: 1.5,
+            unit: "l",
+            packAmount: 0.5,
+            packUnit: "l",
+          },
+        },
+      ];
+      await member.send({ id: crypto.randomUUID() });
+      assert.deepEqual(added, [{ productId: preferredMilk.id, quantity: 3 }]);
+      assert.deepEqual(await shopping.list(), []);
+      const recent = (await shopping.recent())[0]!;
+      assert.equal(recent.ownItem.odaProductId, preferredMilk.id);
+      const restored = await shopping.addRecent({ id: recent.id });
+      assert.equal(restored.ownItem.odaProductId, preferredMilk.id);
+    } finally {
+      historySearch = new Map();
+    }
+  }));
+
+void test("preferred products cannot be substituted, unavailable, or accepted from saved metadata alone", async () => {
+  for (const scenario of ["substitute", "unavailable", "missing"] as const) {
+    await withHousehold(async ({ oda, shopping }) => {
+      cart = new Map([[eggs.id, 1]]);
+      added = [];
+      products =
+        scenario === "missing"
+          ? [eggs]
+          : [
+              {
+                ...milk,
+                availability: { isAvailable: scenario !== "unavailable" },
+              },
+              eggs,
+            ];
+      const item = await shopping.addManual({ name: "Milk" });
+      await shopping.edit({ ...item, odaProduct: milk });
+      selections = [
+        {
+          requirementId: item.id,
+          productId: scenario === "substitute" ? eggs.id : milk.id,
+          quantity: null,
+        },
+      ];
+      await oda.send({ id: crypto.randomUUID() });
+      assert.deepEqual(added, []);
+      assert.equal((await shopping.list())[0]?.id, item.id);
+      assert.deepEqual(await shopping.recent(), []);
+    });
+  }
+});
+
+void test("removing a preference restores automatic matching", () =>
+  withHousehold(async ({ oda, shopping }) => {
+    cart = new Map();
+    added = [];
+    products = [milk, eggs];
+    const item = await shopping.addManual({ name: "Milk" });
+    await shopping.edit({ ...item, odaProduct: eggs });
+    await shopping.edit({ ...item, odaProduct: null });
+    selections = [
+      { requirementId: item.id, productId: milk.id, quantity: null },
+    ];
+    await oda.send({ id: crypto.randomUUID() });
+    assert.deepEqual(added, [{ productId: milk.id, quantity: 1 }]);
+    assert.deepEqual(await shopping.list(), []);
+  }));
+
+void test("changing a preference during a transfer preserves the edited requirement", () =>
+  withHousehold(async ({ oda, shopping }) => {
+    cart = new Map();
+    added = [];
+    products = [milk, eggs];
+    const item = await shopping.addManual({ name: "Milk" });
+    await shopping.edit({ ...item, odaProduct: milk });
+    selections = [
+      { requirementId: item.id, productId: milk.id, quantity: null },
+    ];
+    beforeAdd = async () => {
+      await shopping.edit({ ...item, odaProduct: eggs });
+    };
+    try {
+      await oda.send({ id: crypto.randomUUID() });
+      assert.deepEqual(added, [{ productId: milk.id, quantity: 1 }]);
+      const remaining = await shopping.list();
+      assert.equal(remaining[0]?.id, item.id);
+      assert.equal(remaining[0]?.ownItem.odaProductId, eggs.id);
+      assert.deepEqual(await shopping.recent(), []);
+    } finally {
+      beforeAdd = () => Promise.resolve();
+    }
+  }));
+
+void test("disconnecting Oda preserves product preferences through ordinary edits and reconnection", () =>
+  withHousehold(async ({ oda, member, shopping }) => {
+    const item = await shopping.addManual({ name: "Milk" });
+    await shopping.edit({ ...item, odaProduct: milk });
+    await member.disconnect();
+    assert.equal((await oda.status()).connected, false);
+    const disconnected = await shopping.edit({ ...item, note: "breakfast" });
+    assert.equal(disconnected.ownItem.odaProductId, milk.id);
+    assert.equal(disconnected.ownItem.odaProductName, milk.name);
+    assert.equal(disconnected.ownItem.odaProductDescription, milk.description);
+    await shopping.remove({ id: disconnected.id });
+    const recent = (await shopping.recent())[0]!;
+    const editedRecent = await shopping.editRecent({ ...recent, amount: 2 });
+    assert.equal(editedRecent.ownItem.odaProductId, milk.id);
+    const { url } = await member.connect();
+    await member.callback({
+      state: new URL(url).searchParams.get("state")!,
+      code: "reconnect-code",
+    });
+    assert.equal((await oda.status()).connected, true);
+    const restored = await shopping.addRecent({ id: editedRecent.id });
+    assert.equal(restored.ownItem.odaProductId, milk.id);
+    assert.equal(restored.ownItem.odaProductName, milk.name);
+    assert.equal(restored.note, "breakfast");
+    assert.equal(restored.amount, 2);
+  }));

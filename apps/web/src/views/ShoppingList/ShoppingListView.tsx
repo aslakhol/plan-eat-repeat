@@ -125,7 +125,6 @@ export function ShoppingListView() {
     }
   }, []);
   const menuRef = useRef<HTMLDetailsElement>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const utils = api.useUtils();
   const list = api.shoppingList.list.useQuery(undefined, {
     refetchInterval: 2000,
@@ -162,7 +161,6 @@ export function ShoppingListView() {
   const hasItems = items.length > 0 || optimisticItems.length > 0;
   const oda = useOdaShopping(
     items,
-    menuOpen,
     pendingItems.length > 0 || pendingOwnIds.size > 0,
   );
   const recentItems = movedRecentItems.filter(
@@ -240,11 +238,7 @@ export function ShoppingListView() {
           <Share2 aria-hidden="true" className="size-4" />
           <span className="max-[360px]:sr-only">Share</span>
         </Button>
-        <DetailsMenu
-          ref={menuRef}
-          className="relative"
-          onToggle={(event) => setMenuOpen(event.currentTarget.open)}
-        >
+        <DetailsMenu ref={menuRef} className="relative">
           <Button
             asChild
             variant="outline"

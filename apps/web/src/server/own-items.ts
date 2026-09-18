@@ -8,6 +8,8 @@ import {
   normalizeShoppingName,
 } from "@planeatrepeat/shared";
 import { shoppingCatalog } from "./shopping-catalog";
+import { TRPCError } from "@trpc/server";
+import type { OdaProductPreference } from "~/lib/oda-product";
 
 const catalogs = {
   en: new Map(
@@ -116,11 +118,20 @@ export async function editOwnItem(
     note: string | null;
     category?: ShoppingCategory;
     usuallyHave?: boolean;
+    odaProduct?: OdaProductPreference | null;
   },
 ) {
   const original = await tx.ownItem.findUniqueOrThrow({
     where: { id, householdId },
   });
+  if (
+    input.odaProduct !== undefined &&
+    !(await tx.odaConnection.findUnique({ where: { householdId } }))
+  )
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "Connect Oda in Shopping List settings.",
+    });
   const name = input.name.trim();
   const trimmedNote = input.note?.trim() ?? "";
   const note = trimmedNote.length > 0 ? trimmedNote : null;
@@ -172,6 +183,14 @@ export async function editOwnItem(
       normalizedNote,
       category: input.category ?? original.category,
       usuallyHave: input.usuallyHave ?? original.usuallyHave,
+      // With no explicit selection, a merge keeps the destination's preference.
+      ...(input.odaProduct !== undefined
+        ? {
+            odaProductId: input.odaProduct?.id ?? null,
+            odaProductName: input.odaProduct?.name ?? null,
+            odaProductDescription: input.odaProduct?.description ?? null,
+          }
+        : {}),
     },
   });
   // A definition edit invalidates Dinner Undo for every referring requirement.
@@ -180,7 +199,8 @@ export async function editOwnItem(
     saved.name !== original.name ||
     saved.note !== original.note ||
     saved.category !== original.category ||
-    saved.usuallyHave !== original.usuallyHave
+    saved.usuallyHave !== original.usuallyHave ||
+    saved.odaProductId !== original.odaProductId
   ) {
     await tx.shoppingItem.updateMany({
       where: { householdId, ownItemId },

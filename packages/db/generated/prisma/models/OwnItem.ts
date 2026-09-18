@@ -20,8 +20,18 @@ export type OwnItemModel = runtime.Types.Result.DefaultSelection<Prisma.$OwnItem
 
 export type AggregateOwnItem = {
   _count: OwnItemCountAggregateOutputType | null
+  _avg: OwnItemAvgAggregateOutputType | null
+  _sum: OwnItemSumAggregateOutputType | null
   _min: OwnItemMinAggregateOutputType | null
   _max: OwnItemMaxAggregateOutputType | null
+}
+
+export type OwnItemAvgAggregateOutputType = {
+  odaProductId: number | null
+}
+
+export type OwnItemSumAggregateOutputType = {
+  odaProductId: number | null
 }
 
 export type OwnItemMinAggregateOutputType = {
@@ -33,6 +43,9 @@ export type OwnItemMinAggregateOutputType = {
   normalizedNote: string | null
   category: $Enums.ShoppingCategory | null
   usuallyHave: boolean | null
+  odaProductId: number | null
+  odaProductName: string | null
+  odaProductDescription: string | null
 }
 
 export type OwnItemMaxAggregateOutputType = {
@@ -44,6 +57,9 @@ export type OwnItemMaxAggregateOutputType = {
   normalizedNote: string | null
   category: $Enums.ShoppingCategory | null
   usuallyHave: boolean | null
+  odaProductId: number | null
+  odaProductName: string | null
+  odaProductDescription: string | null
 }
 
 export type OwnItemCountAggregateOutputType = {
@@ -55,9 +71,20 @@ export type OwnItemCountAggregateOutputType = {
   normalizedNote: number
   category: number
   usuallyHave: number
+  odaProductId: number
+  odaProductName: number
+  odaProductDescription: number
   _all: number
 }
 
+
+export type OwnItemAvgAggregateInputType = {
+  odaProductId?: true
+}
+
+export type OwnItemSumAggregateInputType = {
+  odaProductId?: true
+}
 
 export type OwnItemMinAggregateInputType = {
   id?: true
@@ -68,6 +95,9 @@ export type OwnItemMinAggregateInputType = {
   normalizedNote?: true
   category?: true
   usuallyHave?: true
+  odaProductId?: true
+  odaProductName?: true
+  odaProductDescription?: true
 }
 
 export type OwnItemMaxAggregateInputType = {
@@ -79,6 +109,9 @@ export type OwnItemMaxAggregateInputType = {
   normalizedNote?: true
   category?: true
   usuallyHave?: true
+  odaProductId?: true
+  odaProductName?: true
+  odaProductDescription?: true
 }
 
 export type OwnItemCountAggregateInputType = {
@@ -90,6 +123,9 @@ export type OwnItemCountAggregateInputType = {
   normalizedNote?: true
   category?: true
   usuallyHave?: true
+  odaProductId?: true
+  odaProductName?: true
+  odaProductDescription?: true
   _all?: true
 }
 
@@ -131,6 +167,18 @@ export type OwnItemAggregateArgs<ExtArgs extends runtime.Types.Extensions.Intern
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: OwnItemAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: OwnItemSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: OwnItemMinAggregateInputType
@@ -161,6 +209,8 @@ export type OwnItemGroupByArgs<ExtArgs extends runtime.Types.Extensions.Internal
   take?: number
   skip?: number
   _count?: OwnItemCountAggregateInputType | true
+  _avg?: OwnItemAvgAggregateInputType
+  _sum?: OwnItemSumAggregateInputType
   _min?: OwnItemMinAggregateInputType
   _max?: OwnItemMaxAggregateInputType
 }
@@ -174,7 +224,12 @@ export type OwnItemGroupByOutputType = {
   normalizedNote: string
   category: $Enums.ShoppingCategory
   usuallyHave: boolean
+  odaProductId: number | null
+  odaProductName: string | null
+  odaProductDescription: string | null
   _count: OwnItemCountAggregateOutputType | null
+  _avg: OwnItemAvgAggregateOutputType | null
+  _sum: OwnItemSumAggregateOutputType | null
   _min: OwnItemMinAggregateOutputType | null
   _max: OwnItemMaxAggregateOutputType | null
 }
@@ -206,6 +261,9 @@ export type OwnItemWhereInput = {
   normalizedNote?: Prisma.StringFilter<"OwnItem"> | string
   category?: Prisma.EnumShoppingCategoryFilter<"OwnItem"> | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolFilter<"OwnItem"> | boolean
+  odaProductId?: Prisma.IntNullableFilter<"OwnItem"> | number | null
+  odaProductName?: Prisma.StringNullableFilter<"OwnItem"> | string | null
+  odaProductDescription?: Prisma.StringNullableFilter<"OwnItem"> | string | null
   household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
   items?: Prisma.ShoppingItemListRelationFilter
   recentItems?: Prisma.RecentShoppingItemListRelationFilter
@@ -220,6 +278,9 @@ export type OwnItemOrderByWithRelationInput = {
   normalizedNote?: Prisma.SortOrder
   category?: Prisma.SortOrder
   usuallyHave?: Prisma.SortOrder
+  odaProductId?: Prisma.SortOrderInput | Prisma.SortOrder
+  odaProductName?: Prisma.SortOrderInput | Prisma.SortOrder
+  odaProductDescription?: Prisma.SortOrderInput | Prisma.SortOrder
   household?: Prisma.HouseholdOrderByWithRelationInput
   items?: Prisma.ShoppingItemOrderByRelationAggregateInput
   recentItems?: Prisma.RecentShoppingItemOrderByRelationAggregateInput
@@ -239,6 +300,9 @@ export type OwnItemWhereUniqueInput = Prisma.AtLeast<{
   normalizedNote?: Prisma.StringFilter<"OwnItem"> | string
   category?: Prisma.EnumShoppingCategoryFilter<"OwnItem"> | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolFilter<"OwnItem"> | boolean
+  odaProductId?: Prisma.IntNullableFilter<"OwnItem"> | number | null
+  odaProductName?: Prisma.StringNullableFilter<"OwnItem"> | string | null
+  odaProductDescription?: Prisma.StringNullableFilter<"OwnItem"> | string | null
   household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
   items?: Prisma.ShoppingItemListRelationFilter
   recentItems?: Prisma.RecentShoppingItemListRelationFilter
@@ -253,9 +317,14 @@ export type OwnItemOrderByWithAggregationInput = {
   normalizedNote?: Prisma.SortOrder
   category?: Prisma.SortOrder
   usuallyHave?: Prisma.SortOrder
+  odaProductId?: Prisma.SortOrderInput | Prisma.SortOrder
+  odaProductName?: Prisma.SortOrderInput | Prisma.SortOrder
+  odaProductDescription?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.OwnItemCountOrderByAggregateInput
+  _avg?: Prisma.OwnItemAvgOrderByAggregateInput
   _max?: Prisma.OwnItemMaxOrderByAggregateInput
   _min?: Prisma.OwnItemMinOrderByAggregateInput
+  _sum?: Prisma.OwnItemSumOrderByAggregateInput
 }
 
 export type OwnItemScalarWhereWithAggregatesInput = {
@@ -270,6 +339,9 @@ export type OwnItemScalarWhereWithAggregatesInput = {
   normalizedNote?: Prisma.StringWithAggregatesFilter<"OwnItem"> | string
   category?: Prisma.EnumShoppingCategoryWithAggregatesFilter<"OwnItem"> | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolWithAggregatesFilter<"OwnItem"> | boolean
+  odaProductId?: Prisma.IntNullableWithAggregatesFilter<"OwnItem"> | number | null
+  odaProductName?: Prisma.StringNullableWithAggregatesFilter<"OwnItem"> | string | null
+  odaProductDescription?: Prisma.StringNullableWithAggregatesFilter<"OwnItem"> | string | null
 }
 
 export type OwnItemCreateInput = {
@@ -280,6 +352,9 @@ export type OwnItemCreateInput = {
   normalizedNote?: string
   category: $Enums.ShoppingCategory
   usuallyHave?: boolean
+  odaProductId?: number | null
+  odaProductName?: string | null
+  odaProductDescription?: string | null
   household: Prisma.HouseholdCreateNestedOneWithoutOwnItemsInput
   items?: Prisma.ShoppingItemCreateNestedManyWithoutOwnItemInput
   recentItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutOwnItemInput
@@ -294,6 +369,9 @@ export type OwnItemUncheckedCreateInput = {
   normalizedNote?: string
   category: $Enums.ShoppingCategory
   usuallyHave?: boolean
+  odaProductId?: number | null
+  odaProductName?: string | null
+  odaProductDescription?: string | null
   items?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutOwnItemInput
   recentItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutOwnItemInput
 }
@@ -306,6 +384,9 @@ export type OwnItemUpdateInput = {
   normalizedNote?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  odaProductId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  odaProductName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  odaProductDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   household?: Prisma.HouseholdUpdateOneRequiredWithoutOwnItemsNestedInput
   items?: Prisma.ShoppingItemUpdateManyWithoutOwnItemNestedInput
   recentItems?: Prisma.RecentShoppingItemUpdateManyWithoutOwnItemNestedInput
@@ -320,6 +401,9 @@ export type OwnItemUncheckedUpdateInput = {
   normalizedNote?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  odaProductId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  odaProductName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  odaProductDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   items?: Prisma.ShoppingItemUncheckedUpdateManyWithoutOwnItemNestedInput
   recentItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutOwnItemNestedInput
 }
@@ -333,6 +417,9 @@ export type OwnItemCreateManyInput = {
   normalizedNote?: string
   category: $Enums.ShoppingCategory
   usuallyHave?: boolean
+  odaProductId?: number | null
+  odaProductName?: string | null
+  odaProductDescription?: string | null
 }
 
 export type OwnItemUpdateManyMutationInput = {
@@ -343,6 +430,9 @@ export type OwnItemUpdateManyMutationInput = {
   normalizedNote?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  odaProductId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  odaProductName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  odaProductDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type OwnItemUncheckedUpdateManyInput = {
@@ -354,6 +444,9 @@ export type OwnItemUncheckedUpdateManyInput = {
   normalizedNote?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  odaProductId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  odaProductName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  odaProductDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type OwnItemHouseholdIdNormalizedNameNormalizedNoteCompoundUniqueInput = {
@@ -376,6 +469,13 @@ export type OwnItemCountOrderByAggregateInput = {
   normalizedNote?: Prisma.SortOrder
   category?: Prisma.SortOrder
   usuallyHave?: Prisma.SortOrder
+  odaProductId?: Prisma.SortOrder
+  odaProductName?: Prisma.SortOrder
+  odaProductDescription?: Prisma.SortOrder
+}
+
+export type OwnItemAvgOrderByAggregateInput = {
+  odaProductId?: Prisma.SortOrder
 }
 
 export type OwnItemMaxOrderByAggregateInput = {
@@ -387,6 +487,9 @@ export type OwnItemMaxOrderByAggregateInput = {
   normalizedNote?: Prisma.SortOrder
   category?: Prisma.SortOrder
   usuallyHave?: Prisma.SortOrder
+  odaProductId?: Prisma.SortOrder
+  odaProductName?: Prisma.SortOrder
+  odaProductDescription?: Prisma.SortOrder
 }
 
 export type OwnItemMinOrderByAggregateInput = {
@@ -398,6 +501,13 @@ export type OwnItemMinOrderByAggregateInput = {
   normalizedNote?: Prisma.SortOrder
   category?: Prisma.SortOrder
   usuallyHave?: Prisma.SortOrder
+  odaProductId?: Prisma.SortOrder
+  odaProductName?: Prisma.SortOrder
+  odaProductDescription?: Prisma.SortOrder
+}
+
+export type OwnItemSumOrderByAggregateInput = {
+  odaProductId?: Prisma.SortOrder
 }
 
 export type OwnItemScalarRelationFilter = {
@@ -497,6 +607,9 @@ export type OwnItemCreateWithoutItemsInput = {
   normalizedNote?: string
   category: $Enums.ShoppingCategory
   usuallyHave?: boolean
+  odaProductId?: number | null
+  odaProductName?: string | null
+  odaProductDescription?: string | null
   household: Prisma.HouseholdCreateNestedOneWithoutOwnItemsInput
   recentItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutOwnItemInput
 }
@@ -510,6 +623,9 @@ export type OwnItemUncheckedCreateWithoutItemsInput = {
   normalizedNote?: string
   category: $Enums.ShoppingCategory
   usuallyHave?: boolean
+  odaProductId?: number | null
+  odaProductName?: string | null
+  odaProductDescription?: string | null
   recentItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutOwnItemInput
 }
 
@@ -537,6 +653,9 @@ export type OwnItemUpdateWithoutItemsInput = {
   normalizedNote?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  odaProductId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  odaProductName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  odaProductDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   household?: Prisma.HouseholdUpdateOneRequiredWithoutOwnItemsNestedInput
   recentItems?: Prisma.RecentShoppingItemUpdateManyWithoutOwnItemNestedInput
 }
@@ -550,6 +669,9 @@ export type OwnItemUncheckedUpdateWithoutItemsInput = {
   normalizedNote?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  odaProductId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  odaProductName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  odaProductDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recentItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutOwnItemNestedInput
 }
 
@@ -561,6 +683,9 @@ export type OwnItemCreateWithoutRecentItemsInput = {
   normalizedNote?: string
   category: $Enums.ShoppingCategory
   usuallyHave?: boolean
+  odaProductId?: number | null
+  odaProductName?: string | null
+  odaProductDescription?: string | null
   household: Prisma.HouseholdCreateNestedOneWithoutOwnItemsInput
   items?: Prisma.ShoppingItemCreateNestedManyWithoutOwnItemInput
 }
@@ -574,6 +699,9 @@ export type OwnItemUncheckedCreateWithoutRecentItemsInput = {
   normalizedNote?: string
   category: $Enums.ShoppingCategory
   usuallyHave?: boolean
+  odaProductId?: number | null
+  odaProductName?: string | null
+  odaProductDescription?: string | null
   items?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutOwnItemInput
 }
 
@@ -601,6 +729,9 @@ export type OwnItemUpdateWithoutRecentItemsInput = {
   normalizedNote?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  odaProductId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  odaProductName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  odaProductDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   household?: Prisma.HouseholdUpdateOneRequiredWithoutOwnItemsNestedInput
   items?: Prisma.ShoppingItemUpdateManyWithoutOwnItemNestedInput
 }
@@ -614,6 +745,9 @@ export type OwnItemUncheckedUpdateWithoutRecentItemsInput = {
   normalizedNote?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  odaProductId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  odaProductName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  odaProductDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   items?: Prisma.ShoppingItemUncheckedUpdateManyWithoutOwnItemNestedInput
 }
 
@@ -625,6 +759,9 @@ export type OwnItemCreateWithoutHouseholdInput = {
   normalizedNote?: string
   category: $Enums.ShoppingCategory
   usuallyHave?: boolean
+  odaProductId?: number | null
+  odaProductName?: string | null
+  odaProductDescription?: string | null
   items?: Prisma.ShoppingItemCreateNestedManyWithoutOwnItemInput
   recentItems?: Prisma.RecentShoppingItemCreateNestedManyWithoutOwnItemInput
 }
@@ -637,6 +774,9 @@ export type OwnItemUncheckedCreateWithoutHouseholdInput = {
   normalizedNote?: string
   category: $Enums.ShoppingCategory
   usuallyHave?: boolean
+  odaProductId?: number | null
+  odaProductName?: string | null
+  odaProductDescription?: string | null
   items?: Prisma.ShoppingItemUncheckedCreateNestedManyWithoutOwnItemInput
   recentItems?: Prisma.RecentShoppingItemUncheckedCreateNestedManyWithoutOwnItemInput
 }
@@ -679,6 +819,9 @@ export type OwnItemScalarWhereInput = {
   normalizedNote?: Prisma.StringFilter<"OwnItem"> | string
   category?: Prisma.EnumShoppingCategoryFilter<"OwnItem"> | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolFilter<"OwnItem"> | boolean
+  odaProductId?: Prisma.IntNullableFilter<"OwnItem"> | number | null
+  odaProductName?: Prisma.StringNullableFilter<"OwnItem"> | string | null
+  odaProductDescription?: Prisma.StringNullableFilter<"OwnItem"> | string | null
 }
 
 export type OwnItemCreateManyHouseholdInput = {
@@ -689,6 +832,9 @@ export type OwnItemCreateManyHouseholdInput = {
   normalizedNote?: string
   category: $Enums.ShoppingCategory
   usuallyHave?: boolean
+  odaProductId?: number | null
+  odaProductName?: string | null
+  odaProductDescription?: string | null
 }
 
 export type OwnItemUpdateWithoutHouseholdInput = {
@@ -699,6 +845,9 @@ export type OwnItemUpdateWithoutHouseholdInput = {
   normalizedNote?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  odaProductId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  odaProductName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  odaProductDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   items?: Prisma.ShoppingItemUpdateManyWithoutOwnItemNestedInput
   recentItems?: Prisma.RecentShoppingItemUpdateManyWithoutOwnItemNestedInput
 }
@@ -711,6 +860,9 @@ export type OwnItemUncheckedUpdateWithoutHouseholdInput = {
   normalizedNote?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  odaProductId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  odaProductName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  odaProductDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   items?: Prisma.ShoppingItemUncheckedUpdateManyWithoutOwnItemNestedInput
   recentItems?: Prisma.RecentShoppingItemUncheckedUpdateManyWithoutOwnItemNestedInput
 }
@@ -723,6 +875,9 @@ export type OwnItemUncheckedUpdateManyWithoutHouseholdInput = {
   normalizedNote?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.EnumShoppingCategoryFieldUpdateOperationsInput | $Enums.ShoppingCategory
   usuallyHave?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  odaProductId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  odaProductName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  odaProductDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -774,6 +929,9 @@ export type OwnItemSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   normalizedNote?: boolean
   category?: boolean
   usuallyHave?: boolean
+  odaProductId?: boolean
+  odaProductName?: boolean
+  odaProductDescription?: boolean
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
   items?: boolean | Prisma.OwnItem$itemsArgs<ExtArgs>
   recentItems?: boolean | Prisma.OwnItem$recentItemsArgs<ExtArgs>
@@ -789,6 +947,9 @@ export type OwnItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   normalizedNote?: boolean
   category?: boolean
   usuallyHave?: boolean
+  odaProductId?: boolean
+  odaProductName?: boolean
+  odaProductDescription?: boolean
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["ownItem"]>
 
@@ -801,6 +962,9 @@ export type OwnItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   normalizedNote?: boolean
   category?: boolean
   usuallyHave?: boolean
+  odaProductId?: boolean
+  odaProductName?: boolean
+  odaProductDescription?: boolean
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["ownItem"]>
 
@@ -813,9 +977,12 @@ export type OwnItemSelectScalar = {
   normalizedNote?: boolean
   category?: boolean
   usuallyHave?: boolean
+  odaProductId?: boolean
+  odaProductName?: boolean
+  odaProductDescription?: boolean
 }
 
-export type OwnItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "householdId" | "name" | "normalizedName" | "note" | "normalizedNote" | "category" | "usuallyHave", ExtArgs["result"]["ownItem"]>
+export type OwnItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "householdId" | "name" | "normalizedName" | "note" | "normalizedNote" | "category" | "usuallyHave" | "odaProductId" | "odaProductName" | "odaProductDescription", ExtArgs["result"]["ownItem"]>
 export type OwnItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
   items?: boolean | Prisma.OwnItem$itemsArgs<ExtArgs>
@@ -845,6 +1012,9 @@ export type $OwnItemPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     normalizedNote: string
     category: $Enums.ShoppingCategory
     usuallyHave: boolean
+    odaProductId: number | null
+    odaProductName: string | null
+    odaProductDescription: string | null
   }, ExtArgs["result"]["ownItem"]>
   composites: {}
 }
@@ -1279,6 +1449,9 @@ export interface OwnItemFieldRefs {
   readonly normalizedNote: Prisma.FieldRef<"OwnItem", 'String'>
   readonly category: Prisma.FieldRef<"OwnItem", 'ShoppingCategory'>
   readonly usuallyHave: Prisma.FieldRef<"OwnItem", 'Boolean'>
+  readonly odaProductId: Prisma.FieldRef<"OwnItem", 'Int'>
+  readonly odaProductName: Prisma.FieldRef<"OwnItem", 'String'>
+  readonly odaProductDescription: Prisma.FieldRef<"OwnItem", 'String'>
 }
     
 

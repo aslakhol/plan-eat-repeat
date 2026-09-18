@@ -1,4 +1,5 @@
 import { selectRecipeIngredient } from "~/lib/shopping-matching";
+import { odaProductPreferenceSchema } from "~/lib/oda-product";
 import {
   shoppingSources,
   resolveShoppingSelection,
@@ -46,6 +47,7 @@ export const shoppingListRouter = createTRPCRouter({
         id: z.string(),
         usuallyHave: z.boolean().optional(),
         category: z.nativeEnum(ShoppingCategory).optional(),
+        odaProduct: odaProductPreferenceSchema.nullable().optional(),
       }),
     )
     .mutation(({ ctx, input }) =>
@@ -369,6 +371,7 @@ export const shoppingListRouter = createTRPCRouter({
         id: z.string(),
         usuallyHave: z.boolean().optional(),
         category: z.nativeEnum(ShoppingCategory).optional(),
+        odaProduct: odaProductPreferenceSchema.nullable().optional(),
       }),
     )
     .mutation(({ ctx, input }) =>

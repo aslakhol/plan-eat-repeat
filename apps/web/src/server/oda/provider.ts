@@ -31,6 +31,9 @@ export const cartSchema = z.object({
     }),
   ),
 });
+export const productSearchSchema = z.object({
+  result: z.array(z.object({ products: z.array(productSchema) })),
+});
 export type Cart = z.infer<typeof cartSchema>;
 
 export async function odaTool(

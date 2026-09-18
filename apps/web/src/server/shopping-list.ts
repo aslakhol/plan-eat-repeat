@@ -1,6 +1,7 @@
 import { editOwnItem, rememberOwnItem, shoppingItemDetails } from "./own-items";
 import type { Prisma, ShoppingCategory } from "@planeatrepeat/db";
 import { convertUnitAmount, normalizeUnit } from "@planeatrepeat/shared";
+import type { OdaProductPreference } from "~/lib/oda-product";
 
 export type ShoppingRequirement = {
   name: string;
@@ -62,6 +63,7 @@ export const saveShoppingItem = async (
     id?: string;
     category?: ShoppingCategory;
     usuallyHave?: boolean;
+    odaProduct?: OdaProductPreference | null;
   },
 ) => {
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
