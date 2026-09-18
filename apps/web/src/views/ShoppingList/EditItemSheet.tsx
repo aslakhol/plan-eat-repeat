@@ -23,33 +23,55 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { cn } from "~/lib/utils";
+import {
+  shoppingCategoriesQueryOptions,
+  shoppingChoicesQueryOptions,
+} from "~/lib/query-freshness";
 import { api, type RouterOutputs } from "~/utils/api";
 import type { OdaProductPreference } from "~/lib/oda-product";
+import { useShopping } from "./ShoppingProvider";
+import type { ShoppingEdit } from "./use-edit-shopping-item";
 import { OdaProductPicker } from "./OdaProductPicker";
 
 export function EditItemSheet({
   item,
   onClose,
   recent = false,
+  draft,
+  failedKey,
 }: {
   item: RouterOutputs["shoppingList"]["list"][number];
   onClose: () => void;
   recent?: boolean;
+  draft?: ShoppingEdit["input"];
+  failedKey?: string;
 }) {
+  const { editItem, deleteOwnItem } = useShopping();
   const categories = api.shoppingList.categories.useQuery(undefined, {
-    refetchInterval: 2000,
-    refetchOnWindowFocus: "always",
-    refetchOnReconnect: "always",
+    ...shoppingCategoriesQueryOptions,
     retry: false,
   });
-  const [name, setName] = useState(item.name);
-  const [note, setNote] = useState(item.note ?? "");
+  const [name, setName] = useState(draft?.name ?? item.name);
+  const [note, setNote] = useState(
+    draft ? (draft.note ?? "") : (item.note ?? ""),
+  );
   const initialAmount = item.amount === null ? "" : formatAmount(item.amount);
-  const [amount, setAmount] = useState(initialAmount);
-  const [unit, setUnit] = useState(item.unit ?? "");
-  const [categoryDraft, setCategoryDraft] =
-    useState<typeof item.ownItem.category>();
-  const [excludedDraft, setExcludedDraft] = useState<boolean>();
+  const [amount, setAmount] = useState(
+    draft
+      ? draft.amount === null
+        ? ""
+        : formatAmount(draft.amount)
+      : initialAmount,
+  );
+  const [unit, setUnit] = useState(
+    draft ? (draft.unit ?? "") : (item.unit ?? ""),
+  );
+  const [categoryDraft, setCategoryDraft] = useState<
+    typeof item.ownItem.category | undefined
+  >(draft?.category);
+  const [excludedDraft, setExcludedDraft] = useState<boolean | undefined>(
+    draft?.usuallyHave,
+  );
   const odaStatus = api.oda.status.useQuery(undefined, {
     refetchInterval: 2000,
     refetchOnWindowFocus: "always",
@@ -60,7 +82,7 @@ export function EditItemSheet({
     odaStatus.data?.connected && !odaStatus.data.reconnectRequired;
   const [odaProductDraft, setOdaProductDraft] = useState<
     OdaProductPreference | null | undefined
-  >();
+  >(draft?.odaProduct);
   const odaProduct =
     odaProductDraft !== undefined
       ? odaProductDraft
@@ -71,40 +93,20 @@ export function EditItemSheet({
             description: item.ownItem.odaProductDescription!,
           }
         : null;
-  const preferences = api.shoppingList.usuallyHave.useQuery(undefined, {
-    refetchInterval: 2000,
-    refetchOnWindowFocus: "always",
-    refetchOnReconnect: "always",
-    retry: false,
+  const excluded = excludedDraft ?? item.ownItem.usuallyHave;
+  const [unitFocused, setUnitFocused] = useState(false);
+  const ingredientNames = api.dinner.ingredientNames.useQuery(undefined, {
+    ...shoppingChoicesQueryOptions,
+    enabled: unitFocused,
   });
-  const excluded =
-    excludedDraft ??
-    preferences.data?.some((preference) => preference.id === item.ownItemId) ??
-    false;
-  const ingredientNames = api.dinner.ingredientNames.useQuery();
-  const utils = api.useUtils();
-  const onSuccess = async () => {
-    await utils.shoppingList.invalidate();
-    onClose();
-  };
-  const options = {
-    networkMode: "always" as const,
-    retry: false,
-    onSuccess,
-  };
-  const editActive = api.shoppingList.edit.useMutation(options);
-  const editRecent = api.shoppingList.editRecent.useMutation(options);
-  const deleteOwnItem = api.shoppingList.deleteOwnItem.useMutation(options);
-  const edit = recent ? editRecent : editActive;
-  const pending = edit.isPending || deleteOwnItem.isPending;
   const parsedAmount = parseAmount(amount);
   const amountValid =
     amountInputSchema.safeParse(amount).success &&
     (parsedAmount === null || Number.isFinite(parsedAmount));
   const nameValid = name.trim().length > 0;
   const saveAndClose = () => {
-    if (pending) return;
     const changed =
+      draft !== undefined ||
       name !== item.name ||
       note !== (item.note ?? "") ||
       amount !== initialAmount ||
@@ -117,16 +119,24 @@ export function EditItemSheet({
       return;
     }
     if (!nameValid || !amountValid) return;
-    edit.mutate({
-      id: item.id,
-      name,
-      note,
-      amount: parsedAmount,
-      unit,
-      usuallyHave: excludedDraft,
-      category: categoryDraft,
-      odaProduct: odaConnected ? odaProductDraft : undefined,
-    });
+    editItem(
+      {
+        item,
+        recent,
+        input: {
+          id: item.id,
+          name,
+          note,
+          amount: parsedAmount,
+          unit,
+          usuallyHave: excludedDraft,
+          category: categoryDraft,
+          odaProduct: odaConnected ? odaProductDraft : undefined,
+        },
+      },
+      failedKey,
+    );
+    onClose();
   };
 
   return (
@@ -153,7 +163,7 @@ export function EditItemSheet({
             saveAndClose();
           }}
         >
-          <fieldset disabled={pending} className="space-y-4">
+          <fieldset className="space-y-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <Label htmlFor="edit-shopping-name" className="sr-only">
@@ -176,7 +186,7 @@ export function EditItemSheet({
                   disabled={!nameValid || !amountValid}
                   className="text-primary h-12 shrink-0 rounded-xl px-3"
                 >
-                  {edit.isPending ? "Saving…" : "Done"}
+                  Done
                 </Button>
               </div>
               {!nameValid && (
@@ -247,6 +257,7 @@ export function EditItemSheet({
                 <Input
                   id="edit-shopping-unit"
                   list="shopping-item-units"
+                  onFocus={() => setUnitFocused(true)}
                   autoComplete="off"
                   value={unit}
                   onChange={(event) => setUnit(event.target.value)}
@@ -274,7 +285,7 @@ export function EditItemSheet({
               <Label htmlFor="edit-shopping-category">Category</Label>
               <Select
                 value={categoryDraft ?? ""}
-                disabled={!categories.isSuccess || pending}
+                disabled={!categories.isSuccess}
                 onValueChange={(value) =>
                   setCategoryDraft(
                     categories.data?.find((category) => category.id === value)
@@ -290,7 +301,7 @@ export function EditItemSheet({
                     placeholder={
                       categories.data?.find(
                         (category) => category.id === item.ownItem.category,
-                      )?.label
+                      )?.label ?? "Loading categories…"
                     }
                   />
                 </SelectTrigger>
@@ -303,6 +314,14 @@ export function EditItemSheet({
                 </SelectContent>
               </Select>
             </div>
+            {categories.isError && (
+              <p role="alert" className="text-destructive text-sm">
+                Could not load categories.
+                <button type="button" onClick={() => void categories.refetch()}>
+                  Try again
+                </button>
+              </p>
+            )}
             {odaConnected && (
               <OdaProductPicker
                 product={odaProduct}
@@ -322,7 +341,6 @@ export function EditItemSheet({
                 type="button"
                 role="switch"
                 aria-checked={excluded}
-                disabled={!preferences.isSuccess}
                 onClick={() => setExcludedDraft(!excluded)}
                 className={cn(
                   "focus-visible:ring-ring relative h-7 w-12 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50",
@@ -338,27 +356,17 @@ export function EditItemSheet({
                 />
               </button>
             </div>
-            {preferences.isError && (
-              <p role="alert" className="text-destructive text-sm">
-                Could not load Usually have. Check your connection and try
-                again.
-              </p>
-            )}
-            {(edit.isError || deleteOwnItem.isError) && (
-              <p role="alert" className="text-destructive text-sm">
-                Could not{" "}
-                {deleteOwnItem.isError ? "delete the item" : "save the item"}.
-                Check your connection and try again.
-              </p>
-            )}
             <div className="pt-1">
               <Button
                 type="button"
                 variant="outline"
                 className="text-destructive hover:bg-destructive/5 hover:text-destructive h-12 w-full rounded-xl px-3"
-                onClick={() => deleteOwnItem.mutate({ id: item.ownItemId })}
+                onClick={() => {
+                  deleteOwnItem(item);
+                  onClose();
+                }}
               >
-                {deleteOwnItem.isPending ? "Deleting…" : "Delete own item"}
+                Delete own item
               </Button>
             </div>
           </fieldset>

@@ -18,6 +18,7 @@ export function ShoppingList({ language }: { language: ShoppingLanguage }) {
       await Promise.all([
         utils.household.household.invalidate(),
         utils.shoppingList.categories.invalidate(),
+        utils.shoppingList.sources.invalidate(),
       ]);
     },
   });

@@ -4,9 +4,12 @@ import { useRef, useState } from "react";
 import { toast } from "~/components/ui/use-toast";
 import { api, type RouterOutputs } from "~/utils/api";
 
+import type { ShoppingWrites } from "./shopping-writes";
+
 type ShoppingItem = RouterOutputs["shoppingList"]["list"][number];
 type Move = { item: ShoppingItem; recent: boolean };
 type PendingMove = {
+  ticket: ReturnType<ShoppingWrites["reserve"]>;
   key: string;
   confirmed: Move;
   desiredRecent: boolean;
@@ -16,6 +19,8 @@ type PendingMove = {
 export function useMoveShoppingItem(
   list: ShoppingItem[],
   recent: ShoppingItem[],
+  isCurrent: () => boolean,
+  writes: ShoppingWrites,
 ) {
   const utils = api.useUtils();
   const moves = useRef(new Map<string, PendingMove>());
@@ -49,11 +54,13 @@ export function useMoveShoppingItem(
 
   const save = async (move: PendingMove) => {
     try {
+      await move.ticket.ready;
       // A second tap changes the destination immediately. Save this item's
       // requests in order, using the real ID returned by the previous move.
-      while (move.desiredRecent !== move.confirmed.recent) {
+      while (isCurrent() && move.desiredRecent !== move.confirmed.recent) {
         const before = move.confirmed;
         const saved = await mutation.mutateAsync(before);
+        if (!isCurrent()) return;
         if (!saved.recent) void utils.oda.transfer.invalidate();
         move.confirmed = saved;
         move.ids.add(saved.item.id);
@@ -61,6 +68,7 @@ export function useMoveShoppingItem(
           utils.shoppingList.list.cancel(),
           utils.shoppingList.recent.cancel(),
         ]);
+        if (!isCurrent()) return;
         utils.shoppingList.list.setData(undefined, (items = []) =>
           saved.recent
             ? items.filter((item) => item.id !== before.item.id)
@@ -78,6 +86,7 @@ export function useMoveShoppingItem(
         publish();
       }
     } catch {
+      if (!isCurrent()) return;
       // An intervening tap may already have returned to the confirmed state.
       if (move.desiredRecent !== move.confirmed.recent) {
         toast({
@@ -87,10 +96,15 @@ export function useMoveShoppingItem(
         });
       }
     } finally {
+      move.ticket.release();
+      if (!isCurrent()) return;
       moves.current.delete(move.key);
       publish();
       // Refresh in the background; another tap never waits for these queries.
-      void utils.shoppingList.invalidate();
+      void Promise.all([
+        utils.shoppingList.list.invalidate(),
+        utils.shoppingList.recent.invalidate(),
+      ]);
     }
   };
 
@@ -104,6 +118,7 @@ export function useMoveShoppingItem(
       return;
     }
     const move: PendingMove = {
+      ticket: writes.reserve(),
       key: item.id,
       confirmed: { item, recent },
       desiredRecent: !recent,
