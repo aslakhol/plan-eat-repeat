@@ -11,6 +11,7 @@ import {
   shoppingIdentity,
   suggestShoppingItems,
 } from "~/lib/shopping-matching";
+import { shoppingChoicesQueryOptions } from "~/lib/query-freshness";
 import { api } from "~/utils/api";
 import { DinnerSourceActions } from "./DinnerSourceActions";
 import { type ShoppingDinnerSource } from "./DinnerPicker";
@@ -53,7 +54,10 @@ function AddItemContent({
   const [typing, setTyping] = useState(false);
   const [highlighted, setHighlighted] = useState<string | null>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const sources = api.shoppingList.sources.useQuery();
+  const sources = api.shoppingList.sources.useQuery(
+    undefined,
+    shoppingChoicesQueryOptions,
+  );
   const previews = suggestShoppingItems(query, sources.data ?? []);
   const highlightedIndex = previews.findIndex(
     (preview) => shoppingIdentity(preview.name, preview.note) === highlighted,

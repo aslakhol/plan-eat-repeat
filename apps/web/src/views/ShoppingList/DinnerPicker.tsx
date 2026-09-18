@@ -21,6 +21,7 @@ import {
 } from "~/lib/cookbook";
 import { buildDinnerPlanningWeek } from "~/lib/dinner-planning";
 import { cn } from "~/lib/utils";
+import { shoppingChoicesQueryOptions } from "~/lib/query-freshness";
 import { api } from "~/utils/api";
 import { DinnerCollectionControls } from "../DinnerCollectionControls";
 import { WeekSelect } from "../WeekSelect";
@@ -48,7 +49,7 @@ export function DinnerPicker({
   const week = buildDinnerPlanningWeek(addWeeks(today, weekOffset));
   const plans = api.plan.plannedDinners.useQuery(
     { startOfWeek: week.start },
-    { enabled: source === "plan" },
+    { ...shoppingChoicesQueryOptions, enabled: source === "plan" },
   );
   const add = useAddDinnersToShoppingList(onClose);
   const collection = deriveDinnerCollection(dinners.data?.dinners ?? [], {

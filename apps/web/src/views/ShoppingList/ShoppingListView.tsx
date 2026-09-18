@@ -23,6 +23,10 @@ import {
 import { api, type RouterOutputs } from "~/utils/api";
 import { toast } from "~/components/ui/use-toast";
 import { cn } from "~/lib/utils";
+import {
+  shoppingCategoriesQueryOptions,
+  shoppingChoicesQueryOptions,
+} from "~/lib/query-freshness";
 import { shoppingIdentity } from "~/lib/shopping-matching";
 import { useShopping } from "./ShoppingProvider";
 import { AddItemSheet } from "./AddItemSheet";
@@ -137,6 +141,19 @@ export function ShoppingListView() {
   }, []);
   const menuRef = useRef<HTMLDetailsElement>(null);
   const utils = api.useUtils();
+  // Wait for the page's essential reads so preparation uses a later HTTP batch.
+  const readyToPrepare = !list.isPending && !recent.isPending;
+  useEffect(() => {
+    if (!readyToPrepare) return;
+    void utils.shoppingList.sources.prefetch(
+      undefined,
+      shoppingChoicesQueryOptions,
+    );
+    void utils.shoppingList.categories.prefetch(
+      undefined,
+      shoppingCategoriesQueryOptions,
+    );
+  }, [readyToPrepare, utils]);
   // Keep pending additions separate so polling cannot erase them, and only
   // deduplicate the unspecified requirements created by autocomplete.
   const optimisticItems = pendingItems.filter((item, index) => {

@@ -1,9 +1,10 @@
 import { addDays, startOfDay, startOfISOWeek } from "date-fns";
 import { useEffect, useState } from "react";
 
+import { shoppingChoicesQueryOptions } from "~/lib/query-freshness";
 import { api } from "~/utils/api";
 
-const localCalendarBoundaries = () => {
+export const localCalendarBoundaries = () => {
   const today = startOfDay(new Date());
   const currentWeekStart = startOfISOWeek(today);
 
@@ -32,10 +33,13 @@ export const useDinnerSummaries = () => {
     const scheduleMidnightRefresh = () => {
       const now = new Date();
       const nextLocalDay = addDays(startOfDay(now), 1);
-      midnightTimer = setTimeout(() => {
-        refreshCalendar();
-        scheduleMidnightRefresh();
-      }, nextLocalDay.getTime() - now.getTime() + 1_000);
+      midnightTimer = setTimeout(
+        () => {
+          refreshCalendar();
+          scheduleMidnightRefresh();
+        },
+        nextLocalDay.getTime() - now.getTime() + 1_000,
+      );
     };
 
     const refreshWhenVisible = () => {
@@ -55,6 +59,6 @@ export const useDinnerSummaries = () => {
 
   return {
     today: calendar.today,
-    query: api.dinner.summaries.useQuery(calendar),
+    query: api.dinner.summaries.useQuery(calendar, shoppingChoicesQueryOptions),
   };
 };
