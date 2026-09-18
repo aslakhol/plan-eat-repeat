@@ -102,7 +102,10 @@ export const SharedDinnerDetail = () => {
 
   if (!dinner) {
     return (
-      <LoadingIndicator label="Loading shared dinner…" className="min-h-48" />
+      <LoadingIndicator
+        label="Loading shared dinner…"
+        className="h-[50vh] w-full"
+      />
     );
   }
 

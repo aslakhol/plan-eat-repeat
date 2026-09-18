@@ -4,6 +4,7 @@ import { Fragment, type ReactNode, useRef, useState } from "react";
 import { usePostHog } from "posthog-js/react";
 
 import { FavouriteListMark } from "~/components/FavouriteMark";
+import { LoadingIndicator } from "~/components/LoadingIndicator";
 import {
   ResponsiveModalContent,
   ResponsiveModalDescription,
@@ -140,12 +141,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
 
       <ResponsiveModalScrollViewport className="min-h-0 flex-1 py-4">
         {dinnersQuery.isPending ? (
-          <div className="flex h-full items-center justify-center">
-            <Loader2
-              className="text-primary animate-spin"
-              aria-label="Loading Cookbook"
-            />
-          </div>
+          <LoadingIndicator label="Loading Cookbook…" className="h-full" />
         ) : !dinnersQuery.isSuccess ? (
           <PickerMessage
             icon={<AlertCircle className="text-destructive size-6" />}

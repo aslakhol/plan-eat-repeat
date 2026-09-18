@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { usePostHog } from "posthog-js/react";
-import { Loader2 } from "lucide-react";
+import { LoadingIndicator } from "~/components/LoadingIndicator";
 
 import { toast } from "~/components/ui/use-toast";
 import { api } from "~/utils/api";
@@ -74,12 +74,7 @@ export const CreateDinner = () => {
 
   if (!router.isReady) {
     return (
-      <div className="flex h-[50dvh] items-center justify-center">
-        <Loader2
-          className="text-primary animate-spin"
-          aria-label="Loading editor"
-        />
-      </div>
+      <LoadingIndicator label="Loading editor…" className="h-[50vh] w-full" />
     );
   }
 
