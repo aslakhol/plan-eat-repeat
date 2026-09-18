@@ -5,6 +5,8 @@ import { useRouter } from "next/router";
 import {
   createContext,
   useContext,
+  memo,
+  useLayoutEffect,
   useEffect,
   useRef,
   useState,
@@ -14,12 +16,12 @@ import { api } from "~/utils/api";
 import { useAddShoppingItem } from "./use-add-shopping-item";
 import { useMoveShoppingItem } from "./use-move-shopping-item";
 
-const ShoppingContext = createContext<ReturnType<
-  typeof useShoppingState
-> | null>(null);
+type ShoppingState = ReturnType<typeof useShoppingState>;
+type ShoppingSnapshot = { identity: string; value: ShoppingState };
+const ShoppingContext = createContext<ShoppingState | null>(null);
 
-// This owner lives above page layouts, including pages with their own layout.
-// A new identity must start with an empty shopping cache before mounting readers.
+// Only the shopping owner resets on identity changes. Keep unrelated page state
+// mounted, including authentication continuations on Published Dinners.
 export function ShoppingProvider({ children }: { children: ReactNode }) {
   const { userId, sessionId, sessionClaims } = useAuth();
   const { user } = useUser();
@@ -29,12 +31,30 @@ export function ShoppingProvider({ children }: { children: ReactNode }) {
     sessionClaims?.metadata?.householdId,
     user?.publicMetadata.householdId,
   ]);
-  return <ShoppingSession key={identity}>{children}</ShoppingSession>;
+  const [snapshot, setSnapshot] = useState<ShoppingSnapshot | null>(null);
+  return (
+    <ShoppingContext.Provider
+      value={snapshot?.identity === identity ? snapshot.value : null}
+    >
+      <ShoppingSession
+        key={identity}
+        identity={identity}
+        publish={setSnapshot}
+      />
+      {children}
+    </ShoppingContext.Provider>
+  );
 }
 
-function ShoppingSession({ children }: { children: ReactNode }) {
+// Publishing shopping state must not make its owner render again.
+const ShoppingSession = memo(function ShoppingSession({
+  identity,
+  publish,
+}: {
+  identity: string;
+  publish: (snapshot: ShoppingSnapshot) => void;
+}) {
   const client = useQueryClient();
-  const { isSignedIn } = useAuth();
   const [ready, setReady] = useState(false);
   useEffect(() => {
     let active = true;
@@ -44,7 +64,9 @@ function ShoppingSession({ children }: { children: ReactNode }) {
       }));
       await Promise.all(filters.map((filter) => client.cancelQueries(filter)));
       if (!active) return;
-      for (const filter of filters) client.removeQueries(filter);
+      // Clear old data while restarting any readers that stayed mounted.
+      // Their refreshes must not delay the new shopping session.
+      for (const filter of filters) void client.resetQueries(filter);
       setReady(true);
     };
     void reset();
@@ -52,10 +74,10 @@ function ShoppingSession({ children }: { children: ReactNode }) {
       active = false;
     };
   }, [client]);
-  return ready || !isSignedIn ? (
-    <ShoppingStateProvider>{children}</ShoppingStateProvider>
+  return ready ? (
+    <ShoppingStatePublisher identity={identity} publish={publish} />
   ) : null;
-}
+});
 
 function useShoppingState() {
   const { isSignedIn } = useAuth();
@@ -84,13 +106,22 @@ function useShoppingState() {
   };
 }
 
-function ShoppingStateProvider({ children }: { children: ReactNode }) {
+function ShoppingStatePublisher({
+  identity,
+  publish,
+}: {
+  identity: string;
+  publish: (snapshot: ShoppingSnapshot) => void;
+}) {
   const value = useShoppingState();
-  return (
-    <ShoppingContext.Provider value={value}>
-      {children}
-    </ShoppingContext.Provider>
-  );
+  useLayoutEffect(() => {
+    publish({ identity, value });
+  });
+  return null;
+}
+
+export function ShoppingReady({ children }: { children: ReactNode }) {
+  return useContext(ShoppingContext) ? children : null;
 }
 
 export function useShopping() {
