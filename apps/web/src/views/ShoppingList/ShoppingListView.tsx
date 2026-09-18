@@ -28,6 +28,7 @@ import {
   shoppingChoicesQueryOptions,
 } from "~/lib/query-freshness";
 import { shoppingIdentity } from "~/lib/shopping-matching";
+import type { ShoppingEdit } from "./use-edit-shopping-item";
 import { useShopping } from "./ShoppingProvider";
 import { AddItemSheet } from "./AddItemSheet";
 import { EditItemSheet } from "./EditItemSheet";
@@ -108,12 +109,27 @@ export function ShoppingListView() {
   const {
     addItem,
     pendingItems,
+    pendingDinnerAdditions,
+    failedDinnerAdditions,
+    retryDinnerAddition,
+    dismissDinnerAddition,
     list,
     recent,
     moveItem,
     items,
     recentItems: movedRecentItems,
     pendingOwnIds,
+    editingOwnIds,
+    failedEdits,
+    editItem,
+    dismissFailedEdit,
+    resolveOwnId,
+    clearItems,
+    pendingRemovals,
+    failedRemovals,
+    retryRemoval,
+    dismissRemoval,
+    removingOwnIds,
   } = useShopping();
   const pendingIdentities = new Set(
     pendingItems.map((item) => shoppingIdentity(item.name, item.note)),
@@ -130,6 +146,8 @@ export function ShoppingListView() {
   const [editingItem, setEditingItem] = useState<{
     item: ShoppingItem;
     recent: boolean;
+    draft?: ShoppingEdit["input"];
+    failedKey?: string;
   } | null>(null);
   const [recentOpen, setRecentOpen] = useState(true);
   useEffect(() => {
@@ -170,30 +188,28 @@ export function ShoppingListView() {
       )
     );
   });
-  const hasItems = items.length > 0 || optimisticItems.length > 0;
+  const hasItems =
+    items.length > 0 ||
+    optimisticItems.length > 0 ||
+    pendingDinnerAdditions.length > 0;
   const oda = useOdaShopping(
     items,
-    pendingItems.length > 0 || pendingOwnIds.size > 0,
+    pendingItems.length > 0 ||
+      pendingDinnerAdditions.length > 0 ||
+      pendingOwnIds.size > 0 ||
+      editingOwnIds.size > 0 ||
+      pendingRemovals.length > 0,
   );
   const recentItems = movedRecentItems.filter(
     (item) => !pendingIdentities.has(shoppingIdentity(item.name, item.note)),
   );
-  const clear = api.shoppingList.clear.useMutation({
-    networkMode: "always",
-    retry: false,
-    onSuccess: async () => {
-      await Promise.all([
-        utils.shoppingList.list.invalidate(),
-        utils.shoppingList.recent.invalidate(),
-      ]);
-      setClearOpen(false);
-    },
-  });
 
   const shareDisabled =
     !items.length ||
     pendingItems.length > 0 ||
+    pendingDinnerAdditions.length > 0 ||
     pendingOwnIds.size > 0 ||
+    editingOwnIds.size > 0 ||
     sharing;
   const shoppingText = [
     "Shopping list",
@@ -287,11 +303,7 @@ export function ShoppingListView() {
             <button
               type="button"
               className="hover:bg-muted w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold disabled:opacity-50"
-              disabled={
-                !items.length ||
-                pendingItems.length > 0 ||
-                pendingOwnIds.size > 0
-              }
+              disabled={!hasItems || pendingRemovals.length > 0}
               onClick={() => {
                 menuRef.current?.removeAttribute("open");
                 setClearOpen(true);
@@ -307,6 +319,102 @@ export function ShoppingListView() {
         </DetailsMenu>
       </header>
       <OdaTransferProgress oda={oda} />
+      {pendingDinnerAdditions.map((addition) => (
+        <p key={addition.operationId} role="status" className="mb-3 text-sm">
+          Adding {addition.dinners.map(({ name }) => name).join(", ")}…
+        </p>
+      ))}
+      {failedDinnerAdditions.map((addition) => (
+        <div
+          key={addition.operationId}
+          role="alert"
+          className="mb-3 rounded-xl border p-3"
+        >
+          <p>
+            Could not add {addition.dinners.map(({ name }) => name).join(", ")}.
+          </p>
+          <Button variant="ghost" onClick={() => retryDinnerAddition(addition)}>
+            Retry
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => dismissDinnerAddition(addition.operationId)}
+          >
+            Dismiss
+          </Button>
+        </div>
+      ))}
+      {pendingRemovals.map((removal) => (
+        <p key={removal.key} role="status" className="mb-3 text-sm">
+          {removal.kind === "clear"
+            ? "Clearing shopping list…"
+            : `Deleting ${removal.item.name}…`}
+        </p>
+      ))}
+      {failedRemovals.map((removal) => (
+        <div
+          key={removal.key}
+          role="alert"
+          className="mb-3 rounded-xl border p-3"
+        >
+          <p>
+            {removal.kind === "clear"
+              ? "Could not clear the list."
+              : `Could not delete ${removal.item.name}.`}
+          </p>
+          {removal.kind === "clear" ? (
+            <Button variant="ghost" onClick={() => retryRemoval(removal)}>
+              Retry
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                const current = [...items, ...recentItems].find(
+                  (item) =>
+                    resolveOwnId(item.ownItemId) ===
+                    resolveOwnId(removal.item.ownItemId),
+                );
+                if (current)
+                  setEditingItem({
+                    item: current,
+                    recent: recentItems.includes(current),
+                  });
+                dismissRemoval(removal.key);
+              }}
+            >
+              Review item
+            </Button>
+          )}
+          <Button variant="ghost" onClick={() => dismissRemoval(removal.key)}>
+            Dismiss
+          </Button>
+        </div>
+      ))}
+      {failedEdits.map((edit) => (
+        <div key={edit.key} role="alert" className="mb-3 rounded-xl border p-3">
+          <p>Could not save {edit.input.name}.</p>
+          <Button variant="ghost" onClick={() => editItem(edit, edit.key)}>
+            Retry
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() =>
+              setEditingItem({
+                item: edit.item,
+                recent: edit.recent,
+                draft: edit.input,
+                failedKey: edit.key,
+              })
+            }
+          >
+            Edit failed draft
+          </Button>
+          <Button variant="ghost" onClick={() => dismissFailedEdit(edit.key)}>
+            Dismiss
+          </Button>
+        </div>
+      ))}
 
       {list.isPending && (
         <div role="status" className="flex items-center justify-center py-8">
@@ -364,9 +472,12 @@ export function ShoppingListView() {
                       shoppingIdentity(item.name, item.note),
                     )
                   }
-                  moveDisabled={pendingIdentities.has(
-                    shoppingIdentity(item.name, item.note),
-                  )}
+                  moveDisabled={
+                    editingOwnIds.has(item.ownItemId) ||
+                    pendingIdentities.has(
+                      shoppingIdentity(item.name, item.note),
+                    )
+                  }
                   onMove={() => moveItem({ item, recent: false })}
                   onEdit={() => setEditingItem({ item, recent: false })}
                 />
@@ -434,7 +545,14 @@ export function ShoppingListView() {
                 key={item.id}
                 item={item}
                 recent
-                pending={pendingOwnIds.has(item.ownItemId)}
+                moveDisabled={
+                  editingOwnIds.has(item.ownItemId) ||
+                  pendingRemovals.some((removal) => removal.kind === "clear")
+                }
+                pending={
+                  pendingOwnIds.has(item.ownItemId) ||
+                  removingOwnIds.has(item.ownItemId)
+                }
                 onMove={() => moveItem({ item, recent: true })}
                 onEdit={() => setEditingItem({ item, recent: true })}
               />
@@ -452,6 +570,9 @@ export function ShoppingListView() {
       )}
       {editingItem && (
         <EditItemSheet
+          key={editingItem.failedKey ?? editingItem.item.id}
+          draft={editingItem.draft}
+          failedKey={editingItem.failedKey}
           item={editingItem.item}
           recent={editingItem.recent}
           onClose={() => setEditingItem(null)}
@@ -465,21 +586,17 @@ export function ShoppingListView() {
               Remove all items from your shopping list?
             </DialogDescription>
           </DialogHeader>
-          {clear.isError && (
-            <p role="alert" className="text-destructive text-sm">
-              Could not clear the list. Try again.
-            </p>
-          )}
           <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setClearOpen(false)}
-              disabled={clear.isPending}
-            >
+            <Button variant="outline" onClick={() => setClearOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={() => clear.mutate()} disabled={clear.isPending}>
-              {clear.isPending ? "Clearing…" : "Clear the list"}
+            <Button
+              onClick={() => {
+                clearItems();
+                setClearOpen(false);
+              }}
+            >
+              Clear the list
             </Button>
           </DialogFooter>
         </DialogContent>

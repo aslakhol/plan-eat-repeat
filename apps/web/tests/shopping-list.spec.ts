@@ -221,17 +221,17 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
     const saveUrl = "**/api/trpc/shoppingList.edit*";
     await page.route(saveUrl, (route) => route.abort("failed"));
     await page.mouse.click(5, 5);
-    await expect(editor.getByRole("alert")).toContainText(
-      "Could not save the item",
-    );
+    await expect(editor).not.toBeVisible();
+    await page.getByRole("button", { name: "Edit failed draft" }).click();
     await expect(noteInput).toHaveValue("For dinner");
     await page.unroute(saveUrl);
-    // Tap the backdrop below the error notification.
+    // Saving the recovered draft also works by tapping the backdrop.
     const drawer = await editor.boundingBox();
     if (!drawer) throw new Error("Item drawer not visible");
     await page.mouse.click(5, drawer.y - 10);
     await expect(editor).not.toBeVisible();
     ingredientLabel = `${ingredientName}, For dinner`;
+    await expect(removeItem(ingredientName)).toBeEnabled();
     await page.reload();
     await expect(
       page.getByRole("button", {

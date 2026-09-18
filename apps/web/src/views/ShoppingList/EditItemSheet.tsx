@@ -29,29 +29,49 @@ import {
 } from "~/lib/query-freshness";
 import { api, type RouterOutputs } from "~/utils/api";
 import type { OdaProductPreference } from "~/lib/oda-product";
+import { useShopping } from "./ShoppingProvider";
+import type { ShoppingEdit } from "./use-edit-shopping-item";
 import { OdaProductPicker } from "./OdaProductPicker";
 
 export function EditItemSheet({
   item,
   onClose,
   recent = false,
+  draft,
+  failedKey,
 }: {
   item: RouterOutputs["shoppingList"]["list"][number];
   onClose: () => void;
   recent?: boolean;
+  draft?: ShoppingEdit["input"];
+  failedKey?: string;
 }) {
+  const { editItem, deleteOwnItem } = useShopping();
   const categories = api.shoppingList.categories.useQuery(undefined, {
     ...shoppingCategoriesQueryOptions,
     retry: false,
   });
-  const [name, setName] = useState(item.name);
-  const [note, setNote] = useState(item.note ?? "");
+  const [name, setName] = useState(draft?.name ?? item.name);
+  const [note, setNote] = useState(
+    draft ? (draft.note ?? "") : (item.note ?? ""),
+  );
   const initialAmount = item.amount === null ? "" : formatAmount(item.amount);
-  const [amount, setAmount] = useState(initialAmount);
-  const [unit, setUnit] = useState(item.unit ?? "");
-  const [categoryDraft, setCategoryDraft] =
-    useState<typeof item.ownItem.category>();
-  const [excludedDraft, setExcludedDraft] = useState<boolean>();
+  const [amount, setAmount] = useState(
+    draft
+      ? draft.amount === null
+        ? ""
+        : formatAmount(draft.amount)
+      : initialAmount,
+  );
+  const [unit, setUnit] = useState(
+    draft ? (draft.unit ?? "") : (item.unit ?? ""),
+  );
+  const [categoryDraft, setCategoryDraft] = useState<
+    typeof item.ownItem.category | undefined
+  >(draft?.category);
+  const [excludedDraft, setExcludedDraft] = useState<boolean | undefined>(
+    draft?.usuallyHave,
+  );
   const odaStatus = api.oda.status.useQuery(undefined, {
     refetchInterval: 2000,
     refetchOnWindowFocus: "always",
@@ -62,7 +82,7 @@ export function EditItemSheet({
     odaStatus.data?.connected && !odaStatus.data.reconnectRequired;
   const [odaProductDraft, setOdaProductDraft] = useState<
     OdaProductPreference | null | undefined
-  >();
+  >(draft?.odaProduct);
   const odaProduct =
     odaProductDraft !== undefined
       ? odaProductDraft
@@ -79,47 +99,14 @@ export function EditItemSheet({
     ...shoppingChoicesQueryOptions,
     enabled: unitFocused,
   });
-  const utils = api.useUtils();
-  const refreshAndClose = async (deleted: boolean) => {
-    await Promise.all([
-      utils.shoppingList.list.invalidate(),
-      utils.shoppingList.recent.invalidate(),
-      ...(name !== item.name ||
-      note !== (item.note ?? "") ||
-      categoryDraft !== undefined ||
-      deleted
-        ? [utils.shoppingList.sources.invalidate()]
-        : []),
-      ...(excludedDraft !== undefined ||
-      name !== item.name ||
-      note !== (item.note ?? "") ||
-      deleted
-        ? [utils.shoppingList.usuallyHave.invalidate()]
-        : []),
-    ]);
-    onClose();
-  };
-  const options = {
-    networkMode: "always" as const,
-    retry: false,
-    onSuccess: () => refreshAndClose(false),
-  };
-  const editActive = api.shoppingList.edit.useMutation(options);
-  const editRecent = api.shoppingList.editRecent.useMutation(options);
-  const deleteOwnItem = api.shoppingList.deleteOwnItem.useMutation({
-    ...options,
-    onSuccess: () => refreshAndClose(true),
-  });
-  const edit = recent ? editRecent : editActive;
-  const pending = edit.isPending || deleteOwnItem.isPending;
   const parsedAmount = parseAmount(amount);
   const amountValid =
     amountInputSchema.safeParse(amount).success &&
     (parsedAmount === null || Number.isFinite(parsedAmount));
   const nameValid = name.trim().length > 0;
   const saveAndClose = () => {
-    if (pending) return;
     const changed =
+      draft !== undefined ||
       name !== item.name ||
       note !== (item.note ?? "") ||
       amount !== initialAmount ||
@@ -132,16 +119,24 @@ export function EditItemSheet({
       return;
     }
     if (!nameValid || !amountValid) return;
-    edit.mutate({
-      id: item.id,
-      name,
-      note,
-      amount: parsedAmount,
-      unit,
-      usuallyHave: excludedDraft,
-      category: categoryDraft,
-      odaProduct: odaConnected ? odaProductDraft : undefined,
-    });
+    editItem(
+      {
+        item,
+        recent,
+        input: {
+          id: item.id,
+          name,
+          note,
+          amount: parsedAmount,
+          unit,
+          usuallyHave: excludedDraft,
+          category: categoryDraft,
+          odaProduct: odaConnected ? odaProductDraft : undefined,
+        },
+      },
+      failedKey,
+    );
+    onClose();
   };
 
   return (
@@ -168,7 +163,7 @@ export function EditItemSheet({
             saveAndClose();
           }}
         >
-          <fieldset disabled={pending} className="space-y-4">
+          <fieldset className="space-y-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <Label htmlFor="edit-shopping-name" className="sr-only">
@@ -191,7 +186,7 @@ export function EditItemSheet({
                   disabled={!nameValid || !amountValid}
                   className="text-primary h-12 shrink-0 rounded-xl px-3"
                 >
-                  {edit.isPending ? "Saving…" : "Done"}
+                  Done
                 </Button>
               </div>
               {!nameValid && (
@@ -290,7 +285,7 @@ export function EditItemSheet({
               <Label htmlFor="edit-shopping-category">Category</Label>
               <Select
                 value={categoryDraft ?? ""}
-                disabled={!categories.isSuccess || pending}
+                disabled={!categories.isSuccess}
                 onValueChange={(value) =>
                   setCategoryDraft(
                     categories.data?.find((category) => category.id === value)
@@ -361,21 +356,17 @@ export function EditItemSheet({
                 />
               </button>
             </div>
-            {(edit.isError || deleteOwnItem.isError) && (
-              <p role="alert" className="text-destructive text-sm">
-                Could not{" "}
-                {deleteOwnItem.isError ? "delete the item" : "save the item"}.
-                Check your connection and try again.
-              </p>
-            )}
             <div className="pt-1">
               <Button
                 type="button"
                 variant="outline"
                 className="text-destructive hover:bg-destructive/5 hover:text-destructive h-12 w-full rounded-xl px-3"
-                onClick={() => deleteOwnItem.mutate({ id: item.ownItemId })}
+                onClick={() => {
+                  deleteOwnItem(item);
+                  onClose();
+                }}
               >
-                {deleteOwnItem.isPending ? "Deleting…" : "Delete own item"}
+                Delete own item
               </Button>
             </div>
           </fieldset>

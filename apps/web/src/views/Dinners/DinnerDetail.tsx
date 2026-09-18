@@ -266,11 +266,11 @@ export const DinnerDetail = () => {
               </button>
               <button
                 type="button"
-                disabled={addToShoppingList.isPending}
+                disabled={!addToShoppingList.isReady}
                 className="hover:bg-muted w-full border-t px-3.5 py-3 text-left text-[13.5px] font-semibold disabled:opacity-50"
                 onClick={() => {
                   closeActionMenu();
-                  addToShoppingList.mutate({ dinnerIds: [dinner.id] });
+                  addToShoppingList.add([dinner]);
                 }}
               >
                 Add to shopping list

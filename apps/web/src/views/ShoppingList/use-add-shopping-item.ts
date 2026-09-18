@@ -6,7 +6,12 @@ import { api } from "~/utils/api";
 
 export type ShoppingPreview = ReturnType<typeof suggestShoppingItems>[number];
 
-export function useAddShoppingItem(isCurrent: () => boolean) {
+import type { ShoppingWrites } from "./shopping-writes";
+
+export function useAddShoppingItem(
+  isCurrent: () => boolean,
+  writes: ShoppingWrites,
+) {
   const utils = api.useUtils();
   const [pendingItems, setPendingItems] = useState<
     Array<ShoppingPreview & { id: string }>
@@ -15,12 +20,22 @@ export function useAddShoppingItem(isCurrent: () => boolean) {
     networkMode: "always",
     retry: false,
     meta: { handlesError: true },
-    mutationFn: (preview: ShoppingPreview) =>
-      utils.client.shoppingList.addSelection.mutate(preview.selection),
-    onMutate: (preview) => {
-      const id = crypto.randomUUID();
-      setPendingItems((items) => [...items, { ...preview, id }]);
-      return { id };
+    mutationFn: async ({ preview, ticket }: Addition) => {
+      await ticket.ready;
+      if (!isCurrent()) throw new Error("Shopping session ended");
+      const selection = preview.selection;
+      // A later add may have picked an Own Item while its deletion was pending.
+      const sourceId =
+        "ownItemId" in selection
+          ? selection.ownItemId
+          : selection.source && "ownItemId" in selection.source
+            ? selection.source.ownItemId
+            : undefined;
+      return utils.client.shoppingList.addSelection.mutate(
+        sourceId && writes.isForgotten(sourceId)
+          ? { name: preview.name, note: preview.note }
+          : selection,
+      );
     },
     onSuccess: async (saved) => {
       if (!isCurrent()) return;
@@ -33,7 +48,7 @@ export function useAddShoppingItem(isCurrent: () => boolean) {
         saved,
       ]);
     },
-    onError: (_error, preview) => {
+    onError: (_error, { preview }) => {
       if (!isCurrent()) return;
       toast({
         variant: "destructive",
@@ -41,11 +56,10 @@ export function useAddShoppingItem(isCurrent: () => boolean) {
         description: "Check your connection and try again.",
       });
     },
-    onSettled: (_saved, _error, preview, context) => {
+    onSettled: (_saved, _error, { preview, id, ticket }) => {
+      ticket.release();
       if (!isCurrent()) return;
-      setPendingItems((items) =>
-        items.filter((item) => item.id !== context?.id),
-      );
+      setPendingItems((items) => items.filter((item) => item.id !== id));
       void utils.shoppingList.list.invalidate();
       void utils.shoppingList.recent.invalidate();
       if (!("ownItemId" in preview.selection)) {
@@ -53,5 +67,16 @@ export function useAddShoppingItem(isCurrent: () => boolean) {
       }
     },
   });
-  return { addItem: add.mutate, pendingItems };
+  type Addition = {
+    preview: ShoppingPreview;
+    id: string;
+    ticket: ReturnType<ShoppingWrites["reserve"]>;
+  };
+  const addItem = (preview: ShoppingPreview) => {
+    const id = crypto.randomUUID();
+    const ticket = writes.reserve();
+    setPendingItems((items) => [...items, { ...preview, id }]);
+    add.mutate({ preview, id, ticket });
+  };
+  return { addItem, pendingItems };
 }
