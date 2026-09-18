@@ -12,6 +12,7 @@ export type ShoppingEdit = {
 type Edit = ShoppingEdit & {
   key: string;
   ownIds: string[];
+  conflictKeys: string[];
   running: boolean;
   before: { list: Item[]; recent: Item[] };
 };
@@ -20,7 +21,8 @@ function applyDraft(item: Item, edit: ShoppingEdit): Item {
   if (item.ownItemId !== edit.item.ownItemId) return item;
   const input = edit.input;
   const name = input.name.trim();
-  const note = input.note?.trim() || null;
+  const trimmedNote = input.note?.trim() ?? "";
+  const note = trimmedNote.length > 0 ? trimmedNote : null;
   const ownItem = {
     ...item.ownItem,
     name,
@@ -117,16 +119,26 @@ export function useEditShoppingItem(
       );
       // Later edits must address the requirement and Own Item that survived a merge.
       const remap = (next: Edit): Edit => {
-        if (!affected.has(next.item.ownItemId)) return next;
-        const id = saved.mergedIds[next.input.id] ?? next.input.id;
+        const sourceChanged = affected.has(next.item.ownItemId);
+        const targetsSavedIdentity =
+          normalizeShoppingName(next.input.name) ===
+            saved.ownItem.normalizedName &&
+          normalizeShoppingName(next.input.note ?? "") ===
+            saved.ownItem.normalizedNote;
+        if (!sourceChanged && !targetsSavedIdentity) return next;
+        const id = sourceChanged
+          ? (saved.mergedIds[next.input.id] ?? next.input.id)
+          : next.input.id;
         return {
           ...next,
-          item: {
-            ...next.item,
-            id,
-            ownItemId: saved.ownItemId,
-            ownItem: saved.ownItem,
-          },
+          item: sourceChanged
+            ? {
+                ...next.item,
+                id,
+                ownItemId: saved.ownItemId,
+                ownItem: saved.ownItem,
+              }
+            : next.item,
           input: { ...next.input, id },
           before: {
             list: [
@@ -148,6 +160,7 @@ export function useEditShoppingItem(
             ],
           },
           ownIds: [...new Set([...next.ownIds, saved.ownItemId])],
+          conflictKeys: [...new Set([...next.conflictKeys, saved.ownItemId])],
         };
       };
       queue.current = queue.current.map((next) =>
@@ -156,7 +169,7 @@ export function useEditShoppingItem(
       setFailedEdits((edits) => edits.map(remap));
       const definitionChanged =
         edit.input.name.trim() !== edit.item.name ||
-        (edit.input.note?.trim() || null) !== edit.item.note;
+        (edit.input.note?.trim() ?? "") !== (edit.item.note ?? "");
       if (definitionChanged || edit.input.category !== undefined)
         void utils.shoppingList.sources.invalidate();
       if (
@@ -186,8 +199,8 @@ export function useEditShoppingItem(
   const startReady = () => {
     const occupied = new Set<string>();
     for (const edit of queue.current) {
-      const blocked = edit.ownIds.some((id) => occupied.has(id));
-      edit.ownIds.forEach((id) => occupied.add(id));
+      const blocked = edit.conflictKeys.some((id) => occupied.has(id));
+      edit.conflictKeys.forEach((id) => occupied.add(id));
       if (!edit.running && !blocked) {
         edit.running = true;
         void save(edit);
@@ -211,16 +224,18 @@ export function useEditShoppingItem(
       ]),
     ];
     // The normalized destination also orders two renames into a new identity.
-    ownIds.push(
+    const conflictKeys = [
+      ...ownIds,
       JSON.stringify([
         normalizeShoppingName(draft.input.name),
         normalizeShoppingName(draft.input.note ?? ""),
       ]),
-    );
+    ];
     queue.current.push({
       ...draft,
       key: crypto.randomUUID(),
       ownIds,
+      conflictKeys,
       running: false,
       before: {
         list: overlay(list, false).filter((item) =>

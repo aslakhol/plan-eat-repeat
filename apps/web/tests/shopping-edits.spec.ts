@@ -218,3 +218,85 @@ test("a held merge response reconciles identities and queues another edit withou
     });
   }
 });
+
+test("queued renames order a newly established shared identity", async ({
+  page,
+}) => {
+  await ensureSignedIn(page);
+  const response = await page.request.post("/api/dev/auth-bypass");
+  const { userId } = (await response.json()) as { userId: string };
+  const { householdId } = await db.membership.findUniqueOrThrow({
+    where: { userId },
+  });
+  const marker = `Ordered ${crypto.randomUUID()}`;
+  const a = `${marker} a`,
+    b = `${marker} b`,
+    x = `${marker} x`,
+    y = `${marker} y`;
+  for (const [name, amount] of [
+    [a, 1],
+    [b, 2],
+  ] as const)
+    await db.ownItem.create({
+      data: {
+        householdId,
+        name,
+        normalizedName: name.toLowerCase(),
+        category: "OWN_ITEMS",
+        items: { create: { amount } },
+      },
+    });
+  const gates = [Promise.withResolvers<void>(), Promise.withResolvers<void>()];
+  let writes = 0;
+  await page.route("**/api/trpc/shoppingList.edit?*", async (route) => {
+    const index = writes++;
+    const response = await route.fetch();
+    if (gates[index]) await gates[index]!.promise;
+    await route.fulfill({ response });
+  });
+  const editor = page.getByRole("dialog", { name: "Edit item", exact: true });
+  const rename = async (name: string) => {
+    await editor.getByLabel("Item", { exact: true }).fill(name);
+    await editor.getByRole("button", { name: "Done", exact: true }).click();
+    await expect(editor).not.toBeVisible();
+  };
+  try {
+    await page.goto("/shopping-list");
+    await page.getByRole("button", { name: `Edit ${a}`, exact: true }).click();
+    await rename(x);
+    await expect.poll(() => writes).toBe(1);
+    await page.getByRole("button", { name: `Edit ${b}`, exact: true }).click();
+    await rename(x);
+    await page
+      .getByRole("button", { name: `Edit quantity for ${x}`, exact: true })
+      .filter({ hasText: /^1$/ })
+      .click();
+    await rename(y);
+    expect(writes).toBe(1);
+    gates[0]!.resolve();
+    await expect.poll(() => writes).toBe(2);
+    // A read while the second save response is held must not start the dependent third save.
+    await page.waitForResponse(
+      (r) =>
+        r.request().method() === "GET" && r.url().includes("shoppingList.list"),
+    );
+    expect(writes).toBe(2);
+    gates[1]!.resolve();
+    await expect.poll(() => writes).toBe(3);
+    await expect(
+      page.getByRole("button", { name: `Remove ${y} from list`, exact: true }),
+    ).toBeEnabled();
+    await expect(
+      page.getByRole("button", { name: `Edit ${x}`, exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Edit failed draft" }),
+    ).toHaveCount(0);
+  } finally {
+    gates.forEach((gate) => gate.resolve());
+    await page.unrouteAll({ behavior: "wait" });
+    await db.ownItem.deleteMany({
+      where: { householdId, name: { startsWith: marker } },
+    });
+  }
+});
