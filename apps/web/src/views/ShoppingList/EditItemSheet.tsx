@@ -80,20 +80,20 @@ export function EditItemSheet({
     enabled: unitFocused,
   });
   const utils = api.useUtils();
-  const onSuccess = async () => {
+  const refreshAndClose = async (deleted: boolean) => {
     await Promise.all([
       utils.shoppingList.list.invalidate(),
       utils.shoppingList.recent.invalidate(),
       ...(name !== item.name ||
       note !== (item.note ?? "") ||
       categoryDraft !== undefined ||
-      deleteOwnItem.isPending
+      deleted
         ? [utils.shoppingList.sources.invalidate()]
         : []),
       ...(excludedDraft !== undefined ||
       name !== item.name ||
       note !== (item.note ?? "") ||
-      deleteOwnItem.isPending
+      deleted
         ? [utils.shoppingList.usuallyHave.invalidate()]
         : []),
     ]);
@@ -102,11 +102,14 @@ export function EditItemSheet({
   const options = {
     networkMode: "always" as const,
     retry: false,
-    onSuccess,
+    onSuccess: () => refreshAndClose(false),
   };
   const editActive = api.shoppingList.edit.useMutation(options);
   const editRecent = api.shoppingList.editRecent.useMutation(options);
-  const deleteOwnItem = api.shoppingList.deleteOwnItem.useMutation(options);
+  const deleteOwnItem = api.shoppingList.deleteOwnItem.useMutation({
+    ...options,
+    onSuccess: () => refreshAndClose(true),
+  });
   const edit = recent ? editRecent : editActive;
   const pending = edit.isPending || deleteOwnItem.isPending;
   const parsedAmount = parseAmount(amount);
