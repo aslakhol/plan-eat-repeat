@@ -23,7 +23,19 @@ export function useAddShoppingItem(
     mutationFn: async ({ preview, ticket }: Addition) => {
       await ticket.ready;
       if (!isCurrent()) throw new Error("Shopping session ended");
-      return utils.client.shoppingList.addSelection.mutate(preview.selection);
+      const selection = preview.selection;
+      // A later add may have picked an Own Item while its deletion was pending.
+      const sourceId =
+        "ownItemId" in selection
+          ? selection.ownItemId
+          : selection.source && "ownItemId" in selection.source
+            ? selection.source.ownItemId
+            : undefined;
+      return utils.client.shoppingList.addSelection.mutate(
+        sourceId && writes.isForgotten(sourceId)
+          ? { name: preview.name, note: preview.note }
+          : selection,
+      );
     },
     onSuccess: async (saved) => {
       if (!isCurrent()) return;

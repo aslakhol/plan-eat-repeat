@@ -119,6 +119,7 @@ export function ShoppingListView() {
     failedEdits,
     editItem,
     dismissFailedEdit,
+    resolveOwnId,
     clearItems,
     pendingRemovals,
     failedRemovals,
@@ -309,21 +310,48 @@ export function ShoppingListView() {
         </DetailsMenu>
       </header>
       <OdaTransferProgress oda={oda} />
-      {pendingRemovals.length > 0 && (
-        <p role="status" className="mb-3 text-sm">
-          Clearing shopping list…
+      {pendingRemovals.map((removal) => (
+        <p key={removal.key} role="status" className="mb-3 text-sm">
+          {removal.kind === "clear"
+            ? "Clearing shopping list…"
+            : `Deleting ${removal.item.name}…`}
         </p>
-      )}
+      ))}
       {failedRemovals.map((removal) => (
         <div
           key={removal.key}
           role="alert"
           className="mb-3 rounded-xl border p-3"
         >
-          <p>Could not clear the list.</p>
-          <Button variant="ghost" onClick={() => retryRemoval(removal)}>
-            Retry
-          </Button>
+          <p>
+            {removal.kind === "clear"
+              ? "Could not clear the list."
+              : `Could not delete ${removal.item.name}.`}
+          </p>
+          {removal.kind === "clear" ? (
+            <Button variant="ghost" onClick={() => retryRemoval(removal)}>
+              Retry
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                const current = [...items, ...recentItems].find(
+                  (item) =>
+                    resolveOwnId(item.ownItemId) ===
+                    resolveOwnId(removal.item.ownItemId),
+                );
+                if (current)
+                  setEditingItem({
+                    item: current,
+                    recent: recentItems.includes(current),
+                  });
+                dismissRemoval(removal.key);
+              }}
+            >
+              Review item
+            </Button>
+          )}
           <Button variant="ghost" onClick={() => dismissRemoval(removal.key)}>
             Dismiss
           </Button>
@@ -485,7 +513,7 @@ export function ShoppingListView() {
                 recent
                 moveDisabled={
                   editingOwnIds.has(item.ownItemId) ||
-                  removingOwnIds.has(item.ownItemId)
+                  pendingRemovals.some((removal) => removal.kind === "clear")
                 }
                 pending={
                   pendingOwnIds.has(item.ownItemId) ||

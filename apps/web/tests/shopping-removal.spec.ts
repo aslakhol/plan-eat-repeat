@@ -268,3 +268,196 @@ test("a failed Clear survives navigation and retry preserves later changes to th
     }
   }
 });
+
+test("Delete waits for an edit merge, forgets only that variant, and retains a later re-add", async ({
+  page,
+}) => {
+  const fixture = await setup(page);
+  await fixture.createItem("Source eggs");
+  await fixture.createItem("Eggs", "duck");
+  await fixture.createItem("Eggs", "hen");
+  const editGate = Promise.withResolvers<void>();
+  const deleteGate = Promise.withResolvers<void>();
+  const reads = Promise.withResolvers<void>();
+  let edits = 0,
+    deletes = 0,
+    holdReads = false;
+  await page.route("**/api/trpc/**", async (route) => {
+    const request = route.request();
+    if (
+      request.method() === "POST" &&
+      request.url().includes("shoppingList.edit?")
+    ) {
+      edits++;
+      const response = await route.fetch();
+      await editGate.promise;
+      await route.fulfill({ response });
+    } else if (
+      request.method() === "POST" &&
+      request.url().includes("shoppingList.deleteOwnItem")
+    ) {
+      deletes++;
+      const response = await route.fetch();
+      await deleteGate.promise;
+      await route.fulfill({ response });
+    } else {
+      if (
+        holdReads &&
+        request.method() === "GET" &&
+        /shoppingList\.(list|recent)/.test(request.url())
+      )
+        await reads.promise;
+      await route.continue();
+    }
+  });
+  try {
+    await fixture.open();
+    const editor = page.getByRole("dialog", { name: "Edit item", exact: true });
+    await page
+      .getByRole("button", { name: "Edit Source eggs", exact: true })
+      .click();
+    await editor.getByLabel("Item", { exact: true }).fill("Eggs");
+    await editor.getByLabel("Note", { exact: true }).fill("duck");
+    await editor.getByLabel("Amount", { exact: true }).fill("2");
+    await editor.getByRole("button", { name: "Done", exact: true }).click();
+    await expect.poll(() => edits).toBe(1);
+    await page
+      .getByRole("button", {
+        name: "Edit quantity for Eggs, duck",
+        exact: true,
+      })
+      .filter({ hasText: /^2$/ })
+      .click();
+    await editor
+      .getByRole("button", { name: "Delete own item", exact: true })
+      .click();
+    await expect(editor).not.toBeVisible();
+    await expect(
+      page.getByRole("button", {
+        name: "Remove Eggs, duck from list",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", {
+        name: "Remove Eggs, hen from list",
+        exact: true,
+      }),
+    ).toBeEnabled();
+    expect(deletes).toBe(0);
+    editGate.resolve();
+    await expect.poll(() => deletes).toBe(1);
+    await navigate(page);
+    await expect(
+      page.getByRole("status").filter({ hasText: "Deleting" }),
+    ).toBeVisible();
+    await page
+      .getByRole("navigation", { name: "Primary navigation" })
+      .getByRole("button", { name: "Add shopping item" })
+      .click();
+    const drawer = page.getByRole("dialog", {
+      name: "Add an item",
+      exact: true,
+    });
+    await drawer.getByRole("combobox", { name: "Item name" }).fill("Eggs duck");
+    await drawer
+      .getByRole("option", { name: "Eggs, duck", exact: true })
+      .click();
+    await expect(drawer).not.toBeVisible();
+    holdReads = true;
+    deleteGate.resolve();
+    await expect(
+      page.getByRole("button", {
+        name: "Remove Eggs, duck from list",
+        exact: true,
+      }),
+    ).toBeEnabled();
+    await expect(
+      page.getByRole("button", {
+        name: "Remove Eggs, hen from list",
+        exact: true,
+      }),
+    ).toBeEnabled();
+    await expect(
+      page.getByRole("button", {
+        name: "Edit quantity for Eggs, duck",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("status").filter({ hasText: "Deleting" }),
+    ).toHaveCount(0);
+  } finally {
+    editGate.resolve();
+    deleteGate.resolve();
+    reads.resolve();
+    try {
+      await page.unrouteAll({ behavior: "wait" });
+    } finally {
+      await fixture.cleanup();
+    }
+  }
+});
+
+test("a failed Delete restores the variant and reviews current data after later work and navigation", async ({
+  page,
+}) => {
+  const fixture = await setup(page);
+  await fixture.createItem("Eggs", "duck");
+  await fixture.createItem("Eggs", "hen");
+  const gate = Promise.withResolvers<void>();
+  await page.route(
+    "**/api/trpc/shoppingList.deleteOwnItem?*",
+    async (route) => {
+      await gate.promise;
+      await route.abort("failed");
+    },
+  );
+  try {
+    await fixture.open();
+    const editor = page.getByRole("dialog", { name: "Edit item", exact: true });
+    await page
+      .getByRole("button", { name: "Edit Eggs, duck", exact: true })
+      .click();
+    await editor
+      .getByRole("button", { name: "Delete own item", exact: true })
+      .click();
+    await expect(editor).not.toBeVisible();
+    await add(page, "Later success");
+    await navigate(page);
+    gate.resolve();
+    await expect(
+      page.getByRole("alert").filter({ hasText: "Could not delete Eggs" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Remove Later success from list" }),
+    ).toBeEnabled();
+    await page
+      .getByRole("button", { name: "Edit Eggs, duck", exact: true })
+      .click();
+    await editor.getByLabel("Amount", { exact: true }).fill("4");
+    await editor.getByRole("button", { name: "Done", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "Remove Eggs, duck from list" }),
+    ).toBeEnabled();
+    await navigate(page);
+    await page
+      .getByRole("button", { name: "Review item", exact: true })
+      .click();
+    await expect(editor.getByLabel("Amount", { exact: true })).toHaveValue("4");
+    await editor.getByRole("button", { name: "Done", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "Remove Eggs, hen from list" }),
+    ).toBeEnabled();
+    await expect(
+      page.getByRole("button", { name: "Remove Later success from list" }),
+    ).toBeEnabled();
+  } finally {
+    gate.resolve();
+    try {
+      await page.unrouteAll({ behavior: "wait" });
+    } finally {
+      await fixture.cleanup();
+    }
+  }
+});

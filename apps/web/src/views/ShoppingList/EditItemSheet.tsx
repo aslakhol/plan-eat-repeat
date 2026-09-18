@@ -46,7 +46,7 @@ export function EditItemSheet({
   draft?: ShoppingEdit["input"];
   failedKey?: string;
 }) {
-  const { editItem, editingOwnIds } = useShopping();
+  const { editItem, deleteOwnItem } = useShopping();
   const categories = api.shoppingList.categories.useQuery(undefined, {
     ...shoppingCategoriesQueryOptions,
     retry: false,
@@ -99,39 +99,12 @@ export function EditItemSheet({
     ...shoppingChoicesQueryOptions,
     enabled: unitFocused,
   });
-  const utils = api.useUtils();
-  const refreshAndClose = async (deleted: boolean) => {
-    await Promise.all([
-      utils.shoppingList.list.invalidate(),
-      utils.shoppingList.recent.invalidate(),
-      ...(name !== item.name ||
-      note !== (item.note ?? "") ||
-      categoryDraft !== undefined ||
-      deleted
-        ? [utils.shoppingList.sources.invalidate()]
-        : []),
-      ...(excludedDraft !== undefined ||
-      name !== item.name ||
-      note !== (item.note ?? "") ||
-      deleted
-        ? [utils.shoppingList.usuallyHave.invalidate()]
-        : []),
-    ]);
-    onClose();
-  };
-  const deleteOwnItem = api.shoppingList.deleteOwnItem.useMutation({
-    networkMode: "always",
-    retry: false,
-    onSuccess: () => refreshAndClose(true),
-  });
-  const pending = deleteOwnItem.isPending;
   const parsedAmount = parseAmount(amount);
   const amountValid =
     amountInputSchema.safeParse(amount).success &&
     (parsedAmount === null || Number.isFinite(parsedAmount));
   const nameValid = name.trim().length > 0;
   const saveAndClose = () => {
-    if (pending) return;
     const changed =
       draft !== undefined ||
       name !== item.name ||
@@ -190,7 +163,7 @@ export function EditItemSheet({
             saveAndClose();
           }}
         >
-          <fieldset disabled={pending} className="space-y-4">
+          <fieldset className="space-y-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <Label htmlFor="edit-shopping-name" className="sr-only">
@@ -312,7 +285,7 @@ export function EditItemSheet({
               <Label htmlFor="edit-shopping-category">Category</Label>
               <Select
                 value={categoryDraft ?? ""}
-                disabled={!categories.isSuccess || pending}
+                disabled={!categories.isSuccess}
                 onValueChange={(value) =>
                   setCategoryDraft(
                     categories.data?.find((category) => category.id === value)
@@ -383,20 +356,17 @@ export function EditItemSheet({
                 />
               </button>
             </div>
-            {deleteOwnItem.isError && (
-              <p role="alert" className="text-destructive text-sm">
-                Could not delete the item. Check your connection and try again.
-              </p>
-            )}
             <div className="pt-1">
               <Button
                 type="button"
                 variant="outline"
                 className="text-destructive hover:bg-destructive/5 hover:text-destructive h-12 w-full rounded-xl px-3"
-                disabled={editingOwnIds.has(item.ownItemId)}
-                onClick={() => deleteOwnItem.mutate({ id: item.ownItemId })}
+                onClick={() => {
+                  deleteOwnItem(item);
+                  onClose();
+                }}
               >
-                {deleteOwnItem.isPending ? "Deleting…" : "Delete own item"}
+                Delete own item
               </Button>
             </div>
           </fieldset>

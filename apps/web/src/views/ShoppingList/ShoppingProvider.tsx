@@ -124,6 +124,7 @@ function useShoppingState() {
     additions.pendingItems,
     writes,
     isCurrent,
+    edits.resolveOwnId,
   );
   return {
     ...edits,

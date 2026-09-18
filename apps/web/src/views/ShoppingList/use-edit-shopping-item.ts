@@ -63,6 +63,11 @@ export function useEditShoppingItem(
 ) {
   const utils = api.useUtils();
   const queue = useRef<Edit[]>([]);
+  const mergedOwnIds = useRef(new Map<string, string>());
+  const resolveOwnId = (id: string): string => {
+    const replacement = mergedOwnIds.current.get(id);
+    return replacement ? resolveOwnId(replacement) : id;
+  };
   const [pending, setPending] = useState<Edit[]>([]);
   const [failedEdits, setFailedEdits] = useState<Edit[]>([]);
   const publish = () => setPending([...queue.current]);
@@ -89,6 +94,10 @@ export function useEditShoppingItem(
       ]);
       if (!isCurrent()) return;
       const affected = new Set(saved.affectedOwnItemIds);
+      for (const id of affected) {
+        if (id !== saved.ownItemId)
+          mergedOwnIds.current.set(id, saved.ownItemId);
+      }
       utils.shoppingList.list.setData(undefined, (items = []) => [
         ...items.filter((item) => !affected.has(item.ownItemId)),
         ...saved.items,
@@ -305,6 +314,7 @@ export function useEditShoppingItem(
     }, items);
   };
   return {
+    resolveOwnId,
     editedItems: overlay(list, false),
     editedRecentItems: overlay(recent, true),
     editItem,

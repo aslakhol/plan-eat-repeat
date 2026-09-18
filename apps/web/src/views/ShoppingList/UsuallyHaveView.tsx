@@ -4,12 +4,15 @@ import { useRef, useState } from "react";
 import { LoadingIndicator } from "~/components/LoadingIndicator";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { useShopping, useShoppingWrite } from "./ShoppingProvider";
 import { api } from "~/utils/api";
 
 export function UsuallyHaveView() {
   const [name, setName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const utils = api.useUtils();
+  const { isDeletingOwnItem } = useShopping();
+  const reserve = useShoppingWrite();
   const preferences = api.shoppingList.usuallyHave.useQuery(undefined, {
     refetchInterval: 2000,
     refetchOnWindowFocus: "always",
@@ -19,6 +22,12 @@ export function UsuallyHaveView() {
   const setPreference = api.shoppingList.setUsuallyHave.useMutation({
     networkMode: "always",
     retry: false,
+    onMutate: async () => {
+      const ticket = reserve();
+      await ticket.ready;
+      return ticket;
+    },
+    onSettled: (_result, _error, _input, ticket) => ticket?.release(),
     onSuccess: async (_, input) => {
       await Promise.all([
         utils.shoppingList.usuallyHave.invalidate(),
@@ -87,35 +96,37 @@ export function UsuallyHaveView() {
           aria-label="Usually have ingredients"
           className="border-border divide-border divide-y overflow-hidden rounded-[14px] border bg-white"
         >
-          {preferences.data.map((preference) => (
-            <li
-              key={preference.id}
-              className="flex min-h-14 items-center gap-3 pl-3.5 pr-1.5"
-            >
-              <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
-                {preference.name}
-                {preference.note && (
-                  <span className="text-muted-foreground ml-1 text-sm">
-                    {preference.note}
-                  </span>
-                )}
-              </span>
-              <button
-                type="button"
-                aria-label={`Remove ${[preference.name, preference.note].filter(Boolean).join(", ")} from Usually have`}
-                disabled={setPreference.isPending}
-                onClick={() =>
-                  setPreference.mutate({
-                    id: preference.id,
-                    excluded: false,
-                  })
-                }
-                className="text-muted-foreground focus-visible:ring-ring flex size-11 shrink-0 items-center justify-center rounded-xl outline-none focus-visible:ring-2 disabled:opacity-50"
+          {preferences.data
+            .filter((preference) => !isDeletingOwnItem(preference.id))
+            .map((preference) => (
+              <li
+                key={preference.id}
+                className="flex min-h-14 items-center gap-3 pl-3.5 pr-1.5"
               >
-                <X className="size-4" />
-              </button>
-            </li>
-          ))}
+                <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                  {preference.name}
+                  {preference.note && (
+                    <span className="text-muted-foreground ml-1 text-sm">
+                      {preference.note}
+                    </span>
+                  )}
+                </span>
+                <button
+                  type="button"
+                  aria-label={`Remove ${[preference.name, preference.note].filter(Boolean).join(", ")} from Usually have`}
+                  disabled={setPreference.isPending}
+                  onClick={() =>
+                    setPreference.mutate({
+                      id: preference.id,
+                      excluded: false,
+                    })
+                  }
+                  className="text-muted-foreground focus-visible:ring-ring flex size-11 shrink-0 items-center justify-center rounded-xl outline-none focus-visible:ring-2 disabled:opacity-50"
+                >
+                  <X className="size-4" />
+                </button>
+              </li>
+            ))}
         </ul>
       )}
     </div>
