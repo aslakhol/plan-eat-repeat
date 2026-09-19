@@ -63,6 +63,7 @@ export async function ensureSignedIn(page: Page) {
 }
 
 export type LocalAuthIdentity =
+  | "welcome-new-user"
   | "save-intent-existing"
   | "save-intent-first-time";
 

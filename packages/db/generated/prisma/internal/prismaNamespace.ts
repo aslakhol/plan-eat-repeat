@@ -1981,6 +1981,7 @@ export const UserScalarFieldEnum = {
   firstName: 'firstName',
   lastName: 'lastName',
   imageUrl: 'imageUrl',
+  welcomeSeenAt: 'welcomeSeenAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

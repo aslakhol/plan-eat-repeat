@@ -39,6 +39,7 @@ export const Invitation = ({ invite }: Props) => {
         title: "You have joined the household",
         description: `Welcome to the ${invite.household.name} household!`,
       });
+      await utils.household.welcomeStatus.invalidate();
       await user?.reload();
       await router.push("/dinners");
     },
@@ -70,7 +71,7 @@ export const Invitation = ({ invite }: Props) => {
                   className="flex items-center justify-between"
                 >
                   <UserAvatar user={member.user} />
-                  <span className="text-sm capitalize text-muted-foreground">
+                  <span className="text-muted-foreground text-sm capitalize">
                     {member.role.toLowerCase()}
                   </span>
                 </li>
@@ -96,7 +97,11 @@ export const Invitation = ({ invite }: Props) => {
             </Button>
           </SignedIn>
           <SignedOut>
-            <SignUpButton>
+            <SignUpButton
+              mode="modal"
+              forceRedirectUrl={`/invite/${invite.id}`}
+              signInForceRedirectUrl={`/invite/${invite.id}`}
+            >
               <Button className="w-full">Sign up to join</Button>
             </SignUpButton>
           </SignedOut>

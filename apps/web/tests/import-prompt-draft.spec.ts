@@ -246,8 +246,8 @@ test("local drafts stay separate between Households and between members sharing 
     });
     await db.user.upsert({
       where: { id: other.userId },
-      create: { id: other.userId },
-      update: {},
+      create: { id: other.userId, welcomeSeenAt: new Date() },
+      update: { welcomeSeenAt: new Date() },
     });
     await db.membership.upsert({
       where: { userId: other.userId },
@@ -312,7 +312,9 @@ test("dismissing before Household settings finish loading clears the prior draft
     await page.reload();
     await page.getByRole("button", { name: "Add Dinner", exact: true }).click();
     await expect(
-      page.getByRole("heading", { name: "Loading", exact: true }),
+      page
+        .getByRole("dialog", { name: "Import prompt", exact: true })
+        .getByRole("status"),
     ).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).not.toBeVisible();

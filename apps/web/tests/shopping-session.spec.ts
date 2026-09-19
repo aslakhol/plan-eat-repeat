@@ -24,7 +24,7 @@ test("changing Household discards old shopping results and queued moves", async 
 }) => {
   const { userId } = await provisionLocalAuth(page, "save-intent-existing");
   await resetLocalIdentity(db, userId);
-  await db.user.create({ data: { id: userId } });
+  await db.user.create({ data: { id: userId, welcomeSeenAt: new Date() } });
   const marker = crypto.randomUUID();
   const households = await Promise.all(
     ["before", "after"].map((suffix) =>

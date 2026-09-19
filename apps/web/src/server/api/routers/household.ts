@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ensureHousehold } from "~/server/ensure-household";
 import { householdPromptSchema } from "~/server/household-prompt";
 import { getSystemDefaultPrompt } from "~/server/ai/import-prompt";
 
@@ -16,6 +17,7 @@ import { randomUUID } from "node:crypto";
 import { tryUpdateClerkHouseholdMetadata } from "~/server/clerk-household-metadata";
 import { householdSlugBase } from "~/lib/household";
 
+// Retained for the native app’s existing onboarding. Web creates an empty household.
 const onboardingDinnerSchema = z.object({
   name: z.string().trim().min(1).max(200),
   date: z.date(),
@@ -25,6 +27,36 @@ const onboardingDinnerSchema = z.object({
 const importInstructionsSchema = householdPromptSchema.nullable().optional();
 
 export const householdRouter = createTRPCRouter({
+  welcomeStatus: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      if (input.userId !== ctx.auth.userId)
+        throw new TRPCError({ code: "FORBIDDEN" });
+      const user = await ctx.db.user.findUniqueOrThrow({
+        where: { id: ctx.auth.userId },
+        select: { welcomeSeenAt: true },
+      });
+      return { householdId: ctx.householdId ?? null, ...user };
+    }),
+  start: protectedProcedure.mutation(async ({ ctx }) => {
+    const householdId = await ctx.db.$transaction((tx) =>
+      ensureHousehold(tx, ctx.auth.userId),
+    );
+    await tryUpdateClerkHouseholdMetadata(ctx.auth.userId, householdId);
+    const user = await ctx.db.user.findUniqueOrThrow({
+      where: { id: ctx.auth.userId },
+      select: { welcomeSeenAt: true },
+    });
+    return { householdId, ...user };
+  }),
+  dismissWelcome: protectedProcedureWithHousehold.mutation(async ({ ctx }) => {
+    const user = await ctx.db.user.update({
+      where: { id: ctx.auth.userId },
+      data: { welcomeSeenAt: new Date() },
+      select: { welcomeSeenAt: true },
+    });
+    return { householdId: ctx.householdId, ...user };
+  }),
   household: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.auth.userId) {
       throw new TRPCError({ code: "UNAUTHORIZED" });

@@ -35,7 +35,7 @@ async function seedDefault() {
       prisma.user.upsert({
         where: { id: user.id },
         update: {},
-        create: user,
+        create: { ...user, welcomeSeenAt: new Date() },
       }),
     ),
   );

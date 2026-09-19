@@ -1,15 +1,30 @@
+import { SignUp } from "@clerk/nextjs";
+import { getAuth } from "@clerk/nextjs/server";
+import type { GetServerSideProps } from "next";
 import Head from "next/head";
-import { OnboardingView } from "../views/Onboarding/OnboardingView";
+
+export const getServerSideProps: GetServerSideProps = ({ req }) => {
+  if (getAuth(req).userId) {
+    return Promise.resolve({
+      redirect: { destination: "/", permanent: false },
+    });
+  }
+  return Promise.resolve({ props: {} });
+};
 
 export default function Onboarding() {
   return (
     <>
       <Head>
-        <title>PlanEatRepeat</title>
-        <meta name="description" content="The easiest way to plan dinners" />
-        <link rel="icon" href="/favicon.ico" />
+        <title>Get started | Plan Eat Repeat</title>
       </Head>
-      <OnboardingView />
+      <div className="flex min-h-[80vh] items-center justify-center">
+        <SignUp
+          routing="hash"
+          forceRedirectUrl="/"
+          signInForceRedirectUrl="/"
+        />
+      </div>
     </>
   );
 }
