@@ -71,6 +71,117 @@ test("the navigation plus follows the current page", async ({ page }) => {
   await expect(addItemSheet).not.toBeVisible();
 });
 
+test("desktop navigation adds shopping items from Usually have", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1180, height: 850 });
+  await ensureSignedIn(page);
+  const response = await page.request.post("/api/dev/auth-bypass");
+  const { userId } = (await response.json()) as { userId: string };
+  const { householdId } = await db.membership.findUniqueOrThrow({
+    where: { userId },
+  });
+  const name = `Navigation ${crypto.randomUUID()}`;
+  const ownItem = await db.ownItem.create({
+    data: {
+      householdId,
+      name,
+      normalizedName: name.toLowerCase(),
+      category: "OWN_ITEMS",
+      usuallyHave: true,
+    },
+  });
+  const navigation = page.getByRole("navigation", {
+    name: "Primary navigation",
+  });
+  const addItemSheet = page.getByRole("dialog", {
+    name: "Add an item",
+    exact: true,
+  });
+
+  try {
+    await navigation
+      .getByRole("link", { name: "Cookbook", exact: true })
+      .click();
+    await navigation
+      .getByRole("button", { name: "Add Dinner", exact: true })
+      .click();
+    await expect(
+      page.getByRole("dialog", { name: "Add a dinner", exact: true }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await navigation
+      .getByRole("link", { name: "Shopping list", exact: true })
+      .click();
+    await page
+      .locator("summary")
+      .filter({ hasText: "Shopping list actions" })
+      .click();
+    await page.getByRole("link", { name: "Usually have", exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name: "Usually have", exact: true }),
+    ).toBeVisible();
+    await navigation
+      .getByRole("button", { name: "Add item", exact: true })
+      .click();
+    await addItemSheet
+      .getByRole("combobox", { name: "Item name", exact: true })
+      .fill(name);
+    await addItemSheet.getByRole("option", { name, exact: true }).click();
+    await expect(addItemSheet).not.toBeVisible();
+    await expect(page).toHaveURL(/\/shopping-list\/usually-have$/);
+    await expect
+      .poll(() => db.shoppingItem.count({ where: { ownItemId: ownItem.id } }))
+      .toBe(1);
+    expect(
+      (await db.ownItem.findUniqueOrThrow({ where: { id: ownItem.id } }))
+        .usuallyHave,
+    ).toBe(true);
+
+    // The shared flow also includes the dinner picker, not just manual entry.
+    await navigation
+      .getByRole("button", { name: "Add item", exact: true })
+      .click();
+    await addItemSheet
+      .getByRole("button", { name: "From the cookbook", exact: true })
+      .click();
+    await expect(
+      page.getByRole("dialog", { name: "Add dinners", exact: true }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    await navigation
+      .getByRole("link", { name: "Shopping list", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", {
+        name: `Remove ${name} from list`,
+        exact: true,
+      }),
+    ).toBeVisible();
+    await navigation
+      .getByRole("button", { name: "Add item", exact: true })
+      .click();
+    await expect(addItemSheet).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(
+      navigation.getByRole("button", { name: "Add item", exact: true }),
+    ).toBeFocused();
+
+    await navigation
+      .getByRole("link", { name: "Settings", exact: true })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Settings", exact: true }),
+    ).toBeVisible();
+    await expect(
+      navigation.getByRole("button", { name: "Add Dinner", exact: true }),
+    ).toBeVisible();
+  } finally {
+    await db.ownItem.delete({ where: { id: ownItem.id } });
+  }
+});
+
 test("add shopping items, remove them, and edit and restore Recently Used", async ({
   page,
 }) => {

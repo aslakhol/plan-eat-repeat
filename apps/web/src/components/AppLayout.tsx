@@ -1,5 +1,4 @@
-import { SidebarProvider } from "src/components/ui/sidebar";
-import { AppSidebar } from "./AppSidebar";
+import { DesktopNav } from "./DesktopNav";
 import { BottomNav } from "../views/BottomNav";
 import { useUser } from "@clerk/nextjs";
 import { cn } from "src/lib/utils";
@@ -22,12 +21,19 @@ const householdOptionalPages = new Set([
   "/d/[publicSlug]",
   "/h/[publicSlug]",
   "/onboarding",
+  "/system-admin/ai-import-spend",
 ]);
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+type LayoutProps = {
+  children: React.ReactNode;
+  contentClassName?: string;
+  mobileNavigation?: boolean;
+};
+
+export function AppLayout(props: LayoutProps) {
   const { user, isLoaded, isSignedIn } = useUser();
   const router = useRouter();
-  const layout = <Layout>{children}</Layout>;
+  const layout = <Layout {...props} />;
   if (!isLoaded || !isSignedIn || householdOptionalPages.has(router.pathname)) {
     return layout;
   }
@@ -38,11 +44,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Layout({ children }: { children: React.ReactNode }) {
+function Layout({
+  children,
+  contentClassName,
+  mobileNavigation = true,
+}: LayoutProps) {
   const { isSignedIn, isLoaded } = useUser();
   const router = useRouter();
   const showNav = isLoaded && isSignedIn;
-  const showMobileNavigation = showNav && router.pathname !== "/dinners/new";
+  const showMobileNavigation =
+    mobileNavigation && showNav && router.pathname !== "/dinners/new";
   const [addDinnerOpen, setAddDinnerOpen] = useState(false);
   const [addDinnerNavigation, setAddDinnerNavigation] =
     useState<DinnerCreationNavigation>({ origin: "cookbook" });
@@ -59,25 +70,23 @@ function Layout({ children }: { children: React.ReactNode }) {
       <DinnerCreationContext.Provider
         value={{ importedDraft, openAddDinner, setImportedDraft }}
       >
-        <SidebarProvider>
-          {showNav && (
-            <div className="hidden md:block">
-              <AppSidebar
+        <ShoppingItemCreationProvider>
+          <div className="bg-background flex min-h-screen w-full flex-col">
+            {showNav && (
+              <DesktopNav
                 onAddDinner={() =>
                   openAddDinner({
                     origin: router.pathname === "/" ? "week" : "cookbook",
                   })
                 }
               />
-            </div>
-          )}
-
-          <ShoppingItemCreationProvider>
-            <main className="bg-background min-h-screen w-full flex-1">
+            )}
+            <main className="w-full flex-1">
               <div
                 className={cn(
                   "mx-auto w-full max-w-7xl p-4 md:p-8",
                   showMobileNavigation && "pb-24 md:pb-8",
+                  contentClassName,
                 )}
               >
                 {children}
@@ -95,7 +104,7 @@ function Layout({ children }: { children: React.ReactNode }) {
                 </div>
               )}
             </main>
-          </ShoppingItemCreationProvider>
+          </div>
 
           {showNav && (
             <AddDinnerSheet
@@ -104,7 +113,7 @@ function Layout({ children }: { children: React.ReactNode }) {
               navigation={addDinnerNavigation}
             />
           )}
-        </SidebarProvider>
+        </ShoppingItemCreationProvider>
       </DinnerCreationContext.Provider>
     </KeepScreenAwakeProvider>
   );

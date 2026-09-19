@@ -20,11 +20,11 @@ export const SettingsView = ({ household, systemDefaultPrompt }: Props) => {
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <h1 className="text-foreground font-serif text-3xl font-bold">
         Settings
       </h1>
-      <div className="flex max-w-3xl flex-col gap-6">
+      <div className="flex flex-col gap-6">
         <Account />
         <Cooking />
         <ShoppingList language={household.shoppingLanguage} />
