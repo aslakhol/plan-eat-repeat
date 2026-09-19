@@ -1,8 +1,8 @@
+import { defaultHouseholdName } from "./ensure-household";
 import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  publishedDinnerSaveHouseholdName,
   matchesPublishedDinnerSource,
   projectPublishedDinnerCopy,
   reconcilePublishedDinnerTags,
@@ -10,14 +10,14 @@ import {
 
 void test("Save Intent Household names derive from the authenticated user with a fallback", () => {
   assert.equal(
-    publishedDinnerSaveHouseholdName({
+    defaultHouseholdName({
       firstName: "  Ada ",
       lastName: " Lovelace  ",
     }),
     "Ada Lovelace's household",
   );
   assert.equal(
-    publishedDinnerSaveHouseholdName({ firstName: " ", lastName: null }),
+    defaultHouseholdName({ firstName: " ", lastName: null }),
     "My household",
   );
 });

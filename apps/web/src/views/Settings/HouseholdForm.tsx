@@ -25,10 +25,7 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-  CardDescription,
 } from "../../components/ui/card";
-import { useClerk } from "@clerk/nextjs";
-import { useRouter } from "next/router";
 
 const householdFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
@@ -37,64 +34,6 @@ const householdFormSchema = z.object({
 });
 
 type HouseholdFormData = z.infer<typeof householdFormSchema>;
-
-export const NewHousehold = ({
-  systemDefaultPrompt,
-}: {
-  systemDefaultPrompt: string;
-}) => {
-  const router = useRouter();
-  const { user } = useClerk();
-
-  const utils = api.useUtils();
-  const form = useForm<HouseholdFormData>({
-    resolver: zodResolver(householdFormSchema),
-    defaultValues: {
-      name: "",
-      slug: "",
-      importInstructions: systemDefaultPrompt,
-    },
-  });
-
-  const createHouseholdMutation = api.household.createHousehold.useMutation({
-    onSuccess: async () => {
-      void utils.household.invalidate();
-      await user?.reload();
-      router.reload();
-      toast({
-        title: "Created household",
-        description:
-          "Your household has been created successfully, to invite people you can head to settings -> household. Next step now is to make a couple of dinners!",
-      });
-    },
-  });
-
-  const onSubmit = async (data: HouseholdFormData) => {
-    await createHouseholdMutation.mutateAsync(data);
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create Household</CardTitle>
-        <CardDescription>
-          To use PlanEatRepeat you need to create a household. If you&apos;d
-          like, you can invite other people to join later.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <HouseholdForm
-          systemDefaultPrompt={systemDefaultPrompt}
-          householdPrompt={systemDefaultPrompt}
-          form={form}
-          onSubmit={onSubmit}
-          submitLabel="Create Household"
-          isSubmitting={createHouseholdMutation.isPending}
-        />
-      </CardContent>
-    </Card>
-  );
-};
 
 type EditHouseholdProps = {
   household: Household;

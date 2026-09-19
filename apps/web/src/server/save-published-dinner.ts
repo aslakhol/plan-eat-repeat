@@ -1,8 +1,6 @@
-import { randomUUID } from "node:crypto";
-
 import { type Prisma, type PrismaClient } from "@planeatrepeat/db";
 import { normalizeUnit } from "@planeatrepeat/shared";
-import { householdSlugBase } from "~/lib/household";
+import { ensureHousehold } from "./ensure-household";
 
 const SAVE_BURST_WINDOW_MS = 10_000;
 const SAVE_BURST_LIMIT = 20;
@@ -10,21 +8,6 @@ const SAVE_BURST_LIMIT = 20;
 export class PublishedDinnerSaveRateLimitError extends Error {}
 
 class PublishedDinnerUnavailableRollback extends Error {}
-
-export const publishedDinnerSaveHouseholdName = (user: {
-  firstName: string | null;
-  lastName: string | null;
-}) => {
-  const name = [user.firstName, user.lastName]
-    .map((part) => part?.trim())
-    .filter(Boolean)
-    .join(" ");
-  return name ? `${name}'s household` : "My household";
-};
-
-const publishedDinnerSaveHouseholdSlug = (name: string) => {
-  return `${householdSlugBase(name)}-${randomUUID().slice(0, 8)}`;
-};
 
 export const reconcilePublishedDinnerTags = (
   sourceTags: string[],
@@ -264,26 +247,7 @@ export const savePublishedDinnerForUser = async (
         create: user,
       });
 
-      const existingMembership = await tx.membership.findUnique({
-        where: { userId: user.id },
-        select: { householdId: true },
-      });
-      const householdId = existingMembership
-        ? existingMembership.householdId
-        : (
-            await tx.household.create({
-              data: {
-                name: publishedDinnerSaveHouseholdName(user),
-                slug: publishedDinnerSaveHouseholdSlug(
-                  publishedDinnerSaveHouseholdName(user),
-                ),
-                Members: {
-                  create: { userId: user.id, role: "ADMIN" },
-                },
-              },
-              select: { id: true },
-            })
-          ).id;
+      const householdId = await ensureHousehold(tx, user.id);
 
       const result = await savePublishedDinnerInTransaction(
         tx,

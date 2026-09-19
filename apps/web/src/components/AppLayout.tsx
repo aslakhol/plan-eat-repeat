@@ -12,16 +12,43 @@ import {
 import { useRouter } from "next/router";
 import { KeepScreenAwakeProvider } from "~/hooks/use-keep-screen-awake";
 import { ShoppingItemCreationProvider } from "~/views/ShoppingList/ShoppingItemCreationContext";
+import { HouseholdGate } from "./HouseholdGate";
 
-export function AppLayout({
-  children,
-  contentClassName,
-  mobileNavigation = true,
-}: {
+// Public recipes and invitations must finish their own authentication flows
+// before we create a household or show the welcome.
+const householdOptionalPages = new Set([
+  "/invite/[inviteId]",
+  "/d/[publicSlug]",
+  "/h/[publicSlug]",
+  "/onboarding",
+  "/system-admin/ai-import-spend",
+]);
+
+type LayoutProps = {
   children: React.ReactNode;
   contentClassName?: string;
   mobileNavigation?: boolean;
-}) {
+};
+
+export function AppLayout(props: LayoutProps) {
+  const { user, isLoaded, isSignedIn } = useUser();
+  const router = useRouter();
+  const layout = <Layout {...props} />;
+  if (!isLoaded || !isSignedIn || householdOptionalPages.has(router.pathname)) {
+    return layout;
+  }
+  return (
+    <HouseholdGate key={user.id} userId={user.id}>
+      {layout}
+    </HouseholdGate>
+  );
+}
+
+function Layout({
+  children,
+  contentClassName,
+  mobileNavigation = true,
+}: LayoutProps) {
   const { isSignedIn, isLoaded } = useUser();
   const router = useRouter();
   const showNav = isLoaded && isSignedIn;

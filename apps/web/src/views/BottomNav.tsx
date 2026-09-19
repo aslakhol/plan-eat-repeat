@@ -10,11 +10,9 @@ import { useRouter } from "next/router";
 import { cn } from "../lib/utils";
 import Link from "next/link";
 import { ShoppingItemCreationTrigger } from "./ShoppingList/ShoppingItemCreationContext";
-import { useClerk } from "@clerk/nextjs";
 
 export const BottomNav = ({ onAddDinner }: { onAddDinner: () => void }) => {
   const router = useRouter();
-  const { user } = useClerk();
   const isShoppingList = router.pathname === "/shopping-list";
   const addButton = (
     <button
@@ -26,13 +24,6 @@ export const BottomNav = ({ onAddDinner }: { onAddDinner: () => void }) => {
       <Plus aria-hidden="true" className="size-7" />
     </button>
   );
-
-  const onClick = !user?.publicMetadata.householdId
-    ? async () => {
-        await user?.reload();
-        router.reload();
-      }
-    : undefined;
 
   const items = [
     { title: "Plan", url: "/", icon: Calendar },
@@ -64,7 +55,6 @@ export const BottomNav = ({ onAddDinner }: { onAddDinner: () => void }) => {
                   "text-muted-foreground hover:text-primary focus-visible:ring-ring flex h-full min-w-0 items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2",
                   isActive && "text-primary",
                 )}
-                onClick={onClick}
               >
                 <item.icon aria-hidden="true" className="size-6" />
               </Link>

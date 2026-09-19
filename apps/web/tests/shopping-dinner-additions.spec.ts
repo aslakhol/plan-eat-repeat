@@ -21,7 +21,7 @@ test.afterAll(async () => db.$disconnect());
 async function setup(page: Page) {
   const { userId } = await provisionLocalAuth(page, "save-intent-existing");
   await resetLocalIdentity(db, userId);
-  await db.user.create({ data: { id: userId } });
+  await db.user.create({ data: { id: userId, welcomeSeenAt: new Date() } });
   const household = await db.household.create({
     data: {
       name: "Dinner addition test",

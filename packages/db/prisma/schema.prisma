@@ -160,6 +160,8 @@ model User {
     lastName  String?
     imageUrl  String?
 
+    welcomeSeenAt DateTime?
+
     // Not managed by clerk
     createdAt   DateTime     @default(now())
     updatedAt   DateTime     @updatedAt

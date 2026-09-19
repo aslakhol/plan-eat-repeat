@@ -37,7 +37,7 @@ export default function Settings() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <SignedIn>
-        {householdQuery.isSuccess && (
+        {householdQuery.isSuccess && householdQuery.data.household && (
           <SettingsView
             household={householdQuery.data.household}
             systemDefaultPrompt={householdQuery.data.systemDefaultPrompt}

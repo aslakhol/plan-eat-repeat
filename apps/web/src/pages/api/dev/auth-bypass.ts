@@ -4,7 +4,13 @@ import { clerkClient } from "@clerk/nextjs/server";
 const DEV_BYPASS_EMAIL = "aslakhol@gmail.com";
 const SIGN_IN_TOKEN_TTL_SECONDS = 60;
 
-const SAVE_INTENT_IDENTITIES = {
+const TEST_IDENTITIES = {
+  "welcome-new-user": {
+    email: "aslakhol+welcome-new-user@gmail.com",
+    firstName: "Welcome",
+    lastName: "Visitor",
+    recreate: true,
+  },
   "save-intent-existing": {
     email: "aslakhol+save-intent-existing@gmail.com",
     firstName: "Existing",
@@ -19,7 +25,7 @@ const SAVE_INTENT_IDENTITIES = {
   },
 } as const;
 
-type SaveIntentIdentity = keyof typeof SAVE_INTENT_IDENTITIES;
+type TestIdentity = keyof typeof TEST_IDENTITIES;
 
 const isLocalHostname = (hostname: string) => {
   if (
@@ -71,11 +77,11 @@ export default async function handler(
       requestBody !== null &&
       "identity" in requestBody &&
       typeof requestBody.identity === "string" &&
-      requestBody.identity in SAVE_INTENT_IDENTITIES
-        ? (requestBody.identity as SaveIntentIdentity)
+      requestBody.identity in TEST_IDENTITIES
+        ? (requestBody.identity as TestIdentity)
         : null;
     const identity = requestedIdentity
-      ? SAVE_INTENT_IDENTITIES[requestedIdentity]
+      ? TEST_IDENTITIES[requestedIdentity]
       : null;
     const email = identity?.email ?? DEV_BYPASS_EMAIL;
     const users = await client.users.getUserList({

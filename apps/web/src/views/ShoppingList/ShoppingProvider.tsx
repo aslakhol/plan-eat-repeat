@@ -87,8 +87,15 @@ const ShoppingSession = memo(function ShoppingSession({
 });
 
 function useShoppingState() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, userId } = useAuth();
   const { pathname } = useRouter();
+  const householdStatus = api.household.welcomeStatus.useQuery(
+    { userId: userId ?? "" },
+    {
+      enabled: !!isSignedIn && pathname === "/shopping-list",
+      staleTime: Infinity,
+    },
+  );
   const [writes] = useState(createShoppingWrites);
   const active = useRef(true);
   useEffect(() => {
@@ -99,7 +106,10 @@ function useShoppingState() {
   }, []);
   const isCurrent = () => active.current;
   const queryOptions = {
-    enabled: !!isSignedIn && pathname === "/shopping-list",
+    enabled:
+      !!isSignedIn &&
+      pathname === "/shopping-list" &&
+      !!householdStatus.data?.householdId,
     refetchInterval: 2000,
     refetchOnWindowFocus: "always" as const,
     refetchOnReconnect: "always" as const,
