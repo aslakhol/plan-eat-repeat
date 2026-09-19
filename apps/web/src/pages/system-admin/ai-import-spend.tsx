@@ -2,6 +2,7 @@ import React, { useState, type ReactElement } from "react";
 import { getAuth } from "@clerk/nextjs/server";
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
+import { AppLayout } from "~/components/AppLayout";
 
 import { LoadingIndicator } from "~/components/LoadingIndicator";
 import { DailySpendCard } from "~/components/ai-import-spend/daily-spend-card";
@@ -49,7 +50,7 @@ export default function AiImportSpendPage() {
         <title>AI import spend | Plan Eat Repeat</title>
         <meta name="robots" content="noindex,nofollow" />
       </Head>
-      <div className="bg-background text-foreground min-h-screen px-4 pb-16 pt-8 sm:px-8 lg:px-10 lg:pt-12">
+      <div className="bg-background text-foreground px-4 pb-16 pt-8 sm:px-8 lg:px-10 lg:pt-12">
         <main
           className="mx-auto flex w-full max-w-[1080px] flex-col gap-7"
           aria-busy={dashboardQuery.isPending}
@@ -76,7 +77,11 @@ export default function AiImportSpendPage() {
   );
 }
 
-AiImportSpendPage.getLayout = (page: ReactElement) => page;
+AiImportSpendPage.getLayout = (page: ReactElement) => (
+  <AppLayout contentClassName="max-w-none p-0 md:p-0" mobileNavigation={false}>
+    {page}
+  </AppLayout>
+);
 
 export const Dashboard = ({
   projection,

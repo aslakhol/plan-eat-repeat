@@ -31,9 +31,7 @@ import {
 import { shoppingIdentity } from "~/lib/shopping-matching";
 import type { ShoppingEdit } from "./use-edit-shopping-item";
 import { useShopping } from "./ShoppingProvider";
-import { AddItemSheet } from "./AddItemSheet";
 import { EditItemSheet } from "./EditItemSheet";
-import { DinnerPicker, type ShoppingDinnerSource } from "./DinnerPicker";
 import { DinnerSourceActions } from "./DinnerSourceActions";
 import {
   ShoppingItemCreationTrigger,
@@ -107,9 +105,8 @@ function ShoppingItemRow({
 
 export function ShoppingListView() {
   const { enabled: showCategoryHeadings } = useShoppingCategoryHeadings();
-  const { close } = useShoppingItemCreation();
+  const { openDinnerPicker } = useShoppingItemCreation();
   const {
-    addItem,
     pendingItems,
     pendingDinnerAdditions,
     failedDinnerAdditions,
@@ -136,13 +133,6 @@ export function ShoppingListView() {
   const pendingIdentities = new Set(
     pendingItems.map((item) => shoppingIdentity(item.name, item.note)),
   );
-  const [pickerSource, setPickerSource] = useState<ShoppingDinnerSource | null>(
-    null,
-  );
-  const openPicker = (source: ShoppingDinnerSource) => {
-    close();
-    setPickerSource(source);
-  };
   const [clearOpen, setClearOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [editingItem, setEditingItem] = useState<{
@@ -450,7 +440,7 @@ export function ShoppingListView() {
                   Add an item
                 </Button>
               </ShoppingItemCreationTrigger>
-              <DinnerSourceActions onSelect={openPicker} />
+              <DinnerSourceActions onSelect={openDinnerPicker} />
             </div>
           </div>
         ) : (
@@ -582,13 +572,6 @@ export function ShoppingListView() {
         </section>
       )}
 
-      <AddItemSheet onAdd={addItem} onSelectDinners={openPicker} />
-      {pickerSource && (
-        <DinnerPicker
-          initialSource={pickerSource}
-          onClose={() => setPickerSource(null)}
-        />
-      )}
       {editingItem && (
         <EditItemSheet
           key={editingItem.failedKey ?? editingItem.item.id}
