@@ -131,7 +131,7 @@ function WelcomeNote({ onClose }: { onClose: () => void }) {
             className="text-primary size-4 shrink-0"
             aria-hidden="true"
           />
-          Aslak and Madeline
+          Aslak and Madeleine
         </p>
       </div>
       <Button className="h-11 w-full" onClick={onClose}>
