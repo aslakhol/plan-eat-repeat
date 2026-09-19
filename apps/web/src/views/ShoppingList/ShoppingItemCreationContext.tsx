@@ -14,9 +14,13 @@ import {
 import { api } from "~/utils/api";
 import { localCalendarBoundaries } from "~/hooks/use-dinner-summaries";
 import { shoppingChoicesQueryOptions } from "~/lib/query-freshness";
+import { AddItemSheet } from "./AddItemSheet";
+import { DinnerPicker, type ShoppingDinnerSource } from "./DinnerPicker";
+import { ShoppingReady, useShopping } from "./ShoppingProvider";
 
 const ShoppingItemCreationContext = createContext<{
   close: () => void;
+  openDinnerPicker: (source: ShoppingDinnerSource) => void;
   rememberTrigger: (element: HTMLButtonElement) => void;
   restoreFocus: (event: Event) => void;
 } | null>(null);
@@ -27,10 +31,20 @@ export function ShoppingItemCreationProvider({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [pickerSource, setPickerSource] = useState<ShoppingDinnerSource | null>(
+    null,
+  );
   const trigger = useRef<HTMLButtonElement | null>(null);
   const { pathname } = useRouter();
+  const [previousPathname, setPreviousPathname] = useState(pathname);
+  const isShopping =
+    pathname === "/shopping-list" || pathname === "/shopping-list/usually-have";
 
-  if (pathname !== "/shopping-list" && open) setOpen(false);
+  if (previousPathname !== pathname) {
+    setPreviousPathname(pathname);
+    setOpen(false);
+    setPickerSource(null);
+  }
 
   const utils = api.useUtils();
   const onOpenChange = (nextOpen: boolean) => {
@@ -56,6 +70,10 @@ export function ShoppingItemCreationProvider({
     <ShoppingItemCreationContext.Provider
       value={{
         close: () => onOpenChange(false),
+        openDinnerPicker: (source) => {
+          onOpenChange(false);
+          setPickerSource(source);
+        },
         rememberTrigger: (element) => {
           trigger.current = element;
         },
@@ -70,8 +88,35 @@ export function ShoppingItemCreationProvider({
     >
       <ResponsiveModal open={open} onOpenChange={onOpenChange} repositionInputs>
         {children}
+        {isShopping && (
+          <ShoppingReady>
+            <ShoppingCreationDialogs
+              pickerSource={pickerSource}
+              closePicker={() => setPickerSource(null)}
+            />
+          </ShoppingReady>
+        )}
       </ResponsiveModal>
     </ShoppingItemCreationContext.Provider>
+  );
+}
+
+function ShoppingCreationDialogs({
+  pickerSource,
+  closePicker,
+}: {
+  pickerSource: ShoppingDinnerSource | null;
+  closePicker: () => void;
+}) {
+  const { addItem } = useShopping();
+  const { openDinnerPicker } = useShoppingItemCreation();
+  return (
+    <>
+      <AddItemSheet onAdd={addItem} onSelectDinners={openDinnerPicker} />
+      {pickerSource && (
+        <DinnerPicker initialSource={pickerSource} onClose={closePicker} />
+      )}
+    </>
   );
 }
 
