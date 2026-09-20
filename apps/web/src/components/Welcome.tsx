@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
 import {
   BookOpen,
   Calendar,
@@ -7,6 +8,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
+import { toast } from "~/components/ui/use-toast";
 import {
   ResponsiveModal,
   ResponsiveModalContent,
@@ -42,6 +44,15 @@ export function Welcome({ onClose }: { onClose: () => void }) {
 }
 
 function WelcomeNote({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
+  const navigate = async (href: string) => {
+    try {
+      if (await router.push(href)) onClose();
+    } catch {
+      toast({ description: "We couldn't open that page. Please try again." });
+    }
+  };
+
   return (
     <div className="px-1 pb-2 pt-2 sm:px-3">
       <ResponsiveModalHeader className="!text-left">
@@ -66,7 +77,10 @@ function WelcomeNote({ onClose }: { onClose: () => void }) {
             <h2 className="font-serif text-lg">
               <Link
                 href="/dinners"
-                onClick={onClose}
+                onNavigate={(event) => {
+                  event.preventDefault();
+                  void navigate("/dinners");
+                }}
                 className="hover:text-primary focus-visible:ring-ring rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2"
               >
                 Cookbook
@@ -87,7 +101,10 @@ function WelcomeNote({ onClose }: { onClose: () => void }) {
             <h2 className="font-serif text-lg">
               <Link
                 href="/"
-                onClick={onClose}
+                onNavigate={(event) => {
+                  event.preventDefault();
+                  void navigate("/");
+                }}
                 className="hover:text-primary focus-visible:ring-ring rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2"
               >
                 Dinner plan
@@ -107,7 +124,10 @@ function WelcomeNote({ onClose }: { onClose: () => void }) {
             <h2 className="font-serif text-lg">
               <Link
                 href="/shopping-list"
-                onClick={onClose}
+                onNavigate={(event) => {
+                  event.preventDefault();
+                  void navigate("/shopping-list");
+                }}
                 className="hover:text-primary focus-visible:ring-ring rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2"
               >
                 Shopping list
