@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 import {
   BookOpen,
   Calendar,
@@ -16,6 +18,12 @@ import {
 } from "~/components/ResponsiveModal";
 
 export function Welcome({ onClose }: { onClose: () => void }) {
+  const { events } = useRouter();
+  useEffect(() => {
+    events.on("routeChangeComplete", onClose);
+    return () => events.off("routeChangeComplete", onClose);
+  }, [events, onClose]);
+
   return (
     <ResponsiveModal open onOpenChange={(open) => !open && onClose()}>
       <ResponsiveModalContent
@@ -66,7 +74,6 @@ function WelcomeNote({ onClose }: { onClose: () => void }) {
             <h2 className="font-serif text-lg">
               <Link
                 href="/dinners"
-                onClick={onClose}
                 className="hover:text-primary focus-visible:ring-ring rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2"
               >
                 Cookbook
@@ -87,7 +94,6 @@ function WelcomeNote({ onClose }: { onClose: () => void }) {
             <h2 className="font-serif text-lg">
               <Link
                 href="/"
-                onClick={onClose}
                 className="hover:text-primary focus-visible:ring-ring rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2"
               >
                 Dinner plan
@@ -107,7 +113,6 @@ function WelcomeNote({ onClose }: { onClose: () => void }) {
             <h2 className="font-serif text-lg">
               <Link
                 href="/shopping-list"
-                onClick={onClose}
                 className="hover:text-primary focus-visible:ring-ring rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2"
               >
                 Shopping list

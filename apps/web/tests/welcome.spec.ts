@@ -22,6 +22,16 @@ test("a new user can enter the app, follow a welcome link, and return without se
   test.setTimeout(120_000);
   const auth = await provisionLocalAuth(page, "welcome-new-user");
   await resetLocalIdentity(db, auth.userId);
+  const navigationHeld = Promise.withResolvers<void>();
+  const navigationStarted = Promise.withResolvers<void>();
+  await page.route(
+    /\/_next\/data\/[^/]+\/dinners\.json/,
+    async (route) => {
+      navigationStarted.resolve();
+      await navigationHeld.promise;
+      await route.continue();
+    },
+  );
   try {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/onboarding");
@@ -34,6 +44,12 @@ test("a new user can enter the app, follow a welcome link, and return without se
     });
     await expect(welcome).toBeVisible({ timeout: 30_000 });
     await welcome.getByRole("link", { name: "Cookbook" }).click();
+    await navigationStarted.promise;
+    // Let click updates and the closing animation finish while navigation is held.
+    await page.waitForTimeout(300);
+    await expect(page).toHaveURL(/\/shopping-list$/);
+    await expect(welcome).toBeVisible();
+    navigationHeld.resolve();
     await expect(page).toHaveURL(/\/dinners$/);
     await expect(welcome).not.toBeVisible();
     await expect
@@ -54,6 +70,37 @@ test("a new user can enter the app, follow a welcome link, and return without se
     expect(
       await db.dinner.count({ where: { householdId: membership.householdId } }),
     ).toBe(0);
+  } finally {
+    navigationHeld.resolve();
+    await resetLocalIdentity(db, auth.userId);
+  }
+});
+
+test("a welcome link to the current page dismisses the welcome", async ({
+  page,
+}) => {
+  const auth = await provisionLocalAuth(page, "welcome-new-user");
+  await resetLocalIdentity(db, auth.userId);
+  try {
+    await page.goto("/onboarding");
+    await expect(
+      page.getByRole("button", { name: "Continue", exact: true }),
+    ).toBeVisible();
+    await completeLocalAuth(page, auth.ticket, "/shopping-list");
+    const welcome = page.getByRole("dialog", {
+      name: "Welcome to Plan Eat Repeat",
+    });
+    await expect(welcome).toBeVisible({ timeout: 30_000 });
+    await welcome.getByRole("link", { name: "Shopping list" }).click();
+    await expect(page).toHaveURL(/\/shopping-list$/);
+    await expect(welcome).not.toBeVisible();
+    await expect
+      .poll(
+        async () =>
+          (await db.user.findUniqueOrThrow({ where: { id: auth.userId } }))
+            .welcomeSeenAt,
+      )
+      .not.toBeNull();
   } finally {
     await resetLocalIdentity(db, auth.userId);
   }

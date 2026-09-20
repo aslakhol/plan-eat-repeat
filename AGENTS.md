@@ -54,7 +54,7 @@ Use the [testing skill](.agents/skills/testing/SKILL.md) when deciding what and 
 ## Local web testing
 
 - Before running `pnpm dev:web`, check whether a Next.js dev server is already running for this checkout. Do not start a second server on another port. Both processes write to `apps/web/.next`, which can cause a continuous Fast Refresh reload loop and make Playwright fail before it can inspect the page.
-- Reuse the existing server when it is serving the current checkout and has loaded the latest changes. If a clean restart is needed and the user owns the running process, ask the user to stop it instead of killing it. If an agent started the duplicate process, stop that process before rerunning the browser test.
+- Reuse the existing server when it is serving the current checkout and has loaded the latest changes. If a clean restart is needed and the user owns the running process, ask the user if you can restart it. When restarting a dev server that the user has started, restart it in iTerm in the same tab they were using. If an agent started the duplicate process, stop that process before rerunning the browser test.
 
 ## Agent skills
 
