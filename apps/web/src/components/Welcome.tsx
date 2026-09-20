@@ -45,8 +45,7 @@ export function Welcome({ onClose }: { onClose: () => void }) {
 function WelcomeNote({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const navigate = async (href: string) => {
-    const navigated = await router.push(href).catch(console.error);
-    if (navigated) onClose();
+    if (await router.push(href)) onClose();
   };
 
   return (
