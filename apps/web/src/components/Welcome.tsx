@@ -8,7 +8,6 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
-import { toast } from "~/components/ui/use-toast";
 import {
   ResponsiveModal,
   ResponsiveModalContent,
@@ -46,11 +45,8 @@ export function Welcome({ onClose }: { onClose: () => void }) {
 function WelcomeNote({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const navigate = async (href: string) => {
-    try {
-      if (await router.push(href)) onClose();
-    } catch {
-      toast({ description: "We couldn't open that page. Please try again." });
-    }
+    const navigated = await router.push(href).catch(console.error);
+    if (navigated) onClose();
   };
 
   return (
