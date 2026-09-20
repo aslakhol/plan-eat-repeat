@@ -25,7 +25,7 @@ test("a new user can enter the app, follow a welcome link, and return without se
   const navigationHeld = Promise.withResolvers<void>();
   const navigationStarted = Promise.withResolvers<void>();
   await page.route(
-    /\/_next\/static\/chunks\/pages\/dinners[^/]*\.js/,
+    /\/_next\/data\/[^/]+\/dinners\.json/,
     async (route) => {
       navigationStarted.resolve();
       await navigationHeld.promise;
