@@ -76,6 +76,36 @@ test("a new user can enter the app, follow a welcome link, and return without se
   }
 });
 
+test("a welcome link to the current page dismisses the welcome", async ({
+  page,
+}) => {
+  const auth = await provisionLocalAuth(page, "welcome-new-user");
+  await resetLocalIdentity(db, auth.userId);
+  try {
+    await page.goto("/onboarding");
+    await expect(
+      page.getByRole("button", { name: "Continue", exact: true }),
+    ).toBeVisible();
+    await completeLocalAuth(page, auth.ticket, "/shopping-list");
+    const welcome = page.getByRole("dialog", {
+      name: "Welcome to Plan Eat Repeat",
+    });
+    await expect(welcome).toBeVisible({ timeout: 30_000 });
+    await welcome.getByRole("link", { name: "Shopping list" }).click();
+    await expect(page).toHaveURL(/\/shopping-list$/);
+    await expect(welcome).not.toBeVisible();
+    await expect
+      .poll(
+        async () =>
+          (await db.user.findUniqueOrThrow({ where: { id: auth.userId } }))
+            .welcomeSeenAt,
+      )
+      .not.toBeNull();
+  } finally {
+    await resetLocalIdentity(db, auth.userId);
+  }
+});
+
 test("an invitation finishes before the welcome and uses the invited household", async ({
   page,
 }) => {

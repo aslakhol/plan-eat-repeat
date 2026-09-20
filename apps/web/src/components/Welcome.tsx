@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useEffect } from "react";
 import {
   BookOpen,
   Calendar,
@@ -17,6 +18,12 @@ import {
 } from "~/components/ResponsiveModal";
 
 export function Welcome({ onClose }: { onClose: () => void }) {
+  const { events } = useRouter();
+  useEffect(() => {
+    events.on("routeChangeComplete", onClose);
+    return () => events.off("routeChangeComplete", onClose);
+  }, [events, onClose]);
+
   return (
     <ResponsiveModal open onOpenChange={(open) => !open && onClose()}>
       <ResponsiveModalContent
@@ -43,11 +50,6 @@ export function Welcome({ onClose }: { onClose: () => void }) {
 }
 
 function WelcomeNote({ onClose }: { onClose: () => void }) {
-  const router = useRouter();
-  const navigate = async (href: string) => {
-    if (await router.push(href)) onClose();
-  };
-
   return (
     <div className="px-1 pb-2 pt-2 sm:px-3">
       <ResponsiveModalHeader className="!text-left">
@@ -72,10 +74,6 @@ function WelcomeNote({ onClose }: { onClose: () => void }) {
             <h2 className="font-serif text-lg">
               <Link
                 href="/dinners"
-                onNavigate={(event) => {
-                  event.preventDefault();
-                  void navigate("/dinners");
-                }}
                 className="hover:text-primary focus-visible:ring-ring rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2"
               >
                 Cookbook
@@ -96,10 +94,6 @@ function WelcomeNote({ onClose }: { onClose: () => void }) {
             <h2 className="font-serif text-lg">
               <Link
                 href="/"
-                onNavigate={(event) => {
-                  event.preventDefault();
-                  void navigate("/");
-                }}
                 className="hover:text-primary focus-visible:ring-ring rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2"
               >
                 Dinner plan
@@ -119,10 +113,6 @@ function WelcomeNote({ onClose }: { onClose: () => void }) {
             <h2 className="font-serif text-lg">
               <Link
                 href="/shopping-list"
-                onNavigate={(event) => {
-                  event.preventDefault();
-                  void navigate("/shopping-list");
-                }}
                 className="hover:text-primary focus-visible:ring-ring rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2"
               >
                 Shopping list
