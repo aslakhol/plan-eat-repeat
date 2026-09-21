@@ -7,7 +7,6 @@ export default function NewDinnerPage() {
       <Head>
         <title>New dinner · PlanEatRepeat</title>
         <meta name="description" content="Create a new dinner recipe" />
-        <link rel="icon" href="/favicon.ico" />
       </Head>
       <CreateDinner />
     </>
