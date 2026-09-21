@@ -7,7 +7,6 @@ export default function Home() {
       <Head>
         <title>PlanEatRepeat</title>
         <meta name="description" content="The easiest way to plan dinners" />
-        <link rel="icon" href="/favicon.ico" />
       </Head>
       <DinnersView />
     </>

@@ -1,4 +1,5 @@
 import { type AppProps } from "next/app";
+import Head from "next/head";
 import { type NextPage } from "next";
 import { type ReactElement, type ReactNode } from "react";
 
@@ -84,6 +85,12 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   return (
     <PostHogProvider client={posthog}>
       <ClerkProvider localization={localization}>
+        <Head>
+          <link rel="icon" href="/favicon.ico" sizes="any" />
+          <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+          <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+          <meta name="theme-color" content="#e26a36" />
+        </Head>
         <main
           className={`${youngSerif.variable} ${quicksand.variable} font-sans`}
         >

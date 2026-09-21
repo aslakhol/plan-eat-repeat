@@ -17,7 +17,6 @@ export default function DinnerDetailPage() {
       <Head>
         <title>Dinner · PlanEatRepeat</title>
         <meta name="description" content="View and edit a dinner recipe" />
-        <link rel="icon" href="/favicon.ico" />
       </Head>
       <DinnersView />
       <ResponsiveModal
