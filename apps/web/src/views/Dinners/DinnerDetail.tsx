@@ -155,7 +155,7 @@ export const DinnerDetail = () => {
     );
   }
 
-  if (dinnerQuery.isError) {
+  if (dinnerQuery.isError && !dinnerQuery.data) {
     return (
       <div className="mx-auto max-w-[640px] space-y-4 py-12 text-center">
         <h1 className="font-serif text-2xl">Couldn&apos;t load this Dinner</h1>

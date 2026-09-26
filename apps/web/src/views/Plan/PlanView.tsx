@@ -8,6 +8,7 @@ import {
   startOfDay,
 } from "date-fns";
 import { useRouter } from "next/router";
+import { Button } from "~/components/ui/button";
 import { Day } from "./Day";
 import { WeekSelect } from "../WeekSelect";
 import { keepPreviousData } from "@tanstack/react-query";
@@ -70,6 +71,20 @@ export const PlanView = () => {
     );
   }
 
+  if (!plannedDinnersQuery.data) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
+        <h1 className="font-serif text-2xl">Couldn&apos;t load this week</h1>
+        <Button
+          disabled={plannedDinnersQuery.isFetching}
+          onClick={() => void plannedDinnersQuery.refetch()}
+        >
+          Try again
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 pb-24 md:gap-6 md:pb-0">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -88,7 +103,7 @@ export const PlanView = () => {
             date={day.date}
             today={today}
             plannedDinner={
-              plannedDinnersQuery.data?.plans.find((p) =>
+              plannedDinnersQuery.data.plans.find((p) =>
                 isSameDay(p.date, day.date),
               )?.dinner
             }

@@ -28,7 +28,7 @@ export const DinnersView = () => {
     );
   }
 
-  if (!dinnersQuery.isSuccess) {
+  if (!dinnersQuery.data) {
     return (
       <div className="mx-auto flex min-h-[50vh] max-w-md flex-col items-center justify-center gap-3 px-4 text-center">
         <AlertCircle className="text-destructive size-6" />
