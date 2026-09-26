@@ -90,6 +90,22 @@ test("returning to the Week keeps a planned Dinner when the refresh lacks authen
     await page.keyboard.press("Escape");
     await expect(plannedDay).toBeVisible();
 
+    // Without any cached week, a failed read must not look like an empty plan.
+    await page.route("**/api/trpc/**", async (route) => {
+      if (route.request().url().includes("plan.plannedDinners")) {
+        await route.abort("failed");
+      } else {
+        await route.continue();
+      }
+    });
+    await page.reload();
+    await expect(
+      page.getByRole("button", { name: "Try again", exact: true }),
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("plan-day-trigger")).toHaveCount(0);
+    await page.unrouteAll({ behavior: "wait" });
+    await page.getByRole("button", { name: "Try again", exact: true }).click();
+    await expect(plannedDay).toBeVisible();
   } finally {
     await page.unrouteAll({ behavior: "wait" });
     await db.dinner.delete({ where: { id: dinner.id } });
