@@ -305,7 +305,7 @@ export const dinnerRouter = createTRPCRouter({
     return { dinners };
   }),
 
-  summaries: publicProcedure
+  summaries: protectedProcedureWithHousehold
     .input(
       z
         .object({
@@ -321,10 +321,6 @@ export const dinnerRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const householdId = ctx.householdId;
-
-      if (!householdId) {
-        return { dinners: [] };
-      }
 
       const dinners = await ctx.db.dinner.findMany({
         where: { householdId },
@@ -386,13 +382,9 @@ export const dinnerRouter = createTRPCRouter({
       };
     }),
 
-  get: publicProcedure
+  get: protectedProcedureWithHousehold
     .input(z.object({ dinnerId: z.number() }))
     .query(async ({ ctx, input }) => {
-      if (!ctx.householdId) {
-        return { dinner: null };
-      }
-
       const dinner: DinnerWithRecipe | null = await ctx.db.dinner.findUnique({
         where: {
           id: input.dinnerId,

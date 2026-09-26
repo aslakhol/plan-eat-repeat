@@ -9,13 +9,9 @@ import { addDays } from "date-fns";
 import { TRPCError } from "@trpc/server";
 
 export const planRouter = createTRPCRouter({
-  plannedDinners: publicProcedure
+  plannedDinners: protectedProcedureWithHousehold
     .input(z.object({ startOfWeek: z.date() }))
     .query(async ({ ctx, input }) => {
-      if (!ctx.householdId) {
-        return { plans: [] };
-      }
-
       const plans = await ctx.db.plan.findMany({
         where: {
           date: {
