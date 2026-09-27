@@ -75,6 +75,7 @@ export const saveShoppingItemWithMerges = async (
     usuallyHave?: boolean;
     odaProduct?: OdaProductPreference | null;
   },
+  categories?: ReadonlyMap<string, ShoppingCategory>,
 ) => {
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
   if (!input.id)
@@ -90,7 +91,13 @@ export const saveShoppingItemWithMerges = async (
   const { ownItem, reassignedRequirementIds } = original
     ? await editOwnItem(tx, householdId, original.ownItemId, input)
     : {
-        ownItem: await rememberOwnItem(tx, householdId, input.name, input.note),
+        ownItem: await rememberOwnItem(
+          tx,
+          householdId,
+          input.name,
+          input.note,
+          categories,
+        ),
         reassignedRequirementIds: [],
       };
   const quantity = { amount: input.amount, unit: normalizeUnit(input.unit) };
@@ -134,6 +141,7 @@ export const setUsuallyHave = async (
   householdId: string,
   selection: { id: string } | { name: string; note?: string | null },
   excluded: boolean,
+  categories?: ReadonlyMap<string, ShoppingCategory>,
 ) => {
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
   const item =
@@ -141,7 +149,13 @@ export const setUsuallyHave = async (
       ? await tx.ownItem.findUniqueOrThrow({
           where: { id: selection.id, householdId },
         })
-      : await rememberOwnItem(tx, householdId, selection.name, selection.note);
+      : await rememberOwnItem(
+          tx,
+          householdId,
+          selection.name,
+          selection.note,
+          categories,
+        );
   const { ownItem } = await editOwnItem(tx, householdId, item.id, {
     ...item,
     usuallyHave: excluded,

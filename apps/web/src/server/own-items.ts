@@ -1,65 +1,51 @@
-import type {
-  Prisma,
-  ShoppingCategory,
-  ShoppingLanguage,
-} from "@planeatrepeat/db";
+import type { Prisma, ShoppingCategory } from "@planeatrepeat/db";
 import {
   capitalizeShoppingName,
   normalizeShoppingName,
 } from "@planeatrepeat/shared";
-import { shoppingCatalog } from "./shopping-catalog";
+import { classifyShoppingItems } from "./ai/classify-shopping-items";
+import { shoppingIdentity } from "~/lib/shopping-matching";
 import { TRPCError } from "@trpc/server";
 import type { OdaProductPreference } from "~/lib/oda-product";
 
-const catalogs = {
-  en: new Map(
-    shoppingCatalog.map(({ en, category }) => [
-      normalizeShoppingName(en),
-      category,
-    ]),
-  ),
-  no: new Map(
-    shoppingCatalog.map(({ no, category }) => [
-      normalizeShoppingName(no),
-      category,
-    ]),
-  ),
-} satisfies Record<ShoppingLanguage, Map<string, ShoppingCategory>>;
-
-export function ownItemCategory(
-  shoppingLanguage: ShoppingLanguage,
-  remembered: Iterable<{ normalizedName: string; category: ShoppingCategory }>,
-  normalizedName: string,
-  initialCategory?: ShoppingCategory,
-): ShoppingCategory {
-  const catalog = catalogs[shoppingLanguage];
-  let category: ShoppingCategory | undefined =
-    initialCategory ?? catalog.get(normalizedName);
-  if (!category) {
-    const candidates = new Map<string, ShoppingCategory>(catalog);
-    for (const product of remembered) {
-      candidates.set(product.normalizedName, product.category);
-    }
-    let longest = 0;
-    let earliest = Infinity;
-    for (const [phrase, candidate] of candidates) {
-      if (candidate === "OWN_ITEMS") continue;
-      const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const position = normalizedName.search(
-        new RegExp(`(?<![\\p{L}\\p{N}_])${escaped}(?![\\p{L}\\p{N}_])`, "u"),
-      );
-      if (position < 0) continue;
-      if (
-        phrase.length > longest ||
-        (phrase.length === longest && position < earliest)
-      ) {
-        category = candidate;
-        longest = phrase.length;
-        earliest = position;
-      }
-    }
-  }
-  return category ?? "OWN_ITEMS";
+// Classify before opening a transaction. Recheck identity when saving: another
+// household member may have created or corrected the same Own Item meanwhile.
+export async function classifyNewOwnItems(
+  db: Prisma.TransactionClient,
+  householdId: string,
+  items: readonly { name: string; note: string | null }[],
+) {
+  const [existing, household] = await Promise.all([
+    db.ownItem.findMany({
+      where: { householdId },
+      select: { name: true, note: true },
+    }),
+    db.household.findUniqueOrThrow({
+      where: { id: householdId },
+      select: { shoppingLanguage: true },
+    }),
+  ]);
+  const known = new Set(
+    existing.map((item) => shoppingIdentity(item.name, item.note)),
+  );
+  const newItems = new Map(
+    items
+      .filter((item) => !known.has(shoppingIdentity(item.name, item.note)))
+      .map(({ name, note }) => {
+        const trimmedNote = note?.trim() ?? "";
+        return [
+          shoppingIdentity(name, note),
+          {
+            name: capitalizeShoppingName(name),
+            note: trimmedNote === "" ? null : trimmedNote,
+          },
+        ] as const;
+      }),
+  );
+  return classifyShoppingItems(
+    [...newItems.values()],
+    household.shoppingLanguage,
+  );
 }
 
 export const rememberOwnItem = async (
@@ -67,7 +53,7 @@ export const rememberOwnItem = async (
   householdId: string,
   name: string,
   note: string | null = null,
-  initialCategory?: ShoppingCategory,
+  categories: ReadonlyMap<string, ShoppingCategory> = new Map(),
 ) => {
   note = note?.trim() ?? null;
   if (note === "") note = null;
@@ -84,23 +70,12 @@ export const rememberOwnItem = async (
   });
   if (existing) return existing;
 
-  const { shoppingLanguage } = await tx.household.findUniqueOrThrow({
-    where: { id: householdId },
-    select: { shoppingLanguage: true },
-  });
-  const remembered =
-    (initialCategory ?? catalogs[shoppingLanguage].get(normalizedName))
-      ? []
-      : await tx.ownItem.findMany({
-          where: { householdId },
-          select: { normalizedName: true, category: true },
-        });
-  const category = ownItemCategory(
-    shoppingLanguage,
-    remembered,
-    normalizedName,
-    initialCategory,
-  );
+  const category = categories.get(shoppingIdentity(name, note));
+  if (!category)
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "Shopping items changed. Try adding the item again.",
+    });
   return tx.ownItem.create({
     data: {
       householdId,
@@ -108,7 +83,7 @@ export const rememberOwnItem = async (
       note,
       normalizedNote,
       normalizedName,
-      category: category ?? "OWN_ITEMS",
+      category,
     },
   });
 };

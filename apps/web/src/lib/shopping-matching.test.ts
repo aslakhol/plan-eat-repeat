@@ -6,12 +6,12 @@ import {
 } from "./shopping-matching";
 
 const sources = [
-  { name: "Cheese", note: null, category: "DAIRY" },
-  { name: "Blue cheese", note: null, category: "DAIRY" },
-  { name: "Brown cheese", note: null, category: "DAIRY" },
-  { name: "Eggs", note: null, category: "DAIRY" },
-  { name: "Bread", note: null, category: "BAKERY" },
-  { id: "duck", name: "Eggs", note: "duck", category: "MEAT" },
+  { name: "Cheese", note: null },
+  { name: "Blue cheese", note: null },
+  { name: "Brown cheese", note: null },
+  { name: "Eggs", note: null },
+  { name: "Bread", note: null },
+  { id: "duck", name: "Eggs", note: "duck" },
 ] as const;
 
 void test("shopping previews match names, preserve eligible notes, and rank literal choices last", () => {
@@ -78,11 +78,11 @@ void test("shopping previews match names, preserve eligible notes, and rank lite
 
 void test("previews deduplicate normalized destinations and prefer coverage, fewer introduced words, then Own Items", () => {
   const previews = suggestShoppingItems("blue cheese", [
-    { name: "Cheese", note: null, category: "DAIRY" },
-    { name: "Blue cheese", note: null, category: "DAIRY" },
-    { id: "exact", name: " BLUE  CHEESE ", note: null, category: "PETS" },
-    { name: "Fancy blue cheese", note: null, category: "DAIRY" },
-    { name: "Cheesecake", note: null, category: "SNACKS" },
+    { name: "Cheese", note: null },
+    { name: "Blue cheese", note: null },
+    { id: "exact", name: " BLUE  CHEESE ", note: null },
+    { name: "Fancy blue cheese", note: null },
+    { name: "Cheesecake", note: null },
   ]);
   assert.deepEqual(
     previews.map(({ name, note }) => [name, note]),
@@ -96,7 +96,7 @@ void test("previews deduplicate normalized destinations and prefer coverage, few
   assert.deepEqual(previews[0]?.selection, { ownItemId: "exact" });
   assert.deepEqual(
     suggestShoppingItems("duck", [
-      { id: "duck-eggs", name: "Duck eggs", note: "fresh", category: "DAIRY" },
+      { id: "duck-eggs", name: "Duck eggs", note: "fresh" },
     ])[0]?.selection,
     { ownItemId: "duck-eggs" },
   );
@@ -105,8 +105,8 @@ void test("previews deduplicate normalized destinations and prefer coverage, few
 void test("recipe selection uses complete product words and preserves ambiguous ingredient names", () => {
   const recipeSources = [
     ...sources,
-    { name: "Carrots", note: null, category: "PRODUCE" },
-    { id: "grated", name: "Cheese", note: "grated", category: "SNACKS" },
+    { name: "Carrots", note: null },
+    { id: "grated", name: "Cheese", note: "grated" },
   ] as const;
   for (const [name, expected] of [
     ["Car", { name: "Car", note: null }],
@@ -151,13 +151,11 @@ void test("recipe selection prefers exact Own Items, then exact catalog items, a
     id: "own-cheese",
     name: "CHEESE",
     note: null,
-    category: "SNACKS",
   } as const;
   const exact = {
     id: "corrected",
     name: " Cheese  balls ",
     note: null,
-    category: "SNACKS",
   } as const;
   assert.deepEqual(
     selectRecipeIngredient("cheese balls", [...sources, exact]),
@@ -177,8 +175,8 @@ void test("recipe selection prefers exact Own Items, then exact catalog items, a
   assert.deepEqual(
     selectRecipeIngredient("Cream cheese", [
       ...sources,
-      { name: "Cream cheese", note: null, category: "DAIRY" },
-      { id: "cream", name: "Cream", note: null, category: "DAIRY" },
+      { name: "Cream cheese", note: null },
+      { id: "cream", name: "Cream", note: null },
     ]),
     {
       name: "Cream cheese",
@@ -190,9 +188,7 @@ void test("recipe selection prefers exact Own Items, then exact catalog items, a
 
 void test("new preview names are capitalized while existing destinations keep their spelling", () => {
   assert.equal(suggestShoppingItems("mIXED cASE", [])[0]?.name, "Mixed case");
-  const saved = [
-    { id: "saved", name: "iPhone", note: null, category: "OWN_ITEMS" },
-  ] as const;
+  const saved = [{ id: "saved", name: "iPhone", note: null }] as const;
   assert.equal(suggestShoppingItems("IPHONE", saved)[0]?.name, "iPhone");
   assert.equal(suggestShoppingItems("IPHONE cover", saved)[0]?.name, "Iphone");
   assert.equal(suggestShoppingItems("2% MILK", [])[0]?.name, "2% Milk");

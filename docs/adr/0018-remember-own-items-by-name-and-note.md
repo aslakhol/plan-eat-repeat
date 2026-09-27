@@ -1,5 +1,7 @@
 # Remember own items by name and note
 
+Category inheritance when creating an Own Item is superseded by [ADR 0021](0021-classify-new-own-items-with-jev.md).
+
 A Household remembers each name-and-note combination as an Own Item with its own category, so recurring purchases such as Eggs with a duck note remain reusable after leaving the Shopping List and Recently Used. Creating an Own Item through autocomplete copies the source item's category unless the destination Own Item already exists, in which case its remembered category wins; subsequent category changes affect only that Own Item. Amount and Unit belong to shopping requirements rather than Own Items, and different Own Items never merge merely because their names match.
 
 Own Item identity ignores capitalization and extra whitespace in both name and note while preserving display spelling. Punctuation remains meaningful, and an empty note is equivalent to no note.

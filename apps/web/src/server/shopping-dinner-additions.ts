@@ -9,21 +9,27 @@ import superjson from "superjson";
 import {
   selectRecipeIngredient,
   shoppingIdentity,
-  type ShoppingSource,
+  type ShoppingSelection,
 } from "~/lib/shopping-matching";
-import { ownItemCategory, shoppingItemDetails } from "./own-items";
+import { classifyNewOwnItems, shoppingItemDetails } from "./own-items";
 import { readRecentShoppingItems } from "./recent-shopping-items";
 import { combineShoppingQuantity } from "./shopping-list";
-import { shoppingCatalog } from "./shopping-catalog";
+import { shoppingSources } from "./shopping-suggestions";
 
-async function addDinnerRequirements(
-  tx: Prisma.TransactionClient,
+export async function prepareDinnerAddition(
+  db: Prisma.TransactionClient,
   householdId: string,
-  dinnerIds: number[],
+  input: { operationId: string; dinnerIds: number[] },
 ) {
-  const [dinners, ownItems, household, items, recentItems] = await Promise.all([
-    tx.dinner.findMany({
-      where: { householdId, id: { in: dinnerIds } },
+  const receipt = await db.shoppingDinnerAddition.findUnique({
+    where: {
+      householdId_operationId: { householdId, operationId: input.operationId },
+    },
+  });
+  if (receipt) return undefined;
+  const [dinners, sources] = await Promise.all([
+    db.dinner.findMany({
+      where: { householdId, id: { in: input.dinnerIds } },
       include: {
         parts: {
           orderBy: { order: "asc" },
@@ -31,20 +37,79 @@ async function addDinnerRequirements(
         },
       },
     }),
+    shoppingSources(db, householdId),
+  ]);
+  const dinnersById = new Map(dinners.map((dinner) => [dinner.id, dinner]));
+  if (input.dinnerIds.some((id) => !dinnersById.has(id)))
+    throw new TRPCError({ code: "NOT_FOUND", message: "Dinner not found" });
+  const ownSources = new Map(
+    sources.flatMap((source) =>
+      source.id ? [[source.id, source] as const] : [],
+    ),
+  );
+  const requirements: {
+    selection: ShoppingSelection;
+    identity: string;
+    amount: number | null;
+    unit: string | null;
+  }[] = [];
+  const newItems = new Map<string, { name: string; note: string | null }>();
+  // Resolve in selection order, including items introduced by earlier ingredients.
+  for (const dinnerId of input.dinnerIds) {
+    const dinner = dinnersById.get(dinnerId)!;
+    const ingredients = dinner.parts.flatMap((part) => part.ingredients);
+    for (const item of ingredients.length
+      ? ingredients
+      : [{ name: dinner.name, amount: null, unit: null }]) {
+      const selection = ingredients.length
+        ? selectRecipeIngredient(item.name, sources)
+        : { name: dinner.name, note: null };
+      const selected =
+        "ownItemId" in selection
+          ? ownSources.get(selection.ownItemId)!
+          : selection;
+      requirements.push({
+        selection,
+        identity: shoppingIdentity(selected.name, selected.note),
+        amount: item.amount,
+        unit: item.unit,
+      });
+      if ("name" in selection) {
+        const identity = shoppingIdentity(selection.name, selection.note);
+        if (!newItems.has(identity)) {
+          const ownItem = {
+            name: capitalizeShoppingName(selection.name),
+            note: selection.note,
+          };
+          newItems.set(identity, ownItem);
+          sources.push(ownItem);
+        }
+      }
+    }
+  }
+  const categories = await classifyNewOwnItems(db, householdId, [
+    ...newItems.values(),
+  ]);
+  return { requirements, categories };
+}
+
+type PreparedDinnerAddition = NonNullable<
+  Awaited<ReturnType<typeof prepareDinnerAddition>>
+>;
+
+async function addDinnerRequirements(
+  tx: Prisma.TransactionClient,
+  householdId: string,
+  prepared: PreparedDinnerAddition,
+) {
+  const [ownItems, items, recentItems] = await Promise.all([
     tx.ownItem.findMany({ where: { householdId } }),
-    tx.household.findUniqueOrThrow({
-      where: { id: householdId },
-      select: { shoppingLanguage: true },
-    }),
     tx.shoppingItem.findMany({
       where: { householdId },
       orderBy: { id: "asc" },
     }),
     tx.recentShoppingItem.findMany({ where: { householdId } }),
   ]);
-  const dinnersById = new Map(dinners.map((dinner) => [dinner.id, dinner]));
-  if (dinnerIds.some((id) => !dinnersById.has(id)))
-    throw new TRPCError({ code: "NOT_FOUND", message: "Dinner not found" });
   const before = new Map(items.map((item) => [item.id, { ...item }]));
   const recentBefore = new Map(
     recentItems.map((item) => [item.ownItemId, item]),
@@ -53,12 +118,6 @@ async function addDinnerRequirements(
   const ownByIdentity = new Map(
     ownItems.map((item) => [shoppingIdentity(item.name, item.note), item]),
   );
-  const catalog = shoppingCatalog.map((item) => ({
-    name: item[household.shoppingLanguage],
-    note: null,
-    category: item.category,
-  }));
-  const sources: ShoppingSource[] = [...ownItems, ...catalog];
   const newOwnItems: OwnItem[] = [];
   const requirements = new Map<string, ShoppingItem[]>();
   for (const item of items) {
@@ -71,91 +130,86 @@ async function addDinnerRequirements(
     string,
     { ownItemId: string; amount: number | null; unit: string | null }
   >();
-  // Iterate the requested IDs, not the query result: order and repetitions matter.
-  for (const dinnerId of dinnerIds) {
-    const dinner = dinnersById.get(dinnerId)!;
-    const ingredients = dinner.parts.flatMap((part) => part.ingredients);
-    for (const item of ingredients.length
-      ? ingredients
-      : [{ name: dinner.name, amount: null, unit: null }]) {
-      const selection = ingredients.length
-        ? selectRecipeIngredient(item.name, sources)
-        : { name: item.name, note: null };
-      let ownItem =
-        "ownItemId" in selection
-          ? ownById.get(selection.ownItemId)!
-          : ownByIdentity.get(shoppingIdentity(selection.name, selection.note));
-      if (!ownItem && "name" in selection) {
-        const source = selection.source;
-        const category =
-          source &&
-          ("ownItemId" in source
-            ? ownById.get(source.ownItemId)?.category
-            : catalog.find(
-                (item) =>
-                  normalizeShoppingName(item.name) ===
-                  normalizeShoppingName(source.standardName),
-              )?.category);
-        const trimmedNote = selection.note?.trim();
-        const note = trimmedNote === "" ? null : (trimmedNote ?? null);
-        ownItem = {
-          id: crypto.randomUUID(),
-          householdId,
-          name: capitalizeShoppingName(selection.name),
-          note,
-          normalizedName: normalizeShoppingName(selection.name),
-          normalizedNote: normalizeShoppingName(note ?? ""),
-          category: ownItemCategory(
-            household.shoppingLanguage,
-            ownById.values(),
-            normalizeShoppingName(selection.name),
-            category,
-          ),
-          usuallyHave: false,
-          odaProductId: null,
-          odaProductName: null,
-          odaProductDescription: null,
-        };
-        newOwnItems.push(ownItem);
-        ownById.set(ownItem.id, ownItem);
-        ownByIdentity.set(shoppingIdentity(ownItem.name, note), ownItem);
-        sources.push(ownItem);
-      }
-      if (!ownItem) throw new Error("Could not resolve Dinner ingredient");
-      const quantity = {
-        ownItemId: ownItem.id,
-        amount: item.amount,
-        unit: normalizeUnit(item.unit),
+  for (const item of prepared.requirements) {
+    const { selection } = item;
+    let ownItem =
+      "ownItemId" in selection
+        ? ownById.get(selection.ownItemId)!
+        : ownByIdentity.get(shoppingIdentity(selection.name, selection.note));
+    if (
+      ownItem &&
+      shoppingIdentity(ownItem.name, ownItem.note) !== item.identity
+    )
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "Shopping items changed. Try adding the Dinners again.",
+      });
+    if (!ownItem && "name" in selection) {
+      const category = prepared.categories.get(
+        shoppingIdentity(selection.name, selection.note),
+      );
+      if (!category)
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Shopping items changed. Try adding the Dinners again.",
+        });
+      const trimmedNote = selection.note?.trim();
+      const note = trimmedNote === "" ? null : (trimmedNote ?? null);
+      ownItem = {
+        id: crypto.randomUUID(),
+        householdId,
+        name: capitalizeShoppingName(selection.name),
+        note,
+        normalizedName: normalizeShoppingName(selection.name),
+        normalizedNote: normalizeShoppingName(note ?? ""),
+        category,
+        usuallyHave: false,
+        odaProductId: null,
+        odaProductName: null,
+        odaProductDescription: null,
       };
-      if (ownItem.usuallyHave) {
-        skipped.set(ownItem.id, quantity);
-        continue;
-      }
-      const group = requirements.get(ownItem.id) ?? [];
-      let destination;
-      for (const existing of group) {
-        const combined = combineShoppingQuantity(existing, quantity);
-        if (!combined) continue;
-        const { amount } = combined;
-        if (amount !== existing.amount) {
-          existing.amount = amount;
-          existing.revision = crypto.randomUUID();
-        }
-        destination = existing;
-        break;
-      }
-      if (!destination) {
-        destination = {
-          id: crypto.randomUUID(),
-          householdId,
-          ...quantity,
-          revision: crypto.randomUUID(),
-        };
-        group.push(destination);
-        requirements.set(ownItem.id, group);
-      }
-      added.set(destination.id, destination);
+      newOwnItems.push(ownItem);
+      ownById.set(ownItem.id, ownItem);
+      ownByIdentity.set(shoppingIdentity(ownItem.name, note), ownItem);
     }
+    if (!ownItem)
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "Shopping items changed. Try adding the Dinners again.",
+      });
+    const quantity = {
+      ownItemId: ownItem.id,
+      amount: item.amount,
+      unit: normalizeUnit(item.unit),
+    };
+    if (ownItem.usuallyHave) {
+      skipped.set(ownItem.id, quantity);
+      continue;
+    }
+    const group = requirements.get(ownItem.id) ?? [];
+    let destination;
+    for (const existing of group) {
+      const combined = combineShoppingQuantity(existing, quantity);
+      if (!combined) continue;
+      const { amount } = combined;
+      if (amount !== existing.amount) {
+        existing.amount = amount;
+        existing.revision = crypto.randomUUID();
+      }
+      destination = existing;
+      break;
+    }
+    if (!destination) {
+      destination = {
+        id: crypto.randomUUID(),
+        householdId,
+        ...quantity,
+        revision: crypto.randomUUID(),
+      };
+      group.push(destination);
+      requirements.set(ownItem.id, group);
+    }
+    added.set(destination.id, destination);
   }
   if (newOwnItems.length) await tx.ownItem.createMany({ data: newOwnItems });
   if (added.size)
@@ -242,6 +296,7 @@ export async function addDinnersToShoppingList(
   tx: Prisma.TransactionClient,
   householdId: string,
   input: { operationId: string; dinnerIds: number[] },
+  prepared: PreparedDinnerAddition | undefined,
 ) {
   const where = {
     householdId_operationId: { householdId, operationId: input.operationId },
@@ -256,11 +311,16 @@ export async function addDinnersToShoppingList(
       message: "This addition has different Dinner selections.",
     });
   }
+  if (!receipt && !prepared)
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "Shopping addition changed. Try again.",
+    });
   const result = receipt
     ? superjson.parse<Awaited<ReturnType<typeof addDinnerRequirements>>>(
         receipt.result,
       )
-    : await addDinnerRequirements(tx, householdId, input.dinnerIds);
+    : await addDinnerRequirements(tx, householdId, prepared!);
   if (!receipt)
     await tx.shoppingDinnerAddition.create({
       data: {
