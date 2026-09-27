@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.8",
-    "@ai-sdk/typesafe-ai": "3.0.8",
+    "@ai-sdk/gateway": "4.0.96",
     "@clerk/nextjs": "^6.1.0",
     "@hookform/resolvers": "^3.10.0",
     "@modelcontextprotocol/sdk": "^1.30.0",

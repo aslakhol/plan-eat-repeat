@@ -1,3 +1,4 @@
+import * as gatewayProvider from "@ai-sdk/gateway";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { after, mock, test } from "node:test";
@@ -178,9 +179,10 @@ const categoryModel = new Experimental_EvaluationMockModelV4({
       },
     }),
 });
-mock.module("@ai-sdk/typesafe-ai", {
+mock.module("@ai-sdk/gateway", {
   namedExports: {
-    createTypeSafeAi: () => ({ evaluationModel: () => categoryModel }),
+    ...gatewayProvider,
+    createGateway: () => ({ evaluationModel: () => categoryModel }),
   },
 });
 const { odaRouter } = await import("../api/routers/oda");

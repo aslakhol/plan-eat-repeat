@@ -156,9 +156,9 @@ importers:
       '@ai-sdk/anthropic':
         specifier: ^4.0.8
         version: 4.0.8(zod@3.25.76)
-      '@ai-sdk/typesafe-ai':
-        specifier: 3.0.8
-        version: 3.0.8(zod@3.25.76)
+      '@ai-sdk/gateway':
+        specifier: 4.0.96
+        version: 4.0.96(zod@3.25.76)
       '@clerk/nextjs':
         specifier: ^6.1.0
         version: 6.36.10(next@15.5.9)(react-dom@19.1.0)(react@19.1.0)
@@ -465,17 +465,6 @@ packages:
     engines: {node: '>=22'}
     dependencies:
       json-schema: 0.4.0
-    dev: false
-
-  /@ai-sdk/typesafe-ai@3.0.8(zod@3.25.76):
-    resolution: {integrity: sha512-nP5NJGCwZ7jDE2dImurTU9igbj1OUeFAXLvZKcM05KlBpLxhOddBe3sMftAhQq3Zq+B8NqLx1dcW4vQVD2l32w==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
-    dependencies:
-      '@ai-sdk/provider': 4.0.18
-      '@ai-sdk/provider-utils': 5.0.49(zod@3.25.76)
-      zod: 3.25.76
     dev: false
 
   /@alloc/quick-lru@5.2.0:

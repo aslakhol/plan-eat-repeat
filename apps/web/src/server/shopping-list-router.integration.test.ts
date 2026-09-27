@@ -1,4 +1,4 @@
-import { createTypeSafeAi } from "@ai-sdk/typesafe-ai";
+import * as gatewayProvider from "@ai-sdk/gateway";
 import { suggestShoppingItems } from "../lib/shopping-matching";
 import { spawnSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
@@ -73,7 +73,12 @@ beforeEach(() => {
   }))
     jevCategories.set(name, { category, confidence: 0.95 });
 });
-const jevFetch: typeof fetch = async (_url, init) => {
+const jevFetch: typeof fetch = async (url, init) => {
+  assert.equal(url, "https://ai-gateway.vercel.sh/v4/ai/evaluation-model");
+  assert.equal(
+    new Headers(init?.headers).get("ai-model-id"),
+    "typesafe-ai/jev",
+  );
   if (typeof init?.body !== "string")
     throw new Error("Expected a JSON request body");
   const request = JSON.parse(init.body) as JevRequest;
@@ -93,6 +98,20 @@ const jevFetch: typeof fetch = async (_url, init) => {
     });
   }
   return Response.json({
+    providerMetadata: {
+      typesafe: {
+        confidence: Object.fromEntries(
+          Object.entries(request.state.items).flatMap(([id, item]) => {
+            const answer = jevCategories.get(item.name.toLowerCase()) ?? {
+              confidence: 0.99,
+            };
+            return answer.confidence === undefined
+              ? []
+              : [[id, answer.confidence]];
+          }),
+        ),
+      },
+    },
     answers: Object.fromEntries(
       Object.entries(request.questions).map(([id, question]) => {
         const item = request.state.items[id]!;
@@ -105,7 +124,6 @@ const jevFetch: typeof fetch = async (_url, init) => {
           {
             type: "choice",
             choice: answer.category,
-            confidence: answer.confidence,
             probabilities: Object.fromEntries(
               Object.keys(question.criteria).map((category) => [
                 category,
@@ -118,10 +136,11 @@ const jevFetch: typeof fetch = async (_url, init) => {
     ),
   });
 };
-mock.module("@ai-sdk/typesafe-ai", {
+mock.module("@ai-sdk/gateway", {
   namedExports: {
-    createTypeSafeAi: () =>
-      createTypeSafeAi({ apiKey: "test-key", fetch: jevFetch }),
+    ...gatewayProvider,
+    createGateway: () =>
+      gatewayProvider.createGateway({ apiKey: "test-key", fetch: jevFetch }),
   },
 });
 const { shoppingListRouter } = await import("./api/routers/shoppingList");

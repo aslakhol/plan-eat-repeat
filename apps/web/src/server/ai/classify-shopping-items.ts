@@ -1,4 +1,4 @@
-import { createTypeSafeAi } from "@ai-sdk/typesafe-ai";
+import { createGateway } from "@ai-sdk/gateway";
 import { experimental_evaluate as evaluate } from "ai";
 import type { ShoppingCategory, ShoppingLanguage } from "@planeatrepeat/db";
 import { z } from "zod";
@@ -39,9 +39,9 @@ export async function classifyShoppingItems(
   const entries = items.map((item, index) => [`item${index}`, item] as const);
   try {
     const result = await evaluate({
-      model: createTypeSafeAi({
-        apiKey: env.TYPESAFE_AI_API_KEY,
-      }).evaluationModel("jev-1.13.0"),
+      model: createGateway({
+        apiKey: env.AI_GATEWAY_API_KEY,
+      }).evaluationModel("typesafe-ai/jev"),
       state: { shoppingLanguage, items: Object.fromEntries(entries) },
       questions: Object.fromEntries(
         entries.map(([id]) => [
