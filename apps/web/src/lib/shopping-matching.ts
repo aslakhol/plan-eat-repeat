@@ -1,4 +1,3 @@
-import type { ShoppingCategory } from "@planeatrepeat/db";
 import {
   capitalizeShoppingName,
   normalizeShoppingName,
@@ -8,7 +7,6 @@ export type ShoppingSource = {
   id?: string;
   name: string;
   note: string | null;
-  category: ShoppingCategory;
 };
 
 export type ShoppingSelection =

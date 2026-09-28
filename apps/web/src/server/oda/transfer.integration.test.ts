@@ -1,7 +1,11 @@
+import * as gatewayProvider from "@ai-sdk/gateway";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { mock, test } from "node:test";
-import { MockLanguageModelV3 } from "ai/test";
+import { after, mock, test } from "node:test";
+import {
+  Experimental_EvaluationMockModelV4,
+  MockLanguageModelV3,
+} from "ai/test";
 import { createPrismaClient } from "@planeatrepeat/db";
 import { z } from "zod";
 
@@ -142,8 +146,50 @@ const model = new MockLanguageModelV3({
   },
 });
 mock.module("@ai-sdk/anthropic", { namedExports: { anthropic: () => model } });
+const categoryModel = new Experimental_EvaluationMockModelV4({
+  doEvaluate: ({ questions }) =>
+    Promise.resolve({
+      answers: Object.fromEntries(
+        Object.entries(questions).map(([id, question]) => {
+          if (question.type !== "choice")
+            throw new Error("Expected a category choice");
+          return [
+            id,
+            {
+              type: "choice" as const,
+              choice: "OWN_ITEMS",
+              probabilities: Object.fromEntries(
+                Object.keys(question.criteria).map((category) => [
+                  category,
+                  category === "OWN_ITEMS" ? 1 : 0,
+                ]),
+              ),
+            },
+          ];
+        }),
+      ),
+      usage: {},
+      warnings: [],
+      providerMetadata: {
+        typesafe: {
+          confidence: Object.fromEntries(
+            Object.keys(questions).map((id) => [id, 1]),
+          ),
+        },
+      },
+    }),
+});
+mock.module("@ai-sdk/gateway", {
+  namedExports: {
+    ...gatewayProvider,
+    createGateway: () => ({ evaluationModel: () => categoryModel }),
+  },
+});
 const { odaRouter } = await import("../api/routers/oda");
 const { shoppingListRouter } = await import("../api/routers/shoppingList");
+
+const testDb = createPrismaClient(process.env.DATABASE_URL!);
+after(() => testDb.$disconnect());
 
 async function withHousehold(
   run: (fixture: {
@@ -154,7 +200,7 @@ async function withHousehold(
     shopping: ReturnType<typeof shoppingListRouter.createCaller>;
   }) => Promise<void>,
 ) {
-  const db = createPrismaClient(process.env.DATABASE_URL!);
+  const db = testDb;
   const marker = crypto.randomUUID();
   const users = [0, 1].map((n) => `oda-send-${marker}-${n}`);
   await db.user.createMany({ data: users.map((id) => ({ id })) });
@@ -199,7 +245,6 @@ async function withHousehold(
     await db.dinner.deleteMany({ where: { householdId: household.id } });
     await db.household.delete({ where: { id: household.id } });
     await db.user.deleteMany({ where: { id: { in: users } } });
-    await db.$disconnect();
   }
 }
 

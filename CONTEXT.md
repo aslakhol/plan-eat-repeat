@@ -68,7 +68,7 @@ A Household's saved combination of a product name and optional Shopping Note, wi
 _Avoid_: Shopping Product
 
 **Standard Shopping Item**:
-A predefined product name with a Shopping Category, supplied in the English or Norwegian shopping catalog.
+A predefined product name supplied in the English or Norwegian shopping catalog.
 
 **Shopping Language**:
 The Household's selected language for Standard Shopping Item matching and Shopping Category labels, either English or Norwegian.
@@ -76,11 +76,11 @@ The Household's selected language for Standard Shopping Item matching and Shoppi
 **Remembered Shopping Category**:
 The Household's category for an Own Item, whether chosen manually or assigned automatically, including the Own Items Category. It survives removal from the Shopping List and is independent of categories assigned to other Own Items with the same name and different notes.
 
-**Category Inheritance**:
-The initial assignment of a new Own Item's Shopping Category from a matching Own Item or Standard Shopping Item. The new Own Item keeps its Remembered Shopping Category when the source item's category later changes.
+**Category Classification**:
+The initial assignment of a new Own Item's Shopping Category from its product name and Shopping Note, interpreted using the Shopping Language and category descriptions, independently of any Dinner or Recipe. An accepted classification meets the required confidence cutoff; reusing an existing Own Item retains its Remembered Shopping Category without classification.
 
 **Own Items Category**:
-The fallback Shopping Category for names without a category match, labelled "Own Items" and ordered after all other Shopping Categories. Own Items can belong to any Shopping Category.
+The fallback Shopping Category for Own Items without an accepted classification, labelled "Own Items" and ordered after all other Shopping Categories. Own Items can belong to any Shopping Category.
 
 **Usually Have**:
 The Household's set of Own Items to place in Recently Used instead of its Shopping List when adding from Dinners. Each name-and-note combination has its own setting. Turning it on while editing a Shopping Item also moves that item to Recently Used, preserving its saved Amount and Unit. Manual additions remain allowed, and subsequent edits with the setting already on keep the item on the Shopping List.

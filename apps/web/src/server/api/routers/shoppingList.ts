@@ -1,4 +1,7 @@
-import { addDinnersToShoppingList } from "../../shopping-dinner-additions";
+import {
+  addDinnersToShoppingList,
+  prepareDinnerAddition,
+} from "../../shopping-dinner-additions";
 import { odaProductPreferenceSchema } from "~/lib/oda-product";
 import {
   shoppingSources,
@@ -8,7 +11,7 @@ import {
   shoppingCategoryOrder,
   shoppingCategories,
 } from "@planeatrepeat/shared";
-import { shoppingItemDetails } from "../../own-items";
+import { classifyNewOwnItems, shoppingItemDetails } from "../../own-items";
 import { z } from "zod";
 import { type Prisma, ShoppingCategory } from "@planeatrepeat/db";
 import {
@@ -178,11 +181,17 @@ export const shoppingListRouter = createTRPCRouter({
         }),
       ]),
     )
-    .mutation(({ ctx, input }) =>
-      ctx.db.$transaction((tx) =>
-        setUsuallyHave(tx, ctx.householdId, input, input.excluded),
-      ),
-    ),
+    .mutation(async ({ ctx, input }) => {
+      const categories =
+        "name" in input
+          ? await classifyNewOwnItems(ctx.db, ctx.householdId, [
+              { name: input.name, note: input.note ?? null },
+            ])
+          : undefined;
+      return ctx.db.$transaction((tx) =>
+        setUsuallyHave(tx, ctx.householdId, input, input.excluded, categories),
+      );
+    }),
 
   sources: protectedProcedureWithHousehold.query(({ ctx }) =>
     shoppingSources(ctx.db, ctx.householdId),
@@ -204,13 +213,18 @@ export const shoppingListRouter = createTRPCRouter({
         }),
       ]),
     )
-    .mutation(({ ctx, input }) =>
-      ctx.db.$transaction(async (tx) => {
+    .mutation(async ({ ctx, input }) => {
+      const categories =
+        "name" in input
+          ? await classifyNewOwnItems(ctx.db, ctx.householdId, [input])
+          : undefined;
+      return ctx.db.$transaction(async (tx) => {
         await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
         const ownItem = await resolveShoppingSelection(
           tx,
           ctx.householdId,
           input,
+          categories,
         );
         return saveShoppingItem(tx, ctx.householdId, {
           name: ownItem.name,
@@ -218,21 +232,29 @@ export const shoppingListRouter = createTRPCRouter({
           amount: null,
           unit: null,
         });
-      }),
-    ),
+      });
+    }),
 
   addManual: protectedProcedureWithHousehold
     .input(z.object({ name: z.string().trim().min(1, "Enter an item name") }))
-    .mutation(({ ctx, input }) =>
-      ctx.db.$transaction((tx) =>
-        saveShoppingItem(tx, ctx.householdId, {
-          name: input.name,
-          amount: null,
-          unit: null,
-          note: null,
-        }),
-      ),
-    ),
+    .mutation(async ({ ctx, input }) => {
+      const categories = await classifyNewOwnItems(ctx.db, ctx.householdId, [
+        { name: input.name, note: null },
+      ]);
+      return ctx.db.$transaction((tx) =>
+        saveShoppingItem(
+          tx,
+          ctx.householdId,
+          {
+            name: input.name,
+            amount: null,
+            unit: null,
+            note: null,
+          },
+          categories,
+        ),
+      );
+    }),
 
   addDinners: protectedProcedureWithHousehold
     .input(
@@ -244,12 +266,17 @@ export const shoppingListRouter = createTRPCRouter({
         dinnerIds: z.array(z.number().int().positive()).min(1),
       }),
     )
-    .mutation(({ ctx, input }) =>
-      ctx.db.$transaction(async (tx) => {
+    .mutation(async ({ ctx, input }) => {
+      const prepared = await prepareDinnerAddition(
+        ctx.db,
+        ctx.householdId,
+        input,
+      );
+      return ctx.db.$transaction(async (tx) => {
         await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
-        return addDinnersToShoppingList(tx, ctx.householdId, input);
-      }),
-    ),
+        return addDinnersToShoppingList(tx, ctx.householdId, input, prepared);
+      });
+    }),
 
   undo: protectedProcedureWithHousehold
     .input(

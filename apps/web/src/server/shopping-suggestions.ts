@@ -1,4 +1,4 @@
-import type { Prisma } from "@planeatrepeat/db";
+import type { Prisma, ShoppingCategory } from "@planeatrepeat/db";
 import { TRPCError } from "@trpc/server";
 import { normalizeShoppingName } from "@planeatrepeat/shared";
 import { rememberOwnItem } from "./own-items";
@@ -15,7 +15,7 @@ export async function shoppingSources(
   const [ownItems, household] = await Promise.all([
     tx.ownItem.findMany({
       where: { householdId },
-      select: { id: true, name: true, note: true, category: true },
+      select: { id: true, name: true, note: true },
     }),
     tx.household.findUniqueOrThrow({
       where: { id: householdId },
@@ -27,41 +27,38 @@ export async function shoppingSources(
     ...shoppingCatalog.map((item) => ({
       name: item[household.shoppingLanguage],
       note: null,
-      category: item.category,
     })),
   ];
 }
 
 // Call inside the Household's locked shopping transaction. Destination ownership
-// always wins over the source's current category and Usually Have setting.
+// always wins over a new classification.
 export async function resolveShoppingSelection(
   tx: Prisma.TransactionClient,
   householdId: string,
   selection: ShoppingSelection,
+  categories?: ReadonlyMap<string, ShoppingCategory>,
 ) {
   if ("ownItemId" in selection)
     return tx.ownItem.findUniqueOrThrow({
       where: { id: selection.ownItemId, householdId },
     });
   const source = selection.source;
-  let category;
   if (source && "ownItemId" in source) {
-    category = (
-      await tx.ownItem.findUniqueOrThrow({
-        where: { id: source.ownItemId, householdId },
-      })
-    ).category;
+    await tx.ownItem.findUniqueOrThrow({
+      where: { id: source.ownItemId, householdId },
+    });
   } else if (source) {
     const { shoppingLanguage } = await tx.household.findUniqueOrThrow({
       where: { id: householdId },
       select: { shoppingLanguage: true },
     });
-    category = shoppingCatalog.find(
+    const available = shoppingCatalog.some(
       (item) =>
         normalizeShoppingName(item[shoppingLanguage]) ===
         normalizeShoppingName(source.standardName),
-    )?.category;
-    if (!category)
+    );
+    if (!available)
       throw new TRPCError({
         code: "BAD_REQUEST",
         message: "Shopping suggestion is no longer available",
@@ -72,6 +69,6 @@ export async function resolveShoppingSelection(
     householdId,
     selection.name,
     selection.note,
-    category,
+    categories,
   );
 }
