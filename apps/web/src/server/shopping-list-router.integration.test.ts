@@ -210,7 +210,7 @@ const withShoppingList = async (
 
 void test("Jev categorizes new Own Items while reuse and manual corrections skip classification", () =>
   withShoppingList(async ({ caller, member }) => {
-    jevCategories.set("milk", { category: "SNACKS", confidence: 0.8 });
+    jevCategories.set("milk", { category: "SNACKS", confidence: 0.4 });
     const before = jevRequests.length;
     const milk = await caller.addManual({ name: "Milk" });
     assert.equal(milk.ownItem.category, "SNACKS");
@@ -227,10 +227,10 @@ void test("Dinner additions classify new name-and-note combinations together and
   withShoppingList(async ({ caller, createDinner }) => {
     const milk = await caller.addManual({ name: "Milk" });
     await caller.edit({ ...milk, category: "PETS" });
-    jevCategories.set("eggs", { category: "SNACKS", confidence: 0.8 });
+    jevCategories.set("eggs", { category: "SNACKS", confidence: 0.4 });
     jevCategories.set("rocket widget", {
       category: "HOUSEHOLD",
-      confidence: 0.79,
+      confidence: 0.39,
     });
     const dinner = await createDinner({
       name: "Breakfast",

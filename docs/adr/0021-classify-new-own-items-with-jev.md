@@ -2,7 +2,7 @@
 
 Jev assigns the category whenever a new Own Item is created, using its product name, Shopping Note, Shopping Language, and category descriptions. This replaces category inheritance from autocomplete sources, exact catalog matches, and partial name matches, so all new Own Items receive the same classification treatment. Reusing an existing Own Item retains its saved category and makes no Jev request; resolving input against known Own Items remains outside Jev's scope.
 
-Call Jev synchronously through Vercel AI SDK and AI Gateway to try its low-latency classification without introducing background recategorization. Use gateway model `typesafe-ai/jev` with `AI_GATEWAY_API_KEY`. Accept classifications with Jev confidence of at least 0.8. Below-cutoff answers, API errors, and a three-second timeout fall back to Own Items, with no automatic retries or later background updates.
+Call Jev synchronously through Vercel AI SDK and AI Gateway to try its low-latency classification without introducing background recategorization. Use gateway model `typesafe-ai/jev` with `AI_GATEWAY_API_KEY`. Accept classifications with Jev confidence of at least 0.4. Below-cutoff answers, API errors, and a three-second timeout fall back to Own Items, with no automatic retries or later background updates.
 
 When an addition creates several Own Items, classify them in one request with a separate question and confidence check per item. The three-second timeout applies to the whole request. A failed request assigns Own Items to every new item; a successful request can accept some classifications while falling back for others.
 

@@ -25,7 +25,7 @@ const categories = {
     "Items that cannot be identified or do not fit any of the other categories.",
 } satisfies Record<ShoppingCategory, string>;
 
-const minimumConfidence = 0.8;
+const minimumConfidence = 0.4;
 const confidenceSchema = z.record(z.number().finite().min(0).max(1));
 
 export async function classifyShoppingItems(
