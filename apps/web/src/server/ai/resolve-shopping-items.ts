@@ -28,14 +28,22 @@ const categories = {
 const minimumConfidence = 0.4;
 const confidenceSchema = z.record(z.number().finite().min(0).max(1));
 
-export async function classifyShoppingItems(
+// What a new name-and-note combination becomes when it is first saved.
+export type ShoppingResolution =
+  | { ownItemId: string }
+  | { name: string; note: string | null; category: ShoppingCategory };
+
+export async function resolveShoppingItems(
   items: readonly { name: string; note: string | null }[],
   shoppingLanguage: ShoppingLanguage,
 ) {
-  const classified = new Map<string, ShoppingCategory>(
-    items.map((item) => [shoppingIdentity(item.name, item.note), "OWN_ITEMS"]),
+  const resolved = new Map<string, ShoppingResolution>(
+    items.map((item) => [
+      shoppingIdentity(item.name, item.note),
+      { ...item, category: "OWN_ITEMS" },
+    ]),
   );
-  if (!items.length) return classified;
+  if (!items.length) return resolved;
   const entries = items.map((item, index) => [`item${index}`, item] as const);
   try {
     const result = await evaluate({
@@ -66,7 +74,10 @@ export async function classifyShoppingItems(
         confidence.success &&
         (confidence.data[id] ?? 0) >= minimumConfidence
       ) {
-        classified.set(shoppingIdentity(item.name, item.note), answer.choice);
+        resolved.set(shoppingIdentity(item.name, item.note), {
+          ...item,
+          category: answer.choice,
+        });
       }
     }
   } catch (error) {
@@ -75,5 +86,5 @@ export async function classifyShoppingItems(
       error instanceof Error ? error.name : "Unknown error",
     );
   }
-  return classified;
+  return resolved;
 }

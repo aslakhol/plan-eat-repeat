@@ -3,14 +3,17 @@ import {
   capitalizeShoppingName,
   normalizeShoppingName,
 } from "@planeatrepeat/shared";
-import { classifyShoppingItems } from "./ai/classify-shopping-items";
+import {
+  resolveShoppingItems,
+  type ShoppingResolution,
+} from "./ai/resolve-shopping-items";
 import { shoppingIdentity } from "~/lib/shopping-matching";
 import { TRPCError } from "@trpc/server";
 import type { OdaProductPreference } from "~/lib/oda-product";
 
-// Classify before opening a transaction. Recheck identity when saving: another
+// Resolve before opening a transaction. Recheck identity when saving: another
 // household member may have created or corrected the same Own Item meanwhile.
-export async function classifyNewOwnItems(
+export async function resolveNewOwnItems(
   db: Prisma.TransactionClient,
   householdId: string,
   items: readonly { name: string; note: string | null }[],
@@ -42,50 +45,68 @@ export async function classifyNewOwnItems(
         ] as const;
       }),
   );
-  return classifyShoppingItems(
+  return resolveShoppingItems(
     [...newItems.values()],
     household.shoppingLanguage,
   );
 }
+
+const findOwnItem = (
+  tx: Prisma.TransactionClient,
+  householdId: string,
+  name: string,
+  note: string | null,
+) =>
+  tx.ownItem.findUnique({
+    where: {
+      householdId_normalizedName_normalizedNote: {
+        householdId,
+        normalizedName: normalizeShoppingName(name),
+        normalizedNote: normalizeShoppingName(note ?? ""),
+      },
+    },
+  });
+
+const shoppingItemsChanged = () =>
+  new TRPCError({
+    code: "CONFLICT",
+    message: "Shopping items changed. Try adding the item again.",
+  });
 
 export const rememberOwnItem = async (
   tx: Prisma.TransactionClient,
   householdId: string,
   name: string,
   note: string | null = null,
-  categories: ReadonlyMap<string, ShoppingCategory> = new Map(),
+  resolutions: ReadonlyMap<string, ShoppingResolution> = new Map(),
 ) => {
-  note = note?.trim() ?? null;
-  if (note === "") note = null;
-  const normalizedNote = normalizeShoppingName(note ?? "");
-  const normalizedName = normalizeShoppingName(name);
-  const existing = await tx.ownItem.findUnique({
-    where: {
-      householdId_normalizedName_normalizedNote: {
-        householdId,
-        normalizedName,
-        normalizedNote,
-      },
-    },
-  });
+  const existing = await findOwnItem(tx, householdId, name, note);
   if (existing) return existing;
 
-  const category = categories.get(shoppingIdentity(name, note));
-  if (!category)
-    throw new TRPCError({
-      code: "CONFLICT",
-      message: "Shopping items changed. Try adding the item again.",
+  const resolution = resolutions.get(shoppingIdentity(name, note));
+  if (!resolution) throw shoppingItemsChanged();
+  if ("ownItemId" in resolution) {
+    const matched = await tx.ownItem.findUnique({
+      where: { id: resolution.ownItemId, householdId },
     });
-  return tx.ownItem.create({
-    data: {
-      householdId,
-      name: capitalizeShoppingName(name),
-      note,
-      normalizedNote,
-      normalizedName,
-      category,
-    },
-  });
+    if (!matched) throw shoppingItemsChanged();
+    return matched;
+  }
+  const trimmedNote = resolution.note?.trim() ?? "";
+  const resolvedNote = trimmedNote === "" ? null : trimmedNote;
+  return (
+    (await findOwnItem(tx, householdId, resolution.name, resolvedNote)) ??
+    tx.ownItem.create({
+      data: {
+        householdId,
+        name: capitalizeShoppingName(resolution.name),
+        note: resolvedNote,
+        normalizedName: normalizeShoppingName(resolution.name),
+        normalizedNote: normalizeShoppingName(resolvedNote ?? ""),
+        category: resolution.category,
+      },
+    })
+  );
 };
 
 // Requirement views read names and notes from their saved definition.

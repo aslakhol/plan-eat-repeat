@@ -11,7 +11,7 @@ import {
   shoppingIdentity,
   type ShoppingSelection,
 } from "~/lib/shopping-matching";
-import { classifyNewOwnItems, shoppingItemDetails } from "./own-items";
+import { resolveNewOwnItems, shoppingItemDetails } from "./own-items";
 import { readRecentShoppingItems } from "./recent-shopping-items";
 import { combineShoppingQuantity } from "./shopping-list";
 import { shoppingSources } from "./shopping-suggestions";
@@ -87,10 +87,10 @@ export async function prepareDinnerAddition(
       }
     }
   }
-  const categories = await classifyNewOwnItems(db, householdId, [
+  const resolutions = await resolveNewOwnItems(db, householdId, [
     ...newItems.values(),
   ]);
-  return { requirements, categories };
+  return { requirements, resolutions };
 }
 
 type PreparedDinnerAddition = NonNullable<
@@ -145,10 +145,10 @@ async function addDinnerRequirements(
         message: "Shopping items changed. Try adding the Dinners again.",
       });
     if (!ownItem && "name" in selection) {
-      const category = prepared.categories.get(
+      const resolution = prepared.resolutions.get(
         shoppingIdentity(selection.name, selection.note),
       );
-      if (!category)
+      if (!resolution || !("category" in resolution))
         throw new TRPCError({
           code: "CONFLICT",
           message: "Shopping items changed. Try adding the Dinners again.",
@@ -162,7 +162,7 @@ async function addDinnerRequirements(
         note,
         normalizedName: normalizeShoppingName(selection.name),
         normalizedNote: normalizeShoppingName(note ?? ""),
-        category,
+        category: resolution.category,
         usuallyHave: false,
         odaProductId: null,
         odaProductName: null,

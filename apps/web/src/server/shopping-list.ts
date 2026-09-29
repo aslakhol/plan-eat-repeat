@@ -2,6 +2,7 @@ import { editOwnItem, rememberOwnItem, shoppingItemDetails } from "./own-items";
 import type { Prisma, ShoppingCategory } from "@planeatrepeat/db";
 import { convertUnitAmount, normalizeUnit } from "@planeatrepeat/shared";
 import type { OdaProductPreference } from "~/lib/oda-product";
+import type { ShoppingResolution } from "./ai/resolve-shopping-items";
 
 export type ShoppingRequirement = {
   name: string;
@@ -75,7 +76,7 @@ export const saveShoppingItemWithMerges = async (
     usuallyHave?: boolean;
     odaProduct?: OdaProductPreference | null;
   },
-  categories?: ReadonlyMap<string, ShoppingCategory>,
+  resolutions?: ReadonlyMap<string, ShoppingResolution>,
 ) => {
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
   if (!input.id)
@@ -96,7 +97,7 @@ export const saveShoppingItemWithMerges = async (
           householdId,
           input.name,
           input.note,
-          categories,
+          resolutions,
         ),
         reassignedRequirementIds: [],
       };
@@ -141,7 +142,7 @@ export const setUsuallyHave = async (
   householdId: string,
   selection: { id: string } | { name: string; note?: string | null },
   excluded: boolean,
-  categories?: ReadonlyMap<string, ShoppingCategory>,
+  resolutions?: ReadonlyMap<string, ShoppingResolution>,
 ) => {
   await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${householdId} FOR UPDATE`;
   const item =
@@ -154,7 +155,7 @@ export const setUsuallyHave = async (
           householdId,
           selection.name,
           selection.note,
-          categories,
+          resolutions,
         );
   const { ownItem } = await editOwnItem(tx, householdId, item.id, {
     ...item,
