@@ -87,9 +87,12 @@ export async function prepareDinnerAddition(
       }
     }
   }
-  const resolutions = await resolveNewOwnItems(db, householdId, [
-    ...newItems.values(),
-  ]);
+  const resolutions = await resolveNewOwnItems(
+    db,
+    householdId,
+    [...newItems.values()],
+    { match: false },
+  );
   return { requirements, resolutions };
 }
 

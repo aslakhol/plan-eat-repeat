@@ -33,12 +33,17 @@ const jevCategories = new Map<
   string,
   { category: string; confidence?: number }
 >();
+// Candidate descriptions Jev picks for an input name, in order of preference.
+const jevMatches = new Map<string, { labels: string[]; confidence: number }>();
+const matchQuestions = (request: JevRequest) =>
+  Object.keys(request.questions).filter((id) => id.includes("_"));
 let beforeJevResponse: (() => Promise<void>) | undefined;
 let jevFailure: "error" | "timeout" | undefined;
 beforeEach(() => {
   jevFailure = undefined;
   beforeJevResponse = undefined;
   jevCategories.clear();
+  jevMatches.clear();
   for (const [name, category] of Object.entries({
     milk: "DAIRY",
     eggs: "DAIRY",
@@ -97,42 +102,55 @@ const jevFetch: typeof fetch = async (url, init) => {
       );
     });
   }
+  const answers = Object.entries(request.questions).map(([id, question]) => {
+    const item = request.state.items[id.split("_")[0]!]!;
+    if (id.includes("_")) {
+      const match = jevMatches.get(item.name.toLowerCase());
+      const choice =
+        match?.labels
+          .map(
+            (label) =>
+              Object.entries(question.criteria).find(
+                ([, description]) => description === label,
+              )?.[0],
+          )
+          .find(Boolean) ?? "none";
+      return {
+        id,
+        choice,
+        confidence: choice === "none" ? 0.99 : match!.confidence,
+      };
+    }
+    const answer = jevCategories.get(item.name.toLowerCase()) ?? {
+      category: "OWN_ITEMS",
+      confidence: 0.99,
+    };
+    return { id, choice: answer.category, confidence: answer.confidence };
+  });
   return Response.json({
     providerMetadata: {
       typesafe: {
         confidence: Object.fromEntries(
-          Object.entries(request.state.items).flatMap(([id, item]) => {
-            const answer = jevCategories.get(item.name.toLowerCase()) ?? {
-              confidence: 0.99,
-            };
-            return answer.confidence === undefined
-              ? []
-              : [[id, answer.confidence]];
-          }),
+          answers.flatMap(({ id, confidence }) =>
+            confidence === undefined ? [] : [[id, confidence]],
+          ),
         ),
       },
     },
     answers: Object.fromEntries(
-      Object.entries(request.questions).map(([id, question]) => {
-        const item = request.state.items[id]!;
-        const answer = jevCategories.get(item.name.toLowerCase()) ?? {
-          category: "OWN_ITEMS",
-          confidence: 0.99,
-        };
-        return [
-          id,
-          {
-            type: "choice",
-            choice: answer.category,
-            probabilities: Object.fromEntries(
-              Object.keys(question.criteria).map((category) => [
-                category,
-                category === answer.category ? 1 : 0,
-              ]),
-            ),
-          },
-        ];
-      }),
+      answers.map(({ id, choice }) => [
+        id,
+        {
+          type: "choice",
+          choice,
+          probabilities: Object.fromEntries(
+            Object.keys(request.questions[id]!.criteria).map((option) => [
+              option,
+              option === choice ? 1 : 0,
+            ]),
+          ),
+        },
+      ]),
     ),
   });
 };
@@ -301,6 +319,122 @@ void test("autocomplete variants and Usually Have use Jev instead of a source ca
     await caller.addSelection({ ownItemId: variant.ownItemId });
     assert.equal(jevRequests.length, before);
     jevCategories.clear();
+  }));
+
+void test("typed items reuse a confidently matched Own Item", () =>
+  withShoppingList(async ({ caller, member }) => {
+    const tomatoes = await caller.addManual({ name: "Heirloom tomatoes" });
+    await member.edit({ ...tomatoes, category: "PETS" });
+    jevMatches.set("tomato", {
+      labels: ["Heirloom tomatoes"],
+      confidence: 0.95,
+    });
+    const before = jevRequests.length;
+    const typed = await caller.addManual({ name: "Tomato" });
+    assert.equal(typed.ownItemId, tomatoes.ownItemId);
+    assert.equal(typed.ownItem.category, "PETS");
+    assert.equal(jevRequests.length, before + 1);
+
+    jevMatches.set("tomatos", {
+      labels: ["Heirloom tomatoes"],
+      confidence: 0.95,
+    });
+    const literal = await caller.addSelection({ name: "Tomatos", note: null });
+    assert.equal(literal.ownItemId, tomatoes.ownItemId);
+
+    jevMatches.set("heirlooms", {
+      labels: ["Heirloom tomatoes"],
+      confidence: 0.95,
+    });
+    const usual = await caller.setUsuallyHave({
+      name: "Heirlooms",
+      excluded: true,
+    });
+    assert.equal(usual.id, tomatoes.ownItemId);
+    assert.ok(
+      (await caller.sources()).every((item) => item.name !== "Heirlooms"),
+    );
+  }));
+
+void test("a confident Standard Shopping Item match saves the standard name with the input's category", () =>
+  withShoppingList(async ({ caller }) => {
+    jevMatches.set("toms", { labels: ["Tomatoes"], confidence: 0.95 });
+    jevCategories.set("toms", { category: "PRODUCE", confidence: 0.95 });
+    const typed = await caller.addManual({ name: "Toms" });
+    assert.equal(typed.name, "Tomatoes");
+    assert.equal(typed.note, null);
+    assert.equal(typed.ownItem.category, "PRODUCE");
+  }));
+
+void test("uncertain and absent matches create a new Own Item", () =>
+  withShoppingList(async ({ caller }) => {
+    jevMatches.set("toms", { labels: ["Tomatoes"], confidence: 0.89 });
+    const uncertain = await caller.addManual({ name: "Toms" });
+    assert.equal(uncertain.name, "Toms");
+    const absent = await caller.addManual({ name: "Rocket widget" });
+    assert.equal(absent.name, "Rocket widget");
+    jevFailure = "error";
+    const failed = await caller.addManual({ name: "Spare widget" });
+    assert.equal(failed.name, "Spare widget");
+    assert.equal(failed.ownItem.category, "OWN_ITEMS");
+  }));
+
+void test("winners from several chunks are decided by a second request", () =>
+  withShoppingList(async ({ caller }) => {
+    const puppyFood = await caller.addManual({ name: "Puppy food" });
+    jevMatches.set("kibble", {
+      labels: ["Dog food", "Puppy food"],
+      confidence: 0.95,
+    });
+    const before = jevRequests.length;
+    const typed = await caller.addManual({ name: "Kibble" });
+    assert.equal(jevRequests.length, before + 2);
+    const [first, second] = jevRequests.slice(before);
+    assert.ok(matchQuestions(first!).length > 1);
+    assert.deepEqual(
+      Object.values(second!.questions).map((question) =>
+        Object.values(question.criteria).sort(),
+      ),
+      [["Dog food", "None of the options is the same product.", "Puppy food"]],
+    );
+    assert.equal(typed.name, "Dog food");
+    assert.notEqual(typed.ownItemId, puppyFood.ownItemId);
+  }));
+
+void test("a failed deciding request keeps the first request's category", () =>
+  withShoppingList(async ({ caller }) => {
+    await caller.addManual({ name: "Puppy food" });
+    jevMatches.set("kibble", {
+      labels: ["Dog food", "Puppy food"],
+      confidence: 0.95,
+    });
+    jevCategories.set("kibble", { category: "PETS", confidence: 0.95 });
+    beforeJevResponse = () => {
+      beforeJevResponse = () => {
+        jevFailure = "error";
+        return Promise.resolve();
+      };
+      return Promise.resolve();
+    };
+    const typed = await caller.addManual({ name: "Kibble" });
+    assert.equal(typed.name, "Kibble");
+    assert.equal(typed.ownItem.category, "PETS");
+  }));
+
+void test("exact names and autocomplete sources skip matching", () =>
+  withShoppingList(async ({ caller }) => {
+    jevMatches.set("milk", { labels: ["Soy Milk"], confidence: 0.95 });
+    const milk = await caller.addManual({ name: "Milk" });
+    assert.equal(milk.name, "Milk");
+    assert.equal(matchQuestions(jevRequests.at(-1)!).length, 0);
+    jevMatches.set("eggs", { labels: ["Eggs"], confidence: 0.95 });
+    const variant = await caller.addSelection({
+      name: "Eggs",
+      note: "duck",
+      source: { standardName: "Eggs" },
+    });
+    assert.equal(variant.note, "duck");
+    assert.equal(matchQuestions(jevRequests.at(-1)!).length, 0);
   }));
 
 void test("unavailable Jev and missing confidence still save Own Items without retrying or later reclassification", () =>

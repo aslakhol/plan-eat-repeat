@@ -8,20 +8,23 @@ import {
   type ShoppingResolution,
 } from "./ai/resolve-shopping-items";
 import { shoppingIdentity } from "~/lib/shopping-matching";
+import { shoppingCatalog } from "./shopping-catalog";
 import { TRPCError } from "@trpc/server";
 import type { OdaProductPreference } from "~/lib/oda-product";
 
 // Resolve before opening a transaction. Recheck identity when saving: another
 // household member may have created or corrected the same Own Item meanwhile.
+// Only typed input is matched; a chosen suggestion already names its product.
 export async function resolveNewOwnItems(
   db: Prisma.TransactionClient,
   householdId: string,
   items: readonly { name: string; note: string | null }[],
+  { match }: { match: boolean },
 ) {
   const [existing, household] = await Promise.all([
     db.ownItem.findMany({
       where: { householdId },
-      select: { name: true, note: true },
+      select: { id: true, name: true, note: true },
     }),
     db.household.findUniqueOrThrow({
       where: { id: householdId },
@@ -45,9 +48,22 @@ export async function resolveNewOwnItems(
         ] as const;
       }),
   );
+  const standardItems = shoppingCatalog
+    .map((item) => ({ name: item[household.shoppingLanguage], note: null }))
+    .filter((item) => !known.has(shoppingIdentity(item.name, item.note)));
   return resolveShoppingItems(
     [...newItems.values()],
     household.shoppingLanguage,
+    match
+      ? [
+          ...existing.map(({ id, name, note }) => ({
+            ownItemId: id,
+            name,
+            note,
+          })),
+          ...standardItems,
+        ]
+      : [],
   );
 }
 
@@ -92,17 +108,15 @@ export const rememberOwnItem = async (
     if (!matched) throw shoppingItemsChanged();
     return matched;
   }
-  const trimmedNote = resolution.note?.trim() ?? "";
-  const resolvedNote = trimmedNote === "" ? null : trimmedNote;
   return (
-    (await findOwnItem(tx, householdId, resolution.name, resolvedNote)) ??
+    (await findOwnItem(tx, householdId, resolution.name, resolution.note)) ??
     tx.ownItem.create({
       data: {
         householdId,
         name: capitalizeShoppingName(resolution.name),
-        note: resolvedNote,
+        note: resolution.note,
         normalizedName: normalizeShoppingName(resolution.name),
-        normalizedNote: normalizeShoppingName(resolvedNote ?? ""),
+        normalizedNote: normalizeShoppingName(resolution.note ?? ""),
         category: resolution.category,
       },
     })
