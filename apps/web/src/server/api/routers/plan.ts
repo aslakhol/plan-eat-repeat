@@ -8,18 +8,38 @@ import {
 import { addDays } from "date-fns";
 import { TRPCError } from "@trpc/server";
 
+const weekInput = z.object({ startOfWeek: z.date() });
+
+const householdWeek = (
+  householdId: string,
+  { startOfWeek }: z.infer<typeof weekInput>,
+) => ({
+  date: { gte: startOfWeek, lt: addDays(startOfWeek, 7) },
+  dinner: { householdId },
+});
+
 export const planRouter = createTRPCRouter({
-  plannedDinners: protectedProcedureWithHousehold
-    .input(z.object({ startOfWeek: z.date() }))
+  weekOverview: protectedProcedureWithHousehold
+    .input(weekInput)
     .query(async ({ ctx, input }) => {
       const plans = await ctx.db.plan.findMany({
-        where: {
-          date: {
-            gte: input.startOfWeek,
-            lt: addDays(input.startOfWeek, 7),
-          },
-          dinner: { householdId: ctx.householdId },
+        where: householdWeek(ctx.householdId, input),
+        select: {
+          id: true,
+          date: true,
+          dinner: { select: { id: true, name: true } },
         },
+        orderBy: { date: "asc" },
+      });
+
+      return { plans };
+    }),
+  // Retained for the mobile client, which renders recipes from the week.
+  plannedDinners: protectedProcedureWithHousehold
+    .input(weekInput)
+    .query(async ({ ctx, input }) => {
+      const plans = await ctx.db.plan.findMany({
+        where: householdWeek(ctx.householdId, input),
         include: {
           dinner: {
             include: {

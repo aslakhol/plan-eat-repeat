@@ -72,7 +72,7 @@ export const DinnerDetail = () => {
         utils.dinner.get.invalidate({ dinnerId }),
         utils.dinner.summaries.invalidate(),
         utils.dinner.ingredientNames.invalidate(),
-        utils.plan.plannedDinners.invalidate(),
+        utils.plan.invalidate(),
       ]);
       setEditing(false);
       void router.replace(editorSaveHref(result.dinner.id, navigation));
@@ -93,7 +93,7 @@ export const DinnerDetail = () => {
       await Promise.all([
         utils.dinner.summaries.invalidate(),
         utils.dinner.ingredientNames.invalidate(),
-        utils.plan.plannedDinners.invalidate(),
+        utils.plan.invalidate(),
       ]);
       void router.replace("/dinners");
     },
@@ -111,7 +111,7 @@ export const DinnerDetail = () => {
       await Promise.all([
         utils.dinner.summaries.invalidate(),
         utils.dinner.get.invalidate({ dinnerId }),
-        utils.plan.plannedDinners.invalidate(),
+        utils.plan.invalidate(),
       ]);
       toast({
         title: dinner.favourite

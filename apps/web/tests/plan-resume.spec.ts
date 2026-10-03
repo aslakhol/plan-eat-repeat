@@ -42,7 +42,7 @@ test("returning to the Week keeps a planned Dinner when the refresh lacks authen
     await expect(page.locator("article")).toContainText(dinner.notes!);
     let failedReads = 0;
     await page.route("**/api/trpc/**", async (route) => {
-      if (route.request().url().includes("plan.plannedDinners")) {
+      if (route.request().url().includes("plan.weekOverview")) {
         const response = await route.fetch({
           headers: {
             ...route.request().headers(),
@@ -61,7 +61,7 @@ test("returning to the Week keeps a planned Dinner when the refresh lacks authen
       }
     });
     const refreshed = page.waitForResponse((response) =>
-      response.url().includes("plan.plannedDinners"),
+      response.url().includes("plan.weekOverview"),
     );
     for (const value of ["hidden", "visible"]) {
       await page.evaluate((value) => {
@@ -92,7 +92,7 @@ test("returning to the Week keeps a planned Dinner when the refresh lacks authen
 
     // Without any cached week, a failed read must not look like an empty plan.
     await page.route("**/api/trpc/**", async (route) => {
-      if (route.request().url().includes("plan.plannedDinners")) {
+      if (route.request().url().includes("plan.weekOverview")) {
         await route.abort("failed");
       } else {
         await route.continue();

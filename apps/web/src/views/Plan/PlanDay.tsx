@@ -34,7 +34,7 @@ import { useDinnerCreation } from "~/views/Dinners/DinnerCreationContext";
 type Props = {
   date: Date;
   closeDialog: () => void;
-  plannedDinner?: DinnerWithTags;
+  plannedDinner?: Pick<DinnerWithTags, "id" | "name">;
 };
 
 type DinnerSummary = RouterOutputs["dinner"]["summaries"]["dinners"][number];
@@ -67,7 +67,7 @@ export const PlanDay = ({ date, closeDialog, plannedDinner }: Props) => {
   const planDinnerForDateMutation = api.plan.planDinnerForDate.useMutation({
     onMutate: () => setPlanningError(null),
     onSuccess: (result, variables) => {
-      void utils.plan.plannedDinners.invalidate();
+      void utils.plan.invalidate();
       void utils.dinner.summaries.invalidate();
       if (surpriseDinnerNameRef.current) {
         toast({

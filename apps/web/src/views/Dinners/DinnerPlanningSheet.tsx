@@ -51,7 +51,7 @@ export const DinnerPlanningSheet = ({
     setPendingReplaceDate(null);
   }, [open, today]);
 
-  const plansQuery = api.plan.plannedDinners.useQuery(
+  const plansQuery = api.plan.weekOverview.useQuery(
     { startOfWeek: week.start },
     { enabled: open },
   );
@@ -59,7 +59,7 @@ export const DinnerPlanningSheet = ({
   const planMutation = api.plan.planDinnerForDate.useMutation({
     onSuccess: async (_result, variables) => {
       await Promise.all([
-        utils.plan.plannedDinners.invalidate(),
+        utils.plan.invalidate(),
         utils.dinner.summaries.invalidate(),
       ]);
       toast({
