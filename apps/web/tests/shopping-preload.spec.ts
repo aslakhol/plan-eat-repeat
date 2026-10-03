@@ -94,7 +94,7 @@ test("shopping preparation leaves cold editing usable and reuses warm choices", 
     const add = page.getByRole("button", { name: "Add an item", exact: true });
     const prepared = page.waitForResponse(
       (response) =>
-        response.url().includes("plan.plannedDinners") &&
+        response.url().includes("plan.weekOverview") &&
         response.request().method() === "GET",
     );
     await add.press("Enter");
@@ -104,10 +104,10 @@ test("shopping preparation leaves cold editing usable and reuses warm choices", 
     });
     await expect(drawer).toBeVisible();
     await expect.poll(() => count("dinner.summaries")).toBeGreaterThan(0);
-    await expect.poll(() => count("plan.plannedDinners")).toBeGreaterThan(0);
+    await expect.poll(() => count("plan.weekOverview")).toBeGreaterThan(0);
     await prepared;
     const summaries = count("dinner.summaries");
-    const plans = count("plan.plannedDinners");
+    const plans = count("plan.weekOverview");
     await drawer.getByRole("button", { name: "From week plan" }).tap();
     const picker = page.getByRole("dialog", {
       name: "Add dinners",
@@ -117,7 +117,7 @@ test("shopping preparation leaves cold editing usable and reuses warm choices", 
     await picker.getByRole("button", { name: "Cookbook", exact: true }).tap();
     await expect(picker.getByPlaceholder("Search the cookbook…")).toBeVisible();
     expect(count("dinner.summaries")).toBe(summaries);
-    expect(count("plan.plannedDinners")).toBe(plans);
+    expect(count("plan.weekOverview")).toBe(plans);
     expect(count("shoppingList.sources")).toBe(initialSources);
     console.log(
       JSON.stringify({

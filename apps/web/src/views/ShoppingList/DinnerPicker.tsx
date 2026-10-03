@@ -49,7 +49,7 @@ export function DinnerPicker({
   );
   const { query: dinners, today } = useDinnerSummaries();
   const week = buildDinnerPlanningWeek(addWeeks(today, weekOffset));
-  const plans = api.plan.plannedDinners.useQuery(
+  const plans = api.plan.weekOverview.useQuery(
     { startOfWeek: week.start },
     { ...shoppingChoicesQueryOptions, enabled: source === "plan" },
   );

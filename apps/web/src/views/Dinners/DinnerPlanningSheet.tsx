@@ -51,7 +51,7 @@ export const DinnerPlanningSheet = ({
     setPendingReplaceDate(null);
   }, [open, today]);
 
-  const plansQuery = api.plan.plannedDinners.useQuery(
+  const plansQuery = api.plan.weekOverview.useQuery(
     { startOfWeek: week.start },
     { enabled: open },
   );

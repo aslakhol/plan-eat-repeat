@@ -58,7 +58,7 @@ export function ShoppingItemCreationProvider({
         calendar,
         shoppingChoicesQueryOptions,
       );
-      void utils.plan.plannedDinners.prefetch(
+      void utils.plan.weekOverview.prefetch(
         { startOfWeek: calendar.currentWeekStart },
         shoppingChoicesQueryOptions,
       );
