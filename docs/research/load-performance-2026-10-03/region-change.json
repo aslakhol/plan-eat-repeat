@@ -1,0 +1,53 @@
+{
+  "verifiedAt": "2026-10-03T18:24:58.154847+00:00",
+  "baseCommit": "48a0c787470adebcd926712116e23c33369adb8a",
+  "sourceChange": {
+    "file": "vercel.json",
+    "added": {
+      "regions": [
+        "fra1"
+      ]
+    },
+    "committedAtDeployment": false
+  },
+  "previousDeployment": {
+    "id": "dpl_bS8fH98Teu9oSZ1sNYLsij8Qy4k4",
+    "regions": [
+      "lhr1"
+    ]
+  },
+  "newDeployment": {
+    "id": "dpl_68Rcum6q8VgQzBb2UvUpcA882WqF",
+    "url": "plan-eat-repeat-58tmcxkns-aslakhols-projects.vercel.app",
+    "readyState": "READY",
+    "target": "production",
+    "regions": [
+      "fra1"
+    ],
+    "aliasAssigned": true
+  },
+  "productionAlias": {
+    "host": "www.planeatrepeat.com",
+    "deploymentId": "dpl_68Rcum6q8VgQzBb2UvUpcA882WqF"
+  },
+  "functionVerification": {
+    "method": "vercel inspect deployment summary",
+    "function": "api/trpc/[trpc]",
+    "region": "fra1",
+    "size": "5.43 MB"
+  },
+  "checks": {
+    "lint": "passed with Turbo cache",
+    "typecheck": "passed with Turbo cache",
+    "sourceComparison": "vercel.json was the only changed tracked file in the uploaded source"
+  },
+  "connectionsChanged": false,
+  "databaseConfiguration": {
+    "source": "earlier sanitized inspection on 2026-10-03",
+    "region": "eu-central-1",
+    "pooler": "shared transaction",
+    "port": 6543
+  },
+  "deploymentCLI": "62.2.0 via pnpm dlx; global installation unchanged",
+  "productionAppOrAPIRequestsMade": false
+}

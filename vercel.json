@@ -1,5 +1,6 @@
 {
   "framework": "nextjs",
+  "regions": ["fra1"],
   "buildCommand": "pnpm --filter @planeatrepeat/web vercel-build",
   "installCommand": "pnpm install",
   "outputDirectory": "apps/web/.next"
