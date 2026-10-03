@@ -2,7 +2,7 @@ import { format, isSameDay } from "date-fns";
 import { ChevronRight } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { PlannedDinner } from "./PlannedDinner";
-import { type DinnerWithRecipe } from "../../utils/types";
+import { type DinnerWithTags } from "../../utils/types";
 import { useEffect, useState } from "react";
 import { PlanDay } from "./PlanDay";
 import {
@@ -15,7 +15,7 @@ import { Button } from "~/components/ui/button";
 type Props = {
   date: Date;
   today: Date;
-  plannedDinner?: DinnerWithRecipe;
+  plannedDinner?: Pick<DinnerWithTags, "id" | "name">;
   openOnLoad?: boolean;
   onCloseRequestedDate?: () => void;
 };

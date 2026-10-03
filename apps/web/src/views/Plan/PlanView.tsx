@@ -45,24 +45,33 @@ export const PlanView = () => {
     [today, weekOffSet],
   );
 
-  const plannedDinnersQuery = api.plan.plannedDinners.useQuery(
+  const weekQuery = api.plan.weekOverview.useQuery(
     { startOfWeek: week.start },
     { placeholderData: keepPreviousData },
   );
-  const weekShown =
-    plannedDinnersQuery.isSuccess && !plannedDinnersQuery.isPlaceholderData;
+  const weekShown = weekQuery.isSuccess && !weekQuery.isPlaceholderData;
+  const tonightDinnerId = weekQuery.data?.plans.find((p) =>
+    isSameDay(p.date, today),
+  )?.dinner.id;
+
   // Prefetching after the week is shown keeps these out of its request batch.
   useEffect(() => {
     if (!weekShown) return;
     for (const offset of [1, -1]) {
-      void trpc.plan.plannedDinners.prefetch(
+      void trpc.plan.weekOverview.prefetch(
         { startOfWeek: addWeeks(week.start, offset) },
         { staleTime: 60 * 1000 },
       );
     }
-  }, [weekShown, week, trpc]);
+    if (tonightDinnerId) {
+      void trpc.dinner.get.prefetch(
+        { dinnerId: tonightDinnerId },
+        { staleTime: 60 * 1000 },
+      );
+    }
+  }, [weekShown, week, tonightDinnerId, trpc]);
 
-  if (plannedDinnersQuery.isPending) {
+  if (weekQuery.isPending) {
     return (
       <div className="flex h-[50vh] w-full items-center justify-center">
         <UtensilsCrossed className="text-primary animate-spin" />
@@ -70,13 +79,13 @@ export const PlanView = () => {
     );
   }
 
-  if (!plannedDinnersQuery.data) {
+  if (!weekQuery.data) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
         <h1 className="font-serif text-2xl">Couldn&apos;t load this week</h1>
         <Button
-          disabled={plannedDinnersQuery.isFetching}
-          onClick={() => void plannedDinnersQuery.refetch()}
+          disabled={weekQuery.isFetching}
+          onClick={() => void weekQuery.refetch()}
         >
           Try again
         </Button>
@@ -102,9 +111,8 @@ export const PlanView = () => {
             date={day.date}
             today={today}
             plannedDinner={
-              plannedDinnersQuery.data.plans.find((p) =>
-                isSameDay(p.date, day.date),
-              )?.dinner
+              weekQuery.data.plans.find((p) => isSameDay(p.date, day.date))
+                ?.dinner
             }
             openOnLoad={
               requestedDate ? isSameDay(requestedDate, day.date) : false

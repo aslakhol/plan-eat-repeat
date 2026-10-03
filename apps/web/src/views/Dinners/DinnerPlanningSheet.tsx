@@ -59,7 +59,7 @@ export const DinnerPlanningSheet = ({
   const planMutation = api.plan.planDinnerForDate.useMutation({
     onSuccess: async (_result, variables) => {
       await Promise.all([
-        utils.plan.plannedDinners.invalidate(),
+        utils.plan.invalidate(),
         utils.dinner.summaries.invalidate(),
       ]);
       toast({

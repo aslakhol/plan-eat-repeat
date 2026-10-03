@@ -41,7 +41,7 @@ export const CreateDinner = () => {
         utils.dinner.summaries.invalidate(),
         utils.dinner.tags.invalidate(),
         utils.dinner.ingredientNames.invalidate(),
-        utils.plan.plannedDinners.invalidate(),
+        utils.plan.invalidate(),
       ]);
       const saveNavigation = editorSaveNavigation(result.dinner.id, navigation);
       if (saveNavigation.base) {
