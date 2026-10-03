@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   BookOpen,
   Calendar,
@@ -19,9 +19,27 @@ import {
 
 export function Welcome({ onClose }: { onClose: () => void }) {
   const { events } = useRouter();
+  const navigationStarted = useRef(false);
   useEffect(() => {
-    events.on("routeChangeComplete", onClose);
-    return () => events.off("routeChangeComplete", onClose);
+    const start = () => {
+      navigationStarted.current = true;
+    };
+    const complete = () => {
+      if (!navigationStarted.current) return;
+      navigationStarted.current = false;
+      onClose();
+    };
+    const cancel = () => {
+      navigationStarted.current = false;
+    };
+    events.on("routeChangeStart", start);
+    events.on("routeChangeComplete", complete);
+    events.on("routeChangeError", cancel);
+    return () => {
+      events.off("routeChangeStart", start);
+      events.off("routeChangeComplete", complete);
+      events.off("routeChangeError", cancel);
+    };
   }, [events, onClose]);
 
   return (
