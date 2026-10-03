@@ -14,7 +14,8 @@ import type { OdaProductPreference } from "~/lib/oda-product";
 
 // Resolve before opening a transaction. Recheck identity when saving: another
 // household member may have created or corrected the same Own Item meanwhile.
-// Only typed input is matched; a chosen suggestion already names its product.
+// Exact standard names take their catalog category. Only typed input is
+// matched; a chosen suggestion already names its product.
 export async function resolveNewOwnItems(
   db: Prisma.TransactionClient,
   householdId: string,
@@ -48,22 +49,26 @@ export async function resolveNewOwnItems(
         ] as const;
       }),
   );
-  const standardItems = shoppingCatalog
-    .map((item) => ({ name: item[household.shoppingLanguage], note: null }))
-    .filter((item) => !known.has(shoppingIdentity(item.name, item.note)));
   return resolveShoppingItems(
     [...newItems.values()],
     household.shoppingLanguage,
-    match
-      ? [
-          ...existing.map(({ id, name, note }) => ({
-            ownItemId: id,
-            name,
-            note,
-          })),
-          ...standardItems,
-        ]
-      : [],
+    {
+      candidates: [
+        ...existing.map(({ id, name, note }) => ({
+          ownItemId: id,
+          name,
+          note,
+        })),
+        ...shoppingCatalog
+          .map((item) => ({
+            name: item[household.shoppingLanguage],
+            note: null,
+            category: item.category,
+          }))
+          .filter((item) => !known.has(shoppingIdentity(item.name, null))),
+      ],
+      match,
+    },
   );
 }
 

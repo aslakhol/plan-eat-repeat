@@ -68,7 +68,7 @@ A Household's saved combination of a product name and optional Shopping Note, wi
 _Avoid_: Shopping Product
 
 **Standard Shopping Item**:
-A predefined product name supplied in the English or Norwegian shopping catalog.
+A predefined product name supplied in the English or Norwegian shopping catalog, with its Shopping Category.
 
 **Shopping Language**:
 The Household's selected language for Standard Shopping Item matching and Shopping Category labels, either English or Norwegian.
@@ -77,7 +77,7 @@ The Household's selected language for Standard Shopping Item matching and Shoppi
 The Household's category for an Own Item, whether chosen manually or assigned automatically, including the Own Items Category. It survives removal from the Shopping List and is independent of categories assigned to other Own Items with the same name and different notes.
 
 **Category Classification**:
-The initial assignment of a new Own Item's Shopping Category from its product name and Shopping Note, interpreted using the Shopping Language and category descriptions, independently of any Dinner or Recipe. An accepted classification meets the required confidence cutoff; reusing an existing Own Item retains its Remembered Shopping Category without classification.
+The initial assignment of a new Own Item's Shopping Category, when it is not a Standard Shopping Item, from its product name and Shopping Note, interpreted using the Shopping Language and category descriptions, independently of any Dinner or Recipe. An accepted classification meets the required confidence cutoff; reusing an existing Own Item retains its Remembered Shopping Category without classification.
 
 **Item Matching**:
 Resolving typed input that is not exactly a known name-and-note combination to the Own Item or Standard Shopping Item it names, before any new Own Item is created. Only a confident match counts; otherwise the input becomes a new Own Item. Suggestions chosen from autocomplete are not matched.

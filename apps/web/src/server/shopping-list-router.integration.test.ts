@@ -228,17 +228,17 @@ const withShoppingList = async (
 
 void test("Jev categorizes new Own Items while reuse and manual corrections skip classification", () =>
   withShoppingList(async ({ caller, member }) => {
-    jevCategories.set("milk", { category: "SNACKS", confidence: 0.4 });
+    jevCategories.set("kombucha", { category: "SNACKS", confidence: 0.4 });
     const before = jevRequests.length;
-    const milk = await caller.addManual({ name: "Milk" });
-    assert.equal(milk.ownItem.category, "SNACKS");
+    const kombucha = await caller.addManual({ name: "Kombucha" });
+    assert.equal(kombucha.ownItem.category, "SNACKS");
     assert.equal(jevRequests.length, before + 1);
-    await member.edit({ ...milk, category: "PETS" });
+    await member.edit({ ...kombucha, category: "PETS" });
     await caller.clear();
-    const reused = await caller.addManual({ name: " MILK " });
+    const reused = await caller.addManual({ name: " KOMBUCHA " });
     assert.equal(reused.ownItem.category, "PETS");
     assert.equal(jevRequests.length, before + 1);
-    jevCategories.delete("milk");
+    jevCategories.delete("kombucha");
   }));
 
 void test("Dinner additions classify new name-and-note combinations together and apply confidence per item", () =>
@@ -356,10 +356,10 @@ void test("typed items reuse a confidently matched Own Item", () =>
     );
   }));
 
-void test("a confident Standard Shopping Item match saves the standard name with the input's category", () =>
+void test("a confident Standard Shopping Item match saves the standard name and catalog category", () =>
   withShoppingList(async ({ caller }) => {
     jevMatches.set("toms", { labels: ["Tomatoes"], confidence: 0.95 });
-    jevCategories.set("toms", { category: "PRODUCE", confidence: 0.95 });
+    jevCategories.set("toms", { category: "OWN_ITEMS", confidence: 0.95 });
     const typed = await caller.addManual({ name: "Toms" });
     assert.equal(typed.name, "Tomatoes");
     assert.equal(typed.note, null);
@@ -427,12 +427,15 @@ void test("a failed deciding request keeps the first request's category", () =>
     assert.equal(typed.ownItem.category, "PETS");
   }));
 
-void test("exact names and autocomplete sources skip matching", () =>
+void test("exact standard names use the catalog without Jev, and autocomplete sources skip matching", () =>
   withShoppingList(async ({ caller }) => {
     jevMatches.set("milk", { labels: ["Soy Milk"], confidence: 0.95 });
-    const milk = await caller.addManual({ name: "Milk" });
+    jevCategories.set("milk", { category: "SNACKS", confidence: 0.95 });
+    const before = jevRequests.length;
+    const milk = await caller.addManual({ name: "milk" });
     assert.equal(milk.name, "Milk");
-    assert.equal(matchQuestions(jevRequests.at(-1)!).length, 0);
+    assert.equal(milk.ownItem.category, "DAIRY");
+    assert.equal(jevRequests.length, before);
     jevMatches.set("eggs", { labels: ["Eggs"], confidence: 0.95 });
     const variant = await caller.addSelection({
       name: "Eggs",
@@ -445,9 +448,9 @@ void test("exact names and autocomplete sources skip matching", () =>
 
 void test("unavailable Jev and missing confidence still save Own Items without retrying or later reclassification", () =>
   withShoppingList(async ({ caller, createDinner }) => {
-    jevCategories.set("milk", { category: "DAIRY" });
-    const milk = await caller.addManual({ name: "Milk" });
-    assert.equal(milk.ownItem.category, "OWN_ITEMS");
+    jevCategories.set("kombucha", { category: "DAIRY" });
+    const kombucha = await caller.addManual({ name: "Kombucha" });
+    assert.equal(kombucha.ownItem.category, "OWN_ITEMS");
     jevFailure = "error";
     const dinner = await createDinner({
       name: "Dinner",
@@ -456,8 +459,8 @@ void test("unavailable Jev and missing confidence still save Own Items without r
           order: 0,
           ingredients: {
             create: [
-              { order: 0, name: "Rice" },
-              { order: 1, name: "Bread" },
+              { order: 0, name: "Freekeh" },
+              { order: 1, name: "Focaccia" },
             ],
           },
         },
@@ -470,7 +473,7 @@ void test("unavailable Jev and missing confidence still save Own Items without r
       result.items.every((item) => item.ownItem.category === "OWN_ITEMS"),
     );
     jevFailure = undefined;
-    const reused = await caller.addManual({ name: "Rice" });
+    const reused = await caller.addManual({ name: "Freekeh" });
     assert.equal(reused.ownItem.category, "OWN_ITEMS");
     assert.equal(jevRequests.length, before + 1);
   }));
@@ -483,8 +486,8 @@ void test(
       jevFailure = "timeout";
       const before = jevRequests.length;
       const started = Date.now();
-      const milk = await caller.addManual({ name: "Milk" });
-      assert.equal(milk.ownItem.category, "OWN_ITEMS");
+      const kombucha = await caller.addManual({ name: "Kombucha" });
+      assert.equal(kombucha.ownItem.category, "OWN_ITEMS");
       assert.equal(jevRequests.length, before + 1);
       assert.ok(Date.now() - started >= 2_900);
       jevFailure = undefined;
@@ -502,11 +505,11 @@ void test(
         entered.resolve();
         await release.promise;
       };
-      const pending = caller.addManual({ name: "Milk" });
+      const pending = caller.addManual({ name: "Kombucha" });
       try {
         await entered.promise;
-        const milk = await member.addManual({ name: "Milk" });
-        await member.edit({ ...milk, category: "PETS" });
+        const kombucha = await member.addManual({ name: "Kombucha" });
+        await member.edit({ ...kombucha, category: "PETS" });
       } finally {
         release.resolve();
       }
@@ -518,7 +521,7 @@ void test(
 
 void test("Dinner additions reject a matched Own Item renamed while Jev classifies another ingredient", () =>
   withShoppingList(async ({ caller, member, createDinner }) => {
-    const milk = await caller.addManual({ name: "Milk" });
+    const kombucha = await caller.addManual({ name: "Kombucha" });
     const dinner = await createDinner({
       name: "Breakfast",
       parts: {
@@ -526,8 +529,8 @@ void test("Dinner additions reject a matched Own Item renamed while Jev classifi
           order: 0,
           ingredients: {
             create: [
-              { order: 0, name: "Milk" },
-              { order: 1, name: "Bread" },
+              { order: 0, name: "Kombucha" },
+              { order: 1, name: "Focaccia" },
             ],
           },
         },
@@ -542,7 +545,7 @@ void test("Dinner additions reject a matched Own Item renamed while Jev classifi
     const pending = caller.addDinners({ dinnerIds: [dinner.id] });
     try {
       await entered.promise;
-      await member.edit({ ...milk, name: "Sugar" });
+      await member.edit({ ...kombucha, name: "Sugar" });
     } finally {
       release.resolve();
     }
