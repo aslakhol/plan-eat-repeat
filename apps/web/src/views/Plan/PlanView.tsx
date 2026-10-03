@@ -40,28 +40,27 @@ export const PlanView = () => {
     );
   }, [requestedDate, today]);
 
-  const week = buildDinnerPlanningWeek(addWeeks(today, weekOffSet));
+  const week = useMemo(
+    () => buildDinnerPlanningWeek(addWeeks(today, weekOffSet)),
+    [today, weekOffSet],
+  );
 
   const plannedDinnersQuery = api.plan.plannedDinners.useQuery(
-    {
-      startOfWeek: week.start,
-    },
+    { startOfWeek: week.start },
     { placeholderData: keepPreviousData },
   );
-
-  void trpc.plan.plannedDinners.prefetch(
-    {
-      startOfWeek: addWeeks(week.start, 1),
-    },
-    { staleTime: 60 * 1000 },
-  );
-
-  void trpc.plan.plannedDinners.prefetch(
-    {
-      startOfWeek: addWeeks(week.start, -1),
-    },
-    { staleTime: 60 * 1000 },
-  );
+  const weekShown =
+    plannedDinnersQuery.isSuccess && !plannedDinnersQuery.isPlaceholderData;
+  // Prefetching after the week is shown keeps these out of its request batch.
+  useEffect(() => {
+    if (!weekShown) return;
+    for (const offset of [1, -1]) {
+      void trpc.plan.plannedDinners.prefetch(
+        { startOfWeek: addWeeks(week.start, offset) },
+        { staleTime: 60 * 1000 },
+      );
+    }
+  }, [weekShown, week, trpc]);
 
   if (plannedDinnersQuery.isPending) {
     return (
