@@ -53,7 +53,10 @@ export async function prepareDinnerAddition(
     amount: number | null;
     unit: string | null;
   }[] = [];
-  const newItems = new Map<string, { name: string; note: string | null }>();
+  const newItems = new Map<
+    string,
+    { name: string; note: string | null; match: boolean }
+  >();
   // Resolve in selection order, including items introduced by earlier ingredients.
   for (const dinnerId of input.dinnerIds) {
     const dinner = dinnersById.get(dinnerId)!;
@@ -81,20 +84,24 @@ export async function prepareDinnerAddition(
             name: capitalizeShoppingName(selection.name),
             note: selection.note,
           };
-          newItems.set(identity, ownItem);
+          // Only ingredients the word rules left unresolved are matched by Jev.
+          newItems.set(identity, { ...ownItem, match: !selection.source });
           sources.push(ownItem);
         }
       }
     }
   }
-  const resolutions = await resolveNewOwnItems(
-    db,
-    householdId,
-    [...newItems.values()],
-    { match: false },
-  );
+  const resolutions = await resolveNewOwnItems(db, householdId, [
+    ...newItems.values(),
+  ]);
   return { requirements, resolutions };
 }
+
+const shoppingItemsChanged = () =>
+  new TRPCError({
+    code: "CONFLICT",
+    message: "Shopping items changed. Try adding the Dinners again.",
+  });
 
 type PreparedDinnerAddition = NonNullable<
   Awaited<ReturnType<typeof prepareDinnerAddition>>
@@ -143,43 +150,41 @@ async function addDinnerRequirements(
       ownItem &&
       shoppingIdentity(ownItem.name, ownItem.note) !== item.identity
     )
-      throw new TRPCError({
-        code: "CONFLICT",
-        message: "Shopping items changed. Try adding the Dinners again.",
-      });
+      throw shoppingItemsChanged();
     if (!ownItem && "name" in selection) {
       const resolution = prepared.resolutions.get(
         shoppingIdentity(selection.name, selection.note),
       );
-      if (!resolution || !("category" in resolution))
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "Shopping items changed. Try adding the Dinners again.",
-        });
-      const trimmedNote = selection.note?.trim();
-      const note = trimmedNote === "" ? null : (trimmedNote ?? null);
-      ownItem = {
-        id: crypto.randomUUID(),
-        householdId,
-        name: capitalizeShoppingName(selection.name),
-        note,
-        normalizedName: normalizeShoppingName(selection.name),
-        normalizedNote: normalizeShoppingName(note ?? ""),
-        category: resolution.category,
-        usuallyHave: false,
-        odaProductId: null,
-        odaProductName: null,
-        odaProductDescription: null,
-      };
-      newOwnItems.push(ownItem);
-      ownById.set(ownItem.id, ownItem);
-      ownByIdentity.set(shoppingIdentity(ownItem.name, note), ownItem);
+      if (!resolution) throw shoppingItemsChanged();
+      ownItem =
+        "ownItemId" in resolution
+          ? ownById.get(resolution.ownItemId)
+          : ownByIdentity.get(
+              shoppingIdentity(resolution.name, resolution.note),
+            );
+      if (!ownItem && "category" in resolution) {
+        ownItem = {
+          id: crypto.randomUUID(),
+          householdId,
+          name: capitalizeShoppingName(resolution.name),
+          note: resolution.note,
+          normalizedName: normalizeShoppingName(resolution.name),
+          normalizedNote: normalizeShoppingName(resolution.note ?? ""),
+          category: resolution.category,
+          usuallyHave: false,
+          odaProductId: null,
+          odaProductName: null,
+          odaProductDescription: null,
+        };
+        newOwnItems.push(ownItem);
+        ownById.set(ownItem.id, ownItem);
+        ownByIdentity.set(
+          shoppingIdentity(ownItem.name, ownItem.note),
+          ownItem,
+        );
+      }
     }
-    if (!ownItem)
-      throw new TRPCError({
-        code: "CONFLICT",
-        message: "Shopping items changed. Try adding the Dinners again.",
-      });
+    if (!ownItem) throw shoppingItemsChanged();
     const quantity = {
       ownItemId: ownItem.id,
       amount: item.amount,

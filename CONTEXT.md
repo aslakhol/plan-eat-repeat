@@ -80,7 +80,7 @@ The Household's category for an Own Item, whether chosen manually or assigned au
 The initial assignment of a new Own Item's Shopping Category, when it is not a Standard Shopping Item, from its product name and Shopping Note, interpreted using the Shopping Language and category descriptions, independently of any Dinner or Recipe. An accepted classification meets the required confidence cutoff; reusing an existing Own Item retains its Remembered Shopping Category without classification.
 
 **Item Matching**:
-Resolving typed input that is not exactly a known name-and-note combination to the Own Item or Standard Shopping Item it names, before any new Own Item is created. Only a confident match counts; otherwise the input becomes a new Own Item. Suggestions chosen from autocomplete are not matched.
+Resolving typed input, or a Recipe Ingredient the word rules leave unresolved, that is not exactly a known name-and-note combination to the Own Item or Standard Shopping Item it names, before any new Own Item is created. Only a confident match counts; otherwise the input becomes a new Own Item. Suggestions chosen from autocomplete are not matched.
 
 **Own Items Category**:
 The fallback Shopping Category for Own Items without an accepted classification, labelled "Own Items" and ordered after all other Shopping Categories. Own Items can belong to any Shopping Category.

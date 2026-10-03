@@ -14,13 +14,13 @@ import type { OdaProductPreference } from "~/lib/oda-product";
 
 // Resolve before opening a transaction. Recheck identity when saving: another
 // household member may have created or corrected the same Own Item meanwhile.
-// Exact standard names take their catalog category. Only typed input is
-// matched; a chosen suggestion already names its product.
+// Exact standard names take their catalog category. Only items marked for
+// matching are compared with existing items; a chosen suggestion or a word
+// match already names its product.
 export async function resolveNewOwnItems(
   db: Prisma.TransactionClient,
   householdId: string,
-  items: readonly { name: string; note: string | null }[],
-  { match }: { match: boolean },
+  items: readonly { name: string; note: string | null; match: boolean }[],
 ) {
   const [existing, household] = await Promise.all([
     db.ownItem.findMany({
@@ -38,13 +38,14 @@ export async function resolveNewOwnItems(
   const newItems = new Map(
     items
       .filter((item) => !known.has(shoppingIdentity(item.name, item.note)))
-      .map(({ name, note }) => {
+      .map(({ name, note, match }) => {
         const trimmedNote = note?.trim() ?? "";
         return [
           shoppingIdentity(name, note),
           {
             name: capitalizeShoppingName(name),
             note: trimmedNote === "" ? null : trimmedNote,
+            match,
           },
         ] as const;
       }),
@@ -52,23 +53,20 @@ export async function resolveNewOwnItems(
   return resolveShoppingItems(
     [...newItems.values()],
     household.shoppingLanguage,
-    {
-      candidates: [
-        ...existing.map(({ id, name, note }) => ({
-          ownItemId: id,
-          name,
-          note,
-        })),
-        ...shoppingCatalog
-          .map((item) => ({
-            name: item[household.shoppingLanguage],
-            note: null,
-            category: item.category,
-          }))
-          .filter((item) => !known.has(shoppingIdentity(item.name, null))),
-      ],
-      match,
-    },
+    [
+      ...existing.map(({ id, name, note }) => ({
+        ownItemId: id,
+        name,
+        note,
+      })),
+      ...shoppingCatalog
+        .map((item) => ({
+          name: item[household.shoppingLanguage],
+          note: null,
+          category: item.category,
+        }))
+        .filter((item) => !known.has(shoppingIdentity(item.name, null))),
+    ],
   );
 }
 

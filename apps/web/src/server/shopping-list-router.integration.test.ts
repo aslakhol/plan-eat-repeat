@@ -39,11 +39,14 @@ const matchQuestions = (request: JevRequest) =>
   Object.keys(request.questions).filter((id) => id.includes("_"));
 let beforeJevResponse: (() => Promise<void>) | undefined;
 let jevFailure: "error" | "timeout" | undefined;
+// Requests that include any of these lowercase item names fail.
+const jevFailingItems = new Set<string>();
 beforeEach(() => {
   jevFailure = undefined;
   beforeJevResponse = undefined;
   jevCategories.clear();
   jevMatches.clear();
+  jevFailingItems.clear();
   for (const [name, category] of Object.entries({
     milk: "DAIRY",
     eggs: "DAIRY",
@@ -91,7 +94,12 @@ const jevFetch: typeof fetch = async (url, init) => {
   const beforeResponse = beforeJevResponse;
   beforeJevResponse = undefined;
   await beforeResponse?.();
-  if (jevFailure === "error")
+  if (
+    jevFailure === "error" ||
+    Object.values(request.state.items).some((item) =>
+      jevFailingItems.has(item.name.toLowerCase()),
+    )
+  )
     return new Response("Unavailable", { status: 503 });
   if (jevFailure === "timeout") {
     return new Promise((_resolve, reject) => {
@@ -471,6 +479,97 @@ void test("exact standard names use the catalog without Jev, and autocomplete so
     });
     assert.equal(variant.note, "duck");
     assert.equal(matchQuestions(jevRequests.at(-1)!).length, 0);
+  }));
+
+void test("Dinner additions match unresolved ingredients and combine their requirements", () =>
+  withShoppingList(async ({ caller, createDinner }) => {
+    const heirlooms = await caller.addManual({ name: "Heirloom tomatoes" });
+    await caller.clear();
+    for (const name of ["tomato", "tomatos"])
+      jevMatches.set(name, { labels: ["Heirloom tomatoes"], confidence: 0.95 });
+    jevMatches.set("toms", { labels: ["Tomatoes"], confidence: 0.95 });
+    jevCategories.set("toms", { category: "OWN_ITEMS", confidence: 0.95 });
+    jevMatches.set("eggs", { labels: ["Heirloom tomatoes"], confidence: 0.95 });
+    const dinner = await createDinner({
+      name: "Salad",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: {
+            create: [
+              { order: 0, name: "Tomato", amount: 2 },
+              { order: 1, name: "Tomatos", amount: 3 },
+              { order: 2, name: "Toms" },
+              { order: 3, name: "Duck eggs" },
+            ],
+          },
+        },
+      },
+    });
+    const before = jevRequests.length;
+    const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
+    assert.equal(jevRequests.length, before + 1);
+    assert.deepEqual(
+      [
+        ...new Set(
+          matchQuestions(jevRequests.at(-1)!).map((id) => id.split("_")[0]!),
+        ),
+      ].map((id) => jevRequests.at(-1)!.state.items[id]!.name),
+      ["Tomato", "Tomatos", "Toms"],
+    );
+    assert.deepEqual(
+      addition.items
+        .map((item) => [
+          item.ownItemId === heirlooms.ownItemId ? "Heirlooms" : item.name,
+          item.note,
+          item.amount,
+          item.ownItem.category,
+        ])
+        .sort(),
+      [
+        ["Eggs", "Duck", null, "DAIRY"],
+        ["Heirlooms", null, 5, "OWN_ITEMS"],
+        ["Tomatoes", null, null, "PRODUCE"],
+      ],
+    );
+    await caller.undo(addition.undo);
+    assert.deepEqual(await caller.list(), []);
+  }));
+
+void test("large Dinner additions are resolved in parallel batches that fail independently", () =>
+  withShoppingList(async ({ caller, createDinner }) => {
+    const names = Array.from({ length: 10 }, (_, index) => `Gadget ${index}`);
+    for (const name of names)
+      jevMatches.set(name.toLowerCase(), {
+        labels: ["Batteries"],
+        confidence: 0.95,
+      });
+    jevFailingItems.add("gadget 9");
+    const dinner = await createDinner({
+      name: "Gadgets",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: {
+            create: names.map((name, order) => ({ order, name })),
+          },
+        },
+      },
+    });
+    const before = jevRequests.length;
+    const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
+    assert.deepEqual(
+      jevRequests
+        .slice(before)
+        .map((request) => Object.keys(request.state.items).length)
+        .sort(),
+      [2, 8],
+    );
+    assert.deepEqual(addition.items.map((item) => item.name).sort(), [
+      "Batteries",
+      "Gadget 8",
+      "Gadget 9",
+    ]);
   }));
 
 void test("unavailable Jev and missing confidence still save Own Items without retrying or later reclassification", () =>

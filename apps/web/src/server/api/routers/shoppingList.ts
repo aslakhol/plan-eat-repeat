@@ -184,12 +184,9 @@ export const shoppingListRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const resolutions =
         "name" in input
-          ? await resolveNewOwnItems(
-              ctx.db,
-              ctx.householdId,
-              [{ name: input.name, note: input.note ?? null }],
-              { match: true },
-            )
+          ? await resolveNewOwnItems(ctx.db, ctx.householdId, [
+              { name: input.name, note: input.note ?? null, match: true },
+            ])
           : undefined;
       return ctx.db.$transaction((tx) =>
         setUsuallyHave(tx, ctx.householdId, input, input.excluded, resolutions),
@@ -219,9 +216,9 @@ export const shoppingListRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const resolutions =
         "name" in input
-          ? await resolveNewOwnItems(ctx.db, ctx.householdId, [input], {
-              match: !input.source,
-            })
+          ? await resolveNewOwnItems(ctx.db, ctx.householdId, [
+              { name: input.name, note: input.note, match: !input.source },
+            ])
           : undefined;
       return ctx.db.$transaction(async (tx) => {
         await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
@@ -243,12 +240,9 @@ export const shoppingListRouter = createTRPCRouter({
   addManual: protectedProcedureWithHousehold
     .input(z.object({ name: z.string().trim().min(1, "Enter an item name") }))
     .mutation(async ({ ctx, input }) => {
-      const resolutions = await resolveNewOwnItems(
-        ctx.db,
-        ctx.householdId,
-        [{ name: input.name, note: null }],
-        { match: true },
-      );
+      const resolutions = await resolveNewOwnItems(ctx.db, ctx.householdId, [
+        { name: input.name, note: null, match: true },
+      ]);
       return ctx.db.$transaction((tx) =>
         saveShoppingItem(
           tx,
