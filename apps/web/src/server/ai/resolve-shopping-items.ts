@@ -30,10 +30,10 @@ const minimumCategoryConfidence = 0.4;
 const minimumMatchConfidence = 0.9;
 // Jev accepts 255 options per question, and every match question also offers none.
 const chunkSize = 254;
-// A full match question costs about 3,300 tokens, so requests carry at most 16
-// to stay below Jev's 64k-token limit with room for categories and state.
-// Larger additions are split into batches that run in parallel.
-const matchQuestionsPerRequest = 16;
+// Jev limits a request to 64k tokens, and serialized questions run about 1.6
+// characters per token. Requests are packed up to this size and run in
+// parallel; a failed request only loses its own answers.
+const requestCharacters = 85_000;
 const none = "none";
 const confidenceSchema = z.record(z.number().finite().min(0).max(1));
 const categorySchema = z.nativeEnum(ShoppingCategory);
@@ -52,6 +52,22 @@ const chunked = <T>(list: readonly T[], size: number) =>
   Array.from({ length: Math.ceil(list.length / size) }, (_, index) =>
     list.slice(index * size, (index + 1) * size),
   );
+
+// Every request gets at least one question, however large.
+const packed = <T extends { question: Question }>(asked: readonly T[]) => {
+  const batches: T[][] = [];
+  let size = Infinity;
+  for (const entry of asked) {
+    const length = JSON.stringify(entry.question).length;
+    if (size + length > requestCharacters) {
+      batches.push([]);
+      size = 0;
+    }
+    batches.at(-1)!.push(entry);
+    size += length;
+  }
+  return batches;
+};
 
 type Question = {
   type: "choice";
@@ -114,56 +130,77 @@ export async function resolveShoppingItems(
       [none]: "None of the options is the same product or the same variant.",
     },
   });
-  const questionsFor = (batch: typeof pending): Record<string, Question> => ({
-    ...Object.fromEntries(
-      batch
-        .filter(({ classify }) => classify)
-        .map(({ id }) => [
-          id,
+  // Each item's questions stay adjacent so most items fit in one request.
+  const questions = pending.flatMap(({ id, item, classify, searched }) => [
+    ...(classify
+      ? [
           {
-            type: "choice",
-            instructions: `Choose the shopping category for items.${id}, considering its product name and shopping note together. ${guidance}`,
-            criteria: categories,
-          } satisfies Question,
-        ]),
+            key: id,
+            id,
+            item,
+            question: {
+              type: "choice",
+              instructions: `Choose the shopping category for items.${id}, considering its product name and shopping note together. ${guidance}`,
+              criteria: categories,
+            } satisfies Question,
+          },
+        ]
+      : []),
+    ...searched.flatMap((tier) =>
+      tiers[tier].map((keys, index) => ({
+        key: `${id}_${tier}${index}`,
+        id,
+        item,
+        question: matchQuestion(id, keys),
+      })),
     ),
-    ...Object.fromEntries(
-      batch.flatMap(({ id, searched }) =>
-        searched.flatMap((tier) =>
-          tiers[tier].map((keys, index) => [
-            `${id}_${tier}${index}`,
-            matchQuestion(id, keys),
-          ]),
-        ),
-      ),
-    ),
-  });
+  ]);
 
   const abortSignal = AbortSignal.timeout(3_000);
-  const ask = async (
-    batch: typeof pending,
-    questions: Record<string, Question>,
-  ) => {
-    const result = await evaluate({
-      model: createGateway({
-        apiKey: env.AI_GATEWAY_API_KEY,
-      }).evaluationModel("typesafe-ai/jev"),
-      state: {
-        shoppingLanguage,
-        items: Object.fromEntries(batch.map(({ id, item }) => [id, item])),
-      },
-      questions,
-      maxRetries: 0,
-      abortSignal,
-    });
-    const confidence = confidenceSchema.safeParse(
-      result.providerMetadata?.typesafe?.confidence,
+  const ask = async (asked: typeof questions) => {
+    const answers = new Map<string, { choice: string; confidence: number }>();
+    await Promise.all(
+      packed(asked).map(async (batch) => {
+        try {
+          const result = await evaluate({
+            model: createGateway({
+              apiKey: env.AI_GATEWAY_API_KEY,
+            }).evaluationModel("typesafe-ai/jev"),
+            state: {
+              shoppingLanguage,
+              items: Object.fromEntries(
+                batch.map(({ id, item }) => [id, item]),
+              ),
+            },
+            questions: Object.fromEntries(
+              batch.map(({ key, question }) => [key, question]),
+            ),
+            maxRetries: 0,
+            abortSignal,
+          });
+          const confidence = confidenceSchema.safeParse(
+            result.providerMetadata?.typesafe?.confidence,
+          );
+          if (!confidence.success) return;
+          for (const { key } of batch) {
+            const answer = result.answers[key];
+            if (answer)
+              answers.set(key, {
+                choice: answer.choice,
+                confidence: confidence.data[key] ?? 0,
+              });
+          }
+        } catch (error) {
+          console.warn(
+            "Shopping item resolution failed",
+            error instanceof Error ? error.name : "Unknown error",
+          );
+        }
+      }),
     );
-    return (id: string, minimumConfidence: number) => {
-      const answer = result.answers[id];
-      return answer &&
-        confidence.success &&
-        (confidence.data[id] ?? 0) >= minimumConfidence
+    return (key: string, minimumConfidence: number) => {
+      const answer = answers.get(key);
+      return answer && answer.confidence >= minimumConfidence
         ? answer.choice
         : undefined;
     };
@@ -175,68 +212,37 @@ export async function resolveShoppingItems(
     const candidate = choice && options.get(choice);
     if (candidate) matched.set(id, candidate);
   };
-  const resolveBatch = async (batch: typeof pending) => {
-    const questions = questionsFor(batch);
-    if (!Object.keys(questions).length) return;
-    try {
-      const answer = await ask(batch, questions);
-      for (const { id } of batch.filter(({ classify }) => classify)) {
-        const category = categorySchema.safeParse(
-          answer(id, minimumCategoryConfidence),
-        );
-        if (category.success) assigned.set(id, category.data);
-      }
-      const contested = batch.flatMap((pending) => {
-        const { id, searched } = pending;
-        const winners =
-          searched
-            .map((tier) =>
-              tiers[tier].flatMap((_, index) => {
-                const choice = answer(
-                  `${id}_${tier}${index}`,
-                  minimumMatchConfidence,
-                );
-                return choice && options.has(choice) ? [choice] : [];
-              }),
-            )
-            .find((claims) => claims.length) ?? [];
-        const [only, ...others] = winners;
-        if (others.length) return [{ ...pending, winners }];
-        accept(id, only);
-        return [];
-      });
-      if (!contested.length) return;
-      const final = await ask(
-        contested,
-        Object.fromEntries(
-          contested.map(({ id, winners }) => [
-            `${id}_final`,
-            matchQuestion(id, winners),
-          ]),
-        ),
-      );
-      for (const { id } of contested)
-        accept(id, final(`${id}_final`, minimumMatchConfidence));
-    } catch (error) {
-      console.warn(
-        "Shopping item resolution failed",
-        error instanceof Error ? error.name : "Unknown error",
-      );
-    }
-  };
-  const batches: { questions: number; items: typeof pending }[] = [];
-  for (const entry of pending) {
-    const questions = entry.searched.reduce(
-      (sum, tier) => sum + tiers[tier].length,
-      0,
+  const answer = await ask(questions);
+  for (const { id } of pending.filter(({ classify }) => classify)) {
+    const category = categorySchema.safeParse(
+      answer(id, minimumCategoryConfidence),
     );
-    const batch = batches.at(-1);
-    if (batch && batch.questions + questions <= matchQuestionsPerRequest) {
-      batch.items.push(entry);
-      batch.questions += questions;
-    } else batches.push({ questions, items: [entry] });
+    if (category.success) assigned.set(id, category.data);
   }
-  await Promise.all(batches.map(({ items }) => resolveBatch(items)));
+  const contested = pending.flatMap(({ id, item, searched }) => {
+    const winners =
+      searched
+        .map((tier) =>
+          tiers[tier].flatMap((_, index) => {
+            const choice = answer(
+              `${id}_${tier}${index}`,
+              minimumMatchConfidence,
+            );
+            return choice && options.has(choice) ? [choice] : [];
+          }),
+        )
+        .find((claims) => claims.length) ?? [];
+    const [only, ...others] = winners;
+    if (others.length)
+      return [
+        { key: `${id}_final`, id, item, question: matchQuestion(id, winners) },
+      ];
+    accept(id, only);
+    return [];
+  });
+  const final = await ask(contested);
+  for (const { key, id } of contested)
+    accept(id, final(key, minimumMatchConfidence));
   return new Map<string, ShoppingResolution>(
     entries.map(([id, item]) => {
       const identity = shoppingIdentity(item.name, item.note);

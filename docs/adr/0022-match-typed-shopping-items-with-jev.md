@@ -12,4 +12,4 @@ Standard Shopping Items carry their catalog category again. Input that exactly n
 
 This supersedes [ADR 0021](0021-classify-new-own-items-with-jev.md)'s statement that resolving input against known Own Items remains outside Jev's scope, and its removal of category inheritance from exact catalog matches.
 
-A full match question costs about 3,300 tokens, so a request carries at most 16 match questions to stay below Jev's 64k-token limit, and larger additions are resolved in parallel batches. Batches share the three-second timeout, and a failed batch falls back only for its own items.
+A full match question costs 3,000 tokens or more depending on name lengths, so requests are packed by serialized size, about 1.6 characters per token, to stay below Jev's 64k-token limit. More questions, including the chunks for a single item in a very large Household, are split across parallel requests and their answers combined. Requests share the three-second timeout, and a failed request only loses its own answers.

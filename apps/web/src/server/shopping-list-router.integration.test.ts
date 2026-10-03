@@ -536,7 +536,7 @@ void test("Dinner additions match unresolved ingredients and combine their requi
     assert.deepEqual(await caller.list(), []);
   }));
 
-void test("large Dinner additions are resolved in parallel batches that fail independently", () =>
+void test("large Dinner additions are split across parallel requests that fail independently", () =>
   withShoppingList(async ({ caller, createDinner }) => {
     const names = Array.from({ length: 10 }, (_, index) => `Gadget ${index}`);
     for (const name of names)
@@ -558,18 +558,27 @@ void test("large Dinner additions are resolved in parallel batches that fail ind
     });
     const before = jevRequests.length;
     const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
+    const requests = jevRequests.slice(before);
+    assert.equal(requests.length, 2);
+    for (const request of requests)
+      assert.ok(
+        Object.values(request.questions).reduce(
+          (size, question) => size + JSON.stringify(question).length,
+          0,
+        ) <= 85_000,
+      );
+    const failed = requests.find((request) =>
+      Object.values(request.state.items).some(
+        (item) => item.name === "Gadget 9",
+      ),
+    )!;
     assert.deepEqual(
-      jevRequests
-        .slice(before)
-        .map((request) => Object.keys(request.state.items).length)
-        .sort(),
-      [2, 8],
+      [...new Set(addition.items.map((item) => item.name))].sort(),
+      [
+        "Batteries",
+        ...Object.values(failed.state.items).map((item) => item.name),
+      ].sort(),
     );
-    assert.deepEqual(addition.items.map((item) => item.name).sort(), [
-      "Batteries",
-      "Gadget 8",
-      "Gadget 9",
-    ]);
   }));
 
 void test("unavailable Jev and missing confidence still save Own Items without retrying or later reclassification", () =>
