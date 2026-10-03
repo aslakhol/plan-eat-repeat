@@ -261,12 +261,12 @@ void test("an ordinary member sends a modest pack, completes the item, and retri
     const result = await member.send({ id });
     assert.equal(result.state, "COMPLETED");
     assert.deepEqual(added, [{ productId: 10, quantity: 1 }]);
-    assert.deepEqual(await shopping.list(), []);
-    assert.equal((await shopping.recent())[0]?.ownItemId, item.ownItemId);
+    assert.deepEqual((await shopping.list()).items, []);
+    assert.equal((await shopping.recent()).items[0]?.ownItemId, item.ownItemId);
     await shopping.addManual({ name: "Milk" });
     await oda.send({ id });
     assert.equal(added.length, 1);
-    assert.equal((await shopping.list()).length, 1);
+    assert.equal((await shopping.list()).items.length, 1);
   }));
 
 void test("existing cart contents cover matching unspecified items while unavailable and invented products stay on the list", () =>
@@ -288,10 +288,13 @@ void test("existing cart contents cover matching unspecified items while unavail
     assert.deepEqual(added, []);
     assert.equal(cart.get(10), 2);
     assert.deepEqual(
-      new Set((await shopping.list()).map((item) => item.id)),
+      new Set((await shopping.list()).items.map((item) => item.id)),
       new Set([unavailable.id, invented.id, unrelated.id]),
     );
-    assert.equal((await shopping.recent())[0]?.ownItemId, covered.ownItemId);
+    assert.equal(
+      (await shopping.recent()).items[0]?.ownItemId,
+      covered.ownItemId,
+    );
   }));
 
 void test("unresolved quantities remain on the list when the model supplies no usable interpretation", () =>
@@ -308,7 +311,7 @@ void test("unresolved quantities remain on the list when the model supplies no u
     ];
     await oda.send({ id: crypto.randomUUID() });
     assert.deepEqual(added, []);
-    assert.equal((await shopping.list()).length, 2);
+    assert.equal((await shopping.list()).items.length, 2);
   }));
 
 void test("a delayed transfer preserves edits and additions and coordinates both Household members", () =>
@@ -338,8 +341,8 @@ void test("a delayed transfer preserves edits and additions and coordinates both
     }
     await sending;
     assert.deepEqual(added, [{ productId: 10, quantity: 1 }]);
-    assert.equal((await shopping.list()).length, 2);
-    assert.deepEqual(await shopping.recent(), []);
+    assert.equal((await shopping.list()).items.length, 2);
+    assert.deepEqual((await shopping.recent()).items, []);
     await withHousehold(async ({ oda: other }) => {
       assert.equal(await other.transfer(), null);
       await assert.rejects(other.send({ id }));
@@ -366,8 +369,8 @@ void test("partial success completes only confirmed items and an ambiguous write
       const result = await oda.send({ id: crypto.randomUUID() });
       assert.equal(result.state, "UNCERTAIN");
       assert.equal(added.length, 1);
-      assert.equal((await shopping.list()).length, 1);
-      assert.equal((await shopping.recent()).length, 1);
+      assert.equal((await shopping.list()).items.length, 1);
+      assert.equal((await shopping.recent()).items.length, 1);
       assert.equal((await oda.send({ id: crypto.randomUUID() })).id, result.id);
       assert.equal(writes, 2);
     } finally {
@@ -390,8 +393,8 @@ void test("explicit quantities add in full while overlapping unspecified needs a
     await oda.send({ id: crypto.randomUUID() });
     assert.deepEqual(added, [{ productId: 10, quantity: 2 }]);
     assert.equal(cart.get(10), 3);
-    assert.deepEqual(await shopping.list(), []);
-    assert.equal((await shopping.recent()).length, 1);
+    assert.deepEqual((await shopping.list()).items, []);
+    assert.equal((await shopping.recent()).items.length, 1);
   }));
 
 void test("known unit conversions override estimates and round overlapping representations together", () =>
@@ -426,7 +429,7 @@ void test("known unit conversions override estimates and round overlapping repre
     ];
     await oda.send({ id: crypto.randomUUID() });
     assert.deepEqual(added, [{ productId: 30, quantity: 3 }]);
-    assert.deepEqual(await shopping.list(), []);
+    assert.deepEqual((await shopping.list()).items, []);
   }));
 
 void test("text quantities, missing units, and ingredient counts use packs while incompatible notes stay separate", () =>
@@ -484,8 +487,8 @@ void test("text quantities, missing units, and ingredient counts use packs while
         { productId: 40, quantity: 1 },
       ],
     );
-    assert.deepEqual(await shopping.list(), []);
-    const recent = await shopping.recent();
+    assert.deepEqual((await shopping.list()).items, []);
+    const recent = (await shopping.recent()).items;
     assert.equal(recent.find((item) => item.note === "duck")?.amount, 2);
     assert.equal(recent.find((item) => item.note === "hen")?.amount, 2);
   }));
@@ -540,7 +543,7 @@ void test("existing-cart coverage completes independently of an uncertain explic
         "UNCERTAIN",
       );
       assert.deepEqual(
-        (await shopping.list()).map((item) => item.id),
+        (await shopping.list()).items.map((item) => item.id),
         [explicit.id],
       );
       assert.equal(cart.get(10), 1);
@@ -562,7 +565,7 @@ void test("usual purchases are revalidated and can be selected beyond ordinary s
       selections = [{ requirementId: item.id, productId: 11, quantity: null }];
       await oda.send({ id: crypto.randomUUID() });
       assert.deepEqual(added, [{ productId: 11, quantity: 1 }]);
-      assert.deepEqual(await shopping.list(), []);
+      assert.deepEqual((await shopping.list()).items, []);
     } finally {
       suggestions = [];
       historySearch = new Map();
@@ -593,7 +596,7 @@ void test("empty suggestions fall back to recent orders without sharing history 
         ];
         await other.send({ id: crypto.randomUUID() });
         assert.deepEqual(added, []);
-        assert.equal((await otherList.list()).length, 1);
+        assert.equal((await otherList.list()).items.length, 1);
       });
     } finally {
       previousOrders = [];
@@ -616,11 +619,11 @@ void test("historical availability cannot authorize an unavailable product and o
       selections = [{ requirementId: item.id, productId: 11, quantity: null }];
       await oda.send({ id: crypto.randomUUID() });
       assert.deepEqual(added, []);
-      assert.equal((await shopping.list()).length, 1);
+      assert.equal((await shopping.list()).items.length, 1);
       selections = [{ requirementId: item.id, productId: 10, quantity: null }];
       await oda.send({ id: crypto.randomUUID() });
       assert.deepEqual(added, [{ productId: 10, quantity: 1 }]);
-      assert.deepEqual(await shopping.list(), []);
+      assert.deepEqual((await shopping.list()).items, []);
     } finally {
       suggestions = [];
       historySearch = new Map();
@@ -646,8 +649,11 @@ void test("an ambiguous unspecified addition can recover established cart covera
         "COMPLETED",
       );
       assert.deepEqual(added, [{ productId: 10, quantity: 1 }]);
-      assert.deepEqual(await shopping.list(), []);
-      assert.equal((await shopping.recent())[0]?.ownItemId, item.ownItemId);
+      assert.deepEqual((await shopping.list()).items, []);
+      assert.equal(
+        (await shopping.recent()).items[0]?.ownItemId,
+        item.ownItemId,
+      );
     } finally {
       afterAdd = () => Promise.resolve();
     }
@@ -679,7 +685,7 @@ void test("an expired matching request resumes once and its late response cannot
       release.resolve();
       await original;
       assert.deepEqual(added, [{ productId: 10, quantity: 1 }]);
-      assert.deepEqual(await shopping.list(), []);
+      assert.deepEqual((await shopping.list()).items, []);
     } finally {
       release.resolve();
       beforeModel = () => Promise.resolve();
@@ -710,18 +716,18 @@ void test("confirmed remote additions survive local completion failure and prese
       const transfer = await oda.send({ id: crypto.randomUUID() });
       assert.equal(transfer.state, "UNCERTAIN");
       assert.equal(added.length, 2);
-      assert.equal((await shopping.list()).length, 2);
+      assert.equal((await shopping.list()).items.length, 2);
       await db.$executeRawUnsafe(`DROP TRIGGER ${trigger} ON "ShoppingItem"`);
       await shopping.edit({ ...changed, amount: 3 });
       const later = await shopping.addManual({ name: "Bread" });
       assert.equal((await oda.recover({ id: transfer.id })).state, "COMPLETED");
       assert.equal(added.length, 2);
       assert.deepEqual(
-        new Set((await shopping.list()).map((item) => item.id)),
+        new Set((await shopping.list()).items.map((item) => item.id)),
         new Set([changed.id, later.id]),
       );
       assert.equal(
-        (await shopping.recent())[0]?.ownItemId,
+        (await shopping.recent()).items[0]?.ownItemId,
         unchanged.ownItemId,
       );
     } finally {
@@ -753,7 +759,7 @@ void test("an ambiguous explicit addition cannot be inferred from cart totals or
         transfer.id,
       );
       assert.deepEqual(added, [{ productId: 10, quantity: 2 }]);
-      assert.equal((await shopping.list()).length, 1);
+      assert.equal((await shopping.list()).items.length, 1);
       await withHousehold(async ({ oda: other }) => {
         await assert.rejects(other.recover({ id: transfer.id }));
       });
@@ -784,12 +790,12 @@ void test("a delayed remote success can finish locally after recovery without an
       await started.promise;
       clock.mock.mockImplementation(() => now + 181_000);
       assert.equal((await member.recover({ id })).state, "UNCERTAIN");
-      assert.equal((await shopping.list()).length, 1);
+      assert.equal((await shopping.list()).items.length, 1);
       release.resolve();
       await sending;
       assert.equal((await member.recover({ id })).state, "COMPLETED");
       assert.deepEqual(added, [{ productId: 10, quantity: 2 }]);
-      assert.deepEqual(await shopping.list(), []);
+      assert.deepEqual((await shopping.list()).items, []);
     } finally {
       release.resolve();
       afterAdd = () => Promise.resolve();
@@ -816,7 +822,7 @@ void test("uncertain coverage cannot be reconciled against a replacement Oda con
         code: "test-code",
       });
       assert.equal((await oda.recover({ id: transfer.id })).state, "UNCERTAIN");
-      assert.equal((await shopping.list()).length, 1);
+      assert.equal((await shopping.list()).items.length, 1);
       assert.equal(added.length, 1);
     } finally {
       afterAdd = () => Promise.resolve();
@@ -841,7 +847,7 @@ void test("cart coverage recovers the unspecified part of an uncertain shared ad
       afterAdd = () => Promise.resolve();
       assert.equal((await oda.recover({ id: transfer.id })).state, "UNCERTAIN");
       assert.deepEqual(
-        (await shopping.list()).map((item) => item.id),
+        (await shopping.list()).items.map((item) => item.id),
         [explicit.id],
       );
       assert.deepEqual(added, [{ productId: 10, quantity: 2 }]);
@@ -879,11 +885,11 @@ void test("a member resolves uncertain additions after cart review without repla
         "COMPLETED",
       );
       assert.deepEqual(
-        (await shopping.list()).map((item) => item.id),
+        (await shopping.list()).items.map((item) => item.id),
         [edited.id],
       );
       assert.equal(
-        (await shopping.recent())[0]?.ownItemId,
+        (await shopping.recent()).items[0]?.ownItemId,
         unchanged.ownItemId,
       );
       const resolved = await db.odaTransfer.findUniqueOrThrow({
@@ -939,7 +945,7 @@ void test("marking an uncertain addition as not added retains the requirement un
         (await member.resolve({ id, outcome: "NOT_ADDED" })).state,
         "COMPLETED",
       );
-      assert.equal((await shopping.list()).length, 1);
+      assert.equal((await shopping.list()).items.length, 1);
       assert.deepEqual(added, []);
       assert.equal(
         (await oda.send({ id: crypto.randomUUID() })).state,
@@ -986,7 +992,7 @@ void test("recovery identifies the uncertain addition and does not start another
       assert.match(recovered.message ?? "", /2 added packs for Milk \(2 l\)/);
       await member.resolve({ id, outcome: "ADDED" });
       assert.deepEqual(
-        (await shopping.list()).map((item) => item.id),
+        (await shopping.list()).items.map((item) => item.id),
         [eggItem.id],
       );
       release.resolve();
@@ -1151,13 +1157,13 @@ void test("successful shopping additions dismiss completed results, while edits 
       shopping.addDinners({ dinnerIds: [dinner.id, 2147483647] }),
     );
     assert.equal((await member.transfer())?.id, id);
-    assert.equal((await shopping.list()).length, 1);
+    assert.equal((await shopping.list()).items.length, 1);
     await shopping.addManual({ name: "Eggs" });
     assert.equal(await member.transfer(), null);
     await oda.send({ id: crypto.randomUUID() });
     await shopping.remove({ id: item.id });
     assert.ok(await member.transfer());
-    const recent = (await shopping.recent()).find(
+    const recent = (await shopping.recent()).items.find(
       (entry) => entry.ownItemId === item.ownItemId,
     )!;
     await shopping.addRecent({ id: recent.id });
@@ -1180,7 +1186,7 @@ void test("a preferred product survives edits, Recently Used and later shopping 
     const plain = await shopping.addManual({ name: "Breakfast milk" });
     assert.equal(plain.ownItem.odaProductId, null);
     await shopping.remove({ id: renamed.id });
-    const recent = (await shopping.recent())[0]!;
+    const recent = (await shopping.recent()).items[0]!;
     assert.equal(recent.ownItem.odaProductId, milk.id);
     const replaced = await shopping.editRecent({ ...recent, odaProduct: eggs });
     assert.equal(replaced.ownItem.odaProductId, eggs.id);
@@ -1236,7 +1242,10 @@ void test("another Household cannot change an item's Oda preference or use its c
         code: "PRECONDITION_FAILED",
       });
     });
-    assert.equal((await shopping.list())[0]?.ownItem.odaProductId, milk.id);
+    assert.equal(
+      (await shopping.list()).items[0]?.ownItem.odaProductId,
+      milk.id,
+    );
   }));
 
 void test("transfers find the preferred product by name, use its pack size, and retain it for reuse", () =>
@@ -1274,8 +1283,8 @@ void test("transfers find the preferred product by name, use its pack size, and 
       ];
       await member.send({ id: crypto.randomUUID() });
       assert.deepEqual(added, [{ productId: preferredMilk.id, quantity: 3 }]);
-      assert.deepEqual(await shopping.list(), []);
-      const recent = (await shopping.recent())[0]!;
+      assert.deepEqual((await shopping.list()).items, []);
+      const recent = (await shopping.recent()).items[0]!;
       assert.equal(recent.ownItem.odaProductId, preferredMilk.id);
       const restored = await shopping.addRecent({ id: recent.id });
       assert.equal(restored.ownItem.odaProductId, preferredMilk.id);
@@ -1310,8 +1319,8 @@ void test("preferred products cannot be substituted, unavailable, or accepted fr
       ];
       await oda.send({ id: crypto.randomUUID() });
       assert.deepEqual(added, []);
-      assert.equal((await shopping.list())[0]?.id, item.id);
-      assert.deepEqual(await shopping.recent(), []);
+      assert.equal((await shopping.list()).items[0]?.id, item.id);
+      assert.deepEqual((await shopping.recent()).items, []);
     });
   }
 });
@@ -1329,7 +1338,7 @@ void test("removing a preference restores automatic matching", () =>
     ];
     await oda.send({ id: crypto.randomUUID() });
     assert.deepEqual(added, [{ productId: milk.id, quantity: 1 }]);
-    assert.deepEqual(await shopping.list(), []);
+    assert.deepEqual((await shopping.list()).items, []);
   }));
 
 void test("changing a preference during a transfer preserves the edited requirement", () =>
@@ -1348,10 +1357,10 @@ void test("changing a preference during a transfer preserves the edited requirem
     try {
       await oda.send({ id: crypto.randomUUID() });
       assert.deepEqual(added, [{ productId: milk.id, quantity: 1 }]);
-      const remaining = await shopping.list();
+      const remaining = (await shopping.list()).items;
       assert.equal(remaining[0]?.id, item.id);
       assert.equal(remaining[0]?.ownItem.odaProductId, eggs.id);
-      assert.deepEqual(await shopping.recent(), []);
+      assert.deepEqual((await shopping.recent()).items, []);
     } finally {
       beforeAdd = () => Promise.resolve();
     }
@@ -1368,7 +1377,7 @@ void test("disconnecting Oda preserves product preferences through ordinary edit
     assert.equal(disconnected.ownItem.odaProductName, milk.name);
     assert.equal(disconnected.ownItem.odaProductDescription, milk.description);
     await shopping.remove({ id: disconnected.id });
-    const recent = (await shopping.recent())[0]!;
+    const recent = (await shopping.recent()).items[0]!;
     const editedRecent = await shopping.editRecent({ ...recent, amount: 2 });
     assert.equal(editedRecent.ownItem.odaProductId, milk.id);
     const { url } = await member.connect();

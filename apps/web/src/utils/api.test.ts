@@ -99,3 +99,39 @@ void test("a failed user action still reports failure", async (t) => {
   assert.equal(notify.mock.callCount(), 1);
   assert.equal(notify.mock.calls[0]?.arguments[0].description, error.message);
 });
+
+void test("expected first-user absence skips toasts, while generic permission errors still report failure", async (t) => {
+  const client = setup(t);
+  let attempts = 0;
+  const missing = Object.assign(new Error("No household"), {
+    data: {
+      code: "FORBIDDEN",
+      missingHousehold: { userId: "user", sessionId: "session" },
+    },
+  });
+  await assert.rejects(
+    client.fetchQuery({
+      queryKey: ["new-user"],
+      queryFn: () => {
+        attempts += 1;
+        return Promise.reject(missing);
+      },
+      retryDelay: 0,
+    }),
+  );
+  assert.equal(attempts, 1);
+  assert.equal(notify.mock.callCount(), 0);
+  await assert.rejects(
+    client.fetchQuery({
+      queryKey: ["permission"],
+      queryFn: () =>
+        Promise.reject(
+          Object.assign(new Error("Forbidden"), {
+            data: { code: "FORBIDDEN" },
+          }),
+        ),
+      retry: false,
+    }),
+  );
+  assert.equal(notify.mock.callCount(), 1);
+});

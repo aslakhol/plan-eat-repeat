@@ -5,7 +5,7 @@ import { api, type RouterInputs, type RouterOutputs } from "~/utils/api";
 
 import type { ShoppingWrites } from "./shopping-writes";
 
-type Item = RouterOutputs["shoppingList"]["list"][number];
+type Item = RouterOutputs["shoppingList"]["list"]["items"][number];
 export type ShoppingEdit = {
   item: Item;
   recent: boolean;
@@ -98,20 +98,29 @@ export function useEditShoppingItem(
         if (id !== saved.ownItemId)
           mergedOwnIds.current.set(id, saved.ownItemId);
       }
-      utils.shoppingList.list.setData(undefined, (items = []) => [
-        ...items.filter((item) => !affected.has(item.ownItemId)),
-        ...saved.items,
-      ]);
-      utils.shoppingList.recent.setData(undefined, (items = []) => {
+      utils.shoppingList.list.setData(
+        undefined,
+        (data) =>
+          data && {
+            ...data,
+            items: [
+              ...data.items.filter((item) => !affected.has(item.ownItemId)),
+              ...saved.items,
+            ],
+          },
+      );
+      utils.shoppingList.recent.setData(undefined, (data) => {
+        if (!data) return data;
         const active = new Set(saved.items.map((item) => item.ownItemId));
-        return [
-          ...items.filter((item) => !affected.has(item.ownItemId)),
+        const items = [
+          ...data.items.filter((item) => !affected.has(item.ownItemId)),
           ...saved.recentItems.filter((item) => !active.has(item.ownItemId)),
         ]
           .sort(
             (a, b) => b.recentlyUsedAt.getTime() - a.recentlyUsedAt.getTime(),
           )
           .slice(0, 25);
+        return { ...data, items };
       });
       utils.shoppingList.sources.setData(undefined, (sources) =>
         sources
@@ -127,11 +136,14 @@ export function useEditShoppingItem(
       );
       utils.shoppingList.usuallyHave.setData(
         undefined,
-        (items) =>
-          items && [
-            ...items.filter((item) => !affected.has(item.id)),
-            ...(saved.ownItem.usuallyHave ? [saved.ownItem] : []),
-          ],
+        (data) =>
+          data && {
+            ...data,
+            items: [
+              ...data.items.filter((item) => !affected.has(item.id)),
+              ...(saved.ownItem.usuallyHave ? [saved.ownItem] : []),
+            ],
+          },
       );
       // Later edits must address the requirement and Own Item that survived a merge.
       const remap = (next: Edit): Edit => {

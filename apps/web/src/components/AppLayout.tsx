@@ -1,6 +1,6 @@
 import { DesktopNav } from "./DesktopNav";
 import { BottomNav } from "../views/BottomNav";
-import { useUser } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { cn } from "src/lib/utils";
 import { useState } from "react";
 import { AddDinnerSheet } from "~/views/Dinners/AddDinnerSheet";
@@ -32,13 +32,14 @@ type LayoutProps = {
 
 export function AppLayout(props: LayoutProps) {
   const { user, isLoaded, isSignedIn } = useUser();
+  const { sessionId } = useAuth();
   const router = useRouter();
   const layout = <Layout {...props} />;
   if (!isLoaded || !isSignedIn || householdOptionalPages.has(router.pathname)) {
     return layout;
   }
   return (
-    <HouseholdGate key={user.id} userId={user.id}>
+    <HouseholdGate key={`${user.id}:${sessionId}`} userId={user.id}>
       {layout}
     </HouseholdGate>
   );

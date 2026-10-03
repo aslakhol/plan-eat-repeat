@@ -14,6 +14,7 @@ export function UsuallyHaveView() {
   const { isDeletingOwnItem } = useShopping();
   const reserve = useShoppingWrite();
   const preferences = api.shoppingList.usuallyHave.useQuery(undefined, {
+    select: (data) => data.items,
     refetchInterval: 2000,
     refetchOnWindowFocus: "always",
     refetchOnReconnect: "always",

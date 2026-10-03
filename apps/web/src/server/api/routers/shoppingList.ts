@@ -114,9 +114,10 @@ export const shoppingListRouter = createTRPCRouter({
       }),
     ),
 
-  recent: protectedProcedureWithHousehold.query(({ ctx }) =>
-    readRecentShoppingItems(ctx.db, ctx.householdId),
-  ),
+  recent: protectedProcedureWithHousehold.query(async ({ ctx }) => ({
+    items: await readRecentShoppingItems(ctx.db, ctx.householdId),
+    appStatus: ctx.appStatus,
+  })),
 
   addRecent: protectedProcedureWithHousehold
     .input(z.object({ id: z.string() }))
@@ -151,7 +152,7 @@ export const shoppingListRouter = createTRPCRouter({
       where: { householdId: ctx.householdId },
       include: { ownItem: true },
     });
-    return items
+    const sortedItems = items
       .map(shoppingItemDetails)
       .sort(
         (a, b) =>
@@ -161,14 +162,16 @@ export const shoppingListRouter = createTRPCRouter({
           a.ownItem.normalizedNote.localeCompare(b.ownItem.normalizedNote) ||
           a.id.localeCompare(b.id),
       );
+    return { items: sortedItems, appStatus: ctx.appStatus };
   }),
 
-  usuallyHave: protectedProcedureWithHousehold.query(({ ctx }) =>
-    ctx.db.ownItem.findMany({
+  usuallyHave: protectedProcedureWithHousehold.query(async ({ ctx }) => ({
+    items: await ctx.db.ownItem.findMany({
       where: { householdId: ctx.householdId, usuallyHave: true },
       orderBy: [{ normalizedName: "asc" }, { normalizedNote: "asc" }],
     }),
-  ),
+    appStatus: ctx.appStatus,
+  })),
 
   setUsuallyHave: protectedProcedureWithHousehold
     .input(
@@ -274,10 +277,11 @@ export const shoppingListRouter = createTRPCRouter({
         ctx.householdId,
         input,
       );
-      return ctx.db.$transaction(async (tx) => {
+      const result = await ctx.db.$transaction(async (tx) => {
         await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
         return addDinnersToShoppingList(tx, ctx.householdId, input, prepared);
       });
+      return { ...result, appStatus: ctx.appStatus };
     }),
 
   undo: protectedProcedureWithHousehold

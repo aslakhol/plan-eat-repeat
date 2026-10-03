@@ -81,6 +81,15 @@ export const createTRPCContext = (
  * errors on the backend.
  */
 
+class MissingHouseholdError extends Error {
+  constructor(
+    readonly userId: string,
+    readonly sessionId: string | null,
+  ) {
+    super("No household membership");
+  }
+}
+
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
@@ -88,6 +97,10 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
       ...shape,
       data: {
         ...shape.data,
+        missingHousehold:
+          error.cause instanceof MissingHouseholdError
+            ? { userId: error.cause.userId, sessionId: error.cause.sessionId }
+            : null,
         zodError:
           error.cause instanceof ZodError ? error.cause.flatten() : null,
         importErrorCode:
@@ -102,12 +115,12 @@ const ensureDatabaseUser = async (
 ) => {
   const existingUser = await ctx.db.user.findUnique({
     where: { id: userId },
-    select: { id: true },
+    select: { welcomeSeenAt: true },
   });
-  if (existingUser) return;
+  if (existingUser) return existingUser;
 
   const clerkUser = await (await clerkClient()).users.getUser(userId);
-  await ctx.db.user.upsert({
+  return ctx.db.user.upsert({
     where: { id: userId },
     update: {},
     create: {
@@ -116,6 +129,7 @@ const ensureDatabaseUser = async (
       lastName: clerkUser.lastName,
       imageUrl: clerkUser.imageUrl,
     },
+    select: { welcomeSeenAt: true },
   });
 };
 
@@ -131,27 +145,40 @@ const getHouseholdIdForUser = async (
 };
 
 const hasHouseholdOrUndefined = t.middleware(async ({ next, ctx }) => {
-  const householdId = ctx.auth.userId
-    ? await getHouseholdIdForUser(ctx, ctx.auth.userId)
+  const userId = ctx.auth.userId;
+  const user = userId ? await ensureDatabaseUser(ctx, userId) : null;
+  const householdId = userId
+    ? await getHouseholdIdForUser(ctx, userId)
     : undefined;
-
   return next({
     ctx: {
       householdId,
+      appStatus:
+        userId && user
+          ? {
+              userId,
+              sessionId: ctx.auth.sessionId ?? null,
+              householdId: householdId ?? null,
+              welcomeSeenAt: user.welcomeSeenAt,
+            }
+          : null,
     },
   });
 });
 const isAuthed = t.middleware(async ({ next, ctx }) => {
-  if (!ctx.auth.userId) {
-    throw new TRPCError({ code: "UNAUTHORIZED" });
-  }
-  await ensureDatabaseUser(ctx, ctx.auth.userId);
+  if (!ctx.auth.userId) throw new TRPCError({ code: "UNAUTHORIZED" });
+  const user = await ensureDatabaseUser(ctx, ctx.auth.userId);
   const householdId = await getHouseholdIdForUser(ctx, ctx.auth.userId);
-
   return next({
     ctx: {
       auth: ctx.auth,
       householdId,
+      appStatus: {
+        userId: ctx.auth.userId,
+        sessionId: ctx.auth.sessionId ?? null,
+        householdId: householdId ?? null,
+        welcomeSeenAt: user.welcomeSeenAt,
+      },
     },
   });
 });
@@ -171,19 +198,28 @@ const isSystemAdmin = t.middleware(async ({ next, ctx }) => {
 });
 
 const isAuthedAndHasHousehold = t.middleware(async ({ next, ctx }) => {
-  if (!ctx.auth.userId) {
-    throw new TRPCError({ code: "UNAUTHORIZED" });
-  }
-  await ensureDatabaseUser(ctx, ctx.auth.userId);
+  if (!ctx.auth.userId) throw new TRPCError({ code: "UNAUTHORIZED" });
+  const user = await ensureDatabaseUser(ctx, ctx.auth.userId);
   const householdId = await getHouseholdIdForUser(ctx, ctx.auth.userId);
-
   if (!householdId) {
-    throw new TRPCError({ code: "FORBIDDEN" });
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      cause: new MissingHouseholdError(
+        ctx.auth.userId,
+        ctx.auth.sessionId ?? null,
+      ),
+    });
   }
   return next({
     ctx: {
       auth: ctx.auth,
       householdId,
+      appStatus: {
+        userId: ctx.auth.userId,
+        sessionId: ctx.auth.sessionId ?? null,
+        householdId,
+        welcomeSeenAt: user.welcomeSeenAt,
+      },
     },
   });
 });

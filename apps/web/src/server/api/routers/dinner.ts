@@ -120,9 +120,10 @@ const toImportTRPCError = (error: unknown) => {
 };
 
 export const dinnerRouter = createTRPCRouter({
-  sharedDinners: protectedProcedureWithHousehold.query(({ ctx }) =>
-    findSharedDinnersPage(ctx.db, ctx.householdId),
-  ),
+  sharedDinners: protectedProcedureWithHousehold.query(async ({ ctx }) => ({
+    ...(await findSharedDinnersPage(ctx.db, ctx.householdId)),
+    appStatus: ctx.appStatus,
+  })),
 
   publishedSaveStatus: sessionProcedure
     .input(z.object({ publicSlug: z.string().min(1) }))
@@ -287,6 +288,7 @@ export const dinnerRouter = createTRPCRouter({
       },
     });
     return {
+      appStatus: ctx.appStatus,
       tags: tags.filter((tag) => tag._count.Dinner > 0),
     };
   }),
@@ -297,12 +299,12 @@ export const dinnerRouter = createTRPCRouter({
     const householdId = ctx.householdId;
 
     if (!householdId) {
-      return { dinners: [] };
+      return { dinners: [], appStatus: ctx.appStatus };
     }
 
     const dinners = await householdDinnersWithTags(ctx.db, householdId);
 
-    return { dinners };
+    return { dinners, appStatus: ctx.appStatus };
   }),
 
   summaries: protectedProcedureWithHousehold
@@ -330,7 +332,7 @@ export const dinnerRouter = createTRPCRouter({
       const dinnerIds = dinners.map((dinner) => dinner.id);
 
       if (dinnerIds.length === 0) {
-        return { dinners: [] };
+        return { dinners: [], appStatus: ctx.appStatus };
       }
 
       const [pastPlanSummaries, currentWeekPlans] = await Promise.all([
@@ -367,6 +369,7 @@ export const dinnerRouter = createTRPCRouter({
       }
 
       return {
+        appStatus: ctx.appStatus,
         dinners: dinners.map(({ _count, ...dinner }) => {
           const history = pastPlansByDinner.get(dinner.id);
           return {
@@ -402,12 +405,16 @@ export const dinnerRouter = createTRPCRouter({
         },
       });
 
-      return { dinner };
+      return { dinner, appStatus: ctx.appStatus };
     }),
 
   ingredientNames: publicProcedure.query(async ({ ctx }) => {
     if (!ctx.householdId) {
-      return { ingredientNames: [], ingredientUnits: [...UNITS] };
+      return {
+        ingredientNames: [],
+        ingredientUnits: [...UNITS],
+        appStatus: ctx.appStatus,
+      };
     }
 
     const ingredients = await ctx.db.recipeIngredient.groupBy({
@@ -422,6 +429,7 @@ export const dinnerRouter = createTRPCRouter({
     });
 
     return {
+      appStatus: ctx.appStatus,
       ingredientNames: [...new Set(ingredients.map(({ name }) => name))].sort(),
       ingredientUnits: [
         ...new Set([
