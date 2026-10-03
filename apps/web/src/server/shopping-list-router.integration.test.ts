@@ -395,7 +395,13 @@ void test("winners from several chunks are decided by a second request", () =>
       Object.values(second!.questions).map((question) =>
         Object.values(question.criteria).sort(),
       ),
-      [["Dog food", "None of the options is the same product.", "Puppy food"]],
+      [
+        [
+          "Dog food",
+          "None of the options is the same product or the same variant.",
+          "Puppy food",
+        ],
+      ],
     );
     assert.equal(typed.name, "Dog food");
     assert.notEqual(typed.ownItemId, puppyFood.ownItemId);
