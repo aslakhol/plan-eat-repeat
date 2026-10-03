@@ -1,5 +1,7 @@
 # Classify new Own Items with Jev
 
+Matching typed input against Own Items and Standard Shopping Items is covered by [ADR 0022](0022-match-typed-shopping-items-with-jev.md).
+
 Jev assigns the category whenever a new Own Item is created, using its product name, Shopping Note, Shopping Language, and category descriptions. This replaces category inheritance from autocomplete sources, exact catalog matches, and partial name matches, so all new Own Items receive the same classification treatment. Reusing an existing Own Item retains its saved category and makes no Jev request; resolving input against known Own Items remains outside Jev's scope.
 
 Call Jev synchronously through Vercel AI SDK and AI Gateway to try its low-latency classification without introducing background recategorization. Use gateway model `typesafe-ai/jev` with `AI_GATEWAY_API_KEY`. Accept classifications with Jev confidence of at least 0.4. Below-cutoff answers, API errors, and a three-second timeout fall back to Own Items, with no automatic retries or later background updates.

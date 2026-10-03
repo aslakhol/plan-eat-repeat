@@ -11,7 +11,7 @@ import {
   shoppingCategoryOrder,
   shoppingCategories,
 } from "@planeatrepeat/shared";
-import { classifyNewOwnItems, shoppingItemDetails } from "../../own-items";
+import { resolveNewOwnItems, shoppingItemDetails } from "../../own-items";
 import { z } from "zod";
 import { type Prisma, ShoppingCategory } from "@planeatrepeat/db";
 import {
@@ -182,14 +182,14 @@ export const shoppingListRouter = createTRPCRouter({
       ]),
     )
     .mutation(async ({ ctx, input }) => {
-      const categories =
+      const resolutions =
         "name" in input
-          ? await classifyNewOwnItems(ctx.db, ctx.householdId, [
-              { name: input.name, note: input.note ?? null },
+          ? await resolveNewOwnItems(ctx.db, ctx.householdId, [
+              { name: input.name, note: input.note ?? null, match: true },
             ])
           : undefined;
       return ctx.db.$transaction((tx) =>
-        setUsuallyHave(tx, ctx.householdId, input, input.excluded, categories),
+        setUsuallyHave(tx, ctx.householdId, input, input.excluded, resolutions),
       );
     }),
 
@@ -214,9 +214,11 @@ export const shoppingListRouter = createTRPCRouter({
       ]),
     )
     .mutation(async ({ ctx, input }) => {
-      const categories =
+      const resolutions =
         "name" in input
-          ? await classifyNewOwnItems(ctx.db, ctx.householdId, [input])
+          ? await resolveNewOwnItems(ctx.db, ctx.householdId, [
+              { name: input.name, note: input.note, match: !input.source },
+            ])
           : undefined;
       return ctx.db.$transaction(async (tx) => {
         await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
@@ -224,7 +226,7 @@ export const shoppingListRouter = createTRPCRouter({
           tx,
           ctx.householdId,
           input,
-          categories,
+          resolutions,
         );
         return saveShoppingItem(tx, ctx.householdId, {
           name: ownItem.name,
@@ -238,8 +240,8 @@ export const shoppingListRouter = createTRPCRouter({
   addManual: protectedProcedureWithHousehold
     .input(z.object({ name: z.string().trim().min(1, "Enter an item name") }))
     .mutation(async ({ ctx, input }) => {
-      const categories = await classifyNewOwnItems(ctx.db, ctx.householdId, [
-        { name: input.name, note: null },
+      const resolutions = await resolveNewOwnItems(ctx.db, ctx.householdId, [
+        { name: input.name, note: null, match: true },
       ]);
       return ctx.db.$transaction((tx) =>
         saveShoppingItem(
@@ -251,7 +253,7 @@ export const shoppingListRouter = createTRPCRouter({
             unit: null,
             note: null,
           },
-          categories,
+          resolutions,
         ),
       );
     }),

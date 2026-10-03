@@ -33,12 +33,20 @@ const jevCategories = new Map<
   string,
   { category: string; confidence?: number }
 >();
+// Candidate descriptions Jev picks for an input name, in order of preference.
+const jevMatches = new Map<string, { labels: string[]; confidence: number }>();
+const matchQuestions = (request: JevRequest) =>
+  Object.keys(request.questions).filter((id) => id.includes("_"));
 let beforeJevResponse: (() => Promise<void>) | undefined;
 let jevFailure: "error" | "timeout" | undefined;
+// Requests that include any of these lowercase item names fail.
+const jevFailingItems = new Set<string>();
 beforeEach(() => {
   jevFailure = undefined;
   beforeJevResponse = undefined;
   jevCategories.clear();
+  jevMatches.clear();
+  jevFailingItems.clear();
   for (const [name, category] of Object.entries({
     milk: "DAIRY",
     eggs: "DAIRY",
@@ -86,7 +94,12 @@ const jevFetch: typeof fetch = async (url, init) => {
   const beforeResponse = beforeJevResponse;
   beforeJevResponse = undefined;
   await beforeResponse?.();
-  if (jevFailure === "error")
+  if (
+    jevFailure === "error" ||
+    Object.values(request.state.items).some((item) =>
+      jevFailingItems.has(item.name.toLowerCase()),
+    )
+  )
     return new Response("Unavailable", { status: 503 });
   if (jevFailure === "timeout") {
     return new Promise((_resolve, reject) => {
@@ -97,42 +110,55 @@ const jevFetch: typeof fetch = async (url, init) => {
       );
     });
   }
+  const answers = Object.entries(request.questions).map(([id, question]) => {
+    const item = request.state.items[id.split("_")[0]!]!;
+    if (id.includes("_")) {
+      const match = jevMatches.get(item.name.toLowerCase());
+      const choice =
+        match?.labels
+          .map(
+            (label) =>
+              Object.entries(question.criteria).find(
+                ([, description]) => description === label,
+              )?.[0],
+          )
+          .find(Boolean) ?? "none";
+      return {
+        id,
+        choice,
+        confidence: choice === "none" ? 0.99 : match!.confidence,
+      };
+    }
+    const answer = jevCategories.get(item.name.toLowerCase()) ?? {
+      category: "OWN_ITEMS",
+      confidence: 0.99,
+    };
+    return { id, choice: answer.category, confidence: answer.confidence };
+  });
   return Response.json({
     providerMetadata: {
       typesafe: {
         confidence: Object.fromEntries(
-          Object.entries(request.state.items).flatMap(([id, item]) => {
-            const answer = jevCategories.get(item.name.toLowerCase()) ?? {
-              confidence: 0.99,
-            };
-            return answer.confidence === undefined
-              ? []
-              : [[id, answer.confidence]];
-          }),
+          answers.flatMap(({ id, confidence }) =>
+            confidence === undefined ? [] : [[id, confidence]],
+          ),
         ),
       },
     },
     answers: Object.fromEntries(
-      Object.entries(request.questions).map(([id, question]) => {
-        const item = request.state.items[id]!;
-        const answer = jevCategories.get(item.name.toLowerCase()) ?? {
-          category: "OWN_ITEMS",
-          confidence: 0.99,
-        };
-        return [
-          id,
-          {
-            type: "choice",
-            choice: answer.category,
-            probabilities: Object.fromEntries(
-              Object.keys(question.criteria).map((category) => [
-                category,
-                category === answer.category ? 1 : 0,
-              ]),
-            ),
-          },
-        ];
-      }),
+      answers.map(({ id, choice }) => [
+        id,
+        {
+          type: "choice",
+          choice,
+          probabilities: Object.fromEntries(
+            Object.keys(request.questions[id]!.criteria).map((option) => [
+              option,
+              option === choice ? 1 : 0,
+            ]),
+          ),
+        },
+      ]),
     ),
   });
 };
@@ -210,17 +236,17 @@ const withShoppingList = async (
 
 void test("Jev categorizes new Own Items while reuse and manual corrections skip classification", () =>
   withShoppingList(async ({ caller, member }) => {
-    jevCategories.set("milk", { category: "SNACKS", confidence: 0.4 });
+    jevCategories.set("kombucha", { category: "SNACKS", confidence: 0.4 });
     const before = jevRequests.length;
-    const milk = await caller.addManual({ name: "Milk" });
-    assert.equal(milk.ownItem.category, "SNACKS");
+    const kombucha = await caller.addManual({ name: "Kombucha" });
+    assert.equal(kombucha.ownItem.category, "SNACKS");
     assert.equal(jevRequests.length, before + 1);
-    await member.edit({ ...milk, category: "PETS" });
+    await member.edit({ ...kombucha, category: "PETS" });
     await caller.clear();
-    const reused = await caller.addManual({ name: " MILK " });
+    const reused = await caller.addManual({ name: " KOMBUCHA " });
     assert.equal(reused.ownItem.category, "PETS");
     assert.equal(jevRequests.length, before + 1);
-    jevCategories.delete("milk");
+    jevCategories.delete("kombucha");
   }));
 
 void test("Dinner additions classify new name-and-note combinations together and apply confidence per item", () =>
@@ -303,11 +329,263 @@ void test("autocomplete variants and Usually Have use Jev instead of a source ca
     jevCategories.clear();
   }));
 
+void test("typed items reuse a confidently matched Own Item", () =>
+  withShoppingList(async ({ caller, member }) => {
+    const tomatoes = await caller.addManual({ name: "Heirloom tomatoes" });
+    await member.edit({ ...tomatoes, category: "PETS" });
+    jevMatches.set("tomato", {
+      labels: ["Heirloom tomatoes"],
+      confidence: 0.95,
+    });
+    const before = jevRequests.length;
+    const typed = await caller.addManual({ name: "Tomato" });
+    assert.equal(typed.ownItemId, tomatoes.ownItemId);
+    assert.equal(typed.ownItem.category, "PETS");
+    assert.equal(jevRequests.length, before + 1);
+
+    jevMatches.set("tomatos", {
+      labels: ["Heirloom tomatoes"],
+      confidence: 0.95,
+    });
+    const literal = await caller.addSelection({ name: "Tomatos", note: null });
+    assert.equal(literal.ownItemId, tomatoes.ownItemId);
+
+    jevMatches.set("heirlooms", {
+      labels: ["Heirloom tomatoes"],
+      confidence: 0.95,
+    });
+    const usual = await caller.setUsuallyHave({
+      name: "Heirlooms",
+      excluded: true,
+    });
+    assert.equal(usual.id, tomatoes.ownItemId);
+    assert.ok(
+      (await caller.sources()).every((item) => item.name !== "Heirlooms"),
+    );
+  }));
+
+void test("a confident Standard Shopping Item match saves the standard name and catalog category", () =>
+  withShoppingList(async ({ caller }) => {
+    jevMatches.set("toms", { labels: ["Tomatoes"], confidence: 0.95 });
+    jevCategories.set("toms", { category: "OWN_ITEMS", confidence: 0.95 });
+    const typed = await caller.addManual({ name: "Toms" });
+    assert.equal(typed.name, "Tomatoes");
+    assert.equal(typed.note, null);
+    assert.equal(typed.ownItem.category, "PRODUCE");
+  }));
+
+void test("uncertain and absent matches create a new Own Item", () =>
+  withShoppingList(async ({ caller }) => {
+    jevMatches.set("toms", { labels: ["Tomatoes"], confidence: 0.89 });
+    const uncertain = await caller.addManual({ name: "Toms" });
+    assert.equal(uncertain.name, "Toms");
+    const absent = await caller.addManual({ name: "Rocket widget" });
+    assert.equal(absent.name, "Rocket widget");
+    jevFailure = "error";
+    const failed = await caller.addManual({ name: "Spare widget" });
+    assert.equal(failed.name, "Spare widget");
+    assert.equal(failed.ownItem.category, "OWN_ITEMS");
+  }));
+
+void test("a confident Own Item match wins over Standard Shopping Items", () =>
+  withShoppingList(async ({ caller }) => {
+    const puppyFood = await caller.addManual({ name: "Puppy food" });
+    jevMatches.set("kibble", {
+      labels: ["Dog food", "Puppy food"],
+      confidence: 0.95,
+    });
+    const before = jevRequests.length;
+    const typed = await caller.addManual({ name: "Kibble" });
+    assert.equal(jevRequests.length, before + 1);
+    assert.equal(typed.ownItemId, puppyFood.ownItemId);
+  }));
+
+void test("exact standard names are still matched against Own Items", () =>
+  withShoppingList(async ({ caller }) => {
+    const tomatoes = await caller.addSelection({
+      name: "Tomatoes",
+      note: "cherry",
+      source: { standardName: "Tomatoes" },
+    });
+    jevMatches.set("cherry tomatoes", {
+      labels: ["Tomatoes (cherry)", "Cherry tomatoes"],
+      confidence: 0.95,
+    });
+    const typed = await caller.addManual({ name: "Cherry tomatoes" });
+    assert.equal(typed.ownItemId, tomatoes.ownItemId);
+    assert.deepEqual(Object.keys(jevRequests.at(-1)!.questions), [
+      "item0_own0",
+    ]);
+  }));
+
+void test("winners from several chunks of the same kind are decided by a second request", () =>
+  withShoppingList(async ({ caller }) => {
+    jevMatches.set("kibble", {
+      labels: ["Dog food", "Fish"],
+      confidence: 0.95,
+    });
+    const before = jevRequests.length;
+    const typed = await caller.addManual({ name: "Kibble" });
+    assert.equal(jevRequests.length, before + 2);
+    assert.deepEqual(
+      Object.values(jevRequests.at(-1)!.questions).map((question) =>
+        Object.values(question.criteria).sort(),
+      ),
+      [
+        [
+          "Dog food",
+          "Fish",
+          "None of the options is the same product or the same variant.",
+        ],
+      ],
+    );
+    assert.equal(typed.name, "Dog food");
+    assert.equal(typed.ownItem.category, "PETS");
+  }));
+
+void test("a failed deciding request keeps the first request's category", () =>
+  withShoppingList(async ({ caller }) => {
+    jevMatches.set("kibble", {
+      labels: ["Dog food", "Fish"],
+      confidence: 0.95,
+    });
+    jevCategories.set("kibble", { category: "PETS", confidence: 0.95 });
+    beforeJevResponse = () => {
+      beforeJevResponse = () => {
+        jevFailure = "error";
+        return Promise.resolve();
+      };
+      return Promise.resolve();
+    };
+    const typed = await caller.addManual({ name: "Kibble" });
+    assert.equal(typed.name, "Kibble");
+    assert.equal(typed.ownItem.category, "PETS");
+  }));
+
+void test("exact standard names use the catalog without Jev, and autocomplete sources skip matching", () =>
+  withShoppingList(async ({ caller }) => {
+    jevMatches.set("milk", { labels: ["Soy Milk"], confidence: 0.95 });
+    jevCategories.set("milk", { category: "SNACKS", confidence: 0.95 });
+    const before = jevRequests.length;
+    const milk = await caller.addManual({ name: "milk" });
+    assert.equal(milk.name, "Milk");
+    assert.equal(milk.ownItem.category, "DAIRY");
+    assert.equal(jevRequests.length, before);
+    jevMatches.set("eggs", { labels: ["Eggs"], confidence: 0.95 });
+    const variant = await caller.addSelection({
+      name: "Eggs",
+      note: "duck",
+      source: { standardName: "Eggs" },
+    });
+    assert.equal(variant.note, "duck");
+    assert.equal(matchQuestions(jevRequests.at(-1)!).length, 0);
+  }));
+
+void test("Dinner additions match unresolved ingredients and combine their requirements", () =>
+  withShoppingList(async ({ caller, createDinner }) => {
+    const heirlooms = await caller.addManual({ name: "Heirloom tomatoes" });
+    await caller.clear();
+    for (const name of ["tomato", "tomatos"])
+      jevMatches.set(name, { labels: ["Heirloom tomatoes"], confidence: 0.95 });
+    jevMatches.set("toms", { labels: ["Tomatoes"], confidence: 0.95 });
+    jevCategories.set("toms", { category: "OWN_ITEMS", confidence: 0.95 });
+    jevMatches.set("eggs", { labels: ["Heirloom tomatoes"], confidence: 0.95 });
+    const dinner = await createDinner({
+      name: "Salad",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: {
+            create: [
+              { order: 0, name: "Tomato", amount: 2 },
+              { order: 1, name: "Tomatos", amount: 3 },
+              { order: 2, name: "Toms" },
+              { order: 3, name: "Duck eggs" },
+            ],
+          },
+        },
+      },
+    });
+    const before = jevRequests.length;
+    const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
+    assert.equal(jevRequests.length, before + 1);
+    assert.deepEqual(
+      [
+        ...new Set(
+          matchQuestions(jevRequests.at(-1)!).map((id) => id.split("_")[0]!),
+        ),
+      ].map((id) => jevRequests.at(-1)!.state.items[id]!.name),
+      ["Tomato", "Tomatos", "Toms"],
+    );
+    assert.deepEqual(
+      addition.items
+        .map((item) => [
+          item.ownItemId === heirlooms.ownItemId ? "Heirlooms" : item.name,
+          item.note,
+          item.amount,
+          item.ownItem.category,
+        ])
+        .sort(),
+      [
+        ["Eggs", "Duck", null, "DAIRY"],
+        ["Heirlooms", null, 5, "OWN_ITEMS"],
+        ["Tomatoes", null, null, "PRODUCE"],
+      ],
+    );
+    await caller.undo(addition.undo);
+    assert.deepEqual(await caller.list(), []);
+  }));
+
+void test("large Dinner additions are split across parallel requests that fail independently", () =>
+  withShoppingList(async ({ caller, createDinner }) => {
+    const names = Array.from({ length: 10 }, (_, index) => `Gadget ${index}`);
+    for (const name of names)
+      jevMatches.set(name.toLowerCase(), {
+        labels: ["Batteries"],
+        confidence: 0.95,
+      });
+    jevFailingItems.add("gadget 9");
+    const dinner = await createDinner({
+      name: "Gadgets",
+      parts: {
+        create: {
+          order: 0,
+          ingredients: {
+            create: names.map((name, order) => ({ order, name })),
+          },
+        },
+      },
+    });
+    const before = jevRequests.length;
+    const addition = await caller.addDinners({ dinnerIds: [dinner.id] });
+    const requests = jevRequests.slice(before);
+    assert.equal(requests.length, 2);
+    for (const request of requests)
+      assert.ok(
+        Object.values(request.questions).reduce(
+          (size, question) => size + JSON.stringify(question).length,
+          0,
+        ) <= 85_000,
+      );
+    const failed = requests.find((request) =>
+      Object.values(request.state.items).some(
+        (item) => item.name === "Gadget 9",
+      ),
+    )!;
+    assert.deepEqual(
+      [...new Set(addition.items.map((item) => item.name))].sort(),
+      [
+        "Batteries",
+        ...Object.values(failed.state.items).map((item) => item.name),
+      ].sort(),
+    );
+  }));
+
 void test("unavailable Jev and missing confidence still save Own Items without retrying or later reclassification", () =>
   withShoppingList(async ({ caller, createDinner }) => {
-    jevCategories.set("milk", { category: "DAIRY" });
-    const milk = await caller.addManual({ name: "Milk" });
-    assert.equal(milk.ownItem.category, "OWN_ITEMS");
+    jevCategories.set("kombucha", { category: "DAIRY" });
+    const kombucha = await caller.addManual({ name: "Kombucha" });
+    assert.equal(kombucha.ownItem.category, "OWN_ITEMS");
     jevFailure = "error";
     const dinner = await createDinner({
       name: "Dinner",
@@ -316,8 +594,8 @@ void test("unavailable Jev and missing confidence still save Own Items without r
           order: 0,
           ingredients: {
             create: [
-              { order: 0, name: "Rice" },
-              { order: 1, name: "Bread" },
+              { order: 0, name: "Freekeh" },
+              { order: 1, name: "Focaccia" },
             ],
           },
         },
@@ -330,7 +608,7 @@ void test("unavailable Jev and missing confidence still save Own Items without r
       result.items.every((item) => item.ownItem.category === "OWN_ITEMS"),
     );
     jevFailure = undefined;
-    const reused = await caller.addManual({ name: "Rice" });
+    const reused = await caller.addManual({ name: "Freekeh" });
     assert.equal(reused.ownItem.category, "OWN_ITEMS");
     assert.equal(jevRequests.length, before + 1);
   }));
@@ -343,8 +621,8 @@ void test(
       jevFailure = "timeout";
       const before = jevRequests.length;
       const started = Date.now();
-      const milk = await caller.addManual({ name: "Milk" });
-      assert.equal(milk.ownItem.category, "OWN_ITEMS");
+      const kombucha = await caller.addManual({ name: "Kombucha" });
+      assert.equal(kombucha.ownItem.category, "OWN_ITEMS");
       assert.equal(jevRequests.length, before + 1);
       assert.ok(Date.now() - started >= 2_900);
       jevFailure = undefined;
@@ -362,11 +640,11 @@ void test(
         entered.resolve();
         await release.promise;
       };
-      const pending = caller.addManual({ name: "Milk" });
+      const pending = caller.addManual({ name: "Kombucha" });
       try {
         await entered.promise;
-        const milk = await member.addManual({ name: "Milk" });
-        await member.edit({ ...milk, category: "PETS" });
+        const kombucha = await member.addManual({ name: "Kombucha" });
+        await member.edit({ ...kombucha, category: "PETS" });
       } finally {
         release.resolve();
       }
@@ -378,7 +656,7 @@ void test(
 
 void test("Dinner additions reject a matched Own Item renamed while Jev classifies another ingredient", () =>
   withShoppingList(async ({ caller, member, createDinner }) => {
-    const milk = await caller.addManual({ name: "Milk" });
+    const kombucha = await caller.addManual({ name: "Kombucha" });
     const dinner = await createDinner({
       name: "Breakfast",
       parts: {
@@ -386,8 +664,8 @@ void test("Dinner additions reject a matched Own Item renamed while Jev classifi
           order: 0,
           ingredients: {
             create: [
-              { order: 0, name: "Milk" },
-              { order: 1, name: "Bread" },
+              { order: 0, name: "Kombucha" },
+              { order: 1, name: "Focaccia" },
             ],
           },
         },
@@ -402,7 +680,7 @@ void test("Dinner additions reject a matched Own Item renamed while Jev classifi
     const pending = caller.addDinners({ dinnerIds: [dinner.id] });
     try {
       await entered.promise;
-      await member.edit({ ...milk, name: "Sugar" });
+      await member.edit({ ...kombucha, name: "Sugar" });
     } finally {
       release.resolve();
     }

@@ -1,4 +1,5 @@
-import type { Prisma, ShoppingCategory } from "@planeatrepeat/db";
+import type { Prisma } from "@planeatrepeat/db";
+import type { ShoppingResolution } from "./ai/resolve-shopping-items";
 import { TRPCError } from "@trpc/server";
 import { normalizeShoppingName } from "@planeatrepeat/shared";
 import { rememberOwnItem } from "./own-items";
@@ -37,7 +38,7 @@ export async function resolveShoppingSelection(
   tx: Prisma.TransactionClient,
   householdId: string,
   selection: ShoppingSelection,
-  categories?: ReadonlyMap<string, ShoppingCategory>,
+  resolutions?: ReadonlyMap<string, ShoppingResolution>,
 ) {
   if ("ownItemId" in selection)
     return tx.ownItem.findUniqueOrThrow({
@@ -69,6 +70,6 @@ export async function resolveShoppingSelection(
     householdId,
     selection.name,
     selection.note,
-    categories,
+    resolutions,
   );
 }
