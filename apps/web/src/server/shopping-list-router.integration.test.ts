@@ -379,7 +379,7 @@ void test("uncertain and absent matches create a new Own Item", () =>
     assert.equal(failed.ownItem.category, "OWN_ITEMS");
   }));
 
-void test("winners from several chunks are decided by a second request", () =>
+void test("a confident Own Item match wins over Standard Shopping Items", () =>
   withShoppingList(async ({ caller }) => {
     const puppyFood = await caller.addManual({ name: "Puppy food" });
     jevMatches.set("kibble", {
@@ -388,30 +388,57 @@ void test("winners from several chunks are decided by a second request", () =>
     });
     const before = jevRequests.length;
     const typed = await caller.addManual({ name: "Kibble" });
+    assert.equal(jevRequests.length, before + 1);
+    assert.equal(typed.ownItemId, puppyFood.ownItemId);
+  }));
+
+void test("exact standard names are still matched against Own Items", () =>
+  withShoppingList(async ({ caller }) => {
+    const tomatoes = await caller.addSelection({
+      name: "Tomatoes",
+      note: "cherry",
+      source: { standardName: "Tomatoes" },
+    });
+    jevMatches.set("cherry tomatoes", {
+      labels: ["Tomatoes (cherry)", "Cherry tomatoes"],
+      confidence: 0.95,
+    });
+    const typed = await caller.addManual({ name: "Cherry tomatoes" });
+    assert.equal(typed.ownItemId, tomatoes.ownItemId);
+    assert.deepEqual(Object.keys(jevRequests.at(-1)!.questions), [
+      "item0_own0",
+    ]);
+  }));
+
+void test("winners from several chunks of the same kind are decided by a second request", () =>
+  withShoppingList(async ({ caller }) => {
+    jevMatches.set("kibble", {
+      labels: ["Dog food", "Fish"],
+      confidence: 0.95,
+    });
+    const before = jevRequests.length;
+    const typed = await caller.addManual({ name: "Kibble" });
     assert.equal(jevRequests.length, before + 2);
-    const [first, second] = jevRequests.slice(before);
-    assert.ok(matchQuestions(first!).length > 1);
     assert.deepEqual(
-      Object.values(second!.questions).map((question) =>
+      Object.values(jevRequests.at(-1)!.questions).map((question) =>
         Object.values(question.criteria).sort(),
       ),
       [
         [
           "Dog food",
+          "Fish",
           "None of the options is the same product or the same variant.",
-          "Puppy food",
         ],
       ],
     );
     assert.equal(typed.name, "Dog food");
-    assert.notEqual(typed.ownItemId, puppyFood.ownItemId);
+    assert.equal(typed.ownItem.category, "PETS");
   }));
 
 void test("a failed deciding request keeps the first request's category", () =>
   withShoppingList(async ({ caller }) => {
-    await caller.addManual({ name: "Puppy food" });
     jevMatches.set("kibble", {
-      labels: ["Dog food", "Puppy food"],
+      labels: ["Dog food", "Fish"],
       confidence: 0.95,
     });
     jevCategories.set("kibble", { category: "PETS", confidence: 0.95 });
