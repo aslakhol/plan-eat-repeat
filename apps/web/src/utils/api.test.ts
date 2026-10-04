@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { mock, test, type TestContext } from "node:test";
-import type { QueryClient } from "@tanstack/react-query";
+import { QueryClient, type QueryClientConfig } from "@tanstack/react-query";
 
 const notify = mock.fn<(options: { description: string }) => void>();
 let createClient!: () => QueryClient;
@@ -9,9 +9,9 @@ mock.module("@trpc/next", {
     createTRPCNext: ({
       config,
     }: {
-      config: () => { queryClient: QueryClient };
+      config: () => { queryClientConfig: QueryClientConfig };
     }) => {
-      createClient = () => config().queryClient;
+      createClient = () => new QueryClient(config().queryClientConfig);
       return {};
     },
   },

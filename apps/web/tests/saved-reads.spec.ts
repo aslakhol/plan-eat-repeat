@@ -52,6 +52,11 @@ test("reopening shows saved Plan and Shopping before refreshing, and survives fa
     await expect(
       page.getByTestId("plan-day-trigger").filter({ hasText: dinner.name }),
     ).toBeVisible();
+    await expect
+      .poll(() =>
+        page.evaluate((key) => localStorage.getItem(key), SAVED_READS_KEY),
+      )
+      .toContain(dinner.name);
     await page.goto("/shopping-list");
     const remove = page.getByRole("button", {
       name: `Remove ${ownItem.name} from list`,

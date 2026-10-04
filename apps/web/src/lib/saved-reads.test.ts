@@ -1,203 +1,77 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { QueryCache, QueryClient } from "@tanstack/react-query";
-import { createTRPCReact, getQueryKey } from "@trpc/react-query";
-import superjson from "superjson";
-import type { AppRouter } from "~/server/api/root";
-import type { RouterOutputs } from "~/utils/api";
+import { QueryClient } from "@tanstack/react-query";
 import {
-  restoreSavedReads,
-  saveConfirmedRead,
-  SAVED_READS_KEY,
-} from "./saved-reads";
+  persistQueryClientRestore,
+  persistQueryClientSave,
+} from "@tanstack/react-query-persist-client";
+import { getQueryKey } from "@trpc/react-query";
+import { api } from "~/utils/api";
+import { createPersistenceOptions } from "./saved-reads";
 
-const api = createTRPCReact<AppRouter>();
-const monday = new Date("2026-10-05T00:00:00+02:00");
-const planKey = getQueryKey(
-  api.plan.weekOverview,
-  { startOfWeek: monday },
-  "query",
-);
-const listKey = getQueryKey(api.shoppingList.list, undefined, "query");
-const status = {
-  userId: "user",
-  sessionId: "session",
-  householdId: "household",
-  welcomeSeenAt: null,
-};
-const plan = {
-  plans: [{ id: 1, date: monday, dinner: { id: 1, name: "Soup" } }],
-  appStatus: status,
-};
-const item = {
-  id: "shopping-item",
-  ownItemId: "own-item",
-  householdId: "household",
-  amount: 2,
-  unit: "l",
-  revision: "revision",
-  name: "Milk",
-  normalizedName: "milk",
-  note: null,
-  ownItem: {
-    id: "own-item",
-    householdId: "household",
-    name: "Milk",
-    normalizedName: "milk",
-    note: null,
-    normalizedNote: "",
-    category: "DAIRY",
-    usuallyHave: false,
-    odaProductId: null,
-    odaProductName: null,
-    odaProductDescription: null,
-  },
-} satisfies RouterOutputs["shoppingList"]["list"]["items"][number];
-const list = {
-  items: [item],
-  shoppingLanguage: "no",
-  appStatus: status,
-} satisfies RouterOutputs["shoppingList"]["list"];
-
-function storage() {
+void test("persists confirmed Plan and Shopping cache data, including after a failed refresh", async (t) => {
   const values = new Map<string, string>();
-  return {
-    getItem: (key: string) => values.get(key) ?? null,
-    setItem: (key: string, value: string) => {
+  const storage: Storage = {
+    get length() {
+      return values.size;
+    },
+    clear: () => values.clear(),
+    key: (index) => [...values.keys()][index] ?? null,
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => {
       values.set(key, value);
     },
+    removeItem: (key) => {
+      values.delete(key);
+    },
   };
-}
-
-void test("restores exact weeks, Dates, shopping rows and successful empty reads as stale data", (t) => {
-  const disk = storage();
-  saveConfirmedRead(disk, planKey, plan);
-  saveConfirmedRead(disk, listKey, list);
-  const recentKey = getQueryKey(api.shoppingList.recent, undefined, "query");
-  saveConfirmedRead(disk, recentKey, { items: [], appStatus: status });
+  const options = createPersistenceOptions(storage);
   const client = new QueryClient();
-  t.after(() => client.clear());
-  restoreSavedReads(disk, client);
-  assert.deepEqual(client.getQueryData(planKey), { ...plan, appStatus: null });
-  assert.deepEqual(client.getQueryData(listKey), { ...list, appStatus: null });
-  assert.deepEqual(client.getQueryData(recentKey), {
-    items: [],
-    appStatus: null,
+  const reopened = new QueryClient();
+  t.after(() => {
+    client.clear();
+    reopened.clear();
   });
-  assert.equal(client.getQueryState(planKey)?.isInvalidated, true);
-  const nextWeek = getQueryKey(
+  const date = new Date("2026-10-05T00:00:00+02:00");
+  const weekKey = getQueryKey(
     api.plan.weekOverview,
-    { startOfWeek: new Date("2026-10-12T00:00:00+02:00") },
+    { startOfWeek: date },
     "query",
   );
-  assert.equal(client.getQueryData(nextWeek), undefined);
-  // A read or a write already in this visit must win over disk.
-  client.setQueryData(listKey, { ...list, items: [] });
-  restoreSavedReads(disk, client);
-  assert.deepEqual(client.getQueryData(listKey), { ...list, items: [] });
-});
-
-void test("only successful fetches persist; optimistic patches, failed refreshes and cancelled reads do not", async (t) => {
-  const disk = storage();
-  const client = new QueryClient({
-    queryCache: new QueryCache({
-      onSuccess: (data, query) => saveConfirmedRead(disk, query.queryKey, data),
-    }),
-    defaultOptions: { queries: { retry: false } },
-  });
-  t.after(() => client.clear());
-  await client.fetchQuery({
-    queryKey: listKey,
-    queryFn: () => Promise.resolve(list),
-  });
-  client.setQueryData(listKey, { ...list, items: [] });
-  const late = Promise.withResolvers<typeof list>();
-  const fetching = client.fetchQuery({
-    queryKey: listKey,
-    queryFn: () => late.promise,
-  });
-  await client.cancelQueries({ queryKey: listKey });
-  await fetching;
-  late.resolve({ ...list, items: [] });
-  const reopened = new QueryClient();
-  t.after(() => reopened.clear());
-  restoreSavedReads(disk, reopened);
-  assert.deepEqual(reopened.getQueryData(listKey), {
-    ...list,
-    appStatus: null,
-  });
+  const listKey = getQueryKey(api.shoppingList.list, undefined, "query");
+  const otherKey = getQueryKey(api.shoppingList.sources, undefined, "query");
+  const plan = { plans: [{ date, dinner: { id: 1, name: "Soup" } }] };
+  client.setQueryData(weekKey, plan);
+  client.setQueryData(listKey, { items: [{ name: "Milk" }] });
+  // The shopping hooks patch the cache only after a server acknowledgement.
+  client.setQueryData(listKey, { items: [] });
+  client.setQueryData(otherKey, { items: [{ name: "Unrelated" }] });
   await assert.rejects(
-    reopened.fetchQuery({
+    client.fetchQuery({
       queryKey: listKey,
       queryFn: () => Promise.reject(new Error("offline")),
+      retry: false,
     }),
   );
-  assert.deepEqual(reopened.getQueryData(listKey), {
-    ...list,
-    appStatus: null,
-  });
-  await client.fetchQuery({
-    queryKey: listKey,
-    queryFn: () => Promise.resolve({ ...list, items: [] }),
-  });
-  reopened.clear();
-  restoreSavedReads(disk, reopened);
-  assert.deepEqual(reopened.getQueryData(listKey), {
-    ...list,
-    items: [],
-    appStatus: null,
-  });
-});
-
-void test("corrupt, expired and incompatible entries fall back to reads; storage failure is harmless", (t) => {
-  const disk = storage();
-  const client = new QueryClient();
-  t.after(() => client.clear());
-  for (const raw of [
-    "broken JSON",
-    superjson.stringify([
-      { queryKey: listKey, data: { items: [null] }, confirmedAt: Date.now() },
-    ]),
-    superjson.stringify([
-      { queryKey: listKey, data: { ...list, appStatus: null }, confirmedAt: 1 },
-    ]),
-  ]) {
-    disk.setItem(SAVED_READS_KEY, raw);
-    restoreSavedReads(disk, client);
-    assert.equal(client.getQueryData(listKey), undefined);
-  }
-  saveConfirmedRead(disk, listKey, list);
-  restoreSavedReads(disk, client);
-  assert.deepEqual(client.getQueryData(listKey), { ...list, appStatus: null });
-  const denied = {
-    getItem: () => {
-      throw new Error("denied");
+  client.getMutationCache().build(
+    client,
+    { mutationKey: ["pending"] },
+    {
+      context: undefined,
+      data: undefined,
+      error: null,
+      failureCount: 0,
+      failureReason: null,
+      isPaused: true,
+      status: "pending",
+      variables: undefined,
+      submittedAt: Date.now(),
     },
-    setItem: () => {
-      throw new Error("quota");
-    },
-  };
-  assert.doesNotThrow(() => saveConfirmedRead(denied, listKey, list));
-  assert.doesNotThrow(() => restoreSavedReads(denied, client));
-});
-
-void test("keeps shopping reads while bounding saved weeks and excludes unrelated queries", (t) => {
-  const disk = storage();
-  saveConfirmedRead(disk, listKey, list);
-  for (let index = 0; index < 10; index++) {
-    const date = new Date(monday.getTime() + index * 7 * 86400000);
-    saveConfirmedRead(
-      disk,
-      getQueryKey(api.plan.weekOverview, { startOfWeek: date }, "query"),
-      plan,
-    );
-  }
-  const privateKey = getQueryKey(api.household.household, undefined, "query");
-  saveConfirmedRead(disk, privateKey, list);
-  const client = new QueryClient();
-  t.after(() => client.clear());
-  restoreSavedReads(disk, client);
-  assert.equal(client.getQueryCache().getAll().length, 6);
-  assert.deepEqual(client.getQueryData(listKey), { ...list, appStatus: null });
-  assert.equal(client.getQueryData(privateKey), undefined);
+  );
+  await persistQueryClientSave({ ...options, queryClient: client });
+  await persistQueryClientRestore({ ...options, queryClient: reopened });
+  assert.deepEqual(reopened.getQueryData(weekKey), plan);
+  assert.deepEqual(reopened.getQueryData(listKey), { items: [] });
+  assert.equal(reopened.getQueryData(otherKey), undefined);
+  assert.equal(reopened.getMutationCache().getAll().length, 0);
 });

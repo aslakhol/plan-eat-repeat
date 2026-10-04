@@ -7,9 +7,8 @@
 import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCNext } from "@trpc/next";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
-import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
+import { QueryCache, MutationCache } from "@tanstack/react-query";
 import { missingHousehold } from "~/lib/app-status";
-import { restoreSavedReads, saveConfirmedRead } from "~/lib/saved-reads";
 import superjson from "superjson";
 import { toast } from "~/components/ui/use-toast";
 
@@ -30,47 +29,6 @@ export const api = createTRPCNext<AppRouter>({
    */
   transformer: superjson,
   config() {
-    const queryClient = new QueryClient({
-      queryCache: new QueryCache({
-        onSuccess: (data, query) => {
-          try {
-            if (typeof window !== "undefined")
-              saveConfirmedRead(window.localStorage, query.queryKey, data);
-          } catch {
-            // Some browsers deny access to localStorage itself.
-          }
-        },
-        onError: (error, query) => {
-          // Refresh failures remain in query state for inline feedback.
-          // Resuming a phone or polling must not repeatedly interrupt the user.
-          if (query.state.data !== undefined || missingHousehold(error)) return;
-
-          toast({
-            variant: "destructive",
-            title: "Something went wrong",
-            description:
-              error instanceof Error ? error.message : "Please try again later",
-          });
-        },
-      }),
-      mutationCache: new MutationCache({
-        onError: (error, _variables, _context, mutation) => {
-          if (mutation.meta?.handlesError) return;
-          toast({
-            variant: "destructive",
-            title: "Something went wrong",
-            description:
-              error instanceof Error ? error.message : "Please try again later",
-          });
-        },
-      }),
-    });
-    try {
-      if (typeof window !== "undefined")
-        restoreSavedReads(window.localStorage, queryClient);
-    } catch {
-      // The app still works when browser storage is unavailable.
-    }
     return {
       /**
        * Links used to determine request flow from client to server.
@@ -88,7 +46,39 @@ export const api = createTRPCNext<AppRouter>({
           transformer: superjson,
         }),
       ],
-      queryClient,
+      queryClientConfig: {
+        defaultOptions: { queries: { gcTime: 7 * 24 * 60 * 60 * 1000 } },
+        queryCache: new QueryCache({
+          onError: (error, query) => {
+            // Refresh failures remain in query state for inline feedback.
+            // Resuming a phone or polling must not repeatedly interrupt the user.
+            if (query.state.data !== undefined || missingHousehold(error))
+              return;
+
+            toast({
+              variant: "destructive",
+              title: "Something went wrong",
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "Please try again later",
+            });
+          },
+        }),
+        mutationCache: new MutationCache({
+          onError: (error, _variables, _context, mutation) => {
+            if (mutation.meta?.handlesError) return;
+            toast({
+              variant: "destructive",
+              title: "Something went wrong",
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "Please try again later",
+            });
+          },
+        }),
+      },
     };
   },
   /**
