@@ -254,6 +254,7 @@ export function ShoppingListView() {
         <h1 className="min-w-0 flex-1 font-serif text-[30px] leading-tight max-[360px]:text-[26px]">
           Shopping list
         </h1>
+        <ReadRefreshStatus queries={[list, recent]} />
         <Button
           variant="outline"
           size="sm"
@@ -313,7 +314,6 @@ export function ShoppingListView() {
           </div>
         </DetailsMenu>
       </header>
-      <ReadRefreshStatus queries={[list, recent]} />
       <OdaTransferProgress oda={oda} />
       {pendingDinnerAdditions.map((addition) => (
         <p key={addition.operationId} role="status" className="mb-3 text-sm">

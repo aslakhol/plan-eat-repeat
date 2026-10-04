@@ -10,18 +10,29 @@ export function ReadRefreshStatus({
   }[];
 }) {
   const saved = queries.filter((query) => query.data !== undefined);
-  if (!saved.length) return null;
   const failed = saved.some((query) => query.isError || query.failureCount > 0);
   const offline = saved.some((query) => query.isPaused);
   const refreshing = saved.some((query) => query.isFetching);
-  if (!failed && !offline && !refreshing) return null;
+  const message = offline
+    ? "Offline · Showing saved data"
+    : failed
+      ? "Couldn't refresh · Showing saved data"
+      : undefined;
   return (
-    <p role="status" className="text-muted-foreground mb-3 text-xs">
-      {offline
-        ? "Offline · Showing saved data"
-        : failed
-          ? "Couldn't refresh · Showing saved data"
-          : "Updating…"}
-    </p>
+    <div className="size-4 shrink-0" title={message}>
+      {message ? (
+        <span role="status" className="text-muted-foreground">
+          <CloudOff aria-hidden="true" className="size-4" />
+          <span className="sr-only">{message}</span>
+        </span>
+      ) : refreshing ? (
+        <LoadingIndicator
+          label="Updating"
+          className="size-4 py-0 [&_svg]:size-4"
+        />
+      ) : null}
+    </div>
   );
 }
+import { CloudOff } from "lucide-react";
+import { LoadingIndicator } from "./LoadingIndicator";

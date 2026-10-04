@@ -89,15 +89,17 @@ export const PlanView = () => {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 pb-24 md:gap-6 md:pb-0">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-foreground font-serif text-3xl font-normal">
-          Week
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-foreground font-serif text-3xl font-normal">
+            Week
+          </h1>
+          <ReadRefreshStatus queries={[weekQuery]} />
+        </div>
         <div className="hidden md:block">
           <WeekSelect setWeekOfSet={setWeekOffSet} weekLabel={week.label} />
         </div>
       </div>
 
-      <ReadRefreshStatus queries={[weekQuery]} />
       <div className="grid grid-cols-1 gap-2.5">
         {week.days.map((day) => (
           <Day
