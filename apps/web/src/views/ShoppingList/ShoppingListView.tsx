@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Fragment, useEffect, useRef, useState } from "react";
+import { shoppingCategories } from "@planeatrepeat/shared";
 import { useShoppingCategoryHeadings } from "~/hooks/use-shopping-category-headings";
 import { Button } from "~/components/ui/button";
 import { DetailsMenu } from "~/components/ui/details-menu";
@@ -153,12 +154,12 @@ export function ShoppingListView() {
   const utils = api.useUtils();
   // Wait for the page's essential reads so preparation uses a later HTTP batch.
   const readyToPrepare = !list.isPending && !recent.isPending;
-  const categories = api.shoppingList.categories.useQuery(undefined, {
-    ...shoppingCategoriesQueryOptions,
-    enabled: readyToPrepare,
-  });
   useEffect(() => {
     if (!readyToPrepare) return;
+    void utils.shoppingList.categories.prefetch(
+      undefined,
+      shoppingCategoriesQueryOptions,
+    );
     void utils.shoppingList.sources.prefetch(
       undefined,
       shoppingChoicesQueryOptions,
@@ -475,7 +476,7 @@ export function ShoppingListView() {
             {items.map((item, index) => (
               <Fragment key={item.id}>
                 {showCategoryHeadings &&
-                  categories.data &&
+                  list.data &&
                   item.ownItem.category !==
                     items[index - 1]?.ownItem.category && (
                     <li
@@ -484,9 +485,9 @@ export function ShoppingListView() {
                     >
                       <h2 className="text-muted-foreground text-sm font-bold">
                         {
-                          categories.data?.find(
-                            (category) => category.id === item.ownItem.category,
-                          )?.label
+                          shoppingCategories[item.ownItem.category][
+                            list.data.shoppingLanguage
+                          ]
                         }
                       </h2>
                     </li>

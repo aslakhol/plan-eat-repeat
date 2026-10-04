@@ -73,6 +73,7 @@ export function useAddDinners(
         if (!isCurrent()) return;
         utils.shoppingList.list.setData(undefined, {
           items: result.items,
+          shoppingLanguage: result.shoppingLanguage,
           appStatus: result.appStatus,
         });
         utils.shoppingList.recent.setData(undefined, {

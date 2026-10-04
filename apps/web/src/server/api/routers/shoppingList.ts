@@ -62,12 +62,23 @@ async function shoppingEditResult(
   };
 }
 
+async function readShoppingLanguage(
+  db: Prisma.TransactionClient,
+  householdId: string,
+) {
+  const { shoppingLanguage } = await db.household.findUniqueOrThrow({
+    where: { id: householdId },
+    select: { shoppingLanguage: true },
+  });
+  return shoppingLanguage;
+}
+
 export const shoppingListRouter = createTRPCRouter({
   categories: protectedProcedureWithHousehold.query(async ({ ctx }) => {
-    const { shoppingLanguage } = await ctx.db.household.findUniqueOrThrow({
-      where: { id: ctx.householdId },
-      select: { shoppingLanguage: true },
-    });
+    const shoppingLanguage = await readShoppingLanguage(
+      ctx.db,
+      ctx.householdId,
+    );
     return shoppingCategoryOrder.map((id) => ({
       id,
       label: shoppingCategories[id][shoppingLanguage],
@@ -148,10 +159,14 @@ export const shoppingListRouter = createTRPCRouter({
     ),
 
   list: protectedProcedureWithHousehold.query(async ({ ctx }) => {
-    const items = await ctx.db.shoppingItem.findMany({
-      where: { householdId: ctx.householdId },
-      include: { ownItem: true },
-    });
+    // Category headings need the language in the same response as the items.
+    const [items, shoppingLanguage] = await Promise.all([
+      ctx.db.shoppingItem.findMany({
+        where: { householdId: ctx.householdId },
+        include: { ownItem: true },
+      }),
+      readShoppingLanguage(ctx.db, ctx.householdId),
+    ]);
     const sortedItems = items
       .map(shoppingItemDetails)
       .sort(
@@ -162,7 +177,7 @@ export const shoppingListRouter = createTRPCRouter({
           a.ownItem.normalizedNote.localeCompare(b.ownItem.normalizedNote) ||
           a.id.localeCompare(b.id),
       );
-    return { items: sortedItems, appStatus: ctx.appStatus };
+    return { items: sortedItems, shoppingLanguage, appStatus: ctx.appStatus };
   }),
 
   usuallyHave: protectedProcedureWithHousehold.query(async ({ ctx }) => ({
@@ -272,16 +287,15 @@ export const shoppingListRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const prepared = await prepareDinnerAddition(
-        ctx.db,
-        ctx.householdId,
-        input,
-      );
+      const [prepared, shoppingLanguage] = await Promise.all([
+        prepareDinnerAddition(ctx.db, ctx.householdId, input),
+        readShoppingLanguage(ctx.db, ctx.householdId),
+      ]);
       const result = await ctx.db.$transaction(async (tx) => {
         await tx.$queryRaw`SELECT id FROM "Household" WHERE id = ${ctx.householdId} FOR UPDATE`;
         return addDinnersToShoppingList(tx, ctx.householdId, input, prepared);
       });
-      return { ...result, appStatus: ctx.appStatus };
+      return { ...result, shoppingLanguage, appStatus: ctx.appStatus };
     }),
 
   undo: protectedProcedureWithHousehold
