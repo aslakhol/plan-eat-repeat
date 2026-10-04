@@ -5,12 +5,12 @@ import {
   addWeeks,
   differenceInCalendarWeeks,
   isSameDay,
-  startOfDay,
 } from "date-fns";
 import { useRouter } from "next/router";
 import { Button } from "~/components/ui/button";
 import { Day } from "./Day";
 import { WeekSelect } from "../WeekSelect";
+import { useToday } from "~/hooks/use-today";
 import { keepPreviousData } from "@tanstack/react-query";
 import { buildDinnerPlanningWeek } from "~/lib/dinner-planning";
 import {
@@ -23,7 +23,7 @@ export const PlanView = () => {
   const [weekOffSet, setWeekOffSet] = useState(0);
   const trpc = api.useUtils();
 
-  const today = useMemo(() => startOfDay(new Date()), []);
+  const today = useToday();
   const dateQuery =
     typeof router.query.date === "string" && isPlanSlotDate(router.query.date)
       ? router.query.date
