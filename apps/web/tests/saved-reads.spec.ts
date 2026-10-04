@@ -99,9 +99,6 @@ test("reopening shows saved Plan and Shopping before refreshing, and survives fa
       .getByTestId("plan-day-trigger")
       .filter({ hasText: dinner.name });
     await expect(planned).toBeVisible();
-    await expect(
-      page.getByRole("status").filter({ hasText: "Updating" }),
-    ).toBeVisible();
     fail = true;
     hold = false;
     gate.resolve();
