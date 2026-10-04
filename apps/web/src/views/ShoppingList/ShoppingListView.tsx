@@ -192,6 +192,7 @@ export function ShoppingListView() {
       editingOwnIds.size > 0 ||
       pendingRemovals.length > 0,
   );
+  const isEmpty = list.data !== undefined && !hasItems && !oda.progress;
   const recentItems = movedRecentItems.filter(
     (item) => !pendingIdentities.has(shoppingIdentity(item.name, item.note)),
   );
@@ -408,6 +409,21 @@ export function ShoppingListView() {
         </div>
       ))}
 
+      {list.isError && (
+        <p role="alert" className="text-destructive mb-4 text-sm">
+          Could not refresh the list. Check your connection.
+        </p>
+      )}
+      {!isEmpty && (
+        <ShoppingItemCreationTrigger>
+          <button
+            type="button"
+            className="border-border text-muted-foreground mb-2 flex min-h-12 w-full items-center gap-2 rounded-[14px] border border-dashed px-3.5 text-sm font-semibold"
+          >
+            <Plus className="size-4" /> Add an item
+          </button>
+        </ShoppingItemCreationTrigger>
+      )}
       {list.isPending && (
         <div role="status" className="flex items-center justify-center py-8">
           <UtensilsCrossed
@@ -417,13 +433,8 @@ export function ShoppingListView() {
           <span className="sr-only">Loading shopping list…</span>
         </div>
       )}
-      {list.isError && (
-        <p role="alert" className="text-destructive mb-4 text-sm">
-          Could not refresh the list. Check your connection.
-        </p>
-      )}
       {(list.data !== undefined || optimisticItems.length > 0) &&
-        (!hasItems && !oda.progress ? (
+        (isEmpty ? (
           <div
             className={cn(
               "flex flex-col items-center justify-center gap-5 px-4",
@@ -444,73 +455,62 @@ export function ShoppingListView() {
             </div>
           </div>
         ) : (
-          <>
-            <ShoppingItemCreationTrigger>
-              <button
-                type="button"
-                className="border-border text-muted-foreground mb-2 flex min-h-12 w-full items-center gap-2 rounded-[14px] border border-dashed px-3.5 text-sm font-semibold"
+          <ul className="space-y-2" aria-label="Shopping items">
+            {optimisticItems.map((item) => (
+              <li
+                key={item.id}
+                aria-busy="true"
+                className="bg-secondary/70 flex min-h-14 items-center rounded-[14px] px-3.5 py-3 [overflow-wrap:anywhere]"
               >
-                <Plus className="size-4" /> Add an item
-              </button>
-            </ShoppingItemCreationTrigger>
-            <ul className="space-y-2" aria-label="Shopping items">
-              {optimisticItems.map((item) => (
-                <li
-                  key={item.id}
-                  aria-busy="true"
-                  className="bg-secondary/70 flex min-h-14 items-center rounded-[14px] px-3.5 py-3 [overflow-wrap:anywhere]"
-                >
-                  <span>
-                    <span className="font-serif text-[17px]">{item.name}</span>
-                    {item.note && (
-                      <span className="text-muted-foreground ml-1 text-[13px]">
-                        {item.note}
-                      </span>
-                    )}
-                  </span>
-                </li>
-              ))}
-              {items.map((item, index) => (
-                <Fragment key={item.id}>
-                  {showCategoryHeadings &&
-                    categories.data &&
-                    item.ownItem.category !==
-                      items[index - 1]?.ownItem.category && (
-                      <li
-                        className="px-1 pt-4 first:pt-2 [&+li]:!mt-1"
-                        role="presentation"
-                      >
-                        <h2 className="text-muted-foreground text-sm font-bold">
-                          {
-                            categories.data?.find(
-                              (category) =>
-                                category.id === item.ownItem.category,
-                            )?.label
-                          }
-                        </h2>
-                      </li>
-                    )}
-                  <ShoppingItemRow
-                    item={item}
-                    pending={
-                      pendingOwnIds.has(item.ownItemId) ||
-                      pendingIdentities.has(
-                        shoppingIdentity(item.name, item.note),
-                      )
-                    }
-                    moveDisabled={
-                      editingOwnIds.has(item.ownItemId) ||
-                      pendingIdentities.has(
-                        shoppingIdentity(item.name, item.note),
-                      )
-                    }
-                    onMove={() => moveItem({ item, recent: false })}
-                    onEdit={() => setEditingItem({ item, recent: false })}
-                  />
-                </Fragment>
-              ))}
-            </ul>
-          </>
+                <span>
+                  <span className="font-serif text-[17px]">{item.name}</span>
+                  {item.note && (
+                    <span className="text-muted-foreground ml-1 text-[13px]">
+                      {item.note}
+                    </span>
+                  )}
+                </span>
+              </li>
+            ))}
+            {items.map((item, index) => (
+              <Fragment key={item.id}>
+                {showCategoryHeadings &&
+                  categories.data &&
+                  item.ownItem.category !==
+                    items[index - 1]?.ownItem.category && (
+                    <li
+                      className="px-1 pt-4 first:pt-2 [&+li]:!mt-1"
+                      role="presentation"
+                    >
+                      <h2 className="text-muted-foreground text-sm font-bold">
+                        {
+                          categories.data?.find(
+                            (category) => category.id === item.ownItem.category,
+                          )?.label
+                        }
+                      </h2>
+                    </li>
+                  )}
+                <ShoppingItemRow
+                  item={item}
+                  pending={
+                    pendingOwnIds.has(item.ownItemId) ||
+                    pendingIdentities.has(
+                      shoppingIdentity(item.name, item.note),
+                    )
+                  }
+                  moveDisabled={
+                    editingOwnIds.has(item.ownItemId) ||
+                    pendingIdentities.has(
+                      shoppingIdentity(item.name, item.note),
+                    )
+                  }
+                  onMove={() => moveItem({ item, recent: false })}
+                  onEdit={() => setEditingItem({ item, recent: false })}
+                />
+              </Fragment>
+            ))}
+          </ul>
         ))}
 
       {recent.isError && (
