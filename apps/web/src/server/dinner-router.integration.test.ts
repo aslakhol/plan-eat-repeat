@@ -297,6 +297,7 @@ void test("ingredient suggestions include distinct units from only the caller's 
       auth: { userId: null },
     } as Parameters<typeof dinnerRouter.createCaller>[0]);
     assert.deepEqual(await signedOut.ingredientNames(), {
+      appStatus: null,
       ingredientNames: [],
       ingredientUnits: [
         "g",

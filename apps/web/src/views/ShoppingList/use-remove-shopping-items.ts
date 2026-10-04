@@ -4,7 +4,7 @@ import { api, type RouterOutputs } from "~/utils/api";
 import type { ShoppingWrites } from "./shopping-writes";
 import type { ShoppingPreview } from "./use-add-shopping-item";
 
-type Item = RouterOutputs["shoppingList"]["list"][number];
+type Item = RouterOutputs["shoppingList"]["list"]["items"][number];
 type Removal = {
   key: string;
   items: Item[];
@@ -46,23 +46,38 @@ export function useRemoveShoppingItems(
           if (!isCurrent()) return;
           writes.forget(id);
           writes.forget(removal.item.ownItemId);
-          utils.shoppingList.list.setData(undefined, (list) =>
-            list?.filter((item) => item.ownItemId !== id),
+          utils.shoppingList.list.setData(
+            undefined,
+            (data) =>
+              data && {
+                ...data,
+                items: data.items.filter((item) => item.ownItemId !== id),
+              },
           );
-          utils.shoppingList.recent.setData(undefined, (recent) =>
-            recent?.filter((item) => item.ownItemId !== id),
+          utils.shoppingList.recent.setData(
+            undefined,
+            (data) =>
+              data && {
+                ...data,
+                items: data.items.filter((item) => item.ownItemId !== id),
+              },
           );
           utils.shoppingList.sources.setData(undefined, (sources) =>
             sources?.filter((item) => item.id !== id),
           );
-          utils.shoppingList.usuallyHave.setData(undefined, (ownItems) =>
-            ownItems?.filter((item) => item.id !== id),
+          utils.shoppingList.usuallyHave.setData(
+            undefined,
+            (data) =>
+              data && {
+                ...data,
+                items: data.items.filter((item) => item.id !== id),
+              },
           );
           void utils.shoppingList.sources.invalidate();
           void utils.shoppingList.usuallyHave.invalidate();
         } else {
           // Cache writes from predecessors have settled before this snapshot.
-          const before = utils.shoppingList.list.getData() ?? [];
+          const before = utils.shoppingList.list.getData()?.items ?? [];
           const targets =
             removal.retryItems ??
             before.map(({ id, revision }) => ({ id, revision }));
@@ -77,10 +92,18 @@ export function useRemoveShoppingItems(
           ]);
           if (!isCurrent()) return;
           const removedIds = new Set(saved.removedIds);
-          utils.shoppingList.list.setData(undefined, (list = []) =>
-            list.filter((item) => !removedIds.has(item.id)),
+          utils.shoppingList.list.setData(
+            undefined,
+            (data) =>
+              data && {
+                ...data,
+                items: data.items.filter((item) => !removedIds.has(item.id)),
+              },
           );
-          utils.shoppingList.recent.setData(undefined, saved.recentItems);
+          utils.shoppingList.recent.setData(
+            undefined,
+            (data) => data && { ...data, items: saved.recentItems },
+          );
         }
         void utils.oda.transfer.invalidate();
       } catch {

@@ -40,7 +40,7 @@ export function EditItemSheet({
   draft,
   failedKey,
 }: {
-  item: RouterOutputs["shoppingList"]["list"][number];
+  item: RouterOutputs["shoppingList"]["list"]["items"][number];
   onClose: () => void;
   recent?: boolean;
   draft?: ShoppingEdit["input"];

@@ -32,7 +32,7 @@ export const planRouter = createTRPCRouter({
         orderBy: { date: "asc" },
       });
 
-      return { plans };
+      return { plans, appStatus: ctx.appStatus };
     }),
   // Retained for the mobile client, which renders recipes from the week.
   plannedDinners: protectedProcedureWithHousehold
@@ -57,7 +57,7 @@ export const planRouter = createTRPCRouter({
         orderBy: { date: "asc" },
       });
 
-      return { plans };
+      return { plans, appStatus: ctx.appStatus };
     }),
   planDinnerForDate: protectedProcedureWithHousehold
     .input(
@@ -120,6 +120,6 @@ export const planRouter = createTRPCRouter({
         },
         orderBy: { date: "desc" },
       });
-      return { plans };
+      return { plans, appStatus: ctx.appStatus };
     }),
 });

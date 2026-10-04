@@ -20,6 +20,7 @@ mock.module("@clerk/nextjs/server", {
     getAuth: () => ({ userId: null }),
   },
 });
+const { appRouter } = await import("./api/root");
 const { householdRouter } = await import("./api/routers/household");
 const { savePublishedDinnerForUser } = await import("./save-published-dinner");
 
@@ -38,6 +39,14 @@ const fixture = async () => {
     db,
     user,
     caller,
+    pages: appRouter.createCaller({
+      db,
+      auth: {
+        userId: id,
+        sessionId: "welcome-session",
+        sessionClaims: { metadata: { householdId: "stale" } },
+      },
+    } as Parameters<typeof appRouter.createCaller>[0]),
     cleanup: async () => {
       const households = await db.household.findMany({
         where: { OR: [{ Members: { some: { userId: id } } }, { slug: id }] },
@@ -146,6 +155,61 @@ void test("a first visit racing a recipe save shares one household and preserves
       (await caller.welcomeStatus({ userId: user.id })).welcomeSeenAt,
       null,
     );
+  } finally {
+    await cleanup();
+  }
+});
+
+void test("ordinary page reads report absence, then current Household scope and per-user welcome even when empty", async () => {
+  const { db, user, caller, pages, cleanup } = await fixture();
+  const week = { startOfWeek: new Date(2026, 9, 5) };
+  try {
+    const settings = await pages.household.household();
+    assert.equal(settings.household, null);
+    assert.equal(settings.appStatus.householdId, null);
+    await assert.rejects(pages.plan.weekOverview(week), (error: unknown) => {
+      assert.ok(error instanceof Error && "cause" in error);
+      assert.ok(error.cause instanceof Error && "userId" in error.cause);
+      assert.equal(error.cause.userId, user.id);
+      return true;
+    });
+    const setup = await caller.start();
+    const responses = await Promise.all([
+      pages.plan.weekOverview(week),
+      pages.shoppingList.list(),
+      pages.shoppingList.recent(),
+      pages.shoppingList.usuallyHave(),
+      pages.dinner.summaries({
+        today: week.startOfWeek,
+        currentWeekStart: week.startOfWeek,
+        currentWeekEnd: new Date(2026, 9, 12),
+      }),
+      pages.household.household(),
+    ]);
+    for (const response of responses) {
+      assert.deepEqual(response.appStatus, {
+        userId: user.id,
+        sessionId: "welcome-session",
+        householdId: setup.householdId,
+        welcomeSeenAt: null,
+      });
+    }
+    assert.deepEqual(responses[0].plans, []);
+    assert.deepEqual(responses[1].items, []);
+    const dismissed = await caller.dismissWelcome();
+    assert.deepEqual(
+      (await pages.plan.weekOverview(week)).appStatus.welcomeSeenAt,
+      dismissed.welcomeSeenAt,
+    );
+    await db.membership.delete({ where: { userId: user.id } });
+    await assert.rejects(pages.shoppingList.list(), { code: "FORBIDDEN" });
+    assert.equal((await pages.household.household()).household, null);
+    assert.equal(await db.membership.count({ where: { userId: user.id } }), 0);
+    // Cleanup still finds this detached Household by its explicit fixture slug.
+    await db.household.update({
+      where: { id: setup.householdId },
+      data: { slug: user.id },
+    });
   } finally {
     await cleanup();
   }

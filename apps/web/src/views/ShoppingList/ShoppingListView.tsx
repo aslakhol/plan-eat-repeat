@@ -38,7 +38,7 @@ import {
   useShoppingItemCreation,
 } from "./ShoppingItemCreationContext";
 
-type ShoppingItem = RouterOutputs["shoppingList"]["list"][number];
+type ShoppingItem = RouterOutputs["shoppingList"]["list"]["items"][number];
 const RECENT_OPEN_KEY = "plan-eat-repeat:recently-used-open";
 
 function ShoppingItemRow({

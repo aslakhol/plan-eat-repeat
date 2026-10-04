@@ -8,6 +8,7 @@ import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCNext } from "@trpc/next";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import { QueryCache, MutationCache } from "@tanstack/react-query";
+import { missingHousehold } from "~/lib/app-status";
 import superjson from "superjson";
 import { toast } from "~/components/ui/use-toast";
 
@@ -50,7 +51,8 @@ export const api = createTRPCNext<AppRouter>({
           onError: (error, query) => {
             // Refresh failures remain in query state for inline feedback.
             // Resuming a phone or polling must not repeatedly interrupt the user.
-            if (query.state.data !== undefined) return;
+            if (query.state.data !== undefined || missingHousehold(error))
+              return;
 
             toast({
               variant: "destructive",

@@ -43,10 +43,17 @@ export function useAddShoppingItem(
       // An older poll must not replace the saved result after it arrives.
       await utils.shoppingList.list.cancel();
       if (!isCurrent()) return;
-      utils.shoppingList.list.setData(undefined, (items) => [
-        ...(items ?? []).filter((item) => item.id !== saved.id),
-        saved,
-      ]);
+      utils.shoppingList.list.setData(
+        undefined,
+        (data) =>
+          data && {
+            ...data,
+            items: [
+              ...data.items.filter((item) => item.id !== saved.id),
+              saved,
+            ],
+          },
+      );
     },
     onError: (_error, { preview }) => {
       if (!isCurrent()) return;

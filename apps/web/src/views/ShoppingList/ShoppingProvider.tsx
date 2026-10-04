@@ -64,11 +64,15 @@ const ShoppingSession = memo(function ShoppingSession({
   useEffect(() => {
     let active = true;
     const reset = async () => {
-      const filters = [api.shoppingList, api.oda, api.dinner, api.plan].map(
-        (router) => ({
-          queryKey: getQueryKey(router),
-        }),
-      );
+      const filters = [
+        api.shoppingList,
+        api.oda,
+        api.dinner,
+        api.plan,
+        api.household,
+      ].map((router) => ({
+        queryKey: getQueryKey(router),
+      }));
       await Promise.all(filters.map((filter) => client.cancelQueries(filter)));
       if (!active) return;
       // Clear old data while restarting any readers that stayed mounted.
@@ -87,15 +91,8 @@ const ShoppingSession = memo(function ShoppingSession({
 });
 
 function useShoppingState() {
-  const { isSignedIn, userId } = useAuth();
+  const { isSignedIn } = useAuth();
   const { pathname } = useRouter();
-  const householdStatus = api.household.welcomeStatus.useQuery(
-    { userId: userId ?? "" },
-    {
-      enabled: !!isSignedIn && pathname === "/shopping-list",
-      staleTime: Infinity,
-    },
-  );
   const [writes] = useState(createShoppingWrites);
   const active = useRef(true);
   useEffect(() => {
@@ -106,10 +103,7 @@ function useShoppingState() {
   }, []);
   const isCurrent = () => active.current;
   const queryOptions = {
-    enabled:
-      !!isSignedIn &&
-      pathname === "/shopping-list" &&
-      !!householdStatus.data?.householdId,
+    enabled: !!isSignedIn && pathname === "/shopping-list",
     refetchInterval: 2000,
     refetchOnWindowFocus: "always" as const,
     refetchOnReconnect: "always" as const,
@@ -117,8 +111,8 @@ function useShoppingState() {
   const list = api.shoppingList.list.useQuery(undefined, queryOptions);
   const recent = api.shoppingList.recent.useQuery(undefined, queryOptions);
   const edits = useEditShoppingItem(
-    list.data ?? [],
-    recent.data ?? [],
+    list.data?.items ?? [],
+    recent.data?.items ?? [],
     isCurrent,
     writes,
   );

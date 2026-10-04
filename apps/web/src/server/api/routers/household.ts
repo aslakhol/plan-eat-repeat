@@ -57,16 +57,16 @@ export const householdRouter = createTRPCRouter({
     });
     return { householdId: ctx.householdId, ...user };
   }),
-  household: publicProcedure.query(async ({ ctx }) => {
-    if (!ctx.auth.userId) {
-      throw new TRPCError({ code: "UNAUTHORIZED" });
-    }
-
+  household: protectedProcedure.query(async ({ ctx }) => {
     if (!ctx.householdId) {
       if (ctx.auth.sessionClaims?.metadata.householdId) {
         await tryUpdateClerkHouseholdMetadata(ctx.auth.userId, null);
       }
-      return { household: null, systemDefaultPrompt: getSystemDefaultPrompt() };
+      return {
+        household: null,
+        systemDefaultPrompt: getSystemDefaultPrompt(),
+        appStatus: ctx.appStatus,
+      };
     }
 
     const household = await ctx.db.household.findUnique({
@@ -83,7 +83,11 @@ export const householdRouter = createTRPCRouter({
       );
     }
 
-    return { household, systemDefaultPrompt: getSystemDefaultPrompt() };
+    return {
+      household,
+      systemDefaultPrompt: getSystemDefaultPrompt(),
+      appStatus: ctx.appStatus,
+    };
   }),
   createHousehold: protectedProcedure
     .input(

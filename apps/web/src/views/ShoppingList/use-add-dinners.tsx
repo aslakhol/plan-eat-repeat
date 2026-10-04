@@ -71,8 +71,14 @@ export function useAddDinners(
           utils.shoppingList.recent.cancel(),
         ]);
         if (!isCurrent()) return;
-        utils.shoppingList.list.setData(undefined, result.items);
-        utils.shoppingList.recent.setData(undefined, result.recentItems);
+        utils.shoppingList.list.setData(undefined, {
+          items: result.items,
+          appStatus: result.appStatus,
+        });
+        utils.shoppingList.recent.setData(undefined, {
+          items: result.recentItems,
+          appStatus: result.appStatus,
+        });
         void utils.shoppingList.sources.invalidate();
         void utils.oda.transfer.invalidate();
         toast({

@@ -6,7 +6,7 @@ import { api, type RouterOutputs } from "~/utils/api";
 
 import type { ShoppingWrites } from "./shopping-writes";
 
-type ShoppingItem = RouterOutputs["shoppingList"]["list"][number];
+type ShoppingItem = RouterOutputs["shoppingList"]["list"]["items"][number];
 type Move = { item: ShoppingItem; recent: boolean };
 type PendingMove = {
   ticket: ReturnType<ShoppingWrites["reserve"]>;
@@ -69,19 +69,28 @@ export function useMoveShoppingItem(
           utils.shoppingList.recent.cancel(),
         ]);
         if (!isCurrent()) return;
-        utils.shoppingList.list.setData(undefined, (items = []) =>
-          saved.recent
-            ? items.filter((item) => item.id !== before.item.id)
-            : [
-                ...items.filter((item) => item.id !== saved.item.id),
-                saved.item,
-              ],
+        utils.shoppingList.list.setData(
+          undefined,
+          (data) =>
+            data && {
+              ...data,
+              items: saved.recent
+                ? data.items.filter((item) => item.id !== before.item.id)
+                : [
+                    ...data.items.filter((item) => item.id !== saved.item.id),
+                    saved.item,
+                  ],
+            },
         );
-        utils.shoppingList.recent.setData(undefined, (items = []) => {
-          const others = items.filter(
+        utils.shoppingList.recent.setData(undefined, (data) => {
+          if (!data) return data;
+          const others = data.items.filter(
             (item) => item.ownItemId !== saved.item.ownItemId,
           );
-          return saved.recent ? [saved.item, ...others].slice(0, 25) : others;
+          return {
+            ...data,
+            items: saved.recent ? [saved.item, ...others].slice(0, 25) : others,
+          };
         });
         publish();
       }
