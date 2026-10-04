@@ -1,4 +1,5 @@
 import { createPrismaClient } from "@planeatrepeat/db";
+import { SAVED_READS_KEY } from "../src/lib/saved-reads";
 import { expect, test } from "@playwright/test";
 import { createRequire } from "node:module";
 import { ensureSignedIn } from "./capture-support";
@@ -98,6 +99,7 @@ test("returning to the Week keeps a planned Dinner when the refresh lacks authen
         await route.continue();
       }
     });
+    await page.evaluate((key) => localStorage.removeItem(key), SAVED_READS_KEY);
     await page.reload();
     await expect(
       page.getByRole("button", { name: "Try again", exact: true }),

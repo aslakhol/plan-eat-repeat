@@ -24,6 +24,7 @@ import {
 } from "~/components/ui/dialog";
 import { api, type RouterOutputs } from "~/utils/api";
 import { toast } from "~/components/ui/use-toast";
+import { ReadRefreshStatus } from "~/components/ReadRefreshStatus";
 import { cn } from "~/lib/utils";
 import {
   shoppingCategoriesQueryOptions,
@@ -253,6 +254,7 @@ export function ShoppingListView() {
         <h1 className="min-w-0 flex-1 font-serif text-[30px] leading-tight max-[360px]:text-[26px]">
           Shopping list
         </h1>
+        <ReadRefreshStatus queries={[list, recent]} />
         <Button
           variant="outline"
           size="sm"
@@ -410,7 +412,7 @@ export function ShoppingListView() {
         </div>
       ))}
 
-      {list.isError && (
+      {list.isError && !list.data && (
         <p role="alert" className="text-destructive mb-4 text-sm">
           Could not refresh the list. Check your connection.
         </p>

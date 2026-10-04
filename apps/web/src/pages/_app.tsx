@@ -1,7 +1,10 @@
 import { type AppProps } from "next/app";
 import Head from "next/head";
 import { type NextPage } from "next";
-import { type ReactElement, type ReactNode } from "react";
+import { useState, type ReactElement, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createPersistenceOptions } from "~/lib/saved-reads";
 
 import { api } from "~/utils/api";
 
@@ -60,6 +63,16 @@ type AppPropsWithLayout = AppProps & {
 const defaultGetLayout = (page: ReactElement) => <AppLayout>{page}</AppLayout>;
 
 const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
+  const queryClient = useQueryClient();
+  const [persistOptions] = useState(() => {
+    let storage: Storage | undefined;
+    try {
+      if (typeof window !== "undefined") storage = window.localStorage;
+    } catch {
+      // Browser storage can be disabled. Queries still work without persistence.
+    }
+    return createPersistenceOptions(storage);
+  });
   const router = useRouter();
   const getLayout = Component.getLayout ?? defaultGetLayout;
 
@@ -83,24 +96,29 @@ const MyApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   }, [router.events]);
 
   return (
-    <PostHogProvider client={posthog}>
-      <ClerkProvider localization={localization}>
-        <Head>
-          <link rel="icon" href="/favicon.ico" sizes="any" />
-          <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-          <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-          <meta name="theme-color" content="#e26a36" />
-        </Head>
-        <main
-          className={`${youngSerif.variable} ${quicksand.variable} font-sans`}
-        >
-          <ShoppingProvider>
-            {getLayout(<Component {...pageProps} />)}
-          </ShoppingProvider>
-          <Toaster />
-        </main>
-      </ClerkProvider>
-    </PostHogProvider>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={persistOptions}
+    >
+      <PostHogProvider client={posthog}>
+        <ClerkProvider localization={localization}>
+          <Head>
+            <link rel="icon" href="/favicon.ico" sizes="any" />
+            <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+            <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+            <meta name="theme-color" content="#e26a36" />
+          </Head>
+          <main
+            className={`${youngSerif.variable} ${quicksand.variable} font-sans`}
+          >
+            <ShoppingProvider>
+              {getLayout(<Component {...pageProps} />)}
+            </ShoppingProvider>
+            <Toaster />
+          </main>
+        </ClerkProvider>
+      </PostHogProvider>
+    </PersistQueryClientProvider>
   );
 };
 

@@ -1,3 +1,4 @@
+import { SAVED_READS_KEY } from "../src/lib/saved-reads";
 import { expect, test } from "@playwright/test";
 import { ensureSignedIn } from "./capture-support";
 
@@ -29,6 +30,7 @@ test("opening Plan reads the visible week once before prefetching adjacent weeks
   });
 
   try {
+    await page.evaluate((key) => localStorage.removeItem(key), SAVED_READS_KEY);
     await page.reload();
     await expect.poll(() => reads.length).toBeGreaterThan(0);
     // Hold the opening response: no adjacent-week prefetch is useful yet.

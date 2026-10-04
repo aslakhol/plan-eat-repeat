@@ -1,17 +1,13 @@
 import { UtensilsCrossed } from "lucide-react";
 import { api } from "../../utils/api";
 import { useEffect, useMemo, useState } from "react";
-import {
-  addWeeks,
-  differenceInCalendarWeeks,
-  isSameDay,
-  startOfDay,
-} from "date-fns";
+import { addWeeks, differenceInCalendarWeeks, isSameDay } from "date-fns";
 import { useRouter } from "next/router";
 import { Button } from "~/components/ui/button";
 import { Day } from "./Day";
 import { WeekSelect } from "../WeekSelect";
-import { keepPreviousData } from "@tanstack/react-query";
+import { ReadRefreshStatus } from "~/components/ReadRefreshStatus";
+import { useToday } from "~/hooks/use-today";
 import { buildDinnerPlanningWeek } from "~/lib/dinner-planning";
 import {
   isPlanSlotDate,
@@ -23,7 +19,7 @@ export const PlanView = () => {
   const [weekOffSet, setWeekOffSet] = useState(0);
   const trpc = api.useUtils();
 
-  const today = useMemo(() => startOfDay(new Date()), []);
+  const today = useToday();
   const dateQuery =
     typeof router.query.date === "string" && isPlanSlotDate(router.query.date)
       ? router.query.date
@@ -45,10 +41,7 @@ export const PlanView = () => {
     [today, weekOffSet],
   );
 
-  const weekQuery = api.plan.weekOverview.useQuery(
-    { startOfWeek: week.start },
-    { placeholderData: keepPreviousData },
-  );
+  const weekQuery = api.plan.weekOverview.useQuery({ startOfWeek: week.start });
   const weekShown = weekQuery.isSuccess && !weekQuery.isPlaceholderData;
   const tonightDinnerId = weekQuery.data?.plans.find((p) =>
     isSameDay(p.date, today),
@@ -96,9 +89,12 @@ export const PlanView = () => {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 pb-24 md:gap-6 md:pb-0">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-foreground font-serif text-3xl font-normal">
-          Week
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-foreground font-serif text-3xl font-normal">
+            Week
+          </h1>
+          <ReadRefreshStatus queries={[weekQuery]} />
+        </div>
         <div className="hidden md:block">
           <WeekSelect setWeekOfSet={setWeekOffSet} weekLabel={week.label} />
         </div>

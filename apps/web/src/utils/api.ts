@@ -47,6 +47,7 @@ export const api = createTRPCNext<AppRouter>({
         }),
       ],
       queryClientConfig: {
+        defaultOptions: { queries: { gcTime: 7 * 24 * 60 * 60 * 1000 } },
         queryCache: new QueryCache({
           onError: (error, query) => {
             // Refresh failures remain in query state for inline feedback.
