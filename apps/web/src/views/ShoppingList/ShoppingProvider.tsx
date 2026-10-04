@@ -40,8 +40,8 @@ export function ShoppingProvider({ children }: { children: ReactNode }) {
     identity: string;
     resetCache: boolean;
   } | null>(null);
-  // Wait for Clerk's initial identity before deciding whether the cache belongs
-  // to a previous session. A fresh page has no old household data to clear.
+  // Preserve restored reads during initial Clerk loading. Only reset for an
+  // identity change within this visit, after retiring its pending writes.
   if (isLoaded && userLoaded && session?.identity !== identity) {
     setSession({ identity, resetCache: session !== null });
   }

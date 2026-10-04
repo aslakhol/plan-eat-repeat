@@ -28,7 +28,7 @@ export const Day = ({
   onCloseRequestedDate,
 }: Props) => {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [changePlan, setChangePlan] = useState(!plannedDinner);
+  const [changePlan, setChangePlan] = useState(false);
 
   useEffect(() => {
     if (openOnLoad) {

@@ -1,17 +1,13 @@
 import { UtensilsCrossed } from "lucide-react";
 import { api } from "../../utils/api";
 import { useEffect, useMemo, useState } from "react";
-import {
-  addWeeks,
-  differenceInCalendarWeeks,
-  isSameDay,
-} from "date-fns";
+import { addWeeks, differenceInCalendarWeeks, isSameDay } from "date-fns";
 import { useRouter } from "next/router";
 import { Button } from "~/components/ui/button";
 import { Day } from "./Day";
 import { WeekSelect } from "../WeekSelect";
+import { ReadRefreshStatus } from "~/components/ReadRefreshStatus";
 import { useToday } from "~/hooks/use-today";
-import { keepPreviousData } from "@tanstack/react-query";
 import { buildDinnerPlanningWeek } from "~/lib/dinner-planning";
 import {
   isPlanSlotDate,
@@ -45,10 +41,7 @@ export const PlanView = () => {
     [today, weekOffSet],
   );
 
-  const weekQuery = api.plan.weekOverview.useQuery(
-    { startOfWeek: week.start },
-    { placeholderData: keepPreviousData },
-  );
+  const weekQuery = api.plan.weekOverview.useQuery({ startOfWeek: week.start });
   const weekShown = weekQuery.isSuccess && !weekQuery.isPlaceholderData;
   const tonightDinnerId = weekQuery.data?.plans.find((p) =>
     isSameDay(p.date, today),
@@ -104,6 +97,7 @@ export const PlanView = () => {
         </div>
       </div>
 
+      <ReadRefreshStatus queries={[weekQuery]} />
       <div className="grid grid-cols-1 gap-2.5">
         {week.days.map((day) => (
           <Day

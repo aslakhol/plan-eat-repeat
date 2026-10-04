@@ -24,6 +24,7 @@ import {
 } from "~/components/ui/dialog";
 import { api, type RouterOutputs } from "~/utils/api";
 import { toast } from "~/components/ui/use-toast";
+import { ReadRefreshStatus } from "~/components/ReadRefreshStatus";
 import { cn } from "~/lib/utils";
 import {
   shoppingCategoriesQueryOptions,
@@ -312,6 +313,7 @@ export function ShoppingListView() {
           </div>
         </DetailsMenu>
       </header>
+      <ReadRefreshStatus queries={[list, recent]} />
       <OdaTransferProgress oda={oda} />
       {pendingDinnerAdditions.map((addition) => (
         <p key={addition.operationId} role="status" className="mb-3 text-sm">
@@ -410,7 +412,7 @@ export function ShoppingListView() {
         </div>
       ))}
 
-      {list.isError && (
+      {list.isError && !list.data && (
         <p role="alert" className="text-destructive mb-4 text-sm">
           Could not refresh the list. Check your connection.
         </p>
