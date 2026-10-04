@@ -28,24 +28,36 @@ const ShoppingContext = createContext<ShoppingState | null>(null);
 // Only the shopping owner resets on identity changes. Keep unrelated page state
 // mounted, including authentication continuations on Published Dinners.
 export function ShoppingProvider({ children }: { children: ReactNode }) {
-  const { userId, sessionId, sessionClaims } = useAuth();
-  const { user } = useUser();
+  const { isLoaded, userId, sessionId, sessionClaims } = useAuth();
+  const { isLoaded: userLoaded, user } = useUser();
   const identity = JSON.stringify([
     userId,
     sessionId,
     sessionClaims?.metadata?.householdId,
     user?.publicMetadata.householdId,
   ]);
+  const [session, setSession] = useState<{
+    identity: string;
+    resetCache: boolean;
+  } | null>(null);
+  // Wait for Clerk's initial identity before deciding whether the cache belongs
+  // to a previous session. A fresh page has no old household data to clear.
+  if (isLoaded && userLoaded && session?.identity !== identity) {
+    setSession({ identity, resetCache: session !== null });
+  }
   const [snapshot, setSnapshot] = useState<ShoppingSnapshot | null>(null);
   return (
     <ShoppingContext.Provider
       value={snapshot?.identity === identity ? snapshot.value : null}
     >
-      <ShoppingSession
-        key={identity}
-        identity={identity}
-        publish={setSnapshot}
-      />
+      {session && (
+        <ShoppingSession
+          key={session.identity}
+          identity={session.identity}
+          resetCache={session.resetCache}
+          publish={setSnapshot}
+        />
+      )}
       {children}
     </ShoppingContext.Provider>
   );
@@ -54,14 +66,17 @@ export function ShoppingProvider({ children }: { children: ReactNode }) {
 // Publishing shopping state must not make its owner render again.
 const ShoppingSession = memo(function ShoppingSession({
   identity,
+  resetCache,
   publish,
 }: {
   identity: string;
+  resetCache: boolean;
   publish: (snapshot: ShoppingSnapshot) => void;
 }) {
   const client = useQueryClient();
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(!resetCache);
   useEffect(() => {
+    if (!resetCache) return;
     let active = true;
     const reset = async () => {
       const filters = [
@@ -84,7 +99,7 @@ const ShoppingSession = memo(function ShoppingSession({
     return () => {
       active = false;
     };
-  }, [client]);
+  }, [client, resetCache]);
   return ready ? (
     <ShoppingStatePublisher identity={identity} publish={publish} />
   ) : null;
