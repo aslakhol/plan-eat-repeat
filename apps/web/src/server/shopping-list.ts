@@ -50,12 +50,19 @@ export async function combineShoppingRequirements(
       const quantity = combineShoppingQuantity(destination, item);
       if (!quantity) continue;
       const { amount } = quantity;
-      if (amount !== destination.amount) {
+      const dinnerIds = [
+        ...new Set([...destination.dinnerIds, ...item.dinnerIds]),
+      ];
+      if (
+        amount !== destination.amount ||
+        dinnerIds.length !== destination.dinnerIds.length
+      ) {
         await tx.shoppingItem.update({
           where: { id: destination.id, householdId },
-          data: { amount, revision: crypto.randomUUID() },
+          data: { amount, dinnerIds, revision: crypto.randomUUID() },
         });
         destination.amount = amount;
+        destination.dinnerIds = dinnerIds;
       }
       await tx.shoppingItem.delete({ where: { id: item.id, householdId } });
       destinations.set(item.id, destination.id);

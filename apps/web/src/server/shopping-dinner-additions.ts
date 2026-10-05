@@ -52,6 +52,7 @@ export async function prepareDinnerAddition(
     identity: string;
     amount: number | null;
     unit: string | null;
+    dinnerId: number;
   }[] = [];
   const newItems = new Map<
     string,
@@ -76,6 +77,7 @@ export async function prepareDinnerAddition(
         identity: shoppingIdentity(selected.name, selected.note),
         amount: item.amount,
         unit: item.unit,
+        dinnerId,
       });
       if ("name" in selection) {
         const identity = shoppingIdentity(selection.name, selection.note);
@@ -200,8 +202,12 @@ async function addDinnerRequirements(
       const combined = combineShoppingQuantity(existing, quantity);
       if (!combined) continue;
       const { amount } = combined;
-      if (amount !== existing.amount) {
+      const dinnerIds = existing.dinnerIds.includes(item.dinnerId)
+        ? existing.dinnerIds
+        : [...existing.dinnerIds, item.dinnerId];
+      if (amount !== existing.amount || dinnerIds !== existing.dinnerIds) {
         existing.amount = amount;
+        existing.dinnerIds = dinnerIds;
         existing.revision = crypto.randomUUID();
       }
       destination = existing;
@@ -212,6 +218,7 @@ async function addDinnerRequirements(
         id: crypto.randomUUID(),
         householdId,
         ...quantity,
+        dinnerIds: [item.dinnerId],
         revision: crypto.randomUUID(),
       };
       group.push(destination);
@@ -234,11 +241,12 @@ async function addDinnerRequirements(
     // between requirements for the same Own Item in the Shopping List.
     const saved = await tx.shoppingItem.createManyAndReturn({
       data: created.map(
-        ({ householdId, ownItemId, amount, unit, revision }) => ({
+        ({ householdId, ownItemId, amount, unit, dinnerIds, revision }) => ({
           householdId,
           ownItemId,
           amount,
           unit,
+          dinnerIds,
           revision,
         }),
       ),
@@ -250,7 +258,11 @@ async function addDinnerRequirements(
     if (!before.has(item.id)) continue;
     await tx.shoppingItem.update({
       where: { householdId, id: item.id },
-      data: { amount: item.amount, revision: item.revision },
+      data: {
+        amount: item.amount,
+        dinnerIds: item.dinnerIds,
+        revision: item.revision,
+      },
     });
   }
   const recentlyUsedAt = new Date(

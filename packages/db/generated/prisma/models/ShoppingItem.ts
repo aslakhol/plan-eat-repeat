@@ -28,10 +28,12 @@ export type AggregateShoppingItem = {
 
 export type ShoppingItemAvgAggregateOutputType = {
   amount: number | null
+  dinnerIds: number | null
 }
 
 export type ShoppingItemSumAggregateOutputType = {
   amount: number | null
+  dinnerIds: number[]
 }
 
 export type ShoppingItemMinAggregateOutputType = {
@@ -58,6 +60,7 @@ export type ShoppingItemCountAggregateOutputType = {
   householdId: number
   amount: number
   unit: number
+  dinnerIds: number
   revision: number
   _all: number
 }
@@ -65,10 +68,12 @@ export type ShoppingItemCountAggregateOutputType = {
 
 export type ShoppingItemAvgAggregateInputType = {
   amount?: true
+  dinnerIds?: true
 }
 
 export type ShoppingItemSumAggregateInputType = {
   amount?: true
+  dinnerIds?: true
 }
 
 export type ShoppingItemMinAggregateInputType = {
@@ -95,6 +100,7 @@ export type ShoppingItemCountAggregateInputType = {
   householdId?: true
   amount?: true
   unit?: true
+  dinnerIds?: true
   revision?: true
   _all?: true
 }
@@ -191,6 +197,7 @@ export type ShoppingItemGroupByOutputType = {
   householdId: string
   amount: number | null
   unit: string | null
+  dinnerIds: number[]
   revision: string
   _count: ShoppingItemCountAggregateOutputType | null
   _avg: ShoppingItemAvgAggregateOutputType | null
@@ -223,6 +230,7 @@ export type ShoppingItemWhereInput = {
   householdId?: Prisma.StringFilter<"ShoppingItem"> | string
   amount?: Prisma.FloatNullableFilter<"ShoppingItem"> | number | null
   unit?: Prisma.StringNullableFilter<"ShoppingItem"> | string | null
+  dinnerIds?: Prisma.IntNullableListFilter<"ShoppingItem">
   revision?: Prisma.StringFilter<"ShoppingItem"> | string
   ownItem?: Prisma.XOR<Prisma.OwnItemScalarRelationFilter, Prisma.OwnItemWhereInput>
   household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
@@ -234,6 +242,7 @@ export type ShoppingItemOrderByWithRelationInput = {
   householdId?: Prisma.SortOrder
   amount?: Prisma.SortOrderInput | Prisma.SortOrder
   unit?: Prisma.SortOrderInput | Prisma.SortOrder
+  dinnerIds?: Prisma.SortOrder
   revision?: Prisma.SortOrder
   ownItem?: Prisma.OwnItemOrderByWithRelationInput
   household?: Prisma.HouseholdOrderByWithRelationInput
@@ -248,6 +257,7 @@ export type ShoppingItemWhereUniqueInput = Prisma.AtLeast<{
   householdId?: Prisma.StringFilter<"ShoppingItem"> | string
   amount?: Prisma.FloatNullableFilter<"ShoppingItem"> | number | null
   unit?: Prisma.StringNullableFilter<"ShoppingItem"> | string | null
+  dinnerIds?: Prisma.IntNullableListFilter<"ShoppingItem">
   revision?: Prisma.StringFilter<"ShoppingItem"> | string
   ownItem?: Prisma.XOR<Prisma.OwnItemScalarRelationFilter, Prisma.OwnItemWhereInput>
   household?: Prisma.XOR<Prisma.HouseholdScalarRelationFilter, Prisma.HouseholdWhereInput>
@@ -259,6 +269,7 @@ export type ShoppingItemOrderByWithAggregationInput = {
   householdId?: Prisma.SortOrder
   amount?: Prisma.SortOrderInput | Prisma.SortOrder
   unit?: Prisma.SortOrderInput | Prisma.SortOrder
+  dinnerIds?: Prisma.SortOrder
   revision?: Prisma.SortOrder
   _count?: Prisma.ShoppingItemCountOrderByAggregateInput
   _avg?: Prisma.ShoppingItemAvgOrderByAggregateInput
@@ -276,6 +287,7 @@ export type ShoppingItemScalarWhereWithAggregatesInput = {
   householdId?: Prisma.StringWithAggregatesFilter<"ShoppingItem"> | string
   amount?: Prisma.FloatNullableWithAggregatesFilter<"ShoppingItem"> | number | null
   unit?: Prisma.StringNullableWithAggregatesFilter<"ShoppingItem"> | string | null
+  dinnerIds?: Prisma.IntNullableListFilter<"ShoppingItem">
   revision?: Prisma.StringWithAggregatesFilter<"ShoppingItem"> | string
 }
 
@@ -283,6 +295,7 @@ export type ShoppingItemCreateInput = {
   id?: string
   amount?: number | null
   unit?: string | null
+  dinnerIds?: Prisma.ShoppingItemCreatedinnerIdsInput | number[]
   revision?: string
   ownItem: Prisma.OwnItemCreateNestedOneWithoutItemsInput
   household: Prisma.HouseholdCreateNestedOneWithoutShoppingItemsInput
@@ -294,6 +307,7 @@ export type ShoppingItemUncheckedCreateInput = {
   householdId: string
   amount?: number | null
   unit?: string | null
+  dinnerIds?: Prisma.ShoppingItemCreatedinnerIdsInput | number[]
   revision?: string
 }
 
@@ -301,6 +315,7 @@ export type ShoppingItemUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dinnerIds?: Prisma.ShoppingItemUpdatedinnerIdsInput | number[]
   revision?: Prisma.StringFieldUpdateOperationsInput | string
   ownItem?: Prisma.OwnItemUpdateOneRequiredWithoutItemsNestedInput
   household?: Prisma.HouseholdUpdateOneRequiredWithoutShoppingItemsNestedInput
@@ -312,6 +327,7 @@ export type ShoppingItemUncheckedUpdateInput = {
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dinnerIds?: Prisma.ShoppingItemUpdatedinnerIdsInput | number[]
   revision?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -321,6 +337,7 @@ export type ShoppingItemCreateManyInput = {
   householdId: string
   amount?: number | null
   unit?: string | null
+  dinnerIds?: Prisma.ShoppingItemCreatedinnerIdsInput | number[]
   revision?: string
 }
 
@@ -328,6 +345,7 @@ export type ShoppingItemUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dinnerIds?: Prisma.ShoppingItemUpdatedinnerIdsInput | number[]
   revision?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -337,6 +355,7 @@ export type ShoppingItemUncheckedUpdateManyInput = {
   householdId?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dinnerIds?: Prisma.ShoppingItemUpdatedinnerIdsInput | number[]
   revision?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -350,17 +369,27 @@ export type ShoppingItemOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type IntNullableListFilter<$PrismaModel = never> = {
+  equals?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel> | null
+  has?: number | Prisma.IntFieldRefInput<$PrismaModel> | null
+  hasEvery?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
+  hasSome?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
+  isEmpty?: boolean
+}
+
 export type ShoppingItemCountOrderByAggregateInput = {
   ownItemId?: Prisma.SortOrder
   id?: Prisma.SortOrder
   householdId?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   unit?: Prisma.SortOrder
+  dinnerIds?: Prisma.SortOrder
   revision?: Prisma.SortOrder
 }
 
 export type ShoppingItemAvgOrderByAggregateInput = {
   amount?: Prisma.SortOrder
+  dinnerIds?: Prisma.SortOrder
 }
 
 export type ShoppingItemMaxOrderByAggregateInput = {
@@ -383,6 +412,7 @@ export type ShoppingItemMinOrderByAggregateInput = {
 
 export type ShoppingItemSumOrderByAggregateInput = {
   amount?: Prisma.SortOrder
+  dinnerIds?: Prisma.SortOrder
 }
 
 export type ShoppingItemCreateNestedManyWithoutOwnItemInput = {
@@ -425,6 +455,15 @@ export type ShoppingItemUncheckedUpdateManyWithoutOwnItemNestedInput = {
   update?: Prisma.ShoppingItemUpdateWithWhereUniqueWithoutOwnItemInput | Prisma.ShoppingItemUpdateWithWhereUniqueWithoutOwnItemInput[]
   updateMany?: Prisma.ShoppingItemUpdateManyWithWhereWithoutOwnItemInput | Prisma.ShoppingItemUpdateManyWithWhereWithoutOwnItemInput[]
   deleteMany?: Prisma.ShoppingItemScalarWhereInput | Prisma.ShoppingItemScalarWhereInput[]
+}
+
+export type ShoppingItemCreatedinnerIdsInput = {
+  set: number[]
+}
+
+export type ShoppingItemUpdatedinnerIdsInput = {
+  set?: number[]
+  push?: number | number[]
 }
 
 export type ShoppingItemCreateNestedManyWithoutHouseholdInput = {
@@ -473,6 +512,7 @@ export type ShoppingItemCreateWithoutOwnItemInput = {
   id?: string
   amount?: number | null
   unit?: string | null
+  dinnerIds?: Prisma.ShoppingItemCreatedinnerIdsInput | number[]
   revision?: string
   household: Prisma.HouseholdCreateNestedOneWithoutShoppingItemsInput
 }
@@ -481,6 +521,7 @@ export type ShoppingItemUncheckedCreateWithoutOwnItemInput = {
   id?: string
   amount?: number | null
   unit?: string | null
+  dinnerIds?: Prisma.ShoppingItemCreatedinnerIdsInput | number[]
   revision?: string
 }
 
@@ -519,6 +560,7 @@ export type ShoppingItemScalarWhereInput = {
   householdId?: Prisma.StringFilter<"ShoppingItem"> | string
   amount?: Prisma.FloatNullableFilter<"ShoppingItem"> | number | null
   unit?: Prisma.StringNullableFilter<"ShoppingItem"> | string | null
+  dinnerIds?: Prisma.IntNullableListFilter<"ShoppingItem">
   revision?: Prisma.StringFilter<"ShoppingItem"> | string
 }
 
@@ -526,6 +568,7 @@ export type ShoppingItemCreateWithoutHouseholdInput = {
   id?: string
   amount?: number | null
   unit?: string | null
+  dinnerIds?: Prisma.ShoppingItemCreatedinnerIdsInput | number[]
   revision?: string
   ownItem: Prisma.OwnItemCreateNestedOneWithoutItemsInput
 }
@@ -535,6 +578,7 @@ export type ShoppingItemUncheckedCreateWithoutHouseholdInput = {
   id?: string
   amount?: number | null
   unit?: string | null
+  dinnerIds?: Prisma.ShoppingItemCreatedinnerIdsInput | number[]
   revision?: string
 }
 
@@ -568,6 +612,7 @@ export type ShoppingItemCreateManyOwnItemInput = {
   id?: string
   amount?: number | null
   unit?: string | null
+  dinnerIds?: Prisma.ShoppingItemCreatedinnerIdsInput | number[]
   revision?: string
 }
 
@@ -575,6 +620,7 @@ export type ShoppingItemUpdateWithoutOwnItemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dinnerIds?: Prisma.ShoppingItemUpdatedinnerIdsInput | number[]
   revision?: Prisma.StringFieldUpdateOperationsInput | string
   household?: Prisma.HouseholdUpdateOneRequiredWithoutShoppingItemsNestedInput
 }
@@ -583,6 +629,7 @@ export type ShoppingItemUncheckedUpdateWithoutOwnItemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dinnerIds?: Prisma.ShoppingItemUpdatedinnerIdsInput | number[]
   revision?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -590,6 +637,7 @@ export type ShoppingItemUncheckedUpdateManyWithoutOwnItemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dinnerIds?: Prisma.ShoppingItemUpdatedinnerIdsInput | number[]
   revision?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -598,6 +646,7 @@ export type ShoppingItemCreateManyHouseholdInput = {
   id?: string
   amount?: number | null
   unit?: string | null
+  dinnerIds?: Prisma.ShoppingItemCreatedinnerIdsInput | number[]
   revision?: string
 }
 
@@ -605,6 +654,7 @@ export type ShoppingItemUpdateWithoutHouseholdInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dinnerIds?: Prisma.ShoppingItemUpdatedinnerIdsInput | number[]
   revision?: Prisma.StringFieldUpdateOperationsInput | string
   ownItem?: Prisma.OwnItemUpdateOneRequiredWithoutItemsNestedInput
 }
@@ -614,6 +664,7 @@ export type ShoppingItemUncheckedUpdateWithoutHouseholdInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dinnerIds?: Prisma.ShoppingItemUpdatedinnerIdsInput | number[]
   revision?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -622,6 +673,7 @@ export type ShoppingItemUncheckedUpdateManyWithoutHouseholdInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dinnerIds?: Prisma.ShoppingItemUpdatedinnerIdsInput | number[]
   revision?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -633,6 +685,7 @@ export type ShoppingItemSelect<ExtArgs extends runtime.Types.Extensions.Internal
   householdId?: boolean
   amount?: boolean
   unit?: boolean
+  dinnerIds?: boolean
   revision?: boolean
   ownItem?: boolean | Prisma.OwnItemDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
@@ -644,6 +697,7 @@ export type ShoppingItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   householdId?: boolean
   amount?: boolean
   unit?: boolean
+  dinnerIds?: boolean
   revision?: boolean
   ownItem?: boolean | Prisma.OwnItemDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
@@ -655,6 +709,7 @@ export type ShoppingItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   householdId?: boolean
   amount?: boolean
   unit?: boolean
+  dinnerIds?: boolean
   revision?: boolean
   ownItem?: boolean | Prisma.OwnItemDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
@@ -666,10 +721,11 @@ export type ShoppingItemSelectScalar = {
   householdId?: boolean
   amount?: boolean
   unit?: boolean
+  dinnerIds?: boolean
   revision?: boolean
 }
 
-export type ShoppingItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"ownItemId" | "id" | "householdId" | "amount" | "unit" | "revision", ExtArgs["result"]["shoppingItem"]>
+export type ShoppingItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"ownItemId" | "id" | "householdId" | "amount" | "unit" | "dinnerIds" | "revision", ExtArgs["result"]["shoppingItem"]>
 export type ShoppingItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ownItem?: boolean | Prisma.OwnItemDefaultArgs<ExtArgs>
   household?: boolean | Prisma.HouseholdDefaultArgs<ExtArgs>
@@ -695,6 +751,7 @@ export type $ShoppingItemPayload<ExtArgs extends runtime.Types.Extensions.Intern
     householdId: string
     amount: number | null
     unit: string | null
+    dinnerIds: number[]
     revision: string
   }, ExtArgs["result"]["shoppingItem"]>
   composites: {}
@@ -1126,6 +1183,7 @@ export interface ShoppingItemFieldRefs {
   readonly householdId: Prisma.FieldRef<"ShoppingItem", 'String'>
   readonly amount: Prisma.FieldRef<"ShoppingItem", 'Float'>
   readonly unit: Prisma.FieldRef<"ShoppingItem", 'String'>
+  readonly dinnerIds: Prisma.FieldRef<"ShoppingItem", 'Int[]'>
   readonly revision: Prisma.FieldRef<"ShoppingItem", 'String'>
 }
     

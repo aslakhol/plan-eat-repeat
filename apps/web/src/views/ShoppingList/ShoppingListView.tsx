@@ -12,6 +12,7 @@ import Link from "next/link";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { shoppingCategories } from "@planeatrepeat/shared";
 import { useShoppingCategoryHeadings } from "~/hooks/use-shopping-category-headings";
+import { badgeVariants } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { DetailsMenu } from "~/components/ui/details-menu";
 import {
@@ -35,6 +36,7 @@ import type { ShoppingEdit } from "./use-edit-shopping-item";
 import { useShopping } from "./ShoppingProvider";
 import { EditItemSheet } from "./EditItemSheet";
 import { DinnerSourceActions } from "./DinnerSourceActions";
+import { useDinnerNames } from "./use-dinner-names";
 import {
   ShoppingItemCreationTrigger,
   useShoppingItemCreation,
@@ -42,9 +44,15 @@ import {
 
 type ShoppingItem = RouterOutputs["shoppingList"]["list"]["items"][number];
 const RECENT_OPEN_KEY = "plan-eat-repeat:recently-used-open";
+const VISIBLE_DINNER_TAGS = 2;
+const dinnerTagClassName = cn(
+  badgeVariants({ variant: "outline" }),
+  "text-muted-foreground block bg-white py-[3px] text-[10.5px] font-semibold leading-none",
+);
 
 function ShoppingItemRow({
   item,
+  dinnerNames = [],
   onEdit,
   onMove,
   recent = false,
@@ -52,6 +60,7 @@ function ShoppingItemRow({
   moveDisabled = false,
 }: {
   item: ShoppingItem;
+  dinnerNames?: string[];
   onEdit: () => void;
   onMove: () => void;
   recent?: boolean;
@@ -72,11 +81,28 @@ function ShoppingItemRow({
         className="hover:bg-secondary focus-visible:ring-ring flex min-h-14 min-w-0 flex-1 items-center gap-2 rounded-[14px] px-3.5 py-3 text-left outline-none [overflow-wrap:anywhere] focus-visible:ring-2"
       >
         {recent && <Plus className="text-muted-foreground size-4 shrink-0" />}
-        <span>
+        <span className="min-w-0">
           <span className="font-serif text-[17px]">{item.name}</span>
           {item.note && (
             <span className="text-muted-foreground ml-1 text-[13px]">
               {item.note}
+            </span>
+          )}
+          {dinnerNames.length > 0 && (
+            <span className="mt-1.5 flex gap-1">
+              {dinnerNames.slice(0, VISIBLE_DINNER_TAGS).map((name, index) => (
+                <span
+                  key={index}
+                  className={cn(dinnerTagClassName, "min-w-0 truncate")}
+                >
+                  {name}
+                </span>
+              ))}
+              {dinnerNames.length > VISIBLE_DINNER_TAGS && (
+                <span className={cn(dinnerTagClassName, "shrink-0")}>
+                  +{dinnerNames.length - VISIBLE_DINNER_TAGS} more
+                </span>
+              )}
             </span>
           )}
         </span>
@@ -132,6 +158,7 @@ export function ShoppingListView() {
     dismissRemoval,
     removingOwnIds,
   } = useShopping();
+  const dinnerNames = useDinnerNames();
   const pendingIdentities = new Set(
     pendingItems.map((item) => shoppingIdentity(item.name, item.note)),
   );
@@ -496,6 +523,7 @@ export function ShoppingListView() {
                   )}
                 <ShoppingItemRow
                   item={item}
+                  dinnerNames={dinnerNames(item.dinnerIds)}
                   pending={
                     pendingOwnIds.has(item.ownItemId) ||
                     pendingIdentities.has(
@@ -581,6 +609,9 @@ export function ShoppingListView() {
           draft={editingItem.draft}
           failedKey={editingItem.failedKey}
           item={editingItem.item}
+          dinnerNames={
+            editingItem.recent ? [] : dinnerNames(editingItem.item.dinnerIds)
+          }
           recent={editingItem.recent}
           onClose={() => setEditingItem(null)}
         />

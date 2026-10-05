@@ -130,10 +130,13 @@ export const rememberOwnItem = async (
 export function shoppingItemDetails<
   T extends {
     ownItem: { name: string; normalizedName: string; note: string | null };
+    dinnerIds?: number[];
   },
 >(item: T) {
   return {
     ...item,
+    // Recently Used items no longer belong to the Dinners they were added for.
+    dinnerIds: item.dinnerIds ?? [],
     name: item.ownItem.name,
     normalizedName: item.ownItem.normalizedName,
     note: item.ownItem.note,

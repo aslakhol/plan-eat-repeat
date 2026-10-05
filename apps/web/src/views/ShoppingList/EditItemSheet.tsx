@@ -35,12 +35,14 @@ import { OdaProductPicker } from "./OdaProductPicker";
 
 export function EditItemSheet({
   item,
+  dinnerNames,
   onClose,
   recent = false,
   draft,
   failedKey,
 }: {
   item: RouterOutputs["shoppingList"]["list"]["items"][number];
+  dinnerNames: string[];
   onClose: () => void;
   recent?: boolean;
   draft?: ShoppingEdit["input"];
@@ -199,6 +201,21 @@ export function EditItemSheet({
                 </p>
               )}
             </div>
+            {dinnerNames.length > 0 && (
+              <div className="space-y-1.5">
+                <h3 className="text-sm font-medium leading-none">Dinners</h3>
+                <ul className="flex flex-wrap gap-1.5">
+                  {dinnerNames.map((dinnerName, index) => (
+                    <li
+                      key={index}
+                      className="bg-secondary/70 rounded-full px-3 py-1 text-sm"
+                    >
+                      {dinnerName}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="edit-shopping-note">Note</Label>
               <Input

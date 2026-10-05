@@ -118,6 +118,8 @@ model ShoppingItem {
     householdId    String
     amount         Float?
     unit           String?
+    // Dinners this requirement was added for; cleared when it leaves the list.
+    dinnerIds      Int[]     @default([])
     revision       String    @default(uuid())
 
     @@index([householdId, ownItemId])

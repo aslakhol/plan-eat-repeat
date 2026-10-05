@@ -297,14 +297,6 @@ export type ShoppingDinnerAdditionUncheckedUpdateManyInput = {
   result?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
-export type IntNullableListFilter<$PrismaModel = never> = {
-  equals?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel> | null
-  has?: number | Prisma.IntFieldRefInput<$PrismaModel> | null
-  hasEvery?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
-  hasSome?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
-  isEmpty?: boolean
-}
-
 export type ShoppingDinnerAdditionHouseholdIdOperationIdCompoundUniqueInput = {
   householdId: string
   operationId: string

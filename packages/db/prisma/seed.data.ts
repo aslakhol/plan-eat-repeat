@@ -131,6 +131,25 @@ export const dinners: DinnerSeed[] = [
     notes:
       "Brown mince with onion and garlic. Add spices (cumin, paprika, chili, oregano). Add tomato paste and stock, simmer. Warm tortillas. Prep toppings: lettuce, tomato, cheese, sour cream, lime, coriander. Don't forget hot sauce!",
     tags: ["Mexican", "Meat", "Quick"],
+    recipe: {
+      servings: 4,
+      parts: [
+        {
+          name: null,
+          ingredients: [
+            { name: "tortillas", amount: 8, unit: "pcs", note: null },
+            { name: "cherry tomatoes", amount: 250, unit: "g", note: null },
+            { name: "red onion", amount: 1, unit: "pcs", note: null },
+            { name: "avocado", amount: 2, unit: "pcs", note: null },
+            { name: "lime", amount: 1, unit: "pcs", note: null },
+          ],
+          steps: [
+            "Chop the tomatoes, onion, and avocado for toppings.",
+            "Warm the tortillas and serve with the toppings and lime wedges.",
+          ],
+        },
+      ],
+    },
   },
   {
     name: "Chicken Curry",
@@ -208,6 +227,26 @@ export const dinners: DinnerSeed[] = [
     notes:
       "Mix mince with salt, shape patties (make dimple in middle). Get pan smoking hot. 3-4 min each side for medium. Add cheese last minute. Toast buns. Layer: mayo, lettuce, tomato, patty, onion, pickles. Whatever sauce you like.",
     tags: ["Meat", "Comfort", "Quick"],
+    recipe: {
+      servings: 4,
+      parts: [
+        {
+          name: null,
+          ingredients: [
+            { name: "beef mince", amount: 500, unit: "g", note: null },
+            { name: "tomatoes", amount: 2, unit: "pcs", note: null },
+            { name: "onion", amount: 1, unit: "pcs", note: null },
+            { name: "cheddar", amount: 4, unit: "slices", note: null },
+            { name: "burger buns", amount: 4, unit: "pcs", note: null },
+          ],
+          steps: [
+            "Shape the mince into four patties and season well.",
+            "Fry the patties in a smoking hot pan, adding cheddar for the last minute.",
+            "Toast the buns and layer with tomato, onion, and the patties.",
+          ],
+        },
+      ],
+    },
   },
   {
     name: "Vegetable Lasagna",
@@ -224,6 +263,25 @@ export const dinners: DinnerSeed[] = [
     name: "Pad Thai",
     notes: "Thai rice noodles with tofu and peanuts",
     tags: ["Asian", "Vegetarian", "Quick"],
+    recipe: {
+      servings: 4,
+      parts: [
+        {
+          name: null,
+          ingredients: [
+            { name: "rice noodles", amount: 250, unit: "g", note: null },
+            { name: "onion", amount: 1, unit: "pcs", note: null },
+            { name: "lime", amount: 1, unit: "pcs", note: null },
+            { name: "peanuts", amount: 50, unit: "g", note: null },
+          ],
+          steps: [
+            "Soak the noodles until pliable.",
+            "Stir fry the onion, add the noodles and sauce, and toss until coated.",
+            "Serve with crushed peanuts and lime.",
+          ],
+        },
+      ],
+    },
   },
   {
     name: "Caesar Salad",
@@ -234,6 +292,25 @@ export const dinners: DinnerSeed[] = [
     name: "Butter Chicken",
     notes: "Creamy Indian curry with tender chicken",
     tags: ["Asian", "Meat", "Comfort"],
+    recipe: {
+      servings: 4,
+      parts: [
+        {
+          name: null,
+          ingredients: [
+            { name: "chicken thighs", amount: 600, unit: "g", note: null },
+            { name: "onion", amount: 1, unit: "pcs", note: null },
+            { name: "cream", amount: 2, unit: "dl", note: null },
+            { name: "tomatoes", amount: 3, unit: "pcs", note: null },
+          ],
+          steps: [
+            "Brown the chicken and set aside.",
+            "Soften the onion, add the chopped tomatoes, and simmer into a sauce.",
+            "Stir in the cream and chicken and cook through.",
+          ],
+        },
+      ],
+    },
   },
   {
     name: "Veggie Buddha Bowl",
@@ -244,6 +321,24 @@ export const dinners: DinnerSeed[] = [
     name: "Shrimp Scampi",
     notes: "Garlic butter shrimp with pasta",
     tags: ["Fish", "Pasta", "Italian", "Quick"],
+    recipe: {
+      servings: 4,
+      parts: [
+        {
+          name: null,
+          ingredients: [
+            { name: "shrimp", amount: 400, unit: "g", note: null },
+            { name: "onion", amount: 1, unit: "pcs", note: null },
+            { name: "spaghetti", amount: 400, unit: "g", note: null },
+          ],
+          steps: [
+            "Boil the spaghetti.",
+            "Soften the onion, add the shrimp, and cook until pink.",
+            "Toss with the drained pasta.",
+          ],
+        },
+      ],
+    },
   },
   {
     name: "Beef Stir Fry",
@@ -264,5 +359,22 @@ export const dinners: DinnerSeed[] = [
     name: "Mediterranean Quinoa Bowl",
     notes: "Healthy bowl with quinoa, feta, and vegetables",
     tags: ["Vegetarian", "Healthy", "Quick"],
+    recipe: {
+      servings: 4,
+      parts: [
+        {
+          name: null,
+          ingredients: [
+            { name: "quinoa", amount: 200, unit: "g", note: null },
+            { name: "onion", amount: 1, unit: "pcs", note: null },
+            { name: "feta", amount: 150, unit: "g", note: null },
+          ],
+          steps: [
+            "Cook the quinoa and let it cool slightly.",
+            "Top with sliced onion and crumbled feta.",
+          ],
+        },
+      ],
+    },
   },
 ];

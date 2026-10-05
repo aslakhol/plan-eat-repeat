@@ -162,6 +162,7 @@ export const ShoppingItemScalarFieldEnum = {
   householdId: 'householdId',
   amount: 'amount',
   unit: 'unit',
+  dinnerIds: 'dinnerIds',
   revision: 'revision'
 } as const
 
