@@ -2541,3 +2541,37 @@ void test("retrying Clear only removes unchanged requirements from the original 
       ["Original"],
     );
   }));
+
+void test("Shopping Items remember the Dinners they were added for until they leave the list", () =>
+  withShoppingList(async ({ caller, createDinner }) => {
+    const tomatoDinner = (name: string) =>
+      createDinner({
+        name,
+        parts: {
+          create: {
+            order: 0,
+            ingredients: {
+              create: { order: 0, name: "Tomatoes", amount: 2 },
+            },
+          },
+        },
+      });
+    const salsa = await tomatoDinner("Salsa");
+    const burgers = await tomatoDinner("Cheeseburgers");
+    await caller.addDinners({ dinnerIds: [salsa.id] });
+    const second = await caller.addDinners({ dinnerIds: [burgers.id] });
+    const [tomatoes] = (await caller.list()).items;
+    assert.equal(tomatoes.amount, 4);
+    assert.deepEqual(tomatoes.dinnerIds, [salsa.id, burgers.id]);
+    await caller.undo(second.undo);
+    assert.deepEqual((await caller.list()).items[0]?.dinnerIds, [salsa.id]);
+    const manual = await caller.addManual({ name: "Tomatoes" });
+    await caller.edit({ ...manual, amount: 1 });
+    const merged = (await caller.list()).items;
+    assert.equal(merged.length, 1);
+    assert.equal(merged[0]?.amount, 3);
+    assert.deepEqual(merged[0]?.dinnerIds, [salsa.id]);
+    const { recentItem } = await caller.remove({ id: tomatoes.id });
+    const restored = await caller.addRecent({ id: recentItem!.id });
+    assert.deepEqual(restored.dinnerIds, []);
+  }));

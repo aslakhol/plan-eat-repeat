@@ -46,7 +46,7 @@ _Avoid_: Dinner library, Dinners
 The Household's shared collection of items still to buy, added manually or from Dinners. Items leave the list when taken into a physical basket or successfully transferred to the Oda Cart.
 
 **Shopping Item**:
-A requirement to buy an Own Item, with an optional Amount and Unit. It is independent of the Dinner or Recipe Ingredient it may have come from.
+A requirement to buy an Own Item, with an optional Amount and Unit. It remembers the Dinners it was added for until it leaves the Shopping List; it is otherwise independent of the Recipe Ingredients it came from.
 
 **Shopping Note**:
 Optional wording qualifying an Own Item without changing its product name, such as "duck" for Eggs.

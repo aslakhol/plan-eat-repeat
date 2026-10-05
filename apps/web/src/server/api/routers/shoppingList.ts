@@ -310,6 +310,7 @@ export const shoppingListRouter = createTRPCRouter({
               .object({
                 amount: z.number().nullable(),
                 unit: z.string().nullable(),
+                dinnerIds: z.array(z.number().int()).optional(),
                 revision: z.string(),
               })
               .nullable(),
