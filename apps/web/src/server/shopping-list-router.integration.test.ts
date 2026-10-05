@@ -2561,6 +2561,7 @@ void test("Shopping Items remember the Dinners they were added for until they le
     await caller.addDinners({ dinnerIds: [salsa.id] });
     const second = await caller.addDinners({ dinnerIds: [burgers.id] });
     const [tomatoes] = (await caller.list()).items;
+    assert.ok(tomatoes);
     assert.equal(tomatoes.amount, 4);
     assert.deepEqual(tomatoes.dinnerIds, [salsa.id, burgers.id]);
     await caller.undo(second.undo);
