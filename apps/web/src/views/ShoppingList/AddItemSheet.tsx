@@ -28,7 +28,6 @@ export function AddItemSheet({
 
   return (
     <ResponsiveModalContent
-      onOpenAutoFocus={(event) => event.preventDefault()}
       onCloseAutoFocus={restoreFocus}
       className="flex h-auto flex-col gap-0 rounded-t-3xl bg-white p-5 pb-8 has-[[data-typing=true]]:h-[65dvh] has-[[data-typing=true]]:max-h-[600px] md:rounded-2xl md:pt-10"
     >
@@ -51,7 +50,7 @@ function AddItemContent({
   onSelectDinners: (source: ShoppingDinnerSource) => void;
 }) {
   const [query, setQuery] = useState("");
-  const [typing, setTyping] = useState(false);
+  const typing = query.trim().length > 0;
   const [highlighted, setHighlighted] = useState<string | null>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const sources = api.shoppingList.sources.useQuery(
@@ -100,11 +99,11 @@ function AddItemContent({
               : `shopping-suggestion-${highlightedIndex}`
           }
           autoComplete="off"
+          autoFocus
           enterKeyHint="done"
           placeholder="Add an item"
           className="h-[50px] min-w-0 rounded-xl bg-white text-base"
           value={query}
-          onFocus={() => setTyping(true)}
           onChange={(event) => {
             setQuery(event.target.value);
             setHighlighted(null);
