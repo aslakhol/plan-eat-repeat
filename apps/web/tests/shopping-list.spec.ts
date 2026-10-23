@@ -347,9 +347,7 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
     await expect(noteInput).toHaveValue("For dinner");
     await page.unroute(saveUrl);
     // Saving the recovered draft also works by tapping the backdrop.
-    const drawer = await editor.boundingBox();
-    if (!drawer) throw new Error("Item drawer not visible");
-    await page.mouse.click(5, drawer.y - 10);
+    await page.mouse.click(5, 5);
     await expect(editor).not.toBeVisible();
     ingredientLabel = `${ingredientName}, For dinner`;
     await expect(removeItem(ingredientName)).toBeEnabled();
