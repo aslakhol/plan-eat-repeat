@@ -128,6 +128,7 @@ test("desktop navigation adds shopping items from Usually have", async ({
       .getByRole("combobox", { name: "Item name", exact: true })
       .fill(name);
     await addItemSheet.getByRole("option", { name, exact: true }).click();
+    await page.keyboard.press("Escape");
     await expect(addItemSheet).not.toBeVisible();
     await expect(page).toHaveURL(/\/shopping-list\/usually-have$/);
     await expect
@@ -198,6 +199,14 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
   await db.ownItem.create({
     data: {
       householdId,
+      name: manualName,
+      normalizedName: manualName.toLowerCase(),
+      category: "PRODUCE",
+    },
+  });
+  await db.ownItem.create({
+    data: {
+      householdId,
       name: ingredientName,
       normalizedName: ingredientName.toLowerCase(),
       normalizedNote: "",
@@ -265,6 +274,7 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
       .getByRole("combobox", { name: "Item name", exact: true })
       .fill(manualName);
     await page.getByRole("option", { name: manualName, exact: true }).click();
+    await page.keyboard.press("Escape");
     await expect(
       page.getByRole("dialog", { name: "Add an item", exact: true }),
     ).not.toBeVisible();
@@ -337,9 +347,7 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
     await expect(noteInput).toHaveValue("For dinner");
     await page.unroute(saveUrl);
     // Saving the recovered draft also works by tapping the backdrop.
-    const drawer = await editor.boundingBox();
-    if (!drawer) throw new Error("Item drawer not visible");
-    await page.mouse.click(5, drawer.y - 10);
+    await page.mouse.click(5, 5);
     await expect(editor).not.toBeVisible();
     ingredientLabel = `${ingredientName}, For dinner`;
     await expect(removeItem(ingredientName)).toBeEnabled();
@@ -361,6 +369,7 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
     await page
       .getByRole("combobox", { name: "Item name", exact: true })
       .press("Enter");
+    await page.keyboard.press("Escape");
     await expect(
       page.getByRole("dialog", { name: "Add an item", exact: true }),
     ).not.toBeVisible();
@@ -526,6 +535,9 @@ test("shopping previews keep typing through blur, scroll to choices, and support
     try {
       await last.click();
       await refreshRequested.promise;
+      await expect(input).toBeEmpty();
+      await expect(input).toBeFocused();
+      await page.keyboard.press("Escape");
       await expect(drawer).not.toBeVisible();
       await leaveAndReturnToShopping(page);
       await expect(
@@ -561,6 +573,7 @@ test("shopping previews keep typing through blur, scroll to choices, and support
     await input.press("ArrowDown");
     await input.press("ArrowDown");
     await input.press("Enter");
+    await page.keyboard.press("Escape");
     await expect(drawer).not.toBeVisible();
     await expect(
       page.getByRole("button", {
@@ -571,6 +584,7 @@ test("shopping previews keep typing through blur, scroll to choices, and support
     await open.click();
     await input.fill(marker);
     await input.press("Enter");
+    await page.keyboard.press("Escape");
     await expect(drawer).not.toBeVisible();
     await expect(
       page.getByRole("button", {
@@ -650,6 +664,7 @@ test("a failed optimistic shopping add preserves overlapping successful adds", a
       .click();
     await drawer.getByRole("combobox", { name: "Item name" }).fill(name);
     await drawer.getByRole("combobox", { name: "Item name" }).press("Enter");
+    await page.keyboard.press("Escape");
     await expect(drawer).not.toBeVisible();
   };
   try {
