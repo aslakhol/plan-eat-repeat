@@ -24,7 +24,7 @@ export function AddItemSheet({
   onAdd: (preview: ShoppingPreview) => void;
   onSelectDinners: (source: ShoppingDinnerSource) => void;
 }) {
-  const { close, restoreFocus } = useShoppingItemCreation();
+  const { restoreFocus } = useShoppingItemCreation();
 
   return (
     <ResponsiveModalContent
@@ -32,10 +32,7 @@ export function AddItemSheet({
       className="flex h-auto flex-col gap-0 rounded-t-3xl bg-white p-5 pb-8 has-[[data-typing=true]]:h-[65dvh] has-[[data-typing=true]]:max-h-[600px] md:rounded-2xl md:pt-10"
     >
       <AddItemContent
-        onAdd={(preview) => {
-          onAdd(preview);
-          close();
-        }}
+        onAdd={onAdd}
         onSelectDinners={onSelectDinners}
       />
     </ResponsiveModalContent>
@@ -50,6 +47,7 @@ function AddItemContent({
   onSelectDinners: (source: ShoppingDinnerSource) => void;
 }) {
   const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const typing = query.trim().length > 0;
   const [highlighted, setHighlighted] = useState<string | null>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -61,6 +59,12 @@ function AddItemContent({
   const highlightedIndex = previews.findIndex(
     (preview) => shoppingIdentity(preview.name, preview.note) === highlighted,
   );
+  const addItem = (preview: ShoppingPreview) => {
+    onAdd(preview);
+    setQuery("");
+    setHighlighted(null);
+    inputRef.current?.focus({ preventScroll: true });
+  };
 
   return (
     <div data-typing={typing} className="flex min-h-0 flex-1 flex-col">
@@ -75,7 +79,7 @@ function AddItemContent({
         onSubmit={(event) => {
           event.preventDefault();
           if (query.trim())
-            onAdd(
+            addItem(
               previews[highlightedIndex] ?? {
                 name: query.trim(),
                 note: null,
@@ -88,6 +92,7 @@ function AddItemContent({
           Item name
         </label>
         <Input
+          ref={inputRef}
           id="shopping-item-name"
           role="combobox"
           aria-autocomplete="list"
@@ -100,7 +105,7 @@ function AddItemContent({
           }
           autoComplete="off"
           autoFocus
-          enterKeyHint="done"
+          enterKeyHint="enter"
           placeholder="Add an item"
           className="h-[50px] min-w-0 rounded-xl bg-white text-base"
           value={query}
@@ -157,7 +162,7 @@ function AddItemContent({
               }
               className="bg-secondary/70 aria-selected:bg-secondary hover:bg-secondary focus-visible:bg-secondary block w-full rounded-[14px] px-3.5 py-3 text-left focus-visible:outline-none"
               onMouseDown={(event) => event.preventDefault()}
-              onClick={() => onAdd(preview)}
+              onClick={() => addItem(preview)}
             >
               <span className="font-medium">{preview.name}</span>
               {preview.note && (

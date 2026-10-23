@@ -13,7 +13,7 @@ test.afterAll(async () => db.$disconnect());
 const { defaultBrowserType: browserName, ...iphone } = devices["iPhone 13"]!;
 test.use({ ...iphone, browserName });
 
-test("shopping drawer keeps the page in place and restores its opening control", async ({
+test("shopping drawer supports repeated additions and restores its opening control", async ({
   page,
 }) => {
   // Playwright sets the iPhone user agent but retains the host platform.
@@ -41,14 +41,13 @@ test("shopping drawer keeps the page in place and restores its opening control",
       });
     }
     for (const scrollY of [0, 320]) {
-      const name = `${marker} added ${scrollY}`;
-      await db.ownItem.create({
-        data: {
+      await db.ownItem.createMany({
+        data: ["added", "next"].map((label) => ({
           householdId,
-          name,
-          normalizedName: name.toLowerCase(),
+          name: `${marker} ${label} ${scrollY}`,
+          normalizedName: `${marker.toLowerCase()} ${label} ${scrollY}`,
           category: "OWN_ITEMS",
-        },
+        })),
       });
     }
     const navigation = page.getByRole("navigation", {
@@ -116,6 +115,17 @@ test("shopping drawer keeps the page in place and restores its opening control",
         .toBe(headingTop);
       if (scrollY === 0) await input.press("Enter");
       else await sheet.getByRole("option", { name, exact: true }).tap();
+      await expect(input).toHaveValue("");
+      await expect(input).toBeFocused();
+      await expect(sheet).toBeVisible();
+      await expect(fromWeekPlan).toBeVisible();
+      await expect(fromCookbook).toBeVisible();
+      const nextName = `${marker} next ${scrollY}`;
+      await page.keyboard.type(nextName);
+      await sheet.getByRole("option", { name: nextName, exact: true }).tap();
+      await expect(input).toHaveValue("");
+      await expect(input).toBeFocused();
+      await page.keyboard.press("Escape");
       await expect(sheet).not.toBeVisible();
       await expect(trigger).toBeFocused();
       await expect
@@ -124,6 +134,13 @@ test("shopping drawer keeps the page in place and restores its opening control",
       await expect(
         page.getByRole("button", {
           name: `Remove ${name} from list`,
+          exact: true,
+        }),
+      ).toBeAttached();
+
+      await expect(
+        page.getByRole("button", {
+          name: `Remove ${nextName} from list`,
           exact: true,
         }),
       ).toBeAttached();

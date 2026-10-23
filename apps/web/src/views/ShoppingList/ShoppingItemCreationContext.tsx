@@ -19,7 +19,6 @@ import { DinnerPicker, type ShoppingDinnerSource } from "./DinnerPicker";
 import { ShoppingReady, useShopping } from "./ShoppingProvider";
 
 const ShoppingItemCreationContext = createContext<{
-  close: () => void;
   openDinnerPicker: (source: ShoppingDinnerSource) => void;
   rememberTrigger: (element: HTMLButtonElement) => void;
   restoreFocus: (event: Event) => void;
@@ -69,7 +68,6 @@ export function ShoppingItemCreationProvider({
   return (
     <ShoppingItemCreationContext.Provider
       value={{
-        close: () => onOpenChange(false),
         openDinnerPicker: (source) => {
           onOpenChange(false);
           setPickerSource(source);

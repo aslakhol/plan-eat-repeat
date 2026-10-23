@@ -73,6 +73,7 @@ async function add(page: Page, name: string) {
   const drawer = page.getByRole("dialog", { name: "Add an item", exact: true });
   await drawer.getByRole("combobox", { name: "Item name" }).fill(name);
   await drawer.getByRole("option", { name, exact: true }).click();
+  await page.keyboard.press("Escape");
   await expect(drawer).not.toBeVisible();
 }
 async function clear(page: Page) {
@@ -398,6 +399,7 @@ test("Delete waits for an edit merge, forgets only that variant, and retains a l
     await drawer
       .getByRole("option", { name: "Eggs, duck", exact: true })
       .click();
+    await page.keyboard.press("Escape");
     await expect(drawer).not.toBeVisible();
     holdReads = true;
     deleteGate.resolve();
