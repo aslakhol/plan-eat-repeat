@@ -198,6 +198,14 @@ test("add shopping items, remove them, and edit and restore Recently Used", asyn
   await db.ownItem.create({
     data: {
       householdId,
+      name: manualName,
+      normalizedName: manualName.toLowerCase(),
+      category: "PRODUCE",
+    },
+  });
+  await db.ownItem.create({
+    data: {
+      householdId,
       name: ingredientName,
       normalizedName: ingredientName.toLowerCase(),
       normalizedNote: "",
