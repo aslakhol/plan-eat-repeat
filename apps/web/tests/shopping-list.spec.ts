@@ -487,7 +487,7 @@ test("shopping previews keep typing through blur, scroll to choices, and support
     });
     try {
       await open.click();
-      await expect(input).not.toBeFocused();
+      await expect(input).toBeFocused();
       await input.fill(marker);
       await expect(drawer.getByRole("option")).toHaveCount(1);
       await input.press("ArrowDown");
@@ -555,7 +555,7 @@ test("shopping previews keep typing through blur, scroll to choices, and support
     ).toBeVisible();
     await open.click();
     await expect(input).toBeEmpty();
-    await expect(input).not.toBeFocused();
+    await expect(input).toBeFocused();
     await input.fill(marker);
     await expect(drawer.getByRole("option").first()).toBeVisible();
     await input.press("ArrowDown");

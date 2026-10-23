@@ -40,6 +40,17 @@ test("shopping drawer keeps the page in place and restores its opening control",
         },
       });
     }
+    for (const scrollY of [0, 320]) {
+      const name = `${marker} added ${scrollY}`;
+      await db.ownItem.create({
+        data: {
+          householdId,
+          name,
+          normalizedName: name.toLowerCase(),
+          category: "OWN_ITEMS",
+        },
+      });
+    }
     const navigation = page.getByRole("navigation", {
       name: "Primary navigation",
     });
@@ -72,10 +83,29 @@ test("shopping drawer keeps the page in place and restores its opening control",
       );
       await trigger.tap();
       await expect(input).toBeVisible();
-      await expect(input).not.toBeFocused();
-      await input.tap();
+      await expect(input).toBeFocused();
+      const fromWeekPlan = sheet.getByRole("button", {
+        name: "From week plan",
+        exact: true,
+      });
+      const fromCookbook = sheet.getByRole("button", {
+        name: "From the cookbook",
+        exact: true,
+      });
+      await expect(fromWeekPlan).toBeVisible();
+      await expect(fromCookbook).toBeVisible();
       const name = `${marker} added ${scrollY}`;
       await input.fill(name);
+      await expect(fromWeekPlan).not.toBeVisible();
+      await expect(fromCookbook).not.toBeVisible();
+      await input.fill("");
+      await expect(input).toBeFocused();
+      await expect(fromWeekPlan).toBeVisible();
+      await expect(fromCookbook).toBeVisible();
+      await input.fill(name);
+      await expect(
+        sheet.getByRole("option", { name, exact: true }),
+      ).toBeVisible();
       // Desktop WebKit has no software keyboard. Attempt the page displacement
       // that Safari can cause when focusing an input; the drawer must prevent it.
       await page.evaluate(() => window.scrollTo(0, 200));
