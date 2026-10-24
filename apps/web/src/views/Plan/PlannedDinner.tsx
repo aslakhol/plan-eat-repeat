@@ -48,13 +48,26 @@ export const PlannedDinner = ({
 
   const closeMenu = () => menuRef.current?.removeAttribute("open");
   const headerLabel = format(date, "EEEE, LLLL do, y");
-  const actions = (
+  const actions = (onScale?: () => void) => (
     <DetailsMenu ref={menuRef} className="relative">
       <summary className="text-muted-foreground flex h-[30px] w-[30px] cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
         <MoreHorizontal className="size-4" />
         <span className="sr-only">Planned Dinner actions</span>
       </summary>
       <div className="border-border absolute right-0 top-9 z-20 w-[230px] overflow-hidden rounded-[14px] border bg-white shadow-[0_8px_28px_rgba(60,50,40,.22)]">
+        {recipe && recipe.parts.length > 0 && onScale && (
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-auto w-full justify-start rounded-none border-b px-3.5 py-3 text-left text-[13.5px] font-semibold"
+            onClick={() => {
+              closeMenu();
+              onScale();
+            }}
+          >
+            Scale recipe
+          </Button>
+        )}
         <Button
           type="button"
           variant="ghost"
@@ -120,6 +133,7 @@ export const PlannedDinner = ({
       <ResponsiveModalScrollViewport className="-mx-1 min-h-0 flex-1 px-1 pt-2">
         {recipe ? (
           <RecipeView
+            key={recipe.id}
             dinner={recipe}
             headerLabel={headerLabel}
             headerAction={actions}
@@ -130,7 +144,7 @@ export const PlannedDinner = ({
               <p className="text-muted-foreground min-w-0 flex-1 text-[13px] font-semibold">
                 {headerLabel}
               </p>
-              {actions}
+              {actions()}
             </div>
             <h1 className="font-serif text-[26px] font-normal leading-[1.2]">
               {dinner.name}

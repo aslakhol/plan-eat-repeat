@@ -1,4 +1,11 @@
-import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  Fragment,
+  type ReactNode,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import { ExternalLink } from "lucide-react";
 import {
   formatAmount,
@@ -9,12 +16,15 @@ import { cn } from "../../lib/utils";
 import { FavouriteChip } from "~/components/FavouriteMark";
 import { SharedDinnerChip } from "~/components/SharedDinnerMark";
 import { StickyHeaderCard } from "./StickyHeaderCard";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 
 type Props = {
   dinner: DinnerWithRecipe;
   historyLabel?: string;
   headerLabel?: string;
-  headerAction?: ReactNode;
+  headerAction?: (onScale: () => void) => ReactNode;
   footerActions?: ReactNode;
   footerClassName?: string;
 };
@@ -33,6 +43,14 @@ export const RecipeView = ({
   footerClassName,
 }: Props) => {
   const hasRecipe = dinner.parts.length > 0;
+  const [scale, setScale] = useState(1);
+  const [scaling, setScaling] = useState(false);
+  const scaleInputId = useId();
+  const actions = headerAction?.(() => setScaling(true));
+  const scaledAmount = (amount: number) =>
+    formatAmount(
+      scale === 1 ? amount : Number((amount * scale).toPrecision(12)),
+    );
   const titleRef = useRef<HTMLHeadingElement>(null);
   const ingredientsRef = useRef<HTMLDivElement>(null);
   const stepsRef = useRef<HTMLOListElement>(null);
@@ -74,9 +92,7 @@ export const RecipeView = ({
             <p className="text-muted-foreground min-w-0 flex-1 text-[13px] font-semibold">
               {headerLabel}
             </p>
-            <div className="flex shrink-0 items-center gap-2">
-              {headerAction}
-            </div>
+            <div className="flex shrink-0 items-center gap-2">{actions}</div>
           </div>
         )}
         <div className="flex items-center gap-3">
@@ -94,9 +110,7 @@ export const RecipeView = ({
             </h1>
           </div>
           {!headerLabel && (
-            <div className="flex shrink-0 items-center gap-2">
-              {headerAction}
-            </div>
+            <div className="flex shrink-0 items-center gap-2">{actions}</div>
           )}
         </div>
 
@@ -135,10 +149,70 @@ export const RecipeView = ({
             )}
             {dinner.servings && (
               <span className="text-muted-foreground font-medium">
-                {dinner.servings} servings
+                {scaledAmount(dinner.servings)}{" "}
+                {dinner.servings * scale === 1 ? "serving" : "servings"}
               </span>
             )}
           </div>
+        )}
+        {scale !== 1 && (
+          <div className="flex items-center gap-3 text-sm">
+            <button
+              type="button"
+              className="text-primary font-semibold"
+              onClick={() => setScaling(true)}
+            >
+              Scaled ×{formatAmount(scale)}
+            </button>
+            <button
+              type="button"
+              className="text-muted-foreground font-semibold underline"
+              onClick={() => {
+                setScale(1);
+                setScaling(false);
+              }}
+            >
+              Reset
+            </button>
+          </div>
+        )}
+        {scaling && (
+          <form
+            className="bg-muted/50 space-y-3 rounded-xl border p-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const multiplier = Number(
+                new FormData(event.currentTarget).get("multiplier"),
+              );
+              if (!Number.isFinite(multiplier) || multiplier <= 0) return;
+              setScale(multiplier);
+              setScaling(false);
+            }}
+          >
+            <Label htmlFor={scaleInputId}>Multiply recipe by</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id={scaleInputId}
+                name="multiplier"
+                type="number"
+                inputMode="decimal"
+                min={Number.MIN_VALUE}
+                step="any"
+                required
+                autoFocus
+                defaultValue={scale}
+                className="min-w-0 flex-1 bg-white"
+              />
+              <Button type="submit">Apply</Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setScaling(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
         )}
       </header>
 
@@ -218,7 +292,7 @@ export const RecipeView = ({
                     const amount = [
                       ingredient.amount === null
                         ? ""
-                        : formatAmount(ingredient.amount),
+                        : scaledAmount(ingredient.amount),
                       ingredient.unit ?? "",
                     ]
                       .filter(Boolean)
