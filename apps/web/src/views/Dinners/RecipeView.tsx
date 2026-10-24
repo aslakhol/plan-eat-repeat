@@ -1,12 +1,5 @@
-import {
-  Fragment,
-  type ReactNode,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from "react";
-import { ExternalLink } from "lucide-react";
+import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
+import { ExternalLink, Minus, Plus, RotateCcw } from "lucide-react";
 import {
   formatAmount,
   sourceLabel,
@@ -17,8 +10,6 @@ import { FavouriteChip } from "~/components/FavouriteMark";
 import { SharedDinnerChip } from "~/components/SharedDinnerMark";
 import { StickyHeaderCard } from "./StickyHeaderCard";
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
 
 type Props = {
   dinner: DinnerWithRecipe;
@@ -45,7 +36,6 @@ export const RecipeView = ({
   const hasRecipe = dinner.parts.length > 0;
   const [scale, setScale] = useState(1);
   const [scaling, setScaling] = useState(false);
-  const scaleInputId = useId();
   const actions = headerAction?.(() => setScaling(true));
   const scaledAmount = (amount: number) =>
     formatAmount(
@@ -155,64 +145,58 @@ export const RecipeView = ({
             )}
           </div>
         )}
-        {scale !== 1 && (
-          <div className="flex items-center gap-3 text-sm">
-            <button
+        {scaling && (
+          <div
+            className="flex items-center gap-1"
+            role="group"
+            aria-label="Recipe scaling"
+          >
+            <div className="inline-flex items-center overflow-hidden rounded-lg border bg-white">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-9 rounded-none"
+                aria-label="Increase recipe scale"
+                onClick={() => setScale((current) => current + 0.5)}
+              >
+                <Plus className="size-4" />
+              </Button>
+              <output
+                className="text-primary min-w-14 text-center text-sm font-semibold tabular-nums"
+                aria-label="Recipe multiplier"
+                aria-live="polite"
+              >
+                ×{formatAmount(scale)}
+              </output>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-9 rounded-none"
+                aria-label="Decrease recipe scale"
+                disabled={scale <= 0.5}
+                onClick={() =>
+                  setScale((current) => Math.max(0.5, current - 0.5))
+                }
+              >
+                <Minus className="size-4" />
+              </Button>
+            </div>
+            <Button
               type="button"
-              className="text-primary font-semibold"
-              onClick={() => setScaling(true)}
-            >
-              Scaled ×{formatAmount(scale)}
-            </button>
-            <button
-              type="button"
-              className="text-muted-foreground font-semibold underline"
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground size-9"
+              aria-label="Reset recipe scale"
               onClick={() => {
                 setScale(1);
                 setScaling(false);
               }}
             >
-              Reset
-            </button>
+              <RotateCcw className="size-4" />
+            </Button>
           </div>
-        )}
-        {scaling && (
-          <form
-            className="bg-muted/50 space-y-3 rounded-xl border p-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              const multiplier = Number(
-                new FormData(event.currentTarget).get("multiplier"),
-              );
-              if (!Number.isFinite(multiplier) || multiplier <= 0) return;
-              setScale(multiplier);
-              setScaling(false);
-            }}
-          >
-            <Label htmlFor={scaleInputId}>Multiply recipe by</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id={scaleInputId}
-                name="multiplier"
-                type="number"
-                inputMode="decimal"
-                min={Number.MIN_VALUE}
-                step="any"
-                required
-                autoFocus
-                defaultValue={scale}
-                className="min-w-0 flex-1 bg-white"
-              />
-              <Button type="submit">Apply</Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setScaling(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
         )}
       </header>
 

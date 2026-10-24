@@ -47,8 +47,9 @@ test("recipe scaling is temporary in Cookbook and Plan", async ({ page }) => {
     await page
       .getByRole("button", { name: "Scale recipe", exact: true })
       .click();
-    await page.getByLabel("Multiply recipe by").fill("3");
-    await page.getByRole("button", { name: "Apply", exact: true }).click();
+    for (let step = 0; step < 4; step += 1) {
+      await page.getByRole("button", { name: "Increase recipe scale" }).click();
+    }
     await expect(recipe.getByText("600 g", { exact: true })).toBeVisible();
     await expect(recipe.getByText("0.3 dl", { exact: true })).toBeVisible();
     await expect(recipe.getByText("6 servings", { exact: true })).toBeVisible();
@@ -58,20 +59,26 @@ test("recipe scaling is temporary in Cookbook and Plan", async ({ page }) => {
     ).toBeVisible();
 
     // Replacing the multiplier always uses the original quantities.
-    await page.getByRole("button", { name: "Scaled ×3", exact: true }).click();
-    await page.getByLabel("Multiply recipe by").fill("0.5");
-    await page.getByRole("button", { name: "Apply", exact: true }).click();
+    for (let step = 0; step < 5; step += 1) {
+      await page.getByRole("button", { name: "Decrease recipe scale" }).click();
+    }
+    await expect(
+      page.getByRole("button", { name: "Decrease recipe scale" }),
+    ).toBeDisabled();
     await expect(recipe.getByText("100 g", { exact: true })).toBeVisible();
     await expect(recipe.getByText("1 serving", { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Reset", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Reset recipe scale", exact: true })
+      .click();
     await expect(recipe.getByText("200 g", { exact: true })).toBeVisible();
 
     await page.locator("summary").filter({ hasText: "Dinner actions" }).click();
     await page
       .getByRole("button", { name: "Scale recipe", exact: true })
       .click();
-    await page.getByLabel("Multiply recipe by").fill("2");
-    await page.getByRole("button", { name: "Apply", exact: true }).click();
+    for (let step = 0; step < 2; step += 1) {
+      await page.getByRole("button", { name: "Increase recipe scale" }).click();
+    }
     await page.getByRole("button", { name: "Edit", exact: true }).click();
     await expect(page.getByLabel("Number of servings")).toHaveValue("2");
     await expect(
@@ -103,8 +110,9 @@ test("recipe scaling is temporary in Cookbook and Plan", async ({ page }) => {
     await page
       .getByRole("button", { name: "Scale recipe", exact: true })
       .click();
-    await page.getByLabel("Multiply recipe by").fill("2.5");
-    await page.getByRole("button", { name: "Apply", exact: true }).click();
+    for (let step = 0; step < 3; step += 1) {
+      await page.getByRole("button", { name: "Increase recipe scale" }).click();
+    }
     await expect(recipe.getByText("500 g", { exact: true })).toBeVisible();
     await expect(recipe.getByText("5 servings", { exact: true })).toBeVisible();
     await page.keyboard.press("Escape");
