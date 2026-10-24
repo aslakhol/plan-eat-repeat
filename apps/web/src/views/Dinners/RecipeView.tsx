@@ -157,10 +157,13 @@ export const RecipeView = ({
                 variant="ghost"
                 size="icon"
                 className="size-9 rounded-none"
-                aria-label="Increase recipe scale"
-                onClick={() => setScale((current) => current + 0.5)}
+                aria-label="Decrease recipe scale"
+                disabled={scale <= 0.5}
+                onClick={() =>
+                  setScale((current) => Math.max(0.5, current - 0.5))
+                }
               >
-                <Plus className="size-4" />
+                <Minus className="size-4" />
               </Button>
               <output
                 className="text-primary min-w-14 text-center text-sm font-semibold tabular-nums"
@@ -174,13 +177,10 @@ export const RecipeView = ({
                 variant="ghost"
                 size="icon"
                 className="size-9 rounded-none"
-                aria-label="Decrease recipe scale"
-                disabled={scale <= 0.5}
-                onClick={() =>
-                  setScale((current) => Math.max(0.5, current - 0.5))
-                }
+                aria-label="Increase recipe scale"
+                onClick={() => setScale((current) => current + 0.5)}
               >
-                <Minus className="size-4" />
+                <Plus className="size-4" />
               </Button>
             </div>
             <Button
