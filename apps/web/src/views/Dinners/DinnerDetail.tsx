@@ -241,15 +241,28 @@ export const DinnerDetail = () => {
   return (
     <>
       <RecipeView
+        key={dinner.id}
         dinner={dinner}
         historyLabel={historyLabel}
-        headerAction={
+        headerAction={(onScale) => (
           <DetailsMenu ref={actionMenuRef} className="relative">
             <summary className="text-muted-foreground flex h-[30px] w-[30px] cursor-pointer list-none items-center justify-center rounded-full border bg-white [&::-webkit-details-marker]:hidden">
               <MoreHorizontal className="size-4" />
               <span className="sr-only">Dinner actions</span>
             </summary>
             <div className="border-border absolute right-0 top-9 z-20 w-[210px] overflow-hidden rounded-[14px] border bg-white shadow-[0_8px_28px_rgba(60,50,40,.22)]">
+              {dinner.parts.length > 0 && (
+                <button
+                  type="button"
+                  className="hover:bg-muted w-full border-b px-3.5 py-3 text-left text-[13.5px] font-semibold"
+                  onClick={() => {
+                    closeActionMenu();
+                    onScale();
+                  }}
+                >
+                  Scale recipe
+                </button>
+              )}
               <button
                 type="button"
                 disabled={favouriteMutation.isPending}
@@ -310,7 +323,7 @@ export const DinnerDetail = () => {
               />
             </div>
           </DetailsMenu>
-        }
+        )}
         footerActions={
           <>
             <Button

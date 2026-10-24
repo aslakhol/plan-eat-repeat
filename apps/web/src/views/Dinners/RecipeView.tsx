@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Minus, Plus, RotateCcw } from "lucide-react";
 import {
   formatAmount,
   sourceLabel,
@@ -9,12 +9,13 @@ import { cn } from "../../lib/utils";
 import { FavouriteChip } from "~/components/FavouriteMark";
 import { SharedDinnerChip } from "~/components/SharedDinnerMark";
 import { StickyHeaderCard } from "./StickyHeaderCard";
+import { Button } from "~/components/ui/button";
 
 type Props = {
   dinner: DinnerWithRecipe;
   historyLabel?: string;
   headerLabel?: string;
-  headerAction?: ReactNode;
+  headerAction?: (onScale: () => void) => ReactNode;
   footerActions?: ReactNode;
   footerClassName?: string;
 };
@@ -33,6 +34,13 @@ export const RecipeView = ({
   footerClassName,
 }: Props) => {
   const hasRecipe = dinner.parts.length > 0;
+  const [scale, setScale] = useState(1);
+  const [scaling, setScaling] = useState(false);
+  const actions = headerAction?.(() => setScaling(true));
+  const scaledAmount = (amount: number) =>
+    formatAmount(
+      scale === 1 ? amount : Number((amount * scale).toPrecision(12)),
+    );
   const titleRef = useRef<HTMLHeadingElement>(null);
   const ingredientsRef = useRef<HTMLDivElement>(null);
   const stepsRef = useRef<HTMLOListElement>(null);
@@ -74,9 +82,7 @@ export const RecipeView = ({
             <p className="text-muted-foreground min-w-0 flex-1 text-[13px] font-semibold">
               {headerLabel}
             </p>
-            <div className="flex shrink-0 items-center gap-2">
-              {headerAction}
-            </div>
+            <div className="flex shrink-0 items-center gap-2">{actions}</div>
           </div>
         )}
         <div className="flex items-center gap-3">
@@ -94,9 +100,7 @@ export const RecipeView = ({
             </h1>
           </div>
           {!headerLabel && (
-            <div className="flex shrink-0 items-center gap-2">
-              {headerAction}
-            </div>
+            <div className="flex shrink-0 items-center gap-2">{actions}</div>
           )}
         </div>
 
@@ -135,9 +139,63 @@ export const RecipeView = ({
             )}
             {dinner.servings && (
               <span className="text-muted-foreground font-medium">
-                {dinner.servings} servings
+                {scaledAmount(dinner.servings)}{" "}
+                {dinner.servings * scale === 1 ? "serving" : "servings"}
               </span>
             )}
+          </div>
+        )}
+        {scaling && (
+          <div
+            className="flex items-center gap-1"
+            role="group"
+            aria-label="Recipe scaling"
+          >
+            <div className="inline-flex items-center overflow-hidden rounded-lg border bg-white">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-9 rounded-none"
+                aria-label="Decrease recipe scale"
+                disabled={scale <= 0.5}
+                onClick={() =>
+                  setScale((current) => Math.max(0.5, current - 0.5))
+                }
+              >
+                <Minus className="size-4" />
+              </Button>
+              <output
+                className="text-primary min-w-14 text-center text-sm font-semibold tabular-nums"
+                aria-label="Recipe multiplier"
+                aria-live="polite"
+              >
+                ×{formatAmount(scale)}
+              </output>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-9 rounded-none"
+                aria-label="Increase recipe scale"
+                onClick={() => setScale((current) => current + 0.5)}
+              >
+                <Plus className="size-4" />
+              </Button>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground size-9"
+              aria-label="Reset recipe scale"
+              onClick={() => {
+                setScale(1);
+                setScaling(false);
+              }}
+            >
+              <RotateCcw className="size-4" />
+            </Button>
           </div>
         )}
       </header>
@@ -218,7 +276,7 @@ export const RecipeView = ({
                     const amount = [
                       ingredient.amount === null
                         ? ""
-                        : formatAmount(ingredient.amount),
+                        : scaledAmount(ingredient.amount),
                       ingredient.unit ?? "",
                     ]
                       .filter(Boolean)
