@@ -12,6 +12,7 @@ import {
   Check,
   ChevronRight,
   Circle,
+  Clipboard,
   Image as ImageIcon,
   Info,
   Loader2,
@@ -39,6 +40,7 @@ import { Button } from "~/components/ui/button";
 import { LoadingIndicator } from "~/components/LoadingIndicator";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
+import { toast } from "~/components/ui/use-toast";
 import { cn } from "~/lib/utils";
 import {
   buildCreateDinnerEditorHref,
@@ -273,12 +275,10 @@ function AddDinnerFlow(
   const router = useRouter();
   const utils = api.useUtils();
   const { setImportedDraft } = useDinnerCreation();
-  const inputRef = useRef<HTMLInputElement>(null);
   const libraryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const importAttemptRef = useRef(0);
-  const clipboardSourceRef = useRef<RecipeImportSource | null>(null);
   const {
     draft: { prompt, rememberPrompt },
     setDraft,
@@ -305,26 +305,18 @@ function AddDinnerFlow(
     [],
   );
 
-  useEffect(() => {
-    if (screen !== "choose") return;
-    const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 100);
-    return () => window.clearTimeout(focusTimer);
-  }, [screen]);
-
-  useEffect(() => {
-    if (!open || screen !== "url") return;
-    if (clipboardSourceRef.current === source) return;
-    clipboardSourceRef.current = source;
-    if (!navigator.clipboard?.readText) return;
-
-    void navigator.clipboard
-      .readText()
-      .then((clipboardText) => {
-        const clipboardUrl = validUrlOrNull(clipboardText);
-        if (clipboardUrl) setUrl((current) => current || clipboardUrl);
-      })
-      .catch(() => undefined);
-  }, [open, screen, source]);
+  const pasteUrl = async () => {
+    try {
+      const clipboardText = (await navigator.clipboard.readText()).trim();
+      if (clipboardText) setUrl(clipboardText);
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Could not paste link",
+        description: "Touch and hold the URL field to paste.",
+      });
+    }
+  };
 
   const navigateAfterSave = async (dinnerId: number) => {
     const saveNavigation = editorSaveNavigation(dinnerId, navigation);
@@ -584,13 +576,11 @@ function AddDinnerFlow(
               <form onSubmit={submitNameOnly} className="space-y-2">
                 <div className="grid grid-cols-[minmax(0,1fr)_3.25rem] gap-2">
                   <Input
-                    ref={inputRef}
                     value={name}
                     onChange={(event) => {
                       setName(event.target.value);
                       setValidationError(null);
                     }}
-                    autoFocus
                     disabled={createMutation.isPending}
                     placeholder="What's for dinner?"
                     aria-label="Dinner name"
@@ -670,26 +660,39 @@ function AddDinnerFlow(
               <label htmlFor="recipe-import-url" className="sr-only">
                 Recipe URL
               </label>
-              <Input
-                id="recipe-import-url"
-                type="url"
-                inputMode="url"
-                autoComplete="off"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                value={url}
-                autoFocus
-                onChange={(event) => setUrl(event.target.value)}
-                className="h-16 rounded-lg bg-white px-4 text-base"
-                placeholder="https://"
-                aria-invalid={url.length > 0 && !validUrl}
-                aria-describedby={
-                  url.length > 0 && !validUrl
-                    ? "recipe-url-validation"
-                    : undefined
-                }
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="recipe-import-url"
+                  type="url"
+                  inputMode="url"
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  value={url}
+                  autoFocus
+                  onChange={(event) => setUrl(event.target.value)}
+                  className="h-16 min-w-0 flex-1 rounded-lg bg-white px-4 text-base"
+                  placeholder="https://"
+                  aria-invalid={url.length > 0 && !validUrl}
+                  aria-describedby={
+                    url.length > 0 && !validUrl
+                      ? "recipe-url-validation"
+                      : undefined
+                  }
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  aria-label="Paste"
+                  title="Paste"
+                  className="h-16 w-12 shrink-0 rounded-lg"
+                  onClick={() => void pasteUrl()}
+                >
+                  <Clipboard aria-hidden="true" />
+                </Button>
+              </div>
               {url.length > 0 && !validUrl && (
                 <p
                   id="recipe-url-validation"
