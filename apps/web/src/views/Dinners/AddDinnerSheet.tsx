@@ -39,6 +39,7 @@ import { Button } from "~/components/ui/button";
 import { LoadingIndicator } from "~/components/LoadingIndicator";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
+import { toast } from "~/components/ui/use-toast";
 import { cn } from "~/lib/utils";
 import {
   buildCreateDinnerEditorHref,
@@ -302,6 +303,19 @@ function AddDinnerFlow(
     },
     [],
   );
+
+  const pasteUrl = async () => {
+    try {
+      const clipboardText = (await navigator.clipboard.readText()).trim();
+      if (clipboardText) setUrl(clipboardText);
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Could not paste link",
+        description: "Touch and hold the URL field to paste.",
+      });
+    }
+  };
 
   const navigateAfterSave = async (dinnerId: number) => {
     const saveNavigation = editorSaveNavigation(dinnerId, navigation);
@@ -645,26 +659,36 @@ function AddDinnerFlow(
               <label htmlFor="recipe-import-url" className="sr-only">
                 Recipe URL
               </label>
-              <Input
-                id="recipe-import-url"
-                type="url"
-                inputMode="url"
-                autoComplete="off"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                value={url}
-                autoFocus
-                onChange={(event) => setUrl(event.target.value)}
-                className="h-16 rounded-lg bg-white px-4 text-base"
-                placeholder="https://"
-                aria-invalid={url.length > 0 && !validUrl}
-                aria-describedby={
-                  url.length > 0 && !validUrl
-                    ? "recipe-url-validation"
-                    : undefined
-                }
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="recipe-import-url"
+                  type="url"
+                  inputMode="url"
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  value={url}
+                  autoFocus
+                  onChange={(event) => setUrl(event.target.value)}
+                  className="h-16 min-w-0 flex-1 rounded-lg bg-white px-4 text-base"
+                  placeholder="https://"
+                  aria-invalid={url.length > 0 && !validUrl}
+                  aria-describedby={
+                    url.length > 0 && !validUrl
+                      ? "recipe-url-validation"
+                      : undefined
+                  }
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-16 shrink-0 rounded-lg px-3"
+                  onClick={() => void pasteUrl()}
+                >
+                  Paste
+                </Button>
+              </div>
               {url.length > 0 && !validUrl && (
                 <p
                   id="recipe-url-validation"

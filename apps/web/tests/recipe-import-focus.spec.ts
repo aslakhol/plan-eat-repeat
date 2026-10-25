@@ -24,12 +24,13 @@ test("opening the recipe chooser waits for a tap before focusing the dinner name
   await expect(name).toBeFocused();
 });
 
-test("link import accepts the first tap without requesting clipboard access", async ({
+test("link import reads the clipboard only after tapping Paste and preserves the URL if denied", async ({
   page,
 }) => {
   let clipboardReads = 0;
   await page.exposeFunction("readClipboard", () => {
     clipboardReads += 1;
+    if (clipboardReads > 1) throw new Error("Clipboard permission denied");
     return "https://example.com/clipboard-recipe";
   });
   await page.evaluate(() => {
@@ -57,4 +58,13 @@ test("link import accepts the first tap without requesting clipboard access", as
   await expect(
     page.getByRole("button", { name: "Import recipe", exact: true }),
   ).toBeEnabled();
+  const paste = page.getByRole("button", { name: "Paste", exact: true });
+  await paste.tap();
+  await expect(url).toHaveValue("https://example.com/clipboard-recipe");
+  expect(clipboardReads).toBe(1);
+  await paste.tap();
+  await expect(
+    page.getByText("Could not paste link", { exact: true }),
+  ).toBeVisible();
+  await expect(url).toHaveValue("https://example.com/clipboard-recipe");
 });
