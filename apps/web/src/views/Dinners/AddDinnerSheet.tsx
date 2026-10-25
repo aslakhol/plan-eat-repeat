@@ -12,6 +12,7 @@ import {
   Check,
   ChevronRight,
   Circle,
+  Clipboard,
   Image as ImageIcon,
   Info,
   Loader2,
@@ -683,10 +684,13 @@ function AddDinnerFlow(
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-16 shrink-0 rounded-lg px-3"
+                  size="icon"
+                  aria-label="Paste"
+                  title="Paste"
+                  className="h-16 w-12 shrink-0 rounded-lg"
                   onClick={() => void pasteUrl()}
                 >
-                  Paste
+                  <Clipboard aria-hidden="true" />
                 </Button>
               </div>
               {url.length > 0 && !validUrl && (
