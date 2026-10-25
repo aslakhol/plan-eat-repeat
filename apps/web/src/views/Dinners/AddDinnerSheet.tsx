@@ -277,7 +277,6 @@ function AddDinnerFlow(
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const importAttemptRef = useRef(0);
-  const clipboardSourceRef = useRef<RecipeImportSource | null>(null);
   const {
     draft: { prompt, rememberPrompt },
     setDraft,
@@ -303,21 +302,6 @@ function AddDinnerFlow(
     },
     [],
   );
-
-  useEffect(() => {
-    if (!open || screen !== "url") return;
-    if (clipboardSourceRef.current === source) return;
-    clipboardSourceRef.current = source;
-    if (!navigator.clipboard?.readText) return;
-
-    void navigator.clipboard
-      .readText()
-      .then((clipboardText) => {
-        const clipboardUrl = validUrlOrNull(clipboardText);
-        if (clipboardUrl) setUrl((current) => current || clipboardUrl);
-      })
-      .catch(() => undefined);
-  }, [open, screen, source]);
 
   const navigateAfterSave = async (dinnerId: number) => {
     const saveNavigation = editorSaveNavigation(dinnerId, navigation);
