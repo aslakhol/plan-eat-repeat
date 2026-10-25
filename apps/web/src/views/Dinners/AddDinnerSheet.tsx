@@ -273,7 +273,6 @@ function AddDinnerFlow(
   const router = useRouter();
   const utils = api.useUtils();
   const { setImportedDraft } = useDinnerCreation();
-  const inputRef = useRef<HTMLInputElement>(null);
   const libraryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -304,12 +303,6 @@ function AddDinnerFlow(
     },
     [],
   );
-
-  useEffect(() => {
-    if (screen !== "choose") return;
-    const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 100);
-    return () => window.clearTimeout(focusTimer);
-  }, [screen]);
 
   useEffect(() => {
     if (!open || screen !== "url") return;
@@ -584,13 +577,11 @@ function AddDinnerFlow(
               <form onSubmit={submitNameOnly} className="space-y-2">
                 <div className="grid grid-cols-[minmax(0,1fr)_3.25rem] gap-2">
                   <Input
-                    ref={inputRef}
                     value={name}
                     onChange={(event) => {
                       setName(event.target.value);
                       setValidationError(null);
                     }}
-                    autoFocus
                     disabled={createMutation.isPending}
                     placeholder="What's for dinner?"
                     aria-label="Dinner name"
