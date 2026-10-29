@@ -4,6 +4,8 @@ Plan Eat Repeat helps a household maintain a shared collection of dinners, assig
 
 ## Language
 
+### Household, dinners and recipes
+
 **Household**:
 One or more people who share one Cookbook, one set of Plan Slots, and one Shopping List.
 _Avoid_: Account, family
@@ -16,7 +18,7 @@ _Avoid_: Meal, dish, recipe
 The optional structured cooking content attached to a Dinner. A Recipe may contain multiple named parts, ingredients, and steps; it is not managed independently from its Dinner.
 
 **Recipe Ingredient**:
-A named ingredient within a Recipe part, with an optional positive numeric Amount, Unit, and Ingredient Note. Its name is required; it has no free-text alternative to Amount.
+A named ingredient within a Recipe part, with an optional positive numeric Amount, Unit, and Ingredient Note.
 
 **Amount**:
 The positive number specifying how much of a Recipe Ingredient or Shopping Item is needed. An absent Amount leaves the quantity unspecified.
@@ -25,7 +27,7 @@ The positive number specifying how much of a Recipe Ingredient or Shopping Item 
 The optional measure for a Recipe Ingredient or Shopping Item. It may be a recognised Standard Unit or arbitrary wording such as "cheek" or "handful"; an absent Unit is unspecified and distinct from pieces.
 
 **Standard Unit**:
-A Unit recognised by the application, with a preferred abbreviation and equivalent spellings. Defined conversions relate compatible measurements without depending on the ingredient.
+A Unit recognised by the application, with a preferred abbreviation and equivalent spellings.
 
 **Ingredient Note**:
 Optional wording accompanying a Recipe Ingredient, such as preparation details or serving instructions.
@@ -42,29 +44,31 @@ _Avoid_: Recipe-less dinner, un-recipe'd dinner
 The Household's collection of active Dinners.
 _Avoid_: Dinner library, Dinners
 
+### Shopping
+
 **Shopping List**:
-The Household's shared collection of items still to buy, added manually or from Dinners. Items leave the list when taken into a physical basket or successfully transferred to the Oda Cart.
+The Household's shared collection of items still to buy, added manually or from Dinners.
 
 **Shopping Item**:
-A requirement to buy an Own Item, with an optional Amount and Unit. It remembers the Dinners it was added for until it leaves the Shopping List; it is otherwise independent of the Recipe Ingredients it came from.
+A requirement to buy an Own Item, with an optional Amount and Unit, which may be associated with the Dinners it came from.
 
 **Shopping Note**:
 Optional wording qualifying an Own Item without changing its product name, such as "duck" for Eggs.
 
 **Oda Connection**:
-A Household's authorization to use one Oda account for its shopping. Every Household member can use the shared connection.
+A Household's authorization to use one Oda account for its shopping.
 
 **Oda Cart**:
 The shopping basket in the Oda account linked through the Household's Oda Connection. The shopper reviews its products and completes checkout in Oda.
 
 **Oda Transfer**:
-Fulfilling Shopping Items through the Household's Oda Cart. Completed items move to Recently Used, including unspecified requirements already covered by suitable cart contents; unresolved or failed items remain on the Shopping List.
+The fulfillment of Shopping Items through the Household's Oda Cart, before checkout in Oda.
 
 **Shopping Category**:
 A store-oriented grouping of Shopping Items used to order the Shopping List.
 
 **Own Item**:
-A Household's saved combination of a product name and optional Shopping Note, with its own Shopping Category, Usually Have setting and optional preferred Oda product, whether the name originated in the standard catalog or was entered by the Household. It remains available for reuse independently of the Shopping List and Recently Used; Amount and Unit belong to requirements to buy it, not to the Own Item.
+A Household's reusable product definition, identified by name and Shopping Note, with a remembered Shopping Category, Usually Have setting, and optional preferred Oda product. Amount and Unit belong to Shopping Items rather than Own Items.
 _Avoid_: Shopping Product
 
 **Standard Shopping Item**:
@@ -74,29 +78,31 @@ A predefined product name supplied in the English or Norwegian shopping catalog,
 The Household's selected language for Standard Shopping Item matching and Shopping Category labels, either English or Norwegian.
 
 **Remembered Shopping Category**:
-The Household's category for an Own Item, whether chosen manually or assigned automatically, including the Own Items Category. It survives removal from the Shopping List and is independent of categories assigned to other Own Items with the same name and different notes.
+The Household's saved category for an Own Item, including the Own Items Category, whether chosen manually or assigned automatically.
 
 **Category Classification**:
-The initial assignment of a new Own Item's Shopping Category, when it is not a Standard Shopping Item, from its product name and Shopping Note, interpreted using the Shopping Language and category descriptions, independently of any Dinner or Recipe. An accepted classification meets the required confidence cutoff; reusing an existing Own Item retains its Remembered Shopping Category without classification.
+The initial assignment of a Shopping Category to a new Own Item that is not a Standard Shopping Item.
 
 **Item Matching**:
-Resolving typed input, or a Recipe Ingredient the word rules leave unresolved, that is not exactly a known name-and-note combination to the Own Item or Standard Shopping Item it names, before any new Own Item is created. Only a confident match counts; otherwise the input becomes a new Own Item. Suggestions chosen from autocomplete are not matched.
+The resolution of shopping input to an Own Item or Standard Shopping Item it names, instead of creating a new Own Item.
 
 **Own Items Category**:
-The fallback Shopping Category for Own Items without an accepted classification, labelled "Own Items" and ordered after all other Shopping Categories. Own Items can belong to any Shopping Category.
+The fallback Shopping Category for Own Items without an accepted classification. Own Items can belong to any Shopping Category.
 
 **Usually Have**:
-The Household's set of Own Items to place in Recently Used instead of its Shopping List when adding from Dinners. Each name-and-note combination has its own setting. Turning it on while editing a Shopping Item also moves that item to Recently Used, preserving its saved Amount and Unit. Manual additions remain allowed, and subsequent edits with the setting already on keep the item on the Shopping List.
+The Household's set of Own Items to place in Recently Used instead of its Shopping List when adding from Dinners.
 
 **Recently Used**:
-The Household's reusable Own Items from Shopping List removals and Usually Have exclusions when adding from Dinners, shown most recent first without time-based expiry, with at most 25 Own Items and none currently on the Shopping List. Each entry retains its latest Amount and Unit for restoration; different Shopping Notes distinguish entries even when their product names match.
+The Household's reusable Own Items from Shopping List removals and Usually Have exclusions.
+
+### Planning
 
 **Plan Slot**:
 The assignment of one Dinner to one Household calendar date. A Plan Slot identifies a date, not an instant in time.
 _Avoid_: Plan entry, planned day
 
 **Cooking History**:
-The Household's past Plan Slots, which are presumed to represent Dinners that were cooked. Changing or clearing a past Plan Slot corrects this history; deleting a Dinner removes its history.
+The Household's past Plan Slots, which are presumed to represent Dinners that were cooked.
 
 **Cooking Frequency**:
 The number of past Plan Slots in which a Dinner occurs for the Household.
@@ -104,6 +110,8 @@ The number of past Plan Slots in which a Dinner occurs for the Household.
 **Favourite**:
 A Household-shared designation applied to a Dinner.
 _Avoid_: Personal favourite, favorite
+
+### Importing
 
 **Import Draft**:
 Unsaved Dinner editor content produced from an import source. It changes the Cookbook only when the user saves it; cancelling discards it.
@@ -115,7 +123,7 @@ A Household member's request to produce an Import Draft from an import source. I
 The editable instructions that guide how AI turns an Import Source's content into a structured Recipe. They may request adaptations that substantially change the source Recipe.
 
 **System Default Prompt**:
-The application's default Import Prompt, followed by Households without a saved Household Prompt. These Households receive changes to the default automatically.
+The application's default Import Prompt, followed by Households without a saved Household Prompt.
 
 **Household Prompt**:
 A saved Import Prompt shared by a Household. A Household without one follows the System Default Prompt.
@@ -130,7 +138,7 @@ The estimated model provider charge attributable to AI inference during an AI Im
 _Avoid_: Token cost, infrastructure cost
 
 **AI Import Inference Usage**:
-The provider, requested and response model identifiers, and total input and output tokens reported for an AI Import Attempt. It records model use whether or not the attempt produces an Import Draft and does not describe product outcome.
+The model and token usage attributable to inference during an AI Import Attempt, distinct from the attempt's product outcome.
 
 **Supadata Credit Spend**:
 The Supadata credits attributable to acquisition work during an AI Import Attempt. It remains denominated in credits and is not part of AI Import Cost.
@@ -144,6 +152,8 @@ _Avoid_: Import type
 A trusted Plan Eat Repeat operator who may inspect AI Import Spend across Households. This role is distinct from a Household administrator.
 _Avoid_: Admin, Household admin, super admin
 
+### Dinner editing and sharing
+
 **Link**:
 The optional HTTP(S) URL associated with a Dinner. It often identifies the source of a Recipe, but may point somewhere else chosen by the Household.
 _Avoid_: Source Link, Recipe link
@@ -156,7 +166,7 @@ An irreversible Cookbook action that retains one of two household Dinners, prese
 _Avoid_: Merge Cooking History, combine recipes
 
 **Published Dinner**:
-A search-indexable public view of a Dinner, created explicitly by any Household member and readable by anyone while sharing is enabled. Every Dinner can be published, including a Name-only Dinner or Notes-only Dinner; it presents the Dinner's current name, tags, notes, Link, and optional Recipe, and its attribution uses the Household's name.
+A search-indexable public view of a Dinner, readable while its Household shares it.
 _Avoid_: Public Recipe, shared Recipe
 
 **Shared Dinners**:
@@ -164,18 +174,18 @@ The Household's view of its currently Published Dinners. It is a collection view
 _Avoid_: Shared Dinner entity, Published Dinner library
 
 **Public Dinner List**:
-The public view of one Household's currently Published Dinners. It exists only while that Household has at least one Published Dinner.
+The public view of one Household's currently Published Dinners.
 _Avoid_: Public Cookbook, Shared Dinners
 
 **Publication Date**:
-The UTC calendar date on which sharing was most recently enabled for a Published Dinner. It resets when sharing restarts and is used in both public attribution and share status.
+The UTC calendar date on which sharing was most recently enabled for a Published Dinner.
 
 **Published Dinner Copy**:
-An ordinary, detached Dinner created by saving a Published Dinner into a Cookbook. It copies the current public content but reuses only case-insensitively matching tags already present in the destination Cookbook, creates no tags, and has no user-visible connection to its source.
+An ordinary, detached Dinner created by saving a Published Dinner into a Cookbook.
 _Avoid_: Synced Dinner, imported Dinner
 
 **Save Intent**:
-A visitor's request to add a Published Dinner to their Cookbook. It survives authentication, resolves to an existing matching Dinner unless explicitly asked to make another copy, and completes only while the source remains published.
+A visitor's request to add a Published Dinner to their Cookbook.
 
 **Save Count**:
-The number of distinct destination Cookbooks currently containing at least one direct Published Dinner Copy. It excludes the source Cookbook and persists across periods when sharing is stopped, while the interface describes it as “saved by N people.”
+The number of distinct destination Cookbooks currently containing at least one direct Published Dinner Copy.
