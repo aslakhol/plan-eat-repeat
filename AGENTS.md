@@ -68,4 +68,4 @@ Uses the default five triage labels. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
-Uses a single-context layout with root `CONTEXT.md` and `docs/adr/`. See `docs/agents/domain.md`.
+Uses a single-context layout with root `GLOSSARY.md` and `docs/adr/`. See `docs/agents/domain.md`.
